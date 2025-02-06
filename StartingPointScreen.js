@@ -34,11 +34,10 @@ const StartingPointScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (searchText) {
       const filteredData = allStartingPoints.filter(point =>
-        point.md_location_nameeng.toLowerCase().includes(searchText.toLowerCase())
+        (`${point.md_location_nameeng}, ${point.sys_countries_nameeng}`).toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredStartingPoints(filteredData);
     } else {
-  
       setFilteredStartingPoints(allStartingPoints);
     }
   }, [searchText, allStartingPoints]); 
@@ -49,27 +48,28 @@ const StartingPointScreen = ({ navigation, route }) => {
       name: selectedPoint.md_location_nameeng,
       id: selectedPoint.md_timetable_startid,
     }); 
-    setSearchText(searchText); 
+
+    // บันทึกค่าและย้อนกลับหน้าก่อน
+    handleSave({
+      id: selectedPoint.md_timetable_startid,
+      name: selectedPoint.md_location_nameeng,
+    });
   };
 
-  const handleSave = () => {
-    if (route.params?.setStartingPoint && selectedItem) {
-      route.params.setStartingPoint({
-        id: selectedItem.id, // ส่ง id กลับไป
-        name: selectedItem.name, // ส่ง name กลับไป
-      });
+  const handleSave = (selectedData) => {
+    if (route.params?.setStartingPoint && selectedData) {
+      route.params.setStartingPoint(selectedData);
     }
-    navigation.goBack(); // Navigate back to the previous screen
+    navigation.goBack(); // กลับไปหน้าก่อนหน้า
   };
-  
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
+    <TouchableOpacity 
       style={[
         styles.item,
         selectedItem?.id === item.md_timetable_startid && styles.selectedItem,
       ]}
-      onPress={() => handleSelectStartingPoint(item)} // ส่งข้อมูลทั้งหมดของ item
+      onPress={() => handleSelectStartingPoint(item)} 
     >
       <Text
         style={[
@@ -77,15 +77,14 @@ const StartingPointScreen = ({ navigation, route }) => {
           selectedItem?.id === item.md_timetable_startid && styles.selectedItemText,
         ]}
       >
-        {item.md_location_nameeng}
+        {item.md_location_nameeng + ', ' + item.sys_countries_nameeng}
       </Text>
     </TouchableOpacity>
   );
-  
 
   const getItemLayout = (data, index) => ({
-    length: 60, // ความสูงของแต่ละไอเทม
-    offset: 60 * index, // ตำแหน่งของไอเทมในลิสต์
+    length: 60, 
+    offset: 60 * index, 
     index,
   });
 
@@ -97,7 +96,7 @@ const StartingPointScreen = ({ navigation, route }) => {
           style={styles.searchInput}
           placeholder="Search starting point..."
           value={searchText}
-          onChangeText={setSearchText}  // Directly set searchText to trigger effect
+          onChangeText={setSearchText}  
         />
       </View>
       <FlatList
@@ -107,9 +106,6 @@ const StartingPointScreen = ({ navigation, route }) => {
         getItemLayout={getItemLayout}
         style={styles.list}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
     </View>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect  } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/Ionicons';
+
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Dimensions, SectionList } from 'react-native';
 
 

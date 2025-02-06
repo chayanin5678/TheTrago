@@ -48,6 +48,12 @@ const SearchFerry = ({ navigation, route }) => {
   const hideDepartureDatePicker = () => setDepartureDatePickerVisible(false);
   const hideReturnDatePicker = () => setReturnDatePickerVisible(false);
 
+  const calculateDiscountedPrice = (price) => {
+    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+    const discountedPrice = price * 0.9; // ลด 10%
+    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
+
   const handleDepartureDateConfirm = (date) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     setDepartureDate(date.toLocaleDateString('en-GB', options));
@@ -141,15 +147,14 @@ const SearchFerry = ({ navigation, route }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Invalid Date';
   
-    // แปลงรูปแบบ "1 Feb 2025" → "2025-02-01"
-    const parsedDate = Date.parse(dateString);
-    
-    // ตรวจสอบว่า dateString ใช้ได้ไหม
+    // ตรวจสอบว่า Date.parse() สามารถแปลงได้โดยตรงหรือไม่
+    let parsedDate = Date.parse(dateString);
+  
     if (isNaN(parsedDate)) {
-      // ลองแปลงเอง
+      // แปลง "1 Feb 2025" → "2025-02-01"
       const parts = dateString.split(" ");
       if (parts.length === 3) {
-        const day = parts[0].padStart(2, "0"); // เติม 0 ถ้าจำเป็น
+        const day = parts[0]; // ไม่ต้องเติม 0 นำหน้า
         const month = {
           Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
           Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
@@ -157,16 +162,20 @@ const SearchFerry = ({ navigation, route }) => {
         const year = parts[2];
   
         if (month) {
-          dateString = `${year}-${day}-${month}`;
+          dateString = `${year}-${month}-${day}`;
+          parsedDate = Date.parse(dateString); // ลองแปลงใหม่
         }
       }
     }
   
-    const date = new Date(dateString);
-    
+    // ตรวจสอบว่าการแปลงวันที่สำเร็จหรือไม่
+    const date = new Date(parsedDate);
     if (isNaN(date.getTime())) return 'Invalid Date';
   
-    return new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
+    // ใช้ Intl.DateTimeFormat เพื่อแสดงรูปแบบ "Sat, 1 Feb 2025"
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+    }).format(date);
   };
 
   const handleSearchStart = () => {
@@ -261,7 +270,7 @@ const SearchFerry = ({ navigation, route }) => {
        
       </View>
 
-      <Text className='h-[180px]' style={styles.title}>Search ferry</Text>
+      <Text style={styles.title}>Search ferry</Text>
 
       {/* Search Box */}
       <View style={styles.searcContain}>
@@ -449,31 +458,7 @@ const SearchFerry = ({ navigation, route }) => {
         minimumDate={tomorrow}
         onConfirm={handleDepartureDateConfirm}
         onCancel={hideDepartureDatePicker}
-        customStyles={{
-          datePicker: {
-            backgroundColor: '#FD501E',
-          },
-          dateInput: {
-            backgroundColor: '#FD501E',
-            borderColor: '#FD501E',
-            borderWidth: 1,
-          },
-          dateText: {
-            color: 'white',
-          },
-          header: {
-            backgroundColor: '#FD501E',
-            color: 'white',
-          },
-          cancelButton: {
-            backgroundColor: 'transparent',
-            color: 'white',
-          },
-          confirmButton: {
-            backgroundColor: 'transparent',
-            color: 'white',
-          },
-        }}
+      
       />
       <DateTimePickerModal
         isVisible={isReturnDatePickerVisible}
@@ -521,6 +506,7 @@ const SearchFerry = ({ navigation, route }) => {
             </View>
 
             <View style={styles.middleContainer}>
+            <Text style={styles.duration}>{item.md_package_nameeng}</Text>
               <View style={styles.iconLineContainer}>
                 <View style={styles.dashedLine} />
                 <View style={styles.shipIcon}>
@@ -552,7 +538,7 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>THB {item.md_timetable_priceadult} / person</Text>
+            <Text style={styles.price}>THB {calculateDiscountedPrice(item.md_timetable_saleadult)} / person</Text>
             <TouchableOpacity style={styles.bookNowButton}
             onPress={()=>{
               navigation.navigate('TripDetail',{
@@ -561,7 +547,10 @@ const SearchFerry = ({ navigation, route }) => {
                startingPointId: startingPointId,
                startingPointName:startingPointName,
                endPointId:endPointId,
-               endPointName:endPointName
+               endPointName:endPointName,
+               timeTablecCmpanyId:item.md_timetable_companyid,
+               timeTablecPierStartId:item.md_timetable_pierstart,
+               timeTablecPierEndId:item.md_timetable_pierend
               }
               
             ); 
@@ -1242,13 +1231,13 @@ const SearchFerry = ({ navigation, route }) => {
             fontWeight: 'bold',
             color: '#333',
             flexWrap: 'wrap',
-            maxWidth: 150,
+            maxWidth: 100,
           },
           subtext: {
             fontSize: 12,
             color: '#999',
             flexWrap: 'wrap',
-            maxWidth: 150,
+            maxWidth: 100,
 
           },
           time: {
@@ -1259,6 +1248,8 @@ const SearchFerry = ({ navigation, route }) => {
           },
           middleContainer: {
             alignItems: 'center',
+            justifyContent:'center',
+            width:100,
           },
           iconLineContainer: {
             flexDirection: 'row',
@@ -1290,6 +1281,7 @@ const SearchFerry = ({ navigation, route }) => {
           duration: {
             fontSize: 12,
             color: '#555',
+            marginRight:15
           },
           footerRow: {
             flexDirection: 'row',

@@ -11,6 +11,7 @@ import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
 import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
+//import AuthScreen from "./(Screen)/AuthnScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -43,7 +44,9 @@ const MainNavigator = () => (
           iconName = focused ? 'home' : 'home-outline';
         } else if (route.name === 'Settings') {
           iconName = focused ? 'settings' : 'settings-outline';
-        } 
+        } else if (route.name === 'Auth') {
+          iconName = focused ? 'person' : 'person-outline';
+        }
         return <Icon name={iconName} size={size} color={color} />;
       },
       tabBarActiveTintColor: '#FD501E',
@@ -58,6 +61,8 @@ const MainNavigator = () => (
       component={AppNavigator}  // แสดง AppNavigator ที่มี Stack Navigator
     />
     <Tab.Screen name="Settings" component={SettingsScreen} />
+
+    
   </Tab.Navigator>
 );
 

@@ -3,29 +3,22 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList } from 'r
 import ipAddress from './ipconfig';
 
 const EndPointScreen = ({ navigation, route }) => {
-  const [endPoint, setEndPoint] = useState('');
   const [searchText, setSearchText] = useState('');
   const [filteredEndPoints, setFilteredEndPoints] = useState([]);
-  const [allEndPoints, setAllEndPoints] = useState([]); // Store original data
+  const [allEndPoints, setAllEndPoints] = useState([]); 
   const [selectedItem, setSelectedItem] = useState(null);
 
   // รับค่า startingPointId จาก route.params
-  const startingPointId = route.params?.startingPointId; // ตรวจสอบว่าได้ค่าหรือไม่
+  const startingPointId = route.params?.startingPointId;
 
-  // ตรวจสอบว่ามี startingPointId หรือไม่
   useEffect(() => {
     if (!startingPointId) {
       console.error("No startingPointId provided");
-      return; // หยุดการทำงานหากไม่ได้ค่า startingPointId
+      return;
     }
 
     fetch(`http://${ipAddress}:5000/end/${startingPointId}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setAllEndPoints(data.data);
@@ -38,34 +31,37 @@ const EndPointScreen = ({ navigation, route }) => {
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
-  }, [startingPointId]); // Re-run effect when startingPointId changes
+  }, [startingPointId]);
 
   useEffect(() => {
     if (searchText) {
       const filteredData = allEndPoints.filter(point =>
-        point.md_location_nameeng.toLowerCase().includes(searchText.toLowerCase())
+        (`${point.md_location_nameeng}, ${point.sys_countries_nameeng}`)
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
       );
       setFilteredEndPoints(filteredData);
     } else {
-      setFilteredEndPoints(allEndPoints);  // Reset list if search text is empty
+      setFilteredEndPoints(allEndPoints);
     }
   }, [searchText, allEndPoints]);
 
   const handleSelectEndPoint = (selectedPoint) => {
-    setEndPoint(selectedPoint);
     setSelectedItem({
       name: selectedPoint.md_location_nameeng,
       id: selectedPoint.md_timetable_endid,
     });
-    setSearchText('');  // Clear search text after selection
+
+    // บันทึกค่าและย้อนกลับทันที
+    handleSave({
+      id: selectedPoint.md_timetable_endid,
+      name: selectedPoint.md_location_nameeng,
+    });
   };
 
-  const handleSave = () => {
-    if (route.params?.setEndPoint && selectedItem) {
-      route.params.setEndPoint({
-        id: selectedItem.id,
-        name: selectedItem.name,
-      });
+  const handleSave = (selectedData) => {
+    if (route.params?.setEndPoint && selectedData) {
+      route.params.setEndPoint(selectedData);
     }
     navigation.goBack();
   };
@@ -84,16 +80,10 @@ const EndPointScreen = ({ navigation, route }) => {
           selectedItem?.id === item.md_timetable_endid && styles.selectedItemText,
         ]}
       >
-        {item.md_location_nameeng} {/* Ensure this is wrapped in <Text> */}
+        {item.md_location_nameeng + ', ' + item.sys_countries_nameeng} 
       </Text>
     </TouchableOpacity>
   );
-
-  const getItemLayout = (data, index) => ({
-    length: 60,
-    offset: 60 * index,
-    index,
-  });
 
   return (
     <View style={styles.container}>
@@ -110,12 +100,8 @@ const EndPointScreen = ({ navigation, route }) => {
         data={filteredEndPoints}
         renderItem={renderItem}
         keyExtractor={(item) => item.md_timetable_endid.toString()}
-        getItemLayout={getItemLayout}
         style={styles.list}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
     </View>
   );
 };
