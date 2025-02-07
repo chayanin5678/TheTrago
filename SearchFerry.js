@@ -1,7 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList } from 'react-native';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -11,6 +9,8 @@ const itemsPerPage = 5;
 const SearchFerry = ({ navigation, route }) => {
   
   const { startingPointId, endPointId, startingPointName, endPointName,departureDateInput, returnDateInput} = route.params;
+  const detaDepart = new Date(departureDateInput); // แปลงวันที่จาก input
+  const formattedDate = detaDepart.toISOString().split('T')[0];
   const [startingPoint, setStartingPoint] = useState({ id: startingPointId, name: startingPointName });
   const [endPoint, setEndPoint] = useState({ id: endPointId, name: endPointName });
   const [isDepartureDatePickerVisible, setDepartureDatePickerVisible] = useState(false);
@@ -29,18 +29,24 @@ const SearchFerry = ({ navigation, route }) => {
   const [currentPageReturn, setcurrentPageReturn] = useState(1);
  console.log(startingPoint.id);
  console.log(endPoint.id);
+ console.log(departureDateInput);
   
 
+ const formatDateInput = (date) => {
+  if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const formattedDepartureDate = tomorrow.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
-  const [departureDate, setDepartureDate] = useState(departureDateInput);
-
+  const [departureDate, setDepartureDate] = useState(formatDateInput(departureDateInput));
   const initialReturnDate = new Date(tomorrow);
   initialReturnDate.setDate(initialReturnDate.getDate() + 1);
-  const formattedReturnDate = initialReturnDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
-  const [returnDate, setReturnDate] = useState(returnDateInput);
+   const [returnDate, setReturnDate] = useState(formatDateInput(returnDateInput));
 
   const showDepartureDatePicker = () => setDepartureDatePickerVisible(true);
   const showReturnDatePicker = () => setReturnDatePickerVisible(true);
@@ -179,9 +185,12 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
   const handleSearchStart = () => {
-    fetch(`http://${ipAddress}:5000/search/${startingPoint.id}/${endPoint.id}`)
+  
+
+    fetch(`http://${ipAddress}:5000/search/${startingPoint.id}/${endPoint.id}/${formattedDate}`)
       .then((response) => {
-        if (!response.ok) {
+             if (!response.ok) {
+          
           throw new Error('Network response was not ok');
         }
         return response.json();
@@ -200,7 +209,7 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
   const handleSearchEnd = () => {
-    fetch(`http://${ipAddress}:5000/search/${endPoint.id}/${startingPoint.id}`)
+    fetch(`http://${ipAddress}:5000/search/${endPoint.id}/${startingPoint.id}/${formattedDate}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

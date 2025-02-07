@@ -581,7 +581,7 @@ const TripDetail = ({ navigation, route }) => {
         onCancel={hideReturnDatePicker}
       />
        {timetableDepart.map((item) => (
-        <View  style={styles.cardContainer}>
+        <View key={item.md_timetable_id} style={styles.cardContainer}>
         <View style={styles.headerRow}>
         <Image source={require('./assets/image.png')}
         style = {styles.ImageLogo}/>
@@ -966,8 +966,8 @@ const TripDetail = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
       </View>
-      {timetableDepart.map((item, index) => (
-      <View key={index} style={styles.promo }>
+      {timetableDepart.map((item) => (
+      <View style={styles.promo }>
         <View style={styles.rowpromo}>
         <Text style={styles.TextInput}>
           Price

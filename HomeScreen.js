@@ -1,17 +1,8 @@
 import React, { useRef, useState, useEffect  } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated , Dimensions } from 'react-native';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import Banner from './(component)/Banner';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Dimensions, SectionList } from 'react-native';
-
-
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-
-
-
-
-const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
 const banners = [
   require('./assets/banner1.png'), // Path ของภาพแบนเนอร์แรก
   require('./assets/banner2.png'), // Path ของภาพแบนเนอร์ที่สอง
@@ -26,62 +17,36 @@ const destinations = [
 
 const HomeScreen = ({navigation }) => {
   const [activeTab, setActiveTab] = useState('Ferry');  // ใช้ state เพื่อจัดการเมนูที่เลือก
-  const flatListRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [startingPoint, setStartingPoint] = useState({ id: '0' ,name: 'Starting Point'});
   const [endPoint, setEndPoint] = useState({ id: '0' ,name: 'End Point'});
- 
-  const [isDepartureDatePickerVisible, setDepartureDatePickerVisible] = useState(false);
-  const [isReturnDatePickerVisible, setReturnDatePickerVisible] = useState(false);
-  const tomorrow = new Date();
-   tomorrow.setDate(tomorrow.getDate() + 1); // Set the date to tomorrow
-const formattedDepartureDate = tomorrow.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' }); // Format the date
-const [departureDate, setDepartureDate] = useState(formattedDepartureDate); 
+  const [departureDate, setDepartureDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  });
+  
+  const [returnDate, setReturnDate] = useState(() => {
+    const returnDay = new Date(departureDate);
+    returnDay.setDate(returnDay.getDate() + 1);
+    return returnDay;
+  });
+  const [showDepartPicker, setShowDepartPicker] = useState(false);
+  const [showReturnPicker, setShowReturnPicker] = useState(false);
 
 
-const initialReturnDate = new Date(tomorrow); // Clone the departure date
-initialReturnDate.setDate(initialReturnDate.getDate() + 1); // Add one day
-const formattedReturnDate = initialReturnDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 
-const [returnDate, setReturnDate] = useState(formattedReturnDate);
-
-
-  // Show the date picker
-  const showDepartureDatePicker = () => setDepartureDatePickerVisible(true);
-  const showReturnDatePicker = () => setReturnDatePickerVisible(true);
-
-  // Hide the date picker
-  const hideDepartureDatePicker = () => setDepartureDatePickerVisible(false);
-  const hideReturnDatePicker = () => setReturnDatePickerVisible(false);
-
-  // Handle the date selection
-  const handleDepartureDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' }; // รูปแบบวันที่ที่ต้องการ
-    setDepartureDate(date.toLocaleDateString('en-GB', options)); // 'en-GB' เพื่อให้แสดงเดือนในรูปแบบสั้น เช่น Jan, Feb
-    hideDepartureDatePicker();
+  const formatDate = (date) => {
+    if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
-  
-  const handleReturnDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' }; // รูปแบบวันที่ที่ต้องการ
-    setReturnDate(date.toLocaleDateString('en-GB', options)); // 'en-GB' เพื่อให้แสดงเดือนในรูปแบบสั้น เช่น Jan, Feb
-    hideReturnDatePicker();
-  };
-  
+
 
   
-  useEffect(() => {
-  const interval = setInterval(() => {
-    const nextIndex = (currentIndex + 1) % banners.length;
-    setCurrentIndex(nextIndex);
-    
-    // คำนวณ offset โดยใช้ดัชนี (index) คูณกับความกว้างของหน้าจอ
-    const offset = nextIndex * Dimensions.get('window').width;
-    
-    flatListRef.current?.scrollTo({ x: offset, animated: true }); // ใช้ scrollTo แทน scrollToIndex
-  }, 3000);
-
-  return () => clearInterval(interval); // ล้าง interval เมื่อ component ถูกทำลาย
-}, [currentIndex]);
+  
 
   const swapPoints = () => {
     setStartingPoint((prev) => endPoint);
@@ -175,8 +140,9 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
         <View style={styles.inputRow}>
        
           <View style={styles.inputBox}>
-          <TouchableOpacity onPress={showDepartureDatePicker}
+          <TouchableOpacity onPress={() => setShowDepartPicker(true)}
           style={styles.rowdepart}>
+
             <Image
               source={require('./assets/solar_calendar-bold.png')}
               style={styles.logoDate}
@@ -184,7 +150,7 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
             />
             <View style={styles.inputBoxCol}>
               <Text style={styles.inputLabel}>Departure date</Text>
-              <Text style={styles.inputText}>{departureDate}</Text>
+              <Text style={styles.inputText}>{departureDate ? formatDate(departureDate.toString()): "Select Date"}</Text>
             </View>
             </TouchableOpacity>
 
@@ -193,8 +159,9 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
               style={styles.logoLine}
               resizeMode="contain"
             />
-             <TouchableOpacity onPress={showReturnDatePicker}
+             <TouchableOpacity onPress={() => setShowReturnPicker(true)} disabled={!departureDate} 
           style={styles.rowdepart}>
+          
             <Image
               source={require('./assets/solar_calendar-yellow.png')}
               style={styles.logoDate}
@@ -202,55 +169,49 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
             />
             <View style={styles.inputBoxCol}>
               <Text style={styles.inputLabel}>Return date</Text>
-              <Text style={styles.inputText}>{returnDate}</Text>
+              <Text style={styles.inputText}>{returnDate ? formatDate(returnDate.toString()) : "No Date Available"}</Text>
             </View>
             </TouchableOpacity>
           </View>
+          {showDepartPicker && (
+  <DateTimePicker
+    value={departureDate || new Date()} // ถ้ายังไม่มีการเลือกวันที่ให้ใช้วันที่ปัจจุบัน
+    mode="date"
+    display="default"
+    onChange={(event, selectedDate) => {
+      setShowDepartPicker(false);
+      if (selectedDate) {
+        setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
+        if (returnDate < selectedDate) {
+        const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
+        newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
+        setReturnDate(newReturnDate); 
+        }
+      }
+    }}
+    minimumDate={new Date()}  // เลือกวันที่เดินทางได้ตั้งแต่วันนี้
+    maximumDate={null}
+  />
+)}
+
+{showReturnPicker && (
+  <DateTimePicker
+    value={returnDate}
+    mode="date"
+    display="default"
+    onChange={(event, selectedDate) => {
+      setShowReturnPicker(false);
+      if (selectedDate) setReturnDate(selectedDate);
+    }}
+    minimumDate={new Date(new Date(departureDate).setDate(departureDate.getDate() + 1))}  // วันที่กลับต้องไม่สามารถน้อยกว่าวันเดินทาง
+    maximumDate={null}
+  />
+)}
+
         </View>
       </View>
 
-      {/* Date Pickers for Departure and Return Date */}
-      <DateTimePickerModal
-    isVisible={isDepartureDatePickerVisible}
-    mode="date"
-    date={tomorrow} // Set the initial date to tomorrow
-    minimumDate={tomorrow} // Prevent selecting a date before tomorrow
-    onConfirm={handleDepartureDateConfirm}
-    onCancel={hideDepartureDatePicker}
-    customStyles={{
-      datePicker: {
-        backgroundColor: '#FD501E',
-      },
-      dateInput: {
-        backgroundColor: '#FD501E',
-        borderColor: '#FD501E',
-        borderWidth: 1,
-      },
-      dateText: {
-        color: 'white',
-      },
-      header: {
-        backgroundColor: '#FD501E',
-        color: 'white',
-      },
-      cancelButton: {
-        backgroundColor: 'transparent',
-        color: 'white',
-      },
-      confirmButton: {
-        backgroundColor: 'transparent',
-        color: 'white',
-      },
-    }}
-  />
-      <DateTimePickerModal
-        isVisible={isReturnDatePickerVisible}
-        mode="date"
-        date={initialReturnDate}
-        minimumDate={initialReturnDate}
-        onConfirm={handleReturnDateConfirm}
-        onCancel={hideReturnDatePicker}
-      />
+ 
 
 <TouchableOpacity 
   style={styles.searchButton}
@@ -261,8 +222,8 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
         endPointId: endPoint.id,
         startingPointName: startingPoint.name,
         endPointName: endPoint.name,
-        departureDateInput: departureDate,
-        returnDateInput: returnDate
+        departureDateInput: departureDate ? departureDate.toISOString().split("T")[0] : null,
+        returnDateInput: returnDate ? returnDate.toISOString().split("T")[0] : null
 
       });
     } else {
@@ -272,36 +233,11 @@ const [returnDate, setReturnDate] = useState(formattedReturnDate);
 >
   <Text style={styles.searchButtonText}>Search</Text>
 </TouchableOpacity>
+
       <Text style={styles.titledeal}>
         <Text style={styles.highlight}>Hot</Text> Deal
       </Text>
-      <View style={styles.carouselContainer}>
-  <ScrollView
-    ref={flatListRef}
-    horizontal
-    pagingEnabled
-    showsHorizontalScrollIndicator={false}
-    onScroll={(event) => {
-      const slideIndex = Math.round(
-        event.nativeEvent.contentOffset.x / Dimensions.get('window').width
-      );
-      setCurrentIndex(slideIndex);
-    }}
-  >
-    {banners.map((banner, index) => (
-      <Image key={index} source={banner} style={styles.bannerImage} />
-    ))}
-  </ScrollView>
-  <View style={styles.dotContainer}>
-    {banners.map((_, index) => (
-      <View
-        key={index}
-        style={[styles.dot, currentIndex === index ? styles.dotActive : styles.dotInactive]}
-      />
-    ))}
-  </View>
-</View>
-
+      <Banner />
 <View style={styles.rowtrip}>
   <View style={styles.coltrip}>
     <Text style={styles.texcol}>Popular</Text>
@@ -566,20 +502,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  carouselContainer: {
-    marginTop: -20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  bannerImage: {
-    width: Dimensions.get('window').width * 0.9,
-    height: 200,
-    borderRadius: 10,
-  
-    marginRight:41,
-    resizeMode: 'contain',
   },
   dotContainer: {
     flexDirection: 'row',
