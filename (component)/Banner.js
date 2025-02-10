@@ -3,9 +3,9 @@ import { View, StyleSheet, ScrollView, Image, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const banners = [
-  require('.././assets/banner1.png'), // Path ของภาพแบนเนอร์แรก
-  require('.././assets/banner2.png'), // Path ของภาพแบนเนอร์ที่สอง
-  require('.././assets/banner3.png'), // Path ของภาพแบนเนอร์ที่สาม
+  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967469015-807603818.webp' },
+  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967457330-985688254.webp' },
+  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967440410-123061413.webp' }
 ];
 export default function Banner() {
       const [currentBanner, setCurrentBanner] = useState(0);
@@ -43,12 +43,7 @@ export default function Banner() {
              <View key={index} style={[styles.indicator, currentBanner === index && styles.activeIndicator]} />
            ))}
          </View>
-           {/* Indicator Dots */}
-      <View style={styles.indicatorContainer}>
-        {banners.map((_, index) => (
-          <View key={index} style={[styles.indicator, currentBanner === index && styles.activeIndicator]} />
-        ))}
-      </View>
+   
     
    </View>
 
@@ -57,23 +52,24 @@ export default function Banner() {
 
 const styles = StyleSheet.create({
     carouselContainer: {
-        marginTop: -20,
+        marginTop: -5,
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
       },
         bannerImage: {
           width: Dimensions.get('window').width * 0.9,
-          height: 200,
-          borderRadius: 10,
+          height: 150,
+          borderRadius: 30,
           marginRight:41,
           resizeMode: 'contain',
         },
         indicatorContainer: {
             flexDirection: 'row',
-            position: 'absolute',
-            bottom: 10,
+            position: 'relative',
+            margin:10,
             alignSelf: 'center',
+           
           },
           indicator: {
             width: 7,
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
             marginHorizontal: 5,
           },
           activeIndicator: {
-            backgroundColor: '#ff8c00',
+            backgroundColor: '#FD501E',
             width: 8,
             height: 8,
           },

@@ -46,35 +46,36 @@ const StartingPointScreen = ({ navigation, route }) => {
     setStartingPoint(selectedPoint);
     setSelectedItem({
       name: selectedPoint.md_location_nameeng,
-      id: selectedPoint.md_timetable_startid,
+      id: selectedPoint.md_location_id,
     }); 
 
     // บันทึกค่าและย้อนกลับหน้าก่อน
     handleSave({
-      id: selectedPoint.md_timetable_startid,
+      id: selectedPoint.md_location_id,
       name: selectedPoint.md_location_nameeng,
     });
   };
 
   const handleSave = (selectedData) => {
     if (route.params?.setStartingPoint && selectedData) {
-      route.params.setStartingPoint(selectedData);
+      route.params.setStartingPoint(selectedData); // ใช้ callback ที่ส่งมาจาก HomeScreen
     }
-    navigation.goBack(); // กลับไปหน้าก่อนหน้า
+    navigation.goBack();
   };
+  
 
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={[
         styles.item,
-        selectedItem?.id === item.md_timetable_startid && styles.selectedItem,
+        selectedItem?.id === item.md_location_id && styles.selectedItem,
       ]}
       onPress={() => handleSelectStartingPoint(item)} 
     >
       <Text
         style={[
           styles.itemText,
-          selectedItem?.id === item.md_timetable_startid && styles.selectedItemText,
+          selectedItem?.id === item.md_location_id && styles.selectedItemText,
         ]}
       >
         {item.md_location_nameeng + ', ' + item.sys_countries_nameeng}
@@ -102,7 +103,7 @@ const StartingPointScreen = ({ navigation, route }) => {
       <FlatList
         data={filteredStartingPoints}
         renderItem={renderItem}
-        keyExtractor={(item) => item.md_timetable_startid.toString()}
+        keyExtractor={(item) => item.md_location_id.toString()}
         getItemLayout={getItemLayout}
         style={styles.list}
       />

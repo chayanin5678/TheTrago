@@ -1,13 +1,8 @@
 import React, { useRef, useState, useEffect  } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated , Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
-
-const banners = [
-  require('./assets/banner1.png'), // Path ของภาพแบนเนอร์แรก
-  require('./assets/banner2.png'), // Path ของภาพแบนเนอร์ที่สอง
-  require('./assets/banner3.png'), // Path ของภาพแบนเนอร์ที่สาม
-];
+import LogoTheTrago from './(component)/Logo';
 
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
@@ -62,20 +57,16 @@ const HomeScreen = ({navigation }) => {
 
   return (
     <ScrollView  contentContainerStyle={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('./assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-       
-      </View>
+       <ImageBackground 
+    source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+    style={styles.background}>
+      <LogoTheTrago/>
 
       <Text style={styles.title}>
         The <Text style={styles.highlight}>journey</Text> is endless, Book now
       </Text>
 
-      <View style={styles.tabContainer}>
+      {/* <View style={styles.tabContainer}>
         {['Ferry', 'Flight', 'Car', 'Hotel'].map(tab => (
           <View
             key={tab}
@@ -93,12 +84,12 @@ const HomeScreen = ({navigation }) => {
             </TouchableOpacity>
           </View>
         ))}
-      </View>
+      </View> */}
 
       <View style={styles.bookingSection}>
         <View style={styles.inputRow}>
         <TouchableOpacity
-              onPress={() => navigation.navigate('StartingPointScreen', { setStartingPoint })}
+              onPress={() => navigation.navigate('StartingPointScreen', {  setStartingPoint: (data) => setStartingPoint(data) })}
               style={styles.inputBox} >         
               <Image
               source={require('./assets/directions_boat.png')}
@@ -237,7 +228,7 @@ const HomeScreen = ({navigation }) => {
       <Text style={styles.titledeal}>
         <Text style={styles.highlight}>Hot</Text> Deal
       </Text>
-      <Banner />
+      <Banner/>
 <View style={styles.rowtrip}>
   <View style={styles.coltrip}>
     <Text style={styles.texcol}>Popular</Text>
@@ -285,7 +276,7 @@ const HomeScreen = ({navigation }) => {
   ))}
 </ScrollView>
 
-
+</ImageBackground>
     </ScrollView >
   );
 };
@@ -302,17 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 20,
   },
-  logoContainer: {
-    marginTop: 20,
-    width: '100%',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-    flexDirection: 'row',
-  },
-  logo: {
-    width: 97,
-    height: 31,
-  },
+ 
   logoDate: {
     width: 29,
     height: 27,
@@ -601,6 +582,9 @@ const styles = StyleSheet.create({
      height: 12,
      width:12,
   },
+  background:{
+    width:'100%'
+  }
 })
 export default HomeScreen;
 

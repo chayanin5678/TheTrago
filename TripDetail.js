@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList } from 'react-native';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
-
+import LogoTheTrago from './(component)/Logo';
+import Step from './(component)/Step';
 
 const TripDetail = ({ navigation, route }) => {
   const {timeTableDepartId, departDateTimeTable, startingPointId, startingPointName, endPointId, endPointName, timeTablecCmpanyId, timeTablecPierStartId, timeTablecPierEndId}=route.params;
@@ -36,13 +36,12 @@ const TripDetail = ({ navigation, route }) => {
     const [isHourModalVisible, setisHourModalVisible] = useState(false);
     const [isMinuteModalVisible, setisMinuteModalVisible] = useState(false);
 
- console.log(startingPoint.id);
- console.log(endPoint.id);
- console.log(timeTableDepartId);
+
  console.log(timeTablecCmpanyId);
  console.log(timeTablecPierStartId);
- console.log(airPortPickup);
- console.log(selectedTranSportDropoff);
+ console.log(timeTablecPierEndId);
+ console.log(TranSportPickup);
+
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const [departureDate, setDepartureDate] = useState(departDateTimeTable);
@@ -222,6 +221,13 @@ const TripDetail = ({ navigation, route }) => {
     }).format(date);
   };
 
+  
+  const calculateDiscountedPrice = (price) => {
+    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+    const discountedPrice = price * 0.9; // ลด 10%
+    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
+
   useEffect(() => {
     fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
       .then((response) => {
@@ -331,257 +337,20 @@ const TripDetail = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('./assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-       <View style={styles.rowText} >
-            <View style={styles.col}>
-            <View style={styles.circleactive}>
-              <Text style={styles.textactive}>1</Text>
-            </View>
-            <Text style={styles.step}>Trip Detail</Text>
-            </View>
-            <Image source={require('./assets/Line 9.png')}
-            style={styles.linerow}/>
-             <View style={styles.col}>
-            <View style={styles.circledissable}>
-              <Text style={styles.textdissable}>2</Text>
-            </View>
-            <Text style={styles.step}>Personal Information</Text>
-            </View>
-            <Image source={require('./assets/Line 9.png')}
-            style={styles.linerow}/>
-             <View style={styles.col}>
-            <View style={styles.circledissable}>
-              <Text style={styles.textdissable}>3</Text>
-            </View>
-            <Text style={styles.step}>Payment</Text>
-            </View>
-            <Image source={require('./assets/Line 9.png')}
-            style={styles.linerow}/>
-             <View style={styles.col}>
-            <View style={styles.circledissable}>
-              <Text style={styles.textdissable}>4</Text>
-            </View>
-            <Text style={styles.step}>Complete</Text>
-            </View>
-            </View>
-      <Text style={styles.title}>Trip Detail</Text>
-<View style={styles.bookingSection}>
-          <View style={styles.tripTypeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.tripTypeOneWayButton,
-                      tripType === "One Way Trip" && styles.activeButton,
-                    ]}
-                    onPress={() => setTripType("One Way Trip")}
-                  >
-                    <Text
-                      style={[
-                        styles.tripTypeText,
-                        tripType === "One Way Trip" && styles.activeText,
-                        
-                      ]}
-                    >
-                      One Way Trip
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.tripTypeRoundButton,
-                      tripType === "Round Trip" && styles.activeButton,
-                    ]}
-                    onPress={() => setTripType("Round Trip")}
-                  >
-                    <Text
-                      style={[
-                        styles.tripTypeText,
-                        tripType === "Round Trip" && styles.activeText,
-                      
-                      ]}
-                    >
-                      Round Trip
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+       <ImageBackground 
+                source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+                style={styles.background}>
+        <LogoTheTrago/>
+        <Step logoUri={1}/>
+      <Text style={styles.title}>Shuttle Transfer</Text>
 
-          <View style={styles.inputRow}>
-          <View style={styles.inputBoxDrop}>
-          <TouchableOpacity style={styles.button} onPress={toggleAdultModal}>
-        <Text style={styles.buttonText}>{adults} Adult</Text>
-        <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-      </TouchableOpacity>
 
-      {/* Adult Modal */}
-      <Modal
-        visible={isAdultModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={toggleAdultModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={adultOptions}
-              renderItem={renderAdultOption}
-              keyExtractor={(item) => item.toString()}
-            />
-          </View>
-        </View>
-      </Modal>
-      <TouchableOpacity style={styles.button} onPress={toggleChildModal}>
-      <Text style={styles.buttonText}>{children} Child</Text>
-      <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-    </TouchableOpacity>
-
-    {/* Child Modal */}
-    <Modal
-      visible={isChildModalVisible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={toggleChildModal}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <FlatList
-            data={childOptions}
-            renderItem={renderChildOption}
-            keyExtractor={(item) => item.toString()}
-          />
-        </View>
-      </View>
-    </Modal>
-          </View>
-        </View>
-                
-        
-        <View style={styles.inputRow}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('StartingPointScreen', { setStartingPoint })}
-            style={styles.inputBox} >         
-            <Image
-              source={require('./assets/directions_boat.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View >  
-              <View style={styles.inputBoxCol}>
-                <Text style={styles.inputLabel}>From</Text>
-                <Text style={styles.inputText}> {truncateText(startingPoint.name)}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* Swap icon */}
-          <TouchableOpacity onPress={swapPoints}>
-            <Image
-              source={require('./assets/mage_exchange-a.png')}
-              style={styles.logoSwap}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('EndPointScreen', { setEndPoint ,startingPointId: startingPoint.id,})}
-            style={styles.inputBox} >     
-            <Image
-              source={require('./assets/location_on.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View style={styles.inputBoxCol}>
-              <Text style={styles.inputLabel}>To</Text>
-              <Text style={styles.inputText}> {truncateText(endPoint.name)}</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.inputRow}>
-          <View style={styles.inputBox}>
-            <TouchableOpacity onPress={showDepartureDatePicker}
-              style={styles.rowdepart}>
-              <Image
-                source={require('./assets/solar_calendar-bold.png')}
-                style={styles.logoDate}
-                resizeMode="contain"
-              />
-              <View style={styles.inputBoxCol}>
-                <Text style={styles.inputLabel}>Departure date</Text>
-                <Text style={styles.inputText}>{departureDate}</Text>
-              </View>
-            </TouchableOpacity>
-            {tripType === 'Round Trip' && (
-  <>
-    <Image
-      source={require('./assets/Line 2.png')}
-      style={styles.logoLine}
-      resizeMode="contain"
-    />
-    <TouchableOpacity onPress={showReturnDatePicker} style={styles.rowdepart}>
-      <Image
-        source={require('./assets/solar_calendar-yellow.png')}
-        style={styles.logoDate}
-        resizeMode="contain"
-      />
-      <View style={styles.inputBoxCol}>
-        <Text style={styles.inputLabel}>Return date</Text>
-        <Text style={styles.inputText}>{returnDate}</Text>
-      </View>
-    </TouchableOpacity>
-  </>
-)}
-          </View>
-        </View>
-      </View>
-
-      {/* Date Pickers for Departure and Return Date */}
-      <DateTimePickerModal
-        isVisible={isDepartureDatePickerVisible}
-        mode="date"
-        date={tomorrow}
-        minimumDate={tomorrow}
-        onConfirm={handleDepartureDateConfirm}
-        onCancel={hideDepartureDatePicker}
-        customStyles={{
-          datePicker: {
-            backgroundColor: '#FD501E',
-          },
-          dateInput: {
-            backgroundColor: '#FD501E',
-            borderColor: '#FD501E',
-            borderWidth: 1,
-          },
-          dateText: {
-            color: 'white',
-          },
-          header: {
-            backgroundColor: '#FD501E',
-            color: 'white',
-          },
-          cancelButton: {
-            backgroundColor: 'transparent',
-            color: 'white',
-          },
-          confirmButton: {
-            backgroundColor: 'transparent',
-            color: 'white',
-          },
-        }}
-      />
-      <DateTimePickerModal
-        isVisible={isReturnDatePickerVisible}
-        mode="date"
-        date={initialReturnDate}
-        minimumDate={initialReturnDate}
-        onConfirm={handleReturnDateConfirm}
-        onCancel={hideReturnDatePicker}
-      />
-       {timetableDepart.map((item) => (
-        <View key={item.md_timetable_id} style={styles.cardContainer}>
+      
+       {timetableDepart.map((item, index) => (
+        <View key={index} style={styles.cardContainer}>
+          <ImageBackground 
+                    source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                    style={styles.background}>
         <View style={styles.headerRow}>
         <Image source={require('./assets/image.png')}
         style = {styles.ImageLogo}/>
@@ -698,7 +467,7 @@ const TripDetail = ({ navigation, route }) => {
       )}
 
       {/* Pickup Section */}
-      {item.md_timetable_pickup === '1' && (
+      {Array.isArray(TranSportPickup) && TranSportPickup.length > 0 ? (
       <View style={styles.section}>
         <TouchableOpacity onPress={() => setPickup(!pickup)} style={styles.checkboxContainer}>
           <MaterialIcons name={pickup ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
@@ -714,8 +483,8 @@ const TripDetail = ({ navigation, route }) => {
              >
             <Picker.Item label="Select Transport Type" value="0"
             style={styles.pickup} />
-             {TranSportPickup.map((item) => (
-            <Picker.Item  label={item.md_cartype_nameeng} value={item.md_pickup_cartypeid} />
+             {TranSportPickup.map((item, index) => (
+            <Picker.Item key={index} label={item.md_cartype_nameeng} value={item.md_pickup_cartypeid} />
         ))}
       </Picker>
             </View>
@@ -812,12 +581,14 @@ const TripDetail = ({ navigation, route }) => {
           </View>
         )}
       </View>
+      ) : (
+        <Text></Text>
       )}
 
   
 
       {/* Dropoff Section */}
-      {item.md_timetable_dropoff === '1' && (
+      {Array.isArray(TranSportDropoff) && TranSportDropoff.length > 0 ? (
       <View style={styles.section}>
         <TouchableOpacity onPress={() => setDropoff(!dropoff)} style={styles.checkboxContainer}>
           <MaterialIcons name={dropoff ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
@@ -833,8 +604,8 @@ const TripDetail = ({ navigation, route }) => {
              >
             <Picker.Item label="Select Transport Type" value="0"
             style={styles.pickup} />
-             {TranSportDropoff.map((item) => (
-            <Picker.Item  label={item.md_cartype_nameeng} value={item.md_dropoff_cartypeid} />
+             {TranSportDropoff.map((item, index) => (
+            <Picker.Item key={index}  label={item.md_cartype_nameeng} value={item.md_dropoff_cartypeid} />
         ))}
       </Picker>
             </View>
@@ -857,13 +628,13 @@ const TripDetail = ({ navigation, route }) => {
   >
     <Picker.Item label="Please Select" value="0" style={styles.pickup} />
 
-    {DropoffArea.map((item) => (
-      <Picker.Item
-       
-        label={item.md_transfer_nameeng}
-        value={item.md_dropoff_id}
-      />
-    ))}
+    {DropoffArea.map((item, index) => (
+  <Picker.Item 
+    key={index}
+    label={item.md_transfer_nameeng}
+    value={item.md_dropoff_id}
+  />
+))}
 
  
   </Picker>
@@ -934,6 +705,8 @@ const TripDetail = ({ navigation, route }) => {
           </View>
         )}
       </View>
+      ) : (
+        <Text></Text>
       )}
 
   
@@ -948,6 +721,7 @@ const TripDetail = ({ navigation, route }) => {
                     <View style={styles.circleRight2}></View>
                   </View>
                 </View>
+                </ImageBackground>
     </View>
     ))}
        
@@ -966,13 +740,13 @@ const TripDetail = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
       </View>
-      {timetableDepart.map((item) => (
-      <View style={styles.promo }>
+      {timetableDepart.map((item, index) => (
+      <View key={index} style={styles.promo }>
         <View style={styles.rowpromo}>
         <Text style={styles.TextInput}>
           Price
         </Text>
-        <Text style={styles.pricetotal}>THB <Text style={styles.pricperson}>{item.md_timetable_priceadult}</Text>/person</Text>
+        <Text style={styles.pricetotal}>THB <Text style={styles.pricperson}>{calculateDiscountedPrice(item.md_timetable_saleadult)}</Text>/person</Text>
         </View>
       </View>
       ))}
@@ -987,11 +761,12 @@ const TripDetail = ({ navigation, route }) => {
        <TouchableOpacity 
         style={[styles.ActionButton]} // Use an array if you want to combine styles
         onPress={() => {
-       
+          navigation.navigate('CustomerInfo')
         }}>
         <Text style={styles.searchButtonText}>Next Step</Text>
       </TouchableOpacity>
       </View>
+    </ImageBackground>
     </ScrollView>
   );
 };
@@ -1000,7 +775,7 @@ const TripDetail = ({ navigation, route }) => {
     const styles = StyleSheet.create({
         container: {
             flexGrow: 1,
-            alignItems: 'flex-start', // Align content to the left
+            alignItems: 'flex-start', 
             backgroundColor: '#FFFFFF',
             padding: 20,
           },
@@ -1274,12 +1049,13 @@ const TripDetail = ({ navigation, route }) => {
           
           },
           cardContainer: {
+          
             backgroundColor: 'white',
             borderRadius: 20,
-
            padding: 16, 
            margin: 16,
            marginLeft:-3,
+           marginRight:-3,
            shadowColor: '#000',
            shadowOpacity: 0.1,
            shadowRadius: 8,
@@ -1506,13 +1282,7 @@ const TripDetail = ({ navigation, route }) => {
           disabledText: {
             color: '#ccc', // สีข้อความเมื่อปุ่มถูก disable
           },
-          circleactive: {backgroundColor:'#FD501E', height:40, width:40, borderRadius:30,justifyContent:'center', alignItems:'center'},
-  textactive: {color:'#FFF',fontSize:16},
-  rowText: {width:'100%',flexDirection:'row',margin:10,marginBottom:20,justifyContent:'center',alignItems:'center'},
-  linerow:{marginBottom:20,marginLeft:-20,marginRight:-20,width:30},
-  circledissable:{backgroundColor:'#EAEAEA', height:40, width:40, borderRadius:30,justifyContent:'center', alignItems:'center'},
-  textdissable: {fontSize:16,color:'#666666'},
-  step: {fontSize:10},
+        
   col: {flexDirection:'column',width:100,alignItems:'center'},
 
   ImageLogo: {marginRight: 10},
@@ -1536,7 +1306,7 @@ const TripDetail = ({ navigation, route }) => {
   checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
   label: { fontSize: 16, marginLeft: 10 },
  
-  pickerContainer: { borderWidth: 1, borderColor: '#ddd', borderRadius: 15, marginTop: 5 },
+  pickerContainer: { borderWidth: 1, borderColor: '#ddd', borderRadius: 15, marginTop: 5,backgroundColor:'white' },
   input: { borderWidth: 1, borderColor: '#ddd', padding: 10, borderRadius: 15, marginTop: 5 },
   timetable: {fontSize:12,},
   col: {flexDirection:'column',margin:10,width:100,alignItems:'center'},
@@ -1585,6 +1355,9 @@ const TripDetail = ({ navigation, route }) => {
   pricperson:{
     fontSize:25
   },
+  background: {
+    width:'100%',
+  }
   
 });
       

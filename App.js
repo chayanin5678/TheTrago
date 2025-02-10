@@ -11,6 +11,7 @@ import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
 import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
+import CustomerInfo from './(Screen)/CustomerInfo';
 //import AuthScreen from "./(Screen)/AuthnScreen";
 
 const Stack = createStackNavigator();
@@ -31,6 +32,7 @@ const AppNavigator = () => (
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
+    <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 

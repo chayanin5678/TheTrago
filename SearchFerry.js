@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground } from 'react-native';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
+import LogoTheTrago from './(component)/Logo'
 const itemsPerPage = 5;
 
 const SearchFerry = ({ navigation, route }) => {
@@ -270,14 +270,10 @@ const SearchFerry = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('./assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-       
-      </View>
+        <ImageBackground 
+          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+          style={styles.background}>
+     <LogoTheTrago/>
 
       <Text style={styles.title}>Search ferry</Text>
 
@@ -495,6 +491,9 @@ const SearchFerry = ({ navigation, route }) => {
         <>
       {pagedDataDepart.map((item, index) => (
         <View key={index} style={styles.cardContainer}>
+          <ImageBackground 
+          source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+          style={styles.background}>
           <View style={styles.headerRow}>
             <View style={styles.inputBoxCol}>
               <Image source={require('./assets/Ship.png')} />
@@ -568,6 +567,12 @@ const SearchFerry = ({ navigation, route }) => {
              
             </TouchableOpacity>
           </View>
+          {item.md_timetable_remarkthai && (
+          <View>
+            <Text>Remark: {item.md_timetable_remarkthai}</Text>
+          </View>
+          )}
+          </ImageBackground>
         </View>
       ))}
       </>)}
@@ -806,6 +811,7 @@ const SearchFerry = ({ navigation, route }) => {
               <Text style={styles.BackButtonText}>Go Back</Text>
             </TouchableOpacity>     
             </View>
+            </ImageBackground>
     </ScrollView>
   );
 };
@@ -1444,6 +1450,9 @@ const SearchFerry = ({ navigation, route }) => {
             justifyContent:'space-between',
             flexDirection:'row'
           },
+          background:{
+            width:'100%'
+          }
       });
       
       export default SearchFerry;
