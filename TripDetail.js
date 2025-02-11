@@ -6,6 +6,7 @@ import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
 import Step from './(component)/Step';
+import BackNextButton from './(component)/BackNextButton';
 
 const TripDetail = ({ navigation, route }) => {
   const {timeTableDepartId, departDateTimeTable, startingPointId, startingPointName, endPointId, endPointName, timeTablecCmpanyId, timeTablecPierStartId, timeTablecPierEndId}=route.params;
@@ -750,22 +751,7 @@ const TripDetail = ({ navigation, route }) => {
         </View>
       </View>
       ))}
-      <View style={styles.rowButton}>
-      <TouchableOpacity 
-        style={[styles.BackButton]} // Use an array if you want to combine styles
-        onPress={() => {
-          navigation.goBack();
-        }}>
-        <Text style={styles.BackButtonText}>Go Back</Text>
-      </TouchableOpacity>
-       <TouchableOpacity 
-        style={[styles.ActionButton]} // Use an array if you want to combine styles
-        onPress={() => {
-          navigation.navigate('CustomerInfo')
-        }}>
-        <Text style={styles.searchButtonText}>Next Step</Text>
-      </TouchableOpacity>
-      </View>
+     <BackNextButton navigation={navigation} Navi="CustomerInfo" params={{timeTableDepartId:timeTableDepartId , departDateTimeTable:departDateTimeTable}} />  
     </ImageBackground>
     </ScrollView>
   );
@@ -895,26 +881,8 @@ const TripDetail = ({ navigation, route }) => {
           color: '#333',
           fontWeight: 'bold',
         },
-        ActionButton: {
-          backgroundColor: '#FD501E',
-          paddingVertical: 15,
-          borderRadius: 10,
-          alignItems: 'center',
-          marginTop: 10,
-          width: '45%',
-          marginBottom:20,
-          justifyContent:'flex-end',
-        },
-        BackButton: {
-          backgroundColor: '#EAEAEA',
-          paddingVertical: 15,
-          borderRadius: 10,
-          alignItems: 'center',
-          marginTop: 10,
-          width: '45%',
-          marginBottom:20,
-          justifyContent:'flex-end',
-        },
+      
+       
         PxploreButton: {
           backgroundColor: '#FD501E',
           paddingVertical: 15,
@@ -923,18 +891,8 @@ const TripDetail = ({ navigation, route }) => {
           marginTop: 10,
           width: '100%',
         },
-        searchButtonText: {
-          color: '#FFF',
-          fontWeight: 'bold',
-          fontSize: 16,
-        
-        },
-        BackButtonText: {
-          color: '#666666',
-          fontWeight: 'bold',
-          fontSize: 16,
-        
-        },
+       
+       
    
         Detail:{
           color: '#666666',
@@ -1346,12 +1304,7 @@ const TripDetail = ({ navigation, route }) => {
   pricetotal:{
     fontSize:16,
   },
-  rowButton: {
-    width:'100%',
-    alignItems :'center',
-    justifyContent:'space-between',
-    flexDirection:'row'
-  },
+
   pricperson:{
     fontSize:25
   },

@@ -12,7 +12,6 @@ import SearchFerry from './SearchFerry';
 import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
 import CustomerInfo from './(Screen)/CustomerInfo';
-//import AuthScreen from "./(Screen)/AuthnScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

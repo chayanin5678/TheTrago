@@ -47,7 +47,7 @@ export default function Step({ logoUri }) {
         <View style={styles.circlepass}>
         <Entypo name="check" size={22} color="white" />
         </View>
-        <Text style={styles.step}>Trip Detail</Text>
+        <Text style={styles.step}>Choose Your Boat</Text>
       </View>
       <Image source={require('./../assets/Line 9.png')} style={styles.linerow} />
 
@@ -55,7 +55,7 @@ export default function Step({ logoUri }) {
         <View style={styles.circlepass}>
         <Entypo name="check" size={22} color="white" />
         </View>
-        <Text style={styles.step}>Personal Information</Text>
+        <Text style={styles.step}>Shuttle Transfer</Text>
       </View>
       <Image source={require('./../assets/Line 9.png')} style={styles.linerow} />
 
@@ -63,7 +63,7 @@ export default function Step({ logoUri }) {
         <View style={styles.circleactive}>
           <Text style={styles.textactive}>3</Text>
         </View>
-        <Text style={styles.step}>Payment</Text>
+        <Text style={styles.step}>Customer Information</Text>
       </View>
       <Image source={require('./../assets/Line 9.png')} style={styles.linerow} />
 
@@ -71,7 +71,7 @@ export default function Step({ logoUri }) {
         <View style={styles.circledissable}>
           <Text style={styles.textdissable}>4</Text>
         </View>
-        <Text style={styles.step}>Complete</Text>
+        <Text style={styles.step}>Payment</Text>
       </View>
    </>
       )}
