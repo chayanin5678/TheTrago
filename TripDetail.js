@@ -7,20 +7,20 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
 import Step from './(component)/Step';
 import BackNextButton from './(component)/BackNextButton';
+import moment from 'moment';
 
 const TripDetail = ({ navigation, route }) => {
-  const {timeTableDepartId, departDateTimeTable, startingPointId, startingPointName, endPointId, endPointName, timeTablecCmpanyId, timeTablecPierStartId, timeTablecPierEndId}=route.params;
-  const [startingPoint, setStartingPoint] = useState({ id: startingPointId, name: startingPointName });
-  const [endPoint, setEndPoint] = useState({ id: endPointId, name: endPointName });
-  const [isDepartureDatePickerVisible, setDepartureDatePickerVisible] = useState(false);
-  const [isReturnDatePickerVisible, setReturnDatePickerVisible] = useState(false);
+  const {timeTableDepartId, departDateTimeTable, startingPointId, startingPointName, endPointId, endPointName, timeTablecCmpanyId, timeTablecPierStartId, timeTablecPierEndId, adults, children}=route.params;
+ 
   const [tripType, setTripType] = useState("One Way Trip");
-  const [adults, setAdults] = useState(1);
+  const [totalAdult, setTotalAdult] = useState("0.00"); 
+  const [totalChild, setTotalChild] = useState("0.00"); 
+  const [subtotal, setSubtotal] = useState("0.00");
+  const [discount, setDiscount] = useState("0.00");
+
   const [hour, setHour] = useState("HH");
   const [minutes, setMinutes] = useState("MM");
-  const [isAdultModalVisible, setAdultModalVisible] = useState(false);
-  const [children, setChildren] = useState(0);
-  const [isChildModalVisible, setChildModalVisible] = useState(false);
+
     const [timetableDepart, settimetableDepart] = useState([]); 
     const [pickup, setPickup] = useState(false);
     const [dropoff, setDropoff] = useState(false);
@@ -41,89 +41,16 @@ const TripDetail = ({ navigation, route }) => {
  console.log(timeTablecCmpanyId);
  console.log(timeTablecPierStartId);
  console.log(timeTablecPierEndId);
- console.log(TranSportPickup);
+ console.log(departDateTimeTable);
+ console.log(adults);
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const [departureDate, setDepartureDate] = useState(departDateTimeTable);
 
-  const initialReturnDate = new Date(tomorrow);
-  initialReturnDate.setDate(initialReturnDate.getDate() + 1);
-  const formattedReturnDate = initialReturnDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
-  const [returnDate, setReturnDate] = useState(formattedReturnDate);
 
-  const showDepartureDatePicker = () => setDepartureDatePickerVisible(true);
-  const showReturnDatePicker = () => setReturnDatePickerVisible(true);
-
-  const hideDepartureDatePicker = () => setDepartureDatePickerVisible(false);
-  const hideReturnDatePicker = () => setReturnDatePickerVisible(false);
-
-  const handleDepartureDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    setDepartureDate(date.toLocaleDateString('en-GB', options));
-    hideDepartureDatePicker();
-  };
-
-  const handleReturnDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    setReturnDate(date.toLocaleDateString('en-GB', options));
-    hideReturnDatePicker();
-  };
+  function formatNumber(value) {
+    return parseFloat(value).toFixed(2);
+  }
 
  
-
-  const swapPoints = () => {
-    setStartingPoint((prev) => endPoint);
-    setEndPoint((prev) => startingPoint);
-  };
-
-  const truncateText = (text, maxLength = 10) => {
-    if (text.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
-  const toggleAdultModal = () => {
-    setAdultModalVisible(!isAdultModalVisible);
-  };
-
-  const handleAdultSelect = (value) => {
-    setAdults(value);
-    toggleAdultModal();
-  };
-
-  const renderAdultOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleAdultSelect(item)}
-    >
-      <Text style={styles.modalOptionText}>{item}</Text>
-    </TouchableOpacity>
-  );
-
-  const adultOptions = Array.from({ length: 10 }, (_, i) => i + 1); 
-
-  const toggleChildModal = () => {
-    setChildModalVisible(!isChildModalVisible);
-  };
-  
-  const handleChildSelect = (value) => {
-    setChildren(value);
-    toggleChildModal(); // Close the modal after selection
-  };
-  
-  const renderChildOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleChildSelect(item)}
-    >
-       <Text style={styles.modalOptionText}>{item}</Text>
-    </TouchableOpacity>
-  );
-  
-  const childOptions = Array.from({ length: 11 }, (_, i) => i); 
-
   const toggleHourtModal = () => {
     setisHourModalVisible(!isHourModalVisible);
   };
@@ -188,39 +115,10 @@ const TripDetail = ({ navigation, route }) => {
     return `${hours} h ${minutes} min`;
   }
  
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Invalid Date';
-  
-    // ตรวจสอบว่า Date.parse() สามารถแปลงได้โดยตรงหรือไม่
-    let parsedDate = Date.parse(dateString);
-  
-    if (isNaN(parsedDate)) {
-      // แปลง "1 Feb 2025" → "2025-02-01"
-      const parts = dateString.split(" ");
-      if (parts.length === 3) {
-        const day = parts[0]; // ไม่ต้องเติม 0 นำหน้า
-        const month = {
-          Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-          Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
-        }[parts[1]]; // แปลงชื่อเดือน
-        const year = parts[2];
-  
-        if (month) {
-          dateString = `${year}-${month}-${day}`;
-          parsedDate = Date.parse(dateString); // ลองแปลงใหม่
-        }
-      }
-    }
-  
-    // ตรวจสอบว่าการแปลงวันที่สำเร็จหรือไม่
-    const date = new Date(parsedDate);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-  
-    // ใช้ Intl.DateTimeFormat เพื่อแสดงรูปแบบ "Sat, 1 Feb 2025"
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    }).format(date);
-  };
+ 
+   const formatDate = (dateString) => {
+     return moment(dateString).format("ddd, DD MMM YYYY");
+   };
 
   
   const calculateDiscountedPrice = (price) => {
@@ -229,6 +127,18 @@ const TripDetail = ({ navigation, route }) => {
     return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
   };
 
+  function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  
+    console.log("Formatted Value:", formattedValue); // 🛠 Debugging
+    return formattedValue;
+  }
+  
+  
   useEffect(() => {
     fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
       .then((response) => {
@@ -249,6 +159,19 @@ const TripDetail = ({ navigation, route }) => {
         console.error('Error fetching data:', error);
       });
   }, []);
+   
+
+ useEffect(() => {
+    if (timetableDepart.length > 0) {
+      const adultPrice = timetableDepart[0].md_timetable_saleadult * adults;
+      const childPrice = timetableDepart[0].md_timetable_salechild * children;
+  
+      setTotalAdult(formatNumberWithComma(adultPrice));
+      setTotalChild(formatNumberWithComma(childPrice));
+      setSubtotal(formatNumberWithComma(calculateDiscountedPrice(adultPrice+ childPrice))); 
+      setDiscount(formatNumberWithComma((adultPrice+childPrice)-(calculateDiscountedPrice(adultPrice+ childPrice))));
+    }
+  }, [timetableDepart, adults, children]);
 
   useEffect(() => {
     fetch(`http://${ipAddress}:5000/pickup/${timeTablecCmpanyId}/${timeTablecPierStartId}`)
@@ -393,7 +316,7 @@ const TripDetail = ({ navigation, route }) => {
         </View>
         <View style={styles.col}>
         <Text style={styles.ship}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-        <Text style={styles.orangetext}>{item.md_package_nameeng}</Text>
+        <Text style={styles.orangetext}>{item.md_boattype_nameeng}</Text>
         </View>
       </View>
       <View style={styles.tripInfo}>
@@ -506,10 +429,10 @@ const TripDetail = ({ navigation, route }) => {
       }
     }}
   >
-    <Picker.Item label="Please Select" value="0" style={styles.pickup} />
+    <Picker.Item label="Please Select" value="0" style={styles.pickup} key="default" />
     {pickupArea.map((item) => (
       <Picker.Item
-      
+        key={item.md_pickup_id}
         label={item.md_transfer_nameeng}
         value={item.md_pickup_id}
       />
@@ -726,34 +649,65 @@ const TripDetail = ({ navigation, route }) => {
     </View>
     ))}
        
-      <View style={styles.promo }>
+    
+      {timetableDepart.map((item) => (
+      <View key={item.md_timetable_id} style={styles.promo }>
+        
         <Text style={styles.TextInput}>
-          Promo Code
+          Booking Summary
         </Text>
-        <View style={styles.inputconpromo}>
-        <TextInput 
-          style={styles.inputpromo} 
-          placeholder="Input promo code"
-          placeholderTextColor="#aaa"
-        />
-        <TouchableOpacity>
-          <Text style={styles.findCode}>Find promo code?</Text>
-        </TouchableOpacity>
-      </View>
-      </View>
-      {timetableDepart.map((item, index) => (
-      <View key={index} style={styles.promo }>
+
+        <View style={styles.divider} />
+        <Text style={styles.margin}>
+          Depart
+        </Text>
         <View style={styles.rowpromo}>
-        <Text style={styles.TextInput}>
-          Price
+        <Text>
+          Adult x {adults}
         </Text>
-        <Text style={styles.pricetotal}>THB <Text style={styles.pricperson}>{calculateDiscountedPrice(item.md_timetable_saleadult)}</Text>/person</Text>
+        <Text>฿ {totalAdult} </Text>
+        </View>
+        {children !== 0 && (
+        <View style={styles.rowpromo}>
+        <Text>
+          Child x {children}
+        </Text>
+        <Text>฿ {totalChild} </Text>
+        </View>
+        )}
+        <View style={styles.rowpromo}>
+        <Text>
+          Discount 
+        </Text>
+        <Text style={styles.redText}>
+  -฿ {discount}
+</Text>
+
+        </View>
+        <View style={styles.rowpromo}>
+        <Text>
+          Subtotal 
+        </Text>
+        <Text>฿ {subtotal} </Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.rowpromo}>
+        <Text style={styles.totaltext}>Total</Text>
+        <Text style={styles.totaltext}>฿ {subtotal}</Text>
         </View>
       </View>
+      
       ))}
-     <BackNextButton navigation={navigation} Navi="CustomerInfo" params={{timeTableDepartId:timeTableDepartId , departDateTimeTable:departDateTimeTable}} />  
+     <BackNextButton navigation={navigation} Navi="CustomerInfo" params={{
+      timeTableDepartId:timeTableDepartId , 
+      departDateTimeTable:departDateTimeTable,
+      adults:adults,
+      children:children,
+      totalAdult:totalAdult,
+      totalChild:totalChild}} />  
     </ImageBackground>
     </ScrollView>
+
   );
 };
 
@@ -891,7 +845,14 @@ const TripDetail = ({ navigation, route }) => {
           marginTop: 10,
           width: '100%',
         },
-       
+        redText:{
+          color:'red'
+        },
+        margin:{
+          marginTop:5,
+          marginBottom:5,
+          fontSize:16
+        },
        
    
         Detail:{
@@ -1050,24 +1011,7 @@ const TripDetail = ({ navigation, route }) => {
             flexDirection: 'row',
           
           },
-          tag: {
-            backgroundColor: 'rgba(253, 80, 30, 0.1)',
-            opacity:50,
-            color: '#FD501E',
-            fontSize: 12,
-            fontWeight: 'bold',
-            paddingVertical: 4,
-            paddingHorizontal: 8,
-            borderRadius: 30,
-            marginLeft: 8,
-          },
-          detailsRow: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          },
-        
+          
           location: {
             fontSize: 18,
             fontWeight: 'bold',
@@ -1084,70 +1028,14 @@ const TripDetail = ({ navigation, route }) => {
           },
       
      
-          circle: {
-            width: 8,
-            height: 8,
-            backgroundColor: '#FF6B6B',
-            borderRadius: 4,
-          },
-          dashedLine: {
-            flex: 1,
-            height: 1,
-            borderWidth: 1,
-            borderColor: '#CCC',
-            borderStyle: 'dashed',
-            marginRight: 10,
-            marginLeft:-10,
-          },
-          shipIcon: {
-            justifyContent: 'center',
-            alignItems: 'center',
-          },
-          shipText: {
-            fontSize: 16,
-          },
-          duration: {
-            fontSize: 12,
-            color: '#555',
-          },
-          footerRow: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          },
+
           TicketRow: {
             flexDirection: 'row',
           //justifyContent: 'space-between',
             alignItems: 'center',
           },
-          price: {
-            fontSize: 16,
-            fontWeight: 'bold',
-            color: '#333',
-          },
-          bookNowButton: {
-            backgroundColor: '#FD501E',
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 30,
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginLeft: 20,
-          },
-          bookNowText: {
-            color: '#fff',
-            fontWeight: 'bold',
-            marginRight: 8,
-          },
-          pointsText: {
-            color: '#fff',
-            fontSize: 12,
-          },
-          
-          iconText: {
-            fontSize: 20,  // ขนาดของไอคอน
-            color: 'white',  // สีของไอคอน
-          },
+
+
           dashedLineTicket:{
             width: '100%',
             height: 1,  // ความหนาของเส้น
@@ -1213,40 +1101,19 @@ const TripDetail = ({ navigation, route }) => {
             backgroundColor: 'white',
             borderRadius: 30, // ให้เป็นวงกลม
           },
-          ImageBoat:{
-            width:20,
-            height:20,
-            marginRight:20,
-        
-          },
-          searcContain:{
-            flexDirection:'row',
-            marginRight:35,
-          },
-          pagination: {
-            flexDirection: 'row', // เรียงปุ่มในแนวนอน
-            width:'100%',
-            alignItems: 'center', // จัดตำแหน่งแนวตั้งให้ตรงกลาง
-            paddingVertical: 10, // เพิ่มระยะห่างด้านบนและด้านล่าง
-        
-            justifyContent: 'center',
-            
-          },
-          paginationText: {
-            fontSize: 16, // ขนาดตัวอักษร
-            color: '#FD501E', // สีข้อความ (อาจเป็นสีน้ำเงินเพื่อให้ดูโดดเด่น)
-            marginHorizontal: 10, // ระยะห่างด้านข้างระหว่างปุ่มและตัวเลข
-          },
-          disabledText: {
-            color: '#ccc', // สีข้อความเมื่อปุ่มถูก disable
-          },
-        
-  col: {flexDirection:'column',width:100,alignItems:'center'},
 
-  ImageLogo: {marginRight: 10},
+       
+        
+  ImageLogo: {
+    marginRight: 10
+  },
 
-  tagContainer: { flexDirection: 'row', marginTop: 5 },
-  tag: { backgroundColor: 'rgba(253, 80, 30, 0.1)',
+  tagContainer: { 
+    flexDirection: 'row',
+     marginTop: 5 
+    },
+  tag: { 
+    backgroundColor: 'rgba(253, 80, 30, 0.1)',
     opacity:50,
     color: '#FD501E',
     fontSize: 12,
@@ -1255,47 +1122,86 @@ const TripDetail = ({ navigation, route }) => {
     paddingHorizontal: 8,
     borderRadius: 30,
     marginLeft: 3, },
-  tripInfo: { alignItems: 'flex-start', marginBottom: 0, justifyContent:'center',flexDirection:'row' },
-
+  tripInfo: { 
+    alignItems: 'flex-start',
+     marginBottom: 0, 
+     justifyContent:'center',
+     flexDirection:'row' 
+    },
+  date: { 
+    fontSize: 12, 
+    color: '#666'
+   },
+  section: { 
+    marginBottom: 20 
+  },
+  checkboxContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  label: { 
+    fontSize: 16, 
+    marginLeft: 10 
+  },
  
-  date: { fontSize: 12, color: '#666' },
-  duration: { fontSize: 14, color: '#F46A33', marginVertical: 5 },
-  section: { marginBottom: 20 },
-  checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
-  label: { fontSize: 16, marginLeft: 10 },
- 
-  pickerContainer: { borderWidth: 1, borderColor: '#ddd', borderRadius: 15, marginTop: 5,backgroundColor:'white' },
-  input: { borderWidth: 1, borderColor: '#ddd', padding: 10, borderRadius: 15, marginTop: 5 },
-  timetable: {fontSize:12,},
-  col: {flexDirection:'column',margin:10,width:100,alignItems:'center'},
-  ship: {fontSize: 12, color: '#666' },
-  circle: {  top: 20,left: 0,width: 15, height: 15, backgroundColor: '#EAEAEA', borderRadius: 40, },
-  line : {alignItems: 'center',margin:10,marginTop:30,marginBottom:0},
-  orangetext: {color:'#FD501E'},
+  pickerContainer: { 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    borderRadius: 15, 
+    marginTop: 5,
+    backgroundColor:'white' 
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    padding: 10, 
+    borderRadius: 15, 
+    marginTop: 5 
+  },
+  timetable: {
+    fontSize:12,
+  },
+  col: {
+    flexDirection:'column',
+    margin:10,
+    width:100,
+    alignItems:'center'
+  },
+  ship: {
+    fontSize: 12,
+     color: '#666'
+     },
+  circle: {  
+    top: 20,
+    left: 0,
+    width: 15, 
+    height: 15, 
+    backgroundColor: '#EAEAEA', 
+    borderRadius: 40, 
+  },
+  line : {
+    alignItems: 'center',
+    margin:10,
+    marginTop:30,
+    marginBottom:0
+  },
+  orangetext: {
+    color:'#FD501E'
+  },
   titlehead:{
     fontSize:16,
     fontWeight:'bold',
     flexWrap:'wrap',
     width:100
   },
-  TextInput:{fontSize:18,fontWeight:'bold',margin:5},
-  inputconpromo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
- 
+  TextInput:{
+    fontSize:18,
+    fontWeight:'bold'
+    ,margin:5
   },
-  inputpromo: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  findCode: {
-    color: '#FF5733',  // สีส้มคล้ายในภาพ
-    fontSize: 14,
+  totaltext:{
+    fontSize:18,
+    fontWeight:'bold'
   },
   rowpromo:{
     flexDirection:'row',
@@ -1310,8 +1216,13 @@ const TripDetail = ({ navigation, route }) => {
   },
   background: {
     width:'100%',
-  }
-  
+  },
+  divider: {
+    height: 2, // ความหนาของเส้น
+    width: '100%', // ทำให้ยาวเต็มจอ
+    backgroundColor: '#CCCCCC', // สีของเส้น
+    marginVertical: 10, // ระยะห่างระหว่าง element
+  },
 });
       
       export default TripDetail;

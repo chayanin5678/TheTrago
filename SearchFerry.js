@@ -2,8 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground } from 'react-native';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import LogoTheTrago from './(component)/Logo'
+import DateTimePicker from "@react-native-community/datetimepicker";
+import LogoTheTrago from './(component)/Logo';
+import moment from 'moment';
 const itemsPerPage = 5;
 
 const SearchFerry = ({ navigation, route }) => {
@@ -13,8 +14,6 @@ const SearchFerry = ({ navigation, route }) => {
   const formattedDate = detaDepart.toISOString().split('T')[0];
   const [startingPoint, setStartingPoint] = useState({ id: startingPointId, name: startingPointName });
   const [endPoint, setEndPoint] = useState({ id: endPointId, name: endPointName });
-  const [isDepartureDatePickerVisible, setDepartureDatePickerVisible] = useState(false);
-  const [isReturnDatePickerVisible, setReturnDatePickerVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); 
   const [tripType, setTripType] = useState("One Way Trip");
   const [tripTypeSearch, setTripTypeSearch] = useState("One Way Trip");
@@ -23,6 +22,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [isAdultModalVisible, setAdultModalVisible] = useState(false);
   const [children, setChildren] = useState(0);
   const [isChildModalVisible, setChildModalVisible] = useState(false);
+  const [infant, setinfant] = useState(0);
+  const [isinfantodalVisible, setinfantModalVisible] = useState(false);
   const [timetableDepart, setTimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
   const [currentPageDepart, setcurrentPageDepart] = useState(1);
@@ -30,6 +31,7 @@ const SearchFerry = ({ navigation, route }) => {
  console.log(startingPoint.id);
  console.log(endPoint.id);
  console.log(departureDateInput);
+ console.log(formattedDate);
   
 
  const formatDateInput = (date) => {
@@ -41,18 +43,16 @@ const SearchFerry = ({ navigation, route }) => {
   });
 };
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const [departureDate, setDepartureDate] = useState(formatDateInput(departureDateInput));
-  const initialReturnDate = new Date(tomorrow);
-  initialReturnDate.setDate(initialReturnDate.getDate() + 1);
-   const [returnDate, setReturnDate] = useState(formatDateInput(returnDateInput));
-
-  const showDepartureDatePicker = () => setDepartureDatePickerVisible(true);
-  const showReturnDatePicker = () => setReturnDatePickerVisible(true);
-
-  const hideDepartureDatePicker = () => setDepartureDatePickerVisible(false);
-  const hideReturnDatePicker = () => setReturnDatePickerVisible(false);
+ const [departureDate, setDepartureDate] = useState(detaDepart); 
+   const [returnDate, setReturnDate] = useState(() => {
+     const returnDay = new Date(departureDate);
+     returnDay.setDate(returnDay.getDate() + 1);
+     return returnDay;
+   });
+    const [showDepartPicker, setShowDepartPicker] = useState(false);
+    const [showReturnPicker, setShowReturnPicker] = useState(false);
+    const departureDateSend = departureDate.toISOString().split('T')[0];
+  
 
   const calculateDiscountedPrice = (price) => {
     if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
@@ -60,18 +60,16 @@ const SearchFerry = ({ navigation, route }) => {
     return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
   };
 
-  const handleDepartureDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    setDepartureDate(date.toLocaleDateString('en-GB', options));
-    hideDepartureDatePicker();
-  };
-
-  const handleReturnDateConfirm = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    setReturnDate(date.toLocaleDateString('en-GB', options));
-    hideReturnDatePicker();
-  };
-
+  function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  
+    console.log("Formatted Value:", formattedValue); // 🛠 Debugging
+    return formattedValue;
+  }
  
 
   const swapPoints = () => {
@@ -126,6 +124,26 @@ const SearchFerry = ({ navigation, route }) => {
   
   const childOptions = Array.from({ length: 11 }, (_, i) => i); 
 
+  const toggleInfantModal = () => {
+    setinfantModalVisible(!isinfantodalVisible);
+  };
+  
+  const handleInfantSelect = (value) => {
+    setinfant(value);
+    toggleInfantModal(); // Close the modal after selection
+  };
+  
+  const renderInfantOption = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => handleInfantSelect(item)}
+    >
+       <Text style={styles.modalOptionText}>{item}</Text>
+    </TouchableOpacity>
+  );
+  
+  const infantOptions = Array.from({ length: 11 }, (_, i) => i); 
+
   function formatTime(time) {
     // แยกเวลาเป็นชั่วโมง นาที และวินาที
     const [hours, minutes, seconds] = time.split(':');
@@ -151,38 +169,9 @@ const SearchFerry = ({ navigation, route }) => {
   }
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Invalid Date';
-  
-    // ตรวจสอบว่า Date.parse() สามารถแปลงได้โดยตรงหรือไม่
-    let parsedDate = Date.parse(dateString);
-  
-    if (isNaN(parsedDate)) {
-      // แปลง "1 Feb 2025" → "2025-02-01"
-      const parts = dateString.split(" ");
-      if (parts.length === 3) {
-        const day = parts[0]; // ไม่ต้องเติม 0 นำหน้า
-        const month = {
-          Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-          Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
-        }[parts[1]]; // แปลงชื่อเดือน
-        const year = parts[2];
-  
-        if (month) {
-          dateString = `${year}-${month}-${day}`;
-          parsedDate = Date.parse(dateString); // ลองแปลงใหม่
-        }
-      }
-    }
-  
-    // ตรวจสอบว่าการแปลงวันที่สำเร็จหรือไม่
-    const date = new Date(parsedDate);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-  
-    // ใช้ Intl.DateTimeFormat เพื่อแสดงรูปแบบ "Sat, 1 Feb 2025"
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    }).format(date);
+    return moment(dateString).format("ddd, DD MMM YYYY");
   };
+  
 
   const handleSearchStart = () => {
   
@@ -332,7 +321,6 @@ const SearchFerry = ({ navigation, route }) => {
         <Text style={styles.buttonText}>{adults} Adult</Text>
         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
       </TouchableOpacity>
-
       {/* Adult Modal */}
       <Modal
         visible={isAdultModalVisible}
@@ -372,6 +360,27 @@ const SearchFerry = ({ navigation, route }) => {
         </View>
       </View>
     </Modal>
+    <TouchableOpacity style={styles.button} onPress={toggleInfantModal}>
+        <Text style={styles.buttonText}>{infant} Infant</Text>
+        <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+      </TouchableOpacity>
+      {/* Adult Modal */}
+      <Modal
+        visible={isinfantodalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleInfantModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <FlatList
+              data={infantOptions}
+              renderItem={renderInfantOption}
+              keyExtractor={(item) => item.toString()}
+            />
+          </View>
+        </View>
+      </Modal>
           </View>
         </View>
                 
@@ -418,62 +427,80 @@ const SearchFerry = ({ navigation, route }) => {
         </View>
 
         <View style={styles.inputRow}>
-          <View style={styles.inputBox}>
-            <TouchableOpacity onPress={showDepartureDatePicker}
-              style={styles.rowdepart}>
-              <Image
-                source={require('./assets/solar_calendar-bold.png')}
-                style={styles.logoDate}
-                resizeMode="contain"
-              />
-              <View style={styles.inputBoxCol}>
-                <Text style={styles.inputLabel}>Departure date</Text>
-                <Text style={styles.inputText}>{departureDate}</Text>
-              </View>
-            </TouchableOpacity>
-            {tripType === 'Round Trip' && (
-  <>
-    <Image
-      source={require('./assets/Line 2.png')}
-      style={styles.logoLine}
-      resizeMode="contain"
-    />
-    <TouchableOpacity onPress={showReturnDatePicker} style={styles.rowdepart}>
-      <Image
-        source={require('./assets/solar_calendar-yellow.png')}
-        style={styles.logoDate}
-        resizeMode="contain"
-      />
-      <View style={styles.inputBoxCol}>
-        <Text style={styles.inputLabel}>Return date</Text>
-        <Text style={styles.inputText}>{returnDate}</Text>
-      </View>
-    </TouchableOpacity>
-  </>
+       
+       <View style={styles.inputBox}>
+       <TouchableOpacity onPress={() => setShowDepartPicker(true)}
+       style={styles.rowdepart}>
+
+         <Image
+           source={require('./assets/solar_calendar-bold.png')}
+           style={styles.logoDate}
+           resizeMode="contain"
+         />
+         <View style={styles.inputBoxCol}>
+           <Text style={styles.inputLabel}>Departure date</Text>
+           <Text style={styles.inputText}>{departureDate ? formatDateInput(departureDate.toString()): "Select Date"}</Text>
+         </View>
+         </TouchableOpacity>
+
+         <Image
+           source={require('./assets/Line 2.png')}
+           style={styles.logoLine}
+           resizeMode="contain"
+         />
+          <TouchableOpacity onPress={() => setShowReturnPicker(true)} disabled={!departureDate} 
+       style={styles.rowdepart}>
+       
+         <Image
+           source={require('./assets/solar_calendar-yellow.png')}
+           style={styles.logoDate}
+           resizeMode="contain"
+         />
+         <View style={styles.inputBoxCol}>
+           <Text style={styles.inputLabel}>Return date</Text>
+           <Text style={styles.inputText}>{returnDate ? formatDateInput(returnDate.toString()) : "No Date Available"}</Text>
+         </View>
+         </TouchableOpacity>
+       </View>
+       {showDepartPicker && (
+<DateTimePicker
+ value={departureDate || new Date()} // ถ้ายังไม่มีการเลือกวันที่ให้ใช้วันที่ปัจจุบัน
+ mode="date"
+ display="default"
+ onChange={(event, selectedDate) => {
+   setShowDepartPicker(false);
+   if (selectedDate) {
+     setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
+     if (returnDate < selectedDate) {
+     const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
+     newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
+     setReturnDate(newReturnDate); 
+     }
+   }
+ }}
+ minimumDate={new Date()}  // เลือกวันที่เดินทางได้ตั้งแต่วันนี้
+ maximumDate={null}
+/>
 )}
-          </View>
-        </View>
+
+{showReturnPicker && (
+<DateTimePicker
+ value={returnDate}
+ mode="date"
+ display="default"
+ onChange={(event, selectedDate) => {
+   setShowReturnPicker(false);
+   if (selectedDate) setReturnDate(selectedDate);
+ }}
+ minimumDate={new Date(new Date(departureDate).setDate(departureDate.getDate() + 1))}  // วันที่กลับต้องไม่สามารถน้อยกว่าวันเดินทาง
+ maximumDate={null}
+/>
+)}
+
+     </View>
       </View>
 
-      {/* Date Pickers for Departure and Return Date */}
-      <DateTimePickerModal
-        isVisible={isDepartureDatePickerVisible}
-        mode="date"
-        date={tomorrow}
-        minimumDate={tomorrow}
-        onConfirm={handleDepartureDateConfirm}
-        onCancel={hideDepartureDatePicker}
-      
-      />
-      <DateTimePickerModal
-        isVisible={isReturnDatePickerVisible}
-        mode="date"
-        date={initialReturnDate}
-        minimumDate={initialReturnDate}
-        onConfirm={handleReturnDateConfirm}
-        onCancel={hideReturnDatePicker}
-      />
-      
+     
 
       <TouchableOpacity 
   style={[styles.searchButton]} // Use an array if you want to combine styles
@@ -514,7 +541,7 @@ const SearchFerry = ({ navigation, route }) => {
             </View>
 
             <View style={styles.middleContainer}>
-            <Text style={styles.duration}>{item.md_package_nameeng}</Text>
+            <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
               <View style={styles.iconLineContainer}>
                 <View style={styles.dashedLine} />
                 <View style={styles.shipIcon}>
@@ -546,19 +573,21 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>THB {calculateDiscountedPrice(item.md_timetable_saleadult)} / person</Text>
+            <Text style={styles.price}>THB {formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} / person</Text>
             <TouchableOpacity style={styles.bookNowButton}
             onPress={()=>{
               navigation.navigate('TripDetail',{
                timeTableDepartId:item.md_timetable_id,
-               departDateTimeTable: departureDate,
+               departDateTimeTable: departureDateSend,
                startingPointId: startingPointId,
                startingPointName:startingPointName,
                endPointId:endPointId,
                endPointName:endPointName,
                timeTablecCmpanyId:item.md_timetable_companyid,
                timeTablecPierStartId:item.md_timetable_pierstart,
-               timeTablecPierEndId:item.md_timetable_pierend
+               timeTablecPierEndId:item.md_timetable_pierend,
+               adults:adults,
+               children:children
               }
               
             ); 
@@ -1146,7 +1175,7 @@ const SearchFerry = ({ navigation, route }) => {
         },
         dropdownIcon: {
           color: '#FD501E', // Orange color for the icon
-          marginLeft: 60, 
+          marginLeft: 10, 
         },
     
         buttonText: {
@@ -1154,10 +1183,7 @@ const SearchFerry = ({ navigation, route }) => {
           color: '#333',
           fontWeight: 'bold',
         },
-        dropdownIcon: {
-          marginLeft: 40,
-
-        },
+    
         buttonText: {
           fontSize: 16,
           color: '#333',
