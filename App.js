@@ -12,6 +12,7 @@ import SearchFerry from './SearchFerry';
 import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
 import CustomerInfo from './(Screen)/CustomerInfo';
+import PaymentScreen from './(Screen)/PaymentScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,6 +33,7 @@ const AppNavigator = () => (
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
+    <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 

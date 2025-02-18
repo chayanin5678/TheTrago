@@ -6,11 +6,11 @@ import Step from './../(component)/Step';
 import Textinput from '../(component)/Textinput';
 import ipAddress from '../ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { Button } from 'react-native';
+import BackNextButton from '../(component)/BackNextButton';
 
 const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
 
-const  CustomerInfo =({ route }) => {
+const  CustomerInfo =({navigation, route }) => {
   const {timeTableDepartId,departDateTimeTable,adults,children,totalAdult,totalChild} = route.params;
   const [subtotal, setSubtotal] = useState('');
   const [code, setcode] = useState('');
@@ -211,7 +211,7 @@ const  CustomerInfo =({ route }) => {
       </View>
     
       {timetableDepart.map((item, index) => (
-          <View key={index} style={styles.promo}>
+        <View key={index} style={styles.promo}>
         <Text style={styles.title}>Booking Summary</Text>
         <View style={styles.divider} />
         <Text>Depart</Text>
@@ -268,6 +268,13 @@ const  CustomerInfo =({ route }) => {
     </TouchableOpacity>
   </View>
 </View>
+<BackNextButton navigation={navigation} Navi="PaymentScreen" params={{
+  timeTableDepartId:timeTableDepartId,
+  departDateTimeTable:departDateTimeTable,
+  adults:adults,
+  totalAdult:totalAdult,
+  totalChild:totalChild
+  }}/>
     </ImageBackground>
     </ScrollView>
   );
