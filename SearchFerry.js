@@ -7,6 +7,7 @@ import LogoTheTrago from './(component)/Logo';
 import moment from 'moment';
 const itemsPerPage = 5;
 
+
 const SearchFerry = ({ navigation, route }) => {
   
   const { startingPointId, endPointId, startingPointName, endPointName,departureDateInput, returnDateInput} = route.params;

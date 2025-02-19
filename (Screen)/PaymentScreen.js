@@ -7,10 +7,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import { MaterialIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { Picker } from '@react-native-picker/picker';
 
 const PaymentScreen =({ navigate, route }) => {
-  const {timeTableDepartId, departDateTimeTable,adults, totalAdult, totalChild} = route.params;
+  const {timeTableDepartId, departDateTimeTable,adults, totalAdult, totalChild,children,selectedTitle,Firstname,Lastname,selectedTele,mobileNumber,email} = route.params;
+  const [Discount, setDiscount] = useState('');
   const [subtotal, setSubtotal] = useState('');
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setcardName] = useState("");
@@ -21,8 +21,16 @@ const PaymentScreen =({ navigate, route }) => {
   const month = expirationDate.substring(0, 2);
   const year = expirationDate.substring(3, 7);
    const [timetableDepart, settimetableDepart] = useState([]);
+   const [qrCodeUrl, setQrCodeUrl] = useState(null);
+   const [chargeId, setChargeId] = useState(null);
+   
   console.log(year);
-
+  console.log(selectedTitle);
+  console.log(Firstname);
+  console.log(Lastname);
+  console.log(selectedTele);
+  console.log(mobileNumber);
+  console.log(email);
   const handleChange = (text) => {
     // กำจัดสิ่งที่ไม่ใช่ตัวเลข
     let formattedText = text.replace(/\D/g, "");
@@ -60,17 +68,28 @@ const PaymentScreen =({ navigate, route }) => {
     return parseFloat(value).toFixed(2);
   }
 
-     useEffect(() => {
-      setSubtotal(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild)))); 
-        
-      }, []);
+  useEffect(() => {
+    setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild))));  
+    setSubtotal(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-(Discount)));     
+    console.log(subtotal); 
+    }, [Discount,subtotal]);
+ 
 
-      const calculateDiscountedPrice = (price) => {
-        if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-        const discountedPrice = price * 0.9; // ลด 10%
-        return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-      };
+  const calculateDiscountedPrice = (price) => {
+        
+    const discountedPrice = price * 0.10; // ลด 10%
+    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
+
+  const calculatePaymentFee = (price) => {
+
+    const PaymentFee = price * 0.04; // ลด 10%
+    return PaymentFee.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
+ 
+
      
+   
   const handlePayment = async () => {
     try {
 
@@ -97,7 +116,7 @@ const PaymentScreen =({ navigate, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: 2000, // 100 บาท
+          amount: subtotal, // 100 บาท
           token: tokenData.token,  // tokenData.token ที่ได้รับจาก Backend
         }),
       });
@@ -233,8 +252,9 @@ const PaymentScreen =({ navigate, route }) => {
           />
           <View style={styles.logodown}>
           <Text style={styles.labelHead}>PromptPay</Text>
-          </View>
+                  </View>
           <Entypo name="chevron-small-down" size={24} color="black" />
+   
           
         </TouchableOpacity>
         </View>
@@ -278,33 +298,38 @@ const PaymentScreen =({ navigate, route }) => {
         <Text>Boat : {item.md_boattype_nameeng}</Text>
         <Text>Departure Data : {formatDate(departDateTimeTable)}</Text>
         <Text>Departure Time : {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-        <View style={styles.rowpromo}>
+        <View style={styles.row}>
         <Text>Adult x {adults}</Text>
         <Text>฿ {totalAdult}</Text>
         </View>
         {parseFloat(totalChild) !== 0 && (
-  <View style={styles.rowpromo}>
+  <View style={styles.row}>
     <Text>Child x {children}</Text>
     <Text>฿ {totalChild}</Text>
   </View>
 )}
-        <View style={styles.rowpromo}>
+        <View style={styles.row}>
         <Text>Discount</Text>
-        <Text style={styles.redText}>฿ {formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-parseFloat(subtotal))}</Text>
+        <Text style={styles.redText}>- ฿  {Discount}</Text>
         </View>
-        <View style={styles.rowpromo}>
+        <View style={styles.row}>
         <Text>Ticket fare</Text>
         <Text>฿ {subtotal}</Text>
         </View>
         <View style={styles.divider} />
-        <View style={styles.rowpromo}>
+        <View style={styles.row}>
         <Text>Subtotal </Text>
         <Text>฿ {subtotal}</Text>
         </View>
         <View style={styles.divider} />
-        <View style={styles.rowpromo}>
+        <View style={styles.row}>
+        <Text>Payment Fee </Text>
+        <Text style={styles.greenText}>+ ฿ {calculatePaymentFee(subtotal)}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.row}>
         <Text>total </Text>
-        <Text>฿ {subtotal}</Text>
+        <Text> ฿ {(parseFloat(subtotal) + parseFloat(calculatePaymentFee(subtotal))).toFixed(2)}</Text>
         </View>
       </View>
      ))}
@@ -313,7 +338,7 @@ const PaymentScreen =({ navigate, route }) => {
 
 
       <View style={styles.buttonContainer}>
-        <Button title="💰 Pay Now" onPress={handlePayment} color="#28a745" />
+        <Button title="Pay Now" onPress={handlePayment} color="#FD501E" />
       </View>
       
     </ScrollView>
@@ -356,7 +381,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-
+    justifyContent:'space-between'
   },
   inputContainer: {
     width: "48%",
@@ -366,6 +391,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: 8,
     overflow: "hidden",
+    width:'100%',
+    height:200
   },
   card: {
     backgroundColor: 'white',
@@ -439,6 +466,28 @@ const styles = StyleSheet.create({
     width: '100%', // ทำให้ยาวเต็มจอ
     backgroundColor: '#CCCCCC', // สีของเส้น
     marginVertical: 10, // ระยะห่างระหว่าง element
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    color: '#002348',
+    marginBottom: 20,
+  },
+  qrCodeContainer: {
+    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chargeInfo: {
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  redText:{
+    color:'red'
+  },
+  greenText:{
+    color:'green'
   },
 });
 

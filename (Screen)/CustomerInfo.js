@@ -273,7 +273,15 @@ const  CustomerInfo =({navigation, route }) => {
   departDateTimeTable:departDateTimeTable,
   adults:adults,
   totalAdult:totalAdult,
-  totalChild:totalChild
+  totalChild:totalChild,
+  children:children,
+  selectedTitle:selectedTitle,
+  Firstname:Firstname,
+  Lastname:Lastname,
+  selectedTele:selectedTele,
+  mobileNumber:mobileNumber,
+  email:email
+
   }}/>
     </ImageBackground>
     </ScrollView>
