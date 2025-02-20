@@ -8,7 +8,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { MaterialIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
-const PaymentScreen =({ navigate, route }) => {
+const PaymentScreen =({ navigation, route }) => {
   const {timeTableDepartId, departDateTimeTable,adults, totalAdult, totalChild,children,selectedTitle,Firstname,Lastname,selectedTele,mobileNumber,email} = route.params;
   const [Discount, setDiscount] = useState('');
   const [subtotal, setSubtotal] = useState('');
@@ -18,11 +18,11 @@ const PaymentScreen =({ navigate, route }) => {
   const [cvv, setCvv] = useState("");
   const [selectedOption, setSelectedOption] = useState(null);
   const [pickup, setPickup] = useState(false);
+  const [errors, setErrors] = useState({}); // New state for errors
   const month = expirationDate.substring(0, 2);
   const year = expirationDate.substring(3, 7);
    const [timetableDepart, settimetableDepart] = useState([]);
-   const [qrCodeUrl, setQrCodeUrl] = useState(null);
-   const [chargeId, setChargeId] = useState(null);
+   const [totalPayment, settotalPayment] = useState('');
    
   console.log(year);
   console.log(selectedTitle);
@@ -70,7 +70,8 @@ const PaymentScreen =({ navigate, route }) => {
 
   useEffect(() => {
     setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild))));  
-    setSubtotal(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-(Discount)));     
+    setSubtotal(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-(Discount)));    
+    settotalPayment(formatNumber(parseFloat(subtotal) + parseFloat(calculatePaymentFee(subtotal)))); 
     console.log(subtotal); 
     }, [Discount,subtotal]);
  
@@ -91,6 +92,18 @@ const PaymentScreen =({ navigate, route }) => {
      
    
   const handlePayment = async () => {
+    let newErrors = {};
+    if (!cardName) newErrors.cardName = true;
+    if (!cardNumber) newErrors.cardNumber = true;
+    if (!expirationDate) newErrors.expirationDate = true;
+    if (!cvv) newErrors.cvv = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      Alert.alert('Please fill in all fields');
+      return;
+    }
+
     try {
 
       const tokenResponse = await fetch(`http://${ipAddress}:5000/create-token`, {
@@ -116,7 +129,7 @@ const PaymentScreen =({ navigate, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: subtotal, // 100 บาท
+          amount: totalPayment, // 100 บาท
           token: tokenData.token,  // tokenData.token ที่ได้รับจาก Backend
         }),
       });
@@ -193,28 +206,37 @@ const PaymentScreen =({ navigate, route }) => {
                 <Text style={styles.label}>Card Holder Name </Text>
                 <TextInput
                   value={cardName}
-                  onChangeText={setcardName}
+                  onChangeText={(text) => {
+                    setcardName(text);
+                    setErrors((prev) => ({ ...prev, cardName: false }));
+                  }}
                   placeholder="Cardholder name"
-                  style={styles.input}
+                  style={[styles.input, errors.cardName && styles.errorInput]}
                 />
                 <Text style={styles.label}>Card Number </Text>
                 <TextInput
                   value={cardNumber}
-                  onChangeText={setCardNumber}
+                  onChangeText={(text) => {
+                    setCardNumber(text);
+                    setErrors((prev) => ({ ...prev, cardNumber: false }));
+                  }}
                   placeholder="●●●● ●●●● ●●●● ●●●●"
                   keyboardType="number-pad"
-                  style={styles.input}
+                  style={[styles.input, errors.cardNumber && styles.errorInput]}
                 />
                 <View style={styles.row}>
                   <View style={styles.inputContainer}>
                     <Text style={styles.label}>Expiry Date</Text>
                     <TextInput
                       value={expirationDate}
-                      onChangeText={handleChange}
+                      onChangeText={(text) => {
+                        handleChange(text);
+                        setErrors((prev) => ({ ...prev, expirationDate: false }));
+                      }}
                       keyboardType="number-pad"
                       placeholder="MM/YY"
                       maxLength={7}  // จำกัดให้กรอกได้สูงสุด 5 ตัวอักษร (เช่น 12/34)
-                      style={styles.input}
+                      style={[styles.input, errors.expirationDate && styles.errorInput]}
                     />
 
                   </View>
@@ -225,11 +247,14 @@ const PaymentScreen =({ navigate, route }) => {
                     <Text style={styles.label}>CVV</Text>
                     <TextInput
                       value={cvv}
-                      onChangeText={setCvv}
+                      onChangeText={(text) => {
+                        setCvv(text);
+                        setErrors((prev) => ({ ...prev, cvv: false }));
+                      }}
                       keyboardType="number-pad"
                       placeholder="●●●"
                       secureTextEntry
-                      style={styles.input}
+                      style={[styles.input, errors.cvv && styles.errorInput]}
                     />
                   </View>
                 </View>
@@ -329,7 +354,7 @@ const PaymentScreen =({ navigate, route }) => {
         <View style={styles.divider} />
         <View style={styles.row}>
         <Text>total </Text>
-        <Text> ฿ {(parseFloat(subtotal) + parseFloat(calculatePaymentFee(subtotal))).toFixed(2)}</Text>
+        <Text> ฿ {totalPayment}</Text>
         </View>
       </View>
      ))}
@@ -337,9 +362,19 @@ const PaymentScreen =({ navigate, route }) => {
 
 
 
-      <View style={styles.buttonContainer}>
-        <Button title="Pay Now" onPress={handlePayment} color="#FD501E" />
-      </View>
+       <TouchableOpacity 
+                style={[styles.buttonContainer]} // Use an array if you want to combine styles
+                onPress={() => {
+                  if(!pickup){
+                    Alert.alert('Please check');
+                  } else if (selectedOption == "Option 1"){
+                  handlePayment();
+                  }else{
+                    Alert.alert('Please Select option');
+                  }
+                }}>
+                <Text style={styles.BackButtonText}>Payment</Text>
+              </TouchableOpacity>
       
     </ScrollView>
   );
@@ -388,11 +423,14 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   buttonContainer: {
-    marginTop: 20,
-    borderRadius: 8,
-    overflow: "hidden",
-    width:'100%',
-    height:200
+    backgroundColor: '#FD501E',
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 10,
+        width: '100%',
+        marginBottom:20,
+        justifyContent:'center',
   },
   card: {
     backgroundColor: 'white',
@@ -488,6 +526,14 @@ const styles = StyleSheet.create({
   },
   greenText:{
     color:'green'
+  },
+  BackButtonText:{
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  errorInput: {
+    borderColor: 'red',
   },
 });
 

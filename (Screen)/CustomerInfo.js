@@ -32,6 +32,36 @@ const  CustomerInfo =({navigation, route }) => {
   console.log(timeTableDepartId);
   console.log(departDateTimeTable);
 
+  const [errors, setErrors] = useState({}); 
+  
+  // ฟังก์ชันตรวจสอบข้อผิดพลาด
+  const handleNext = () => {
+    let newErrors = {};
+    if (!Firstname) newErrors.Firstname = true;
+    if (!Lastname) newErrors.Lastname = true;
+    if (!mobileNumber) newErrors.mobileNumber = true;
+    if (!email) newErrors.email = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors); // อัพเดต errors
+      return;
+    }
+
+    // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
+    navigation.navigate('PaymentScreen', {
+      timeTableDepartId,
+      departDateTimeTable,
+      adults,
+      totalAdult,
+      totalChild,
+      children,
+      Firstname,
+      Lastname,
+      mobileNumber,
+      email
+    });
+  };
+
   const toggleModal = () => setModalVisible(!isModalVisible);
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
 
@@ -158,7 +188,12 @@ const  CustomerInfo =({navigation, route }) => {
         </Modal>
         {/* ชื่อจริง & นามสกุล */}
         <Text style={styles.textHead}>First Name</Text>
-        <Textinput placeholder="First Name" value={Firstname} onChangeText={setFirstname} />
+        <TextInput
+          placeholder="First Name"
+          value={Firstname}
+          onChangeText={setFirstname}
+          style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+        />
         <Text style={styles.textHead}>Last Name</Text>
         <Textinput placeholder="Last Name" value={Lastname} onChangeText={setLastname} />
 
