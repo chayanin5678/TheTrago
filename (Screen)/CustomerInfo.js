@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LoGo from './../(component)/Logo';
 import Step from './../(component)/Step';
@@ -25,6 +25,7 @@ const  CustomerInfo =({navigation, route }) => {
   const [mobileNumber, setmobileNumber] = useState('');
   const [email, setemail] = useState('');
   const [timetableDepart, settimetableDepart] = useState([]);
+  const [errors, setErrors] = useState({}); 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
     return timeString.slice(0, 5); // Extracts "HH:mm"
@@ -32,20 +33,44 @@ const  CustomerInfo =({navigation, route }) => {
   console.log(timeTableDepartId);
   console.log(departDateTimeTable);
 
-  const [errors, setErrors] = useState({}); 
+
   
   // ฟังก์ชันตรวจสอบข้อผิดพลาด
   const handleNext = () => {
     let newErrors = {};
-    if (!Firstname) newErrors.Firstname = true;
-    if (!Lastname) newErrors.Lastname = true;
-    if (!mobileNumber) newErrors.mobileNumber = true;
-    if (!email) newErrors.email = true;
+    if (selectedTitle === 'Please Select') newErrors.selectedTitle = true;
+  if (!Firstname) newErrors.Firstname = true;
+  if (!Lastname) newErrors.Lastname = true;
+  if (selectedTele === 'Please Select') newErrors.selectedTele = true;
+  if (!mobileNumber) newErrors.mobileNumber = true;
+  if (!email) newErrors.email = true;
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors); // อัพเดต errors
-      return;
+  if (!email) {
+    newErrors.email = true;
+  } else {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = true;
     }
+  }
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors); // Update the errors state
+
+    // Show an alert if there are missing fields or invalid email
+    if (newErrors.email) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.', [
+        { text: 'OK', onPress: () => console.log('OK Pressed') }
+      ]);
+    } else {
+      Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
+        { text: 'OK', onPress: () => console.log('OK Pressed') }
+      ]);
+    }
+
+    return;
+  }
+
 
     // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
     navigation.navigate('PaymentScreen', {
@@ -71,6 +96,17 @@ const  CustomerInfo =({navigation, route }) => {
     return parseFloat(value).toFixed(2);
   }
 
+  function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    console.log("Formatted Value:", formattedValue); 
+    return formattedValue;
+  }
+
    
   const calculateDiscountedPrice = (price) => {
     if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
@@ -79,13 +115,17 @@ const  CustomerInfo =({navigation, route }) => {
   };
   const handleSelectTitle = (title) => {
     setSelectedTitle(title);
+    setErrors((prev) => ({ ...prev, selectedTitle: false })); // Clear the error state
     toggleModal();
   };
+  
   const handleSelectTele = (item) => {
-    const selectedValue =  `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`;
+    const selectedValue = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`;
     setSelectedTele(selectedValue);
+    setErrors((prev) => ({ ...prev, selectedTele: false })); // Clear the error state
     toggleTeleModal();
   };
+  
 
   const filteredTelePhones = telePhone.filter((item) => {
     const searchText = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`.toLowerCase();
@@ -109,7 +149,7 @@ const  CustomerInfo =({navigation, route }) => {
    useEffect(() => {
     setSubtotal(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild)))); 
       
-    }, []);
+    }, [subtotal]);
 
   useEffect(() => {
     fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
@@ -161,13 +201,15 @@ const  CustomerInfo =({navigation, route }) => {
 
         {/* คำนำหน้า */}
         <Text style={styles.textHead}>Title</Text>
-        <TouchableOpacity style={styles.button} onPress={toggleModal}>
+        <TouchableOpacity 
+          style={[styles.button, errors.selectedTitle && styles.errorInput]} 
+          onPress={toggleModal}>
           <Text style={styles.buttonText}>{selectedTitle}</Text>
           <Icon name="chevron-down" size={18} color="#A1A1A1" style={styles.icon} />
         </TouchableOpacity>
 
-        {/* Modal เลือกคำนำหน้า */}
-             <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
+        {/* Modal for title selection */}
+        <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContentPre}>
               <FlatList
@@ -188,61 +230,84 @@ const  CustomerInfo =({navigation, route }) => {
         </Modal>
         {/* ชื่อจริง & นามสกุล */}
         <Text style={styles.textHead}>First Name</Text>
-        <TextInput
-          placeholder="First Name"
-          value={Firstname}
-          onChangeText={setFirstname}
-          style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-        />
+          <TextInput
+            placeholder="First Name"
+            value={Firstname}
+            onChangeText={(text) => {
+              setFirstname(text);
+              setErrors((prev) => ({ ...prev, Firstname: false })); 
+            }}
+            style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+          />
+        
         <Text style={styles.textHead}>Last Name</Text>
-        <Textinput placeholder="Last Name" value={Lastname} onChangeText={setLastname} />
+          <TextInput
+            placeholder="Last Name"
+            value={Lastname}
+            onChangeText={(text) => {
+              setLastname(text);
+              setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
+            }}
+            style={[styles.input, errors.Lastname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+          />
+
 
         {/* รายละเอียดการติดต่อ */}
         <Text style={styles.TextInput}>Contact Details</Text>
         <Text style={styles.textHead}>Phone number</Text>
-        <TouchableOpacity style={styles.button} onPress={toggleTeleModal}>
+        <TouchableOpacity 
+          style={[styles.button, errors.selectedTele && styles.errorInput]} 
+          onPress={toggleTeleModal}>
           <Text style={styles.buttonText}>{selectedTele}</Text>
           <Icon name="chevron-down" size={18} color="#A1A1A1" style={styles.icon} />
         </TouchableOpacity>
 
-        {/* Modal เลือกรหัสประเทศ */}
+        {/* Modal for selecting telephone */}
         <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              {/* ช่องค้นหาเบอร์โทรศัพท์ */}
-              <Textinput
+              <TextInput
                 placeholder="Search country"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
               <FlatList
-  data={filteredTelePhones}
-  renderItem={({ item }) => (
-    <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-      <Text style={styles.optionText}>{item.sys_countries_nameeng} (+{item.sys_countries_telephone})</Text>
-    </TouchableOpacity>
-  )}
-  keyExtractor={(item, index) => index.toString()}
-  initialNumToRender={5}
-  maxToRenderPerBatch={5}
-  windowSize={5}
-  pagingEnabled
-/>
+                data={filteredTelePhones}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
+                    <Text style={styles.optionText}>{item.sys_countries_nameeng} (+{item.sys_countries_telephone})</Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                initialNumToRender={5}
+                maxToRenderPerBatch={5}
+                windowSize={5}
+                pagingEnabled
+              />
             </View>
           </View>
         </Modal>
-        <Textinput 
-          placeholder={"Enter your mobile number"}
-         value={mobileNumber}
-         onChangeText={setmobileNumber}
-        />
+        <Text style={styles.textHead}>Phone number</Text>
+          <TextInput
+            placeholder="Mobile Number"
+            value={mobileNumber}
+            onChangeText={(text) => {
+              setmobileNumber(text);
+              setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
+            }}
+            style={[styles.input, errors.mobileNumber && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+          />
       <Text style={styles.title}>Where should we send your bokking confirmation?</Text>
       <Text style={styles.textHead}>Email</Text>
-      <Textinput
-        placeholder="Enter Your Email"
-        value={email}
-        onChangeText={setemail}
-      />
+          <TextInput
+            placeholder="Enter Your Email"
+            value={email}
+            onChangeText={(text) => {
+              setemail(text);
+              setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
+            }}
+            style={[styles.input, errors.email && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+          />
       </View>
     
       {timetableDepart.map((item, index) => (
@@ -258,31 +323,31 @@ const  CustomerInfo =({navigation, route }) => {
         <Text>Departure Time : {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
         <View style={styles.rowpromo}>
         <Text>Adult x {adults}</Text>
-        <Text>฿ {totalAdult}</Text>
+        <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
         </View>
         {parseFloat(totalChild) !== 0 && (
   <View style={styles.rowpromo}>
     <Text>Child x {children}</Text>
-    <Text>฿ {totalChild}</Text>
+    <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
   </View>
 )}
         <View style={styles.rowpromo}>
         <Text>Discount</Text>
-        <Text style={styles.redText}>฿ {formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-parseFloat(subtotal))}</Text>
+        <Text style={styles.redText}>฿ {formatNumberWithComma(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-parseFloat(subtotal)))}</Text>
         </View>
         <View style={styles.rowpromo}>
         <Text>Ticket fare</Text>
-        <Text>฿ {subtotal}</Text>
+        <Text>฿ {formatNumberWithComma(subtotal)}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.rowpromo}>
         <Text>Subtotal </Text>
-        <Text>฿ {subtotal}</Text>
+        <Text>฿ {formatNumberWithComma(subtotal)}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.rowpromo}>
         <Text>total </Text>
-        <Text>฿ {subtotal}</Text>
+        <Text>฿ {formatNumberWithComma(subtotal)}</Text>
         </View>
       </View>
     ))}
@@ -303,21 +368,22 @@ const  CustomerInfo =({navigation, route }) => {
     </TouchableOpacity>
   </View>
 </View>
-<BackNextButton navigation={navigation} Navi="PaymentScreen" params={{
-  timeTableDepartId:timeTableDepartId,
-  departDateTimeTable:departDateTimeTable,
-  adults:adults,
-  totalAdult:totalAdult,
-  totalChild:totalChild,
-  children:children,
-  selectedTitle:selectedTitle,
-  Firstname:Firstname,
-  Lastname:Lastname,
-  selectedTele:selectedTele,
-  mobileNumber:mobileNumber,
-  email:email
-
-  }}/>
+ <View style={styles.rowButton}>
+        <TouchableOpacity 
+          style={[styles.BackButton]} // Use an array if you want to combine styles
+          onPress={() => {
+            navigation.goBack();
+          }}>
+          <Text style={styles.BackButtonText}>Go Back</Text>
+        </TouchableOpacity>
+         <TouchableOpacity 
+          style={[styles.ActionButton]} // Use an array if you want to combine styles
+          onPress={() => {
+         handleNext();
+          }}>
+          <Text style={styles.searchButtonText}>Next Step</Text>
+        </TouchableOpacity>
+        </View>
     </ImageBackground>
     </ScrollView>
   );
@@ -463,5 +529,59 @@ const styles = StyleSheet.create({
   background: {
     width:'100%',
   },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ced4da",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+    paddingVertical: 10,
+    marginLeft:10,
+    marginRight:10
+  },
+  errorInput: {
+    borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด
+  },
+  rowButton: {
+    width:'100%',
+    alignItems :'center',
+    justifyContent:'space-between',
+    flexDirection:'row'
+  },
+  BackButton: {
+    backgroundColor: '#EAEAEA',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '45%',
+    marginBottom:20,
+    justifyContent:'flex-end',
+  },
+  BackButtonText: {
+    color: '#666666',
+    fontWeight: 'bold',
+    fontSize: 16,
+  
+  },
+  ActionButton: {
+    backgroundColor: '#FD501E',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '45%',
+    marginBottom:20,
+    justifyContent:'flex-end',
+  },
+  searchButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  
+  },
+
 });
 export default CustomerInfo;

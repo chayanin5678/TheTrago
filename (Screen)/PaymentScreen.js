@@ -68,6 +68,17 @@ const PaymentScreen =({ navigation, route }) => {
     return parseFloat(value).toFixed(2);
   }
 
+  function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    console.log("Formatted Value:", formattedValue); 
+    return formattedValue;
+  }
+
   useEffect(() => {
     setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild))));  
     setSubtotal(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-(Discount)));    
@@ -100,7 +111,7 @@ const PaymentScreen =({ navigation, route }) => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      Alert.alert('Please fill in all fields');
+      Alert.alert('Incomplete Information', 'Please fill in all required fields.');
       return;
     }
 
@@ -325,36 +336,36 @@ const PaymentScreen =({ navigation, route }) => {
         <Text>Departure Time : {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
         <View style={styles.row}>
         <Text>Adult x {adults}</Text>
-        <Text>฿ {totalAdult}</Text>
+        <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
         </View>
         {parseFloat(totalChild) !== 0 && (
   <View style={styles.row}>
     <Text>Child x {children}</Text>
-    <Text>฿ {totalChild}</Text>
+    <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
   </View>
 )}
         <View style={styles.row}>
         <Text>Discount</Text>
-        <Text style={styles.redText}>- ฿  {Discount}</Text>
+        <Text style={styles.redText}>- ฿  {formatNumberWithComma(formatNumber(Discount))}</Text>
         </View>
         <View style={styles.row}>
         <Text>Ticket fare</Text>
-        <Text>฿ {subtotal}</Text>
+        <Text>฿ {formatNumberWithComma(formatNumber(subtotal))}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
         <Text>Subtotal </Text>
-        <Text>฿ {subtotal}</Text>
+        <Text>฿ {formatNumberWithComma(formatNumber(subtotal))}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
         <Text>Payment Fee </Text>
-        <Text style={styles.greenText}>+ ฿ {calculatePaymentFee(subtotal)}</Text>
+        <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal)))}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
         <Text>total </Text>
-        <Text> ฿ {totalPayment}</Text>
+        <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
         </View>
       </View>
      ))}
@@ -366,11 +377,11 @@ const PaymentScreen =({ navigation, route }) => {
                 style={[styles.buttonContainer]} // Use an array if you want to combine styles
                 onPress={() => {
                   if(!pickup){
-                    Alert.alert('Please check');
+                    Alert.alert('Terms and Conditions', 'Please check the Terms and Conditions before proceeding.');
                   } else if (selectedOption == "Option 1"){
                   handlePayment();
                   }else{
-                    Alert.alert('Please Select option');
+                    Alert.alert('Payment Option', 'Please select a payment option.');
                   }
                 }}>
                 <Text style={styles.BackButtonText}>Payment</Text>

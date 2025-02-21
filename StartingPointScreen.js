@@ -40,7 +40,8 @@ const StartingPointScreen = ({ navigation, route }) => {
     } else {
       setFilteredStartingPoints(allStartingPoints);
     }
-  }, [searchText, allStartingPoints]); 
+  }, [searchText, allStartingPoints]);
+  
 
   const handleSelectStartingPoint = (selectedPoint) => {
     setStartingPoint(selectedPoint);
@@ -60,8 +61,13 @@ const StartingPointScreen = ({ navigation, route }) => {
     if (route.params?.setStartingPoint && selectedData) {
       route.params.setStartingPoint(selectedData); // ใช้ callback ที่ส่งมาจาก HomeScreen
     }
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack(); // ตรวจสอบก่อนว่าไปหน้าก่อนหน้านี้ได้
+    } else {
+      console.warn('No previous screen to go back to');
+    }
   };
+  
   
 
   const renderItem = ({ item }) => (
