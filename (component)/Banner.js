@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect  } from 'react';
 import { View, StyleSheet, ScrollView, Image, Dimensions } from 'react-native';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 const { width } = Dimensions.get('window');
 
 const banners = [
@@ -58,11 +59,13 @@ const styles = StyleSheet.create({
         width: '100%',
       },
         bannerImage: {
-          width: Dimensions.get('window').width * 0.9,
-          height: 150,
-          borderRadius: 30,
-          marginRight:41,
-          resizeMode: 'contain',
+          width: Dimensions.get('window').width * 0.8,
+          height: hp('15%'),
+          borderRadius: 40,
+          justifyContent: 'center',
+          marginLeft: Dimensions.get('window').width * 0.085,
+          marginRight: Dimensions.get('window').width * 0.1,
+          resizeMode: 'cover',
         },
         indicatorContainer: {
             flexDirection: 'row',

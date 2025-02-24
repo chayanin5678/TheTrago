@@ -5,6 +5,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput,
 import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
 import moment from 'moment';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+
 const itemsPerPage = 5;
 
 
@@ -866,7 +868,8 @@ const SearchFerry = ({ navigation, route }) => {
           height: 31,
         },
         logoDate: {
-          width: 29,
+          width: wp('5%'),
+          height: hp('5%'),
           height: 27,
           marginRight: 10,
         },
@@ -928,8 +931,9 @@ const SearchFerry = ({ navigation, route }) => {
         bookingSection: {
           backgroundColor: '#F6F6F6',
           borderRadius: 30,
-          padding: 20,
+          padding: '3%',
           width: '100%',
+          
           marginBottom: 0,
           paddingBottom: 0,
           shadowColor: '#F6F6F6',
@@ -1058,11 +1062,11 @@ const SearchFerry = ({ navigation, route }) => {
           flexDirection: 'column',
         },
         inputLabel: {
-          fontSize: 12,
+          fontSize: wp('3%'),
           color: '#666',
         },
         inputText: {
-          fontSize: 16,
+          fontSize: wp('3.5%'),
           color: '#333',
           fontWeight: 'bold',
         },
@@ -1180,16 +1184,9 @@ const SearchFerry = ({ navigation, route }) => {
         },
     
         buttonText: {
-          fontSize: 16,
+          fontSize: wp('3.5%'),
           color: '#333',
           fontWeight: 'bold',
-        },
-    
-        buttonText: {
-          fontSize: 16,
-          color: '#333',
-          fontWeight: 'bold',
-          
         },
         modalOverlay: {
           flex: 1,
@@ -1222,9 +1219,8 @@ const SearchFerry = ({ navigation, route }) => {
           cardContainer: {
             backgroundColor: 'white',
             borderRadius: 20,
-      
-           padding: 16,
-           margin: 16,
+           padding: '4%',
+           margin: '1.5%',
            shadowColor: '#000',
            shadowOpacity: 0.1,
            shadowRadius: 8,
@@ -1336,7 +1332,7 @@ const SearchFerry = ({ navigation, route }) => {
             alignItems: 'center',
           },
           price: {
-            fontSize: 16,
+            fontSize: wp('4%'),
             fontWeight: 'bold',
             color: '#333',
           },
@@ -1352,7 +1348,7 @@ const SearchFerry = ({ navigation, route }) => {
           bookNowText: {
             color: '#fff',
             fontWeight: 'bold',
-            marginRight: 8,
+          
           },
           pointsText: {
             color: '#fff',

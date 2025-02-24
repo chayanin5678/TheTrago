@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   rowText: {
     width: '100%',
     flexDirection: 'row',
-    margin: 5,
+    margin: '2%',
     marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground } from "react-native";
 import ipAddress from "../ipconfig";
 import LogoHeader from "./../(component)/Logo";
 import Step from "../(component)/Step";
@@ -23,7 +23,14 @@ const PaymentScreen =({ navigation, route }) => {
   const year = expirationDate.substring(3, 7);
    const [timetableDepart, settimetableDepart] = useState([]);
    const [totalPayment, settotalPayment] = useState('');
-   
+   const [bookingcode, setBookingcode] = useState([]);
+
+   // Compute booking_code only if bookingcode is available
+   const booking_code = bookingcode.length > 0 
+     ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
+     : "";
+
+  console.log(booking_code);
   console.log(year);
   console.log(selectedTitle);
   console.log(Firstname);
@@ -148,8 +155,9 @@ const PaymentScreen =({ navigation, route }) => {
       const result = await response.json();
       if (result.success) {
         Alert.alert("✅ Payment Successful", `Transaction ID: ${result.charge.id}`);
+        console.log(result.charge.currency);
       } else {
-        Alert.alert("❌ Payment Failed", result.error);
+        Alert.alert("❌ Payment Failed", result.success);
       }
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -182,9 +190,33 @@ const PaymentScreen =({ navigation, route }) => {
       });
   }, []);
 
+  useEffect(() => {
+    fetch(`http://${ipAddress}:5000/bookingcode`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          setBookingcode(data.data);
+        } else {
+          console.error('Data is not an array', data);
+          setBookingcode([]); 
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
 
   return (
        <ScrollView contentContainerStyle={styles.container}>
+         <ImageBackground 
+                              source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+                              style={styles.background}>
       <LogoHeader />
       <Step logoUri={3} />
       <Text style={styles.header}>Payment</Text>
@@ -214,6 +246,11 @@ const PaymentScreen =({ navigation, route }) => {
           {selectedOption === "Option 1" && (
             <>
               <View style={styles.payment}>
+                <View style={styles.row}>
+              <Text style={styles.label}>We Accept:</Text>
+              <Image  source={{ uri: 'https://www.thetrago.com/assets/images/credit1.png' }}
+      style={{ width: 150, height: 20 }} />
+              </View>
                 <Text style={styles.label}>Card Holder Name </Text>
                 <TextInput
                   value={cardName}
@@ -231,7 +268,7 @@ const PaymentScreen =({ navigation, route }) => {
                     setCardNumber(text);
                     setErrors((prev) => ({ ...prev, cardNumber: false }));
                   }}
-                  placeholder="●●●● ●●●● ●●●● ●●●●"
+                  placeholder="**** **** **** ****"
                   keyboardType="number-pad"
                   style={[styles.input, errors.cardNumber && styles.errorInput]}
                 />
@@ -263,7 +300,7 @@ const PaymentScreen =({ navigation, route }) => {
                         setErrors((prev) => ({ ...prev, cvv: false }));
                       }}
                       keyboardType="number-pad"
-                      placeholder="●●●"
+                      placeholder="***"
                       secureTextEntry
                       style={[styles.input, errors.cvv && styles.errorInput]}
                     />
@@ -386,7 +423,7 @@ const PaymentScreen =({ navigation, route }) => {
                 }}>
                 <Text style={styles.BackButtonText}>Payment</Text>
               </TouchableOpacity>
-      
+      </ImageBackground>
     </ScrollView>
   );
 };
@@ -545,6 +582,9 @@ const styles = StyleSheet.create({
   },
   errorInput: {
     borderColor: 'red',
+  },
+  background: {
+    width:'100%',
   },
 });
 

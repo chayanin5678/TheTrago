@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackg
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import LogoTheTrago from './(component)/Logo';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
@@ -295,8 +296,8 @@ const styles = StyleSheet.create({
   },
  
   logoDate: {
-    width: 29,
-    height: 27,
+    width: wp('5%'),
+    height: wp('5%'),
     marginRight: 10,
   },
   logoLine: {
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   bookingSection: {
     backgroundColor: '#F6F6F6',
     borderRadius: 30,
-    padding: 20,
+    padding: wp('3.5%'),
     width: '100%',
     marginBottom: 0,
     paddingBottom: 0,

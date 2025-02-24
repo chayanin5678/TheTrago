@@ -80,8 +80,10 @@ const  CustomerInfo =({navigation, route }) => {
       totalAdult,
       totalChild,
       children,
+      selectedTitle,
       Firstname,
       Lastname,
+      selectedTele,
       mobileNumber,
       email
     });
@@ -121,6 +123,7 @@ const  CustomerInfo =({navigation, route }) => {
   
   const handleSelectTele = (item) => {
     const selectedValue = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`;
+    
     setSelectedTele(selectedValue);
     setErrors((prev) => ({ ...prev, selectedTele: false })); // Clear the error state
     toggleTeleModal();
