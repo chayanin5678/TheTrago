@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native'; // ต้องใช้แค่ที่นี่
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -13,6 +13,8 @@ import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
 import CustomerInfo from './(Screen)/CustomerInfo';
 import PaymentScreen from './(Screen)/PaymentScreen';
+import ResultScreen from './(Screen)/ResultScreen';
+import { CustomerProvider } from './(Screen)/CustomerContext';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,6 +36,7 @@ const AppNavigator = () => (
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -47,8 +50,6 @@ const MainNavigator = () => (
           iconName = focused ? 'home' : 'home-outline';
         } else if (route.name === 'Settings') {
           iconName = focused ? 'settings' : 'settings-outline';
-        } else if (route.name === 'Auth') {
-          iconName = focused ? 'person' : 'person-outline';
         }
         return <Icon name={iconName} size={size} color={color} />;
       },
@@ -64,8 +65,6 @@ const MainNavigator = () => (
       component={AppNavigator}  // แสดง AppNavigator ที่มี Stack Navigator
     />
     <Tab.Screen name="Settings" component={SettingsScreen} />
-
-    
   </Tab.Navigator>
 );
 
@@ -73,7 +72,9 @@ const MainNavigator = () => (
 export default function App() {
   return (
     <NavigationContainer>
-      <MainNavigator />
+      <CustomerProvider>
+        <MainNavigator />
+      </CustomerProvider>
     </NavigationContainer>
   );
 }

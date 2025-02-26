@@ -6,7 +6,7 @@ import Step from './../(component)/Step';
 import Textinput from '../(component)/Textinput';
 import ipAddress from '../ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import BackNextButton from '../(component)/BackNextButton';
+import { useCustomer } from './CustomerContext';
 
 const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
 
@@ -25,6 +25,7 @@ const  CustomerInfo =({navigation, route }) => {
   const [mobileNumber, setmobileNumber] = useState('');
   const [email, setemail] = useState('');
   const [timetableDepart, settimetableDepart] = useState([]);
+  const { customerData, updateCustomerData } = useCustomer();
   const [errors, setErrors] = useState({}); 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
@@ -53,6 +54,20 @@ const  CustomerInfo =({navigation, route }) => {
       newErrors.email = true;
     }
   }
+
+  updateCustomerData({
+    Firstname: Firstname,
+    Lastname: Lastname,
+    mobileNumber: mobileNumber,
+    email: email,
+    adult: adults,
+    child: children,
+    timetable: timeTableDepartId,
+    departtime: departDateTimeTable,
+    companyname: timetableDepart[0].md_company_nameeng,
+    startingpoint_name: timetableDepart[0].startingpoint_name,
+    endpoint_name: timetableDepart[0].endpoint_name,
+  });
 
   if (Object.keys(newErrors).length > 0) {
     setErrors(newErrors); // Update the errors state

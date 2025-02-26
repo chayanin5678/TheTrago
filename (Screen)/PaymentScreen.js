@@ -147,18 +147,13 @@ const PaymentScreen =({ navigation, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: totalPayment, // 100 บาท
-          token: tokenData.token,  // tokenData.token ที่ได้รับจาก Backend
+          amount: totalPayment, 
+          token: tokenData.token, 
         }),
       });
 
       const result = await response.json();
-      if (result.success) {
-        Alert.alert("✅ Payment Successful", `Transaction ID: ${result.charge.id}`);
-        console.log(result.charge.currency);
-      } else {
-        Alert.alert("❌ Payment Failed", result.success);
-      }
+      navigation.navigate('ResultScreen', {success: result.success, booking_code: booking_code});
     } catch (error) {
       Alert.alert("Error", error.message);
     }
