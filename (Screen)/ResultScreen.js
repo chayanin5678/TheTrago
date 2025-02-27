@@ -67,7 +67,7 @@ const ResultScreen = ({ navigation, route }) => {
         <View style={styles.divider} />
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
         <Text style={styles.titel}>Summary</Text>
-        <Text> Booking date: {bookdate}</Text>
+        <Text> Booking date: {customerData.bookdate}</Text>
         </View>
         {orderStatus === "Failed" && (
           <Text style={styles.errorText}>Please try again later or contact support.</Text>

@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
+import { useCustomer } from './(Screen)/CustomerContext';
 import moment from 'moment';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
@@ -31,10 +32,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [timetableReturn, settimetableReturn] = useState([]);
   const [currentPageDepart, setcurrentPageDepart] = useState(1);
   const [currentPageReturn, setcurrentPageReturn] = useState(1);
- console.log(startingPoint.id);
- console.log(endPoint.id);
- console.log(departureDateInput);
- console.log(formattedDate);
+  const { customerData, updateCustomerData } = useCustomer();
+
   
 
  const formatDateInput = (date) => {
@@ -55,7 +54,12 @@ const SearchFerry = ({ navigation, route }) => {
     const [showDepartPicker, setShowDepartPicker] = useState(false);
     const [showReturnPicker, setShowReturnPicker] = useState(false);
     const departureDateSend = departureDate.toISOString().split('T')[0];
-  
+    const day = departureDateSend.substring(8,10);
+    console.log(day);
+    const month = departureDateSend.substring(5,7);
+    console.log(month);
+    const year = departureDateSend.substring(0,4);
+    console.log(year);
 
   const calculateDiscountedPrice = (price) => {
     if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
@@ -70,7 +74,7 @@ const SearchFerry = ({ navigation, route }) => {
       maximumFractionDigits: 2 
     });
   
-    console.log("Formatted Value:", formattedValue); // 🛠 Debugging
+
     return formattedValue;
   }
  
@@ -579,6 +583,16 @@ const SearchFerry = ({ navigation, route }) => {
             <Text style={styles.price}>THB {formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} / person</Text>
             <TouchableOpacity style={styles.bookNowButton}
             onPress={()=>{
+            
+              updateCustomerData({
+                roud: tripTypeSearch === "One Way Trip" ? 1 : tripTypeSearch === "Round Trip" ? 2 : null,
+                day: day,
+                month: month,
+                year: year,
+                departdate:departureDateSend,  
+
+            });
+            
               navigation.navigate('TripDetail',{
                timeTableDepartId:item.md_timetable_id,
                departDateTimeTable: departureDateSend,

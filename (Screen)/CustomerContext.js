@@ -6,25 +6,27 @@ const CustomerContext = createContext();
 // สร้าง Provider สำหรับ Context
 export const CustomerProvider = ({ children }) => {
   const [customerData, setCustomerData] = useState({
+    bookingcode: '',
+    groupcode: '',
     Firstname: '',
     Lastname: '',
     selectedTitle: 'Please Select',
-    mobileNumber: '',
+    tel: '',
     email: '',
     companyid: '',
     companyname: '',
     startingpoint_name: '',
     endpoint_name: '',
-    boatpeid: '',
+    boatypeid: '',
     country: '',
     countrycode: '',
-    roumd: '',
-    timetable: '',
+    roud: '',
+    timetableid: '',
     tel: '',
     email:'',
     price:'',
     total:'',
-    currency:'',
+    currency:'THB',
     net:'',
     adult:'',
     child:'',
@@ -34,8 +36,10 @@ export const CustomerProvider = ({ children }) => {
     year:'',
     time:'',
     date:'',
+    departdate:'',
     departtime:'',
     ip:'',
+    paymentid:'',
   });
 
   const updateCustomerData = (newData) => {

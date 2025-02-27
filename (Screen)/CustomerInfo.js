@@ -26,6 +26,8 @@ const  CustomerInfo =({navigation, route }) => {
   const [email, setemail] = useState('');
   const [timetableDepart, settimetableDepart] = useState([]);
   const { customerData, updateCustomerData } = useCustomer();
+  const [country, setCountry] = useState('');
+  const[countrycode, setCountrycode] = useState('');
   const [errors, setErrors] = useState({}); 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
@@ -58,15 +60,22 @@ const  CustomerInfo =({navigation, route }) => {
   updateCustomerData({
     Firstname: Firstname,
     Lastname: Lastname,
-    mobileNumber: mobileNumber,
+    tel: mobileNumber,
     email: email,
     adult: adults,
     child: children,
     timetable: timeTableDepartId,
     departtime: departDateTimeTable,
+    companyid: timetableDepart[0].md_timetable_companyid,
     companyname: timetableDepart[0].md_company_nameeng,
     startingpoint_name: timetableDepart[0].startingpoint_name,
     endpoint_name: timetableDepart[0].endpoint_name,
+    boatypeid: timetableDepart[0].md_timetable_boattypeid,
+    country: country,
+    countrycode: countrycode,
+    timetableid:  timetableDepart[0].md_timetable_id,
+    time: timetableDepart[0].md_timetable_time,
+    departtime: timetableDepart[0].md_timetable_departuretime,
   });
 
   if (Object.keys(newErrors).length > 0) {
@@ -138,7 +147,8 @@ const  CustomerInfo =({navigation, route }) => {
   
   const handleSelectTele = (item) => {
     const selectedValue = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`;
-    
+    setCountry(item.sys_countries_code);
+    setCountrycode(item.sys_countries_telephone);
     setSelectedTele(selectedValue);
     setErrors((prev) => ({ ...prev, selectedTele: false })); // Clear the error state
     toggleTeleModal();

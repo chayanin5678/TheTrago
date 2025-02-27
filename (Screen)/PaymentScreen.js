@@ -7,6 +7,9 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import { MaterialIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import axios from 'axios';
+import { useCustomer } from './CustomerContext';
+import moment from "moment-timezone";
 
 const PaymentScreen =({ navigation, route }) => {
   const {timeTableDepartId, departDateTimeTable,adults, totalAdult, totalChild,children,selectedTitle,Firstname,Lastname,selectedTele,mobileNumber,email} = route.params;
@@ -24,11 +27,16 @@ const PaymentScreen =({ navigation, route }) => {
    const [timetableDepart, settimetableDepart] = useState([]);
    const [totalPayment, settotalPayment] = useState('');
    const [bookingcode, setBookingcode] = useState([]);
-
+  const { customerData } = useCustomer();
    // Compute booking_code only if bookingcode is available
    const booking_code = bookingcode.length > 0 
      ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
      : "";
+    const [paymentcode,setpaymentcode] = useState('');
+    const [paymentfee,setPaymentfee] = useState('');
+    const [currentDateTime, setCurrentDateTime] = useState('');
+
+
 
   console.log(booking_code);
   console.log(year);
@@ -38,6 +46,10 @@ const PaymentScreen =({ navigation, route }) => {
   console.log(selectedTele);
   console.log(mobileNumber);
   console.log(email);
+  
+  console.log("Booking DateTime:", currentDateTime);
+  
+  console.log(customerData.departtime);
   const handleChange = (text) => {
     // กำจัดสิ่งที่ไม่ใช่ตัวเลข
     let formattedText = text.replace(/\D/g, "");
@@ -90,6 +102,7 @@ const PaymentScreen =({ navigation, route }) => {
     setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild))));  
     setSubtotal(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-(Discount)));    
     settotalPayment(formatNumber(parseFloat(subtotal) + parseFloat(calculatePaymentFee(subtotal)))); 
+    setPaymentfee(calculatePaymentFee(subtotal));
     console.log(subtotal); 
     }, [Discount,subtotal]);
  
@@ -117,47 +130,93 @@ const PaymentScreen =({ navigation, route }) => {
     if (!cvv) newErrors.cvv = true;
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      Alert.alert('Incomplete Information', 'Please fill in all required fields.');
-      return;
+        setErrors(newErrors);
+        Alert.alert("Incomplete Information", "Please fill in all required fields.");
+        return;
     }
 
     try {
+        // 1️⃣ สร้าง Token สำหรับบัตรเครดิต
+        const tokenResponse = await fetch(`http://${ipAddress}:5000/create-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                card: {
+                    name: cardName,
+                    number: cardNumber,
+                    expiration_month: month,
+                    expiration_year: year,
+                    security_code: cvv,
+                },
+            }),
+        });
 
-      const tokenResponse = await fetch(`http://${ipAddress}:5000/create-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          card: {
-            name: cardName,
-            number: cardNumber,
-            expiration_month: month,
-            expiration_year: year,
-            security_code: cvv,
-          },
-        }),
-      });
+        if (!tokenResponse.ok) throw new Error("Failed to create payment token");
+        const tokenData = await tokenResponse.json();
+        if (!tokenData.success) throw new Error(tokenData.error);
 
-      // ตรวจสอบว่า tokenResponse เป็น JSON และแปลงข้อมูลที่ได้รับ
-      const tokenData = await tokenResponse.json();  // ใช้ json() แปลงเป็น JSON
-      if (!tokenData.success) throw new Error(tokenData.error); // ถ้าไม่สำเร็จให้แสดงข้อผิดพลาด
+        // 2️⃣ ใช้ Token เพื่อชำระเงิน
+        const paymentResponse = await fetch(`http://${ipAddress}:5000/charge`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: totalPayment,
+                token: tokenData.token,
+            }),
+        });
 
-      // ใช้ Token เพื่อชำระเงิน
-      const response = await fetch(`http://${ipAddress}:5000/charge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: totalPayment, 
-          token: tokenData.token, 
-        }),
-      });
+        if (!paymentResponse.ok) throw new Error("Payment failed");
+        const paymentResult = await paymentResponse.json();
+        if (!paymentResult.success) throw new Error("Payment declined");
 
-      const result = await response.json();
-      navigation.navigate('ResultScreen', {success: result.success, booking_code: booking_code});
+        // 3️⃣ ตั้งค่าเวลาปัจจุบันและบันทึกลงฐานข้อมูล
+       
+        setpaymentcode(paymentResult.charge.id);
+        await createBooking(currentDateTime, paymentResult.charge.id);
+
+        Alert.alert("Success", "Booking created successfully");
+        navigation.navigate("ResultScreen", { success: paymentResult.success, booking_code: bookingcode });
+
     } catch (error) {
-      Alert.alert("Error", error.message);
+        console.error("Error:", error);
+        Alert.alert("Error", error.message);
     }
-  };
+};
+
+// 🛠️ ฟังก์ชันสำหรับสร้าง Booking
+const createBooking = async (currentDateTime, paymentId) => {
+    try {
+        await axios.post(`http://${ipAddress}:5000/booking`, {
+            md_booking_code: booking_code,
+            md_booking_companyid: customerData.companyid,
+            md_booking_paymentid: paymentId,
+            md_booking_boattypeid: customerData.boatypeid,
+            md_booking_country: customerData.country,
+            md_booking_countrycode: customerData.countrycode,
+            md_booking_round: customerData.roud,
+            md_booking_timetableid: customerData.timetableid,
+            md_booking_tel: customerData.tel,
+            md_booking_email: customerData.email,
+            md_booking_price: subtotal,
+            md_booking_total: totalPayment,
+            md_booking_currency: customerData.currency,
+            md_booking_net: Discount,
+            md_booking_adult: customerData.adult,
+            md_booking_child: customerData.child,
+            md_booking_day: customerData.day,
+            md_booking_month: customerData.month,
+            md_booking_year: customerData.year,
+            md_booking_time: customerData.time,
+            md_booking_date: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+            md_booking_departdate: customerData.departdate,
+            md_booking_departtime: customerData.departtime,
+        });
+    } catch (error) {
+        console.error("Error submitting booking:", error);
+        throw new Error("Failed to create booking");
+    }
+};
+
 
   const handleSelection = (option) => {
     setSelectedOption(option);
