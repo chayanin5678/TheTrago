@@ -4,13 +4,14 @@ import LogoHeader from "./../(component)/Logo";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import ipAddress from "../ipconfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
-
+import moment from "moment";
 import { useCustomer } from './CustomerContext';
 
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
-  const { success, booking_code } = route.params;
+  const { success, booking_code } = route.params || {};
   const [orderStatus, setOrderStatus] = useState("Pending");
+  console.log(customerData.bookingdate);
 
   useEffect(() => {
     if (success === true) {
@@ -31,6 +32,15 @@ const ResultScreen = ({ navigation, route }) => {
     return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function formatPhoneNumber(phoneNumber) {
+    // ตรวจสอบว่าหมายเลขมีความยาวเพียงพอ
+    if (phoneNumber.length !== 10) return "Invalid number";
+
+    // ตัดเลขตัวแรกออก แล้วจัดรูปแบบใหม่
+    return `${phoneNumber.slice(1, 3)}-${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
+}
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <LogoHeader />
@@ -47,32 +57,61 @@ const ResultScreen = ({ navigation, route }) => {
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, flexWrap: "wrap", width:"90%" }}>{customerData.companyname}</Text>
           <View style={styles.row}>
           <Ionicons name="location-outline" size={16} color="#FD501E" />
-          <Text>{customerData.startingpoint_name}</Text>
+           <Text> {customerData.startingpoint_name}</Text>
           <AntDesign name="arrowright" size={10} color="black" />
-          <Text>{customerData.endpoint_name}</Text>
+          <Text> {customerData.endpoint_name}</Text>
           </View>
           <View style={styles.row}>
           <Ionicons name="calendar-outline" size={16} color="#FD501E" />
-          <Text>{formatDate(customerData.departtime)}</Text>
+          <Text> {formatDate(customerData.departdate)}</Text>
           </View>
           <View style={styles.row}>
           <Ionicons name="person-outline" size={16} color="#FD501E" />
-          <Text>{customerData.adult} Adult, {customerData.child} Child</Text>
+          <Text> {customerData.adult} Adult, {customerData.child} Child</Text>
           </View>
-          <Ionicons name="globe-outline" size={16} color="#FD501E" />
+          <View style={styles.row}>
           <Ionicons name="checkmark-circle-outline" size={16} color="#FD501E" />
+          <Text> Free Cancellation</Text>
+          </View>
           </View>
         </View>
         
         <View style={styles.divider} />
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
         <Text style={styles.titel}>Summary</Text>
-        <Text> Booking date: {customerData.bookdate}</Text>
+        <Text> Booking date: {formatDate(customerData.bookingdate)}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text >Adult </Text>
+        <Text> {customerData.adult} Persons</Text>
+        </View>
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text >Passenger name </Text>
+        <Text>{customerData.Firstname} {customerData.Lastname}</Text>
+        </View>
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text >Phone number </Text>
+        <Text>{customerData.countrycode} {formatPhoneNumber(customerData.tel)}</Text>
+        </View>
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text >Email address </Text>
+        <Text>{customerData.email}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text style={styles.titel}>Price Details</Text>
+        </View>
+     
+        <View style={[styles.row, { justifyContent: 'space-between' }]}>
+        <Text >Adult x {customerData.adult} </Text>
+        <Text>{customerData.totaladult}</Text>
         </View>
         {orderStatus === "Failed" && (
           <Text style={styles.errorText}>Please try again later or contact support.</Text>
         )}
-        <Text style={styles.bookingCodeText}>Booking Code: {booking_code || "N/A"}</Text>
+       <Text style={styles.bookingCodeText}>Booking Code: {booking_code || "N/A"}</Text>
+
 
         <TouchableOpacity style={styles.BackButton} onPress={handleGoBack}>
           <Text style={styles.BackButtonText}>Go Back</Text>

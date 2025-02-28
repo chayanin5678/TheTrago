@@ -72,7 +72,7 @@ const  CustomerInfo =({navigation, route }) => {
     endpoint_name: timetableDepart[0].endpoint_name,
     boatypeid: timetableDepart[0].md_timetable_boattypeid,
     country: country,
-    countrycode: countrycode,
+    countrycode: '+'+countrycode,
     timetableid:  timetableDepart[0].md_timetable_id,
     time: timetableDepart[0].md_timetable_time,
     departtime: timetableDepart[0].md_timetable_departuretime,

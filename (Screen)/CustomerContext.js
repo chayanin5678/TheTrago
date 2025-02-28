@@ -28,9 +28,10 @@ export const CustomerProvider = ({ children }) => {
     total:'',
     currency:'THB',
     net:'',
-    adult:'',
-    child:'',
-    infant:'',
+    adult:0,
+    child:0,
+    infant:0,
+    totaladult:'',
     day:'',
     month:'',
     year:'',
@@ -40,6 +41,7 @@ export const CustomerProvider = ({ children }) => {
     departtime:'',
     ip:'',
     paymentid:'',
+    bookingdate:'',
   });
 
   const updateCustomerData = (newData) => {
