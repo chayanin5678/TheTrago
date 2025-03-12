@@ -67,32 +67,7 @@ const PaymentScreen = ({ navigation, route }) => {
     
   };
 
-  useEffect(() => {
-    const handleDeepLink = (event) => {
-      let url = event.url || "";
-      console.log("🔗 Deep Link Received:", url);
 
-      if (url.includes("payment/success")) {
-        Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
-        navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
-      } else if (url.includes("payment/failure")) {
-        Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
-        navigation.navigate("ResultScreen", { success: false });
-      }
-    };
-
-    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-
-    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [navigation]);
 
   
 
@@ -229,22 +204,23 @@ const PaymentScreen = ({ navigation, route }) => {
       if (!paymentResult.success) throw new Error("❌ Payment declined");
   
       // ✅ 3. เปิด Omise Authorize URL
-      if (paymentResult.charge.authorize_uri) {
-        console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
-        await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+      // if (paymentResult.charge.authorize_uri) {
+      //   console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
+      //   await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
      
-      } else {
-        throw new Error("❌ No authorize URI found.");
-      }
+      // } else {
+      //   throw new Error("❌ No authorize URI found.");
+      // }
   
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
       setpaymentcode(paymentResult.charge.id);
       console.log('✅ Payment code:', paymentResult.charge.id);
+      console.log('✅ booking code:', booking_code);
   
       await createBooking(paymentResult.charge.id);
   
       updateCustomerData({
-        bookingcode: booking_code,
+        bookingcode: `${booking_code}`,
         bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
         totaladult: formatNumberWithComma(formatNumber(totalAdult)),
         totalchild: formatNumberWithComma(formatNumber(totalChild)),
@@ -254,6 +230,7 @@ const PaymentScreen = ({ navigation, route }) => {
         paymentfee: formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal))),
         total: formatNumberWithComma(formatNumber(totalPayment)),
       });
+      navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
 
    //   navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
@@ -305,6 +282,33 @@ const PaymentScreen = ({ navigation, route }) => {
       throw new Error("❌ Failed to create booking");
     }
   };
+
+  useEffect(() => {
+    const handleDeepLink = (event) => {
+      let url = event.url || "";
+      console.log("🔗 Deep Link Received:", url);
+
+      if (url.includes("payment/success")) {
+        Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+        navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+      } else if (url.includes("payment/failure")) {
+        Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
+        navigation.navigate("ResultScreen", { success: false });
+      }
+    };
+
+    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation]);
   
 
 

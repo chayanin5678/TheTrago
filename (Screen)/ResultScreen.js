@@ -227,18 +227,6 @@ const ResultScreen = ({ navigation, route }) => {
   </html>
   `;
 
-  const convertUriToBase64 = async (uri) => {
-    try {
-      const file = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      return file;
-    } catch (error) {
-      console.error('Error converting URI to base64:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     const generatePDF = async () => {
       try {
@@ -259,26 +247,39 @@ const ResultScreen = ({ navigation, route }) => {
     }
   }, [pdfUri]);
 
-const sendEmail = async (pdfUri) => {
-  try {
-    const base64File = await convertUriToBase64(pdfUri);
-    const response = await axios.post(`${ipAddress}/send-email`, {
-      recipientEmail: customerData.email,
-      subject: 'Your Travel Ticket',
-      body: 'Dear customer, \n\nPlease find your travel ticket attached.',
-      pdfUri: base64File,  // Sending the base64 string instead of the local URI
-    });
+  const sendEmail = async (pdfUri) => {
+    try {
+      const base64File = await convertUriToBase64(pdfUri);
+      const response = await axios.post(`${ipAddress}/upload`, {
+        email: customerData.email,
+        file: base64File,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-    if (response.data.success) {
-      alert("The email has been sent successfully.");
-    } else {
-      alert("Failed to send the email.");
+      if (response.data.success) {
+        Alert.alert('Success', 'The email has been sent successfully.');
+      } else {
+        Alert.alert('Error', 'Failed to send the email.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      Alert.alert('Error', 'There was an error sending the email.');
     }
-  } catch (error) {
-    console.error('Error sending email:', error);
-    alert("There was an error sending the email.");
-  }
-};
+  };
+
+  const convertUriToBase64 = async (uri) => {
+    try {
+      const file = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return file;
+    } catch (error) {
+      console.error('Error converting URI to base64:', error);
+      return null;
+    }
+  };
+  
   
 
 
@@ -399,7 +400,7 @@ const sendEmail = async (pdfUri) => {
         <View style={styles.bookingCodeText}>
         <View style={{ flexDirection: 'column' }}>
           <Text>Booking Code:</Text>
-          <Text>{customerData.booking_code || "N/A"}</Text>
+          <Text>{customerData.bookingcode || "N/A"}</Text>
           </View>
           <TouchableOpacity style={styles.BackButton} onPress={handleGoBack}>
           <Text style={styles.BackButtonText}>Go Back</Text>
