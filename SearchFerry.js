@@ -183,7 +183,7 @@ const SearchFerry = ({ navigation, route }) => {
   const handleSearchStart = () => {
   
 
-    fetch(`http://${ipAddress}:5000/search/${startingPoint.id}/${endPoint.id}/${formattedDate}`)
+    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${formattedDate}`)
       .then((response) => {
              if (!response.ok) {
           
@@ -205,7 +205,7 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
   const handleSearchEnd = () => {
-    fetch(`http://${ipAddress}:5000/search/${endPoint.id}/${startingPoint.id}/${formattedDate}`)
+    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${formattedDate}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

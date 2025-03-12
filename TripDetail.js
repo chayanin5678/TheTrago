@@ -143,7 +143,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
+    fetch(`${ipAddress}/timetable/${timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -177,7 +177,7 @@ const TripDetail = ({ navigation, route }) => {
   }, [timetableDepart, adults, children, adultPrice, childPrice]);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/pickup/${timeTablecCmpanyId}/${timeTablecPierStartId}`)
+    fetch(`${ipAddress}/pickup/${timeTablecCmpanyId}/${timeTablecPierStartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -198,7 +198,7 @@ const TripDetail = ({ navigation, route }) => {
   }, [timeTablecCmpanyId, timeTablecPierStartId]);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/pickup/${timeTablecCmpanyId}/${timeTablecPierStartId}/${selectedTranSportPickup}`)
+    fetch(`${ipAddress}/pickup/${timeTablecCmpanyId}/${timeTablecPierStartId}/${selectedTranSportPickup}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -219,7 +219,7 @@ const TripDetail = ({ navigation, route }) => {
   }, [timeTablecCmpanyId, timeTablecPierStartId, selectedTranSportPickup]);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/dropoff/${timeTablecCmpanyId}/${timeTablecPierEndId}`)
+    fetch(`${ipAddress}/dropoff/${timeTablecCmpanyId}/${timeTablecPierEndId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -240,7 +240,7 @@ const TripDetail = ({ navigation, route }) => {
   }, [timeTablecCmpanyId, timeTablecPierStartId]);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/dropoff/${timeTablecCmpanyId}/${timeTablecPierEndId}/${selectedTranSportDropoff}`)
+    fetch(`${ipAddress}/dropoff/${timeTablecCmpanyId}/${timeTablecPierEndId}/${selectedTranSportDropoff}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -753,6 +753,7 @@ const styles = StyleSheet.create({
     textAlign: 'left', // Ensure left alignment
     color: '#002348',
     marginBottom: 20,
+    marginTop: 20,
     marginLeft: 0, // Optional: ensure no margin if not needed
   },
 
@@ -760,7 +761,8 @@ const styles = StyleSheet.create({
   bookingSection: {
     backgroundColor: '#F6F6F6',
     borderRadius: 30,
-    padding: 20,
+    padding: '6%',
+    margin: '1.5%',
     width: '100%',
     marginBottom: 0,
     paddingBottom: 0,
@@ -969,8 +971,8 @@ const styles = StyleSheet.create({
 
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 16,
-    margin: 16,
+    padding: '5%',
+    margin:'6%',
     marginLeft: -3,
     marginRight: -3,
     shadowColor: '#000',

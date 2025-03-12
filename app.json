@@ -2,9 +2,20 @@
   "expo": {
     "name": "TheTrago",
     "slug": "TheTrago",
+    "scheme": "thetrago",
+    "extra": {
+      "deeplink": {
+        "host": "thetrago",
+        "path": "/",
+        "subdomain": "thetrago"
+      },
+      "eas": {
+        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
+      }
+    },
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -12,17 +23,18 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "versionCode": 1,
+      "package": "com.chayanin5678.TheTrago"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "linking": {
+      "prefixes": ["thetrago://"],
+      "config": {
+        "screens": {
+          "HomeScreen": "home",
+          "ResultScreen": "payment/success"
+        }
+      }
     },
     "plugins": [
       "expo-secure-store"

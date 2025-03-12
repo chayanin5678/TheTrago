@@ -10,7 +10,7 @@ const StartingPointScreen = ({ navigation, route }) => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/start`)
+    fetch(`${ipAddress}/start`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

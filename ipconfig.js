@@ -1,3 +1,2 @@
-const ipAddress = '192.168.2.178';
+const ipAddress = 'https://5fd4-184-22-134-134.ngrok-free.app';
 export default ipAddress;
-

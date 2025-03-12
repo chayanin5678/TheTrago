@@ -180,7 +180,7 @@ const  CustomerInfo =({navigation, route }) => {
     }, [subtotal]);
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
+    fetch(`${ipAddress}/timetable/${timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -202,7 +202,7 @@ const  CustomerInfo =({navigation, route }) => {
 
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/telephone`)
+    fetch(`${ipAddress}/telephone`)
       .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {

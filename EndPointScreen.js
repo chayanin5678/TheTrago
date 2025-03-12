@@ -17,7 +17,7 @@ const EndPointScreen = ({ navigation, route }) => {
       return;
     }
 
-    fetch(`http://${ipAddress}:5000/end/${startingPointId}`)
+    fetch(`${ipAddress}/end/${startingPointId}`)
       .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {

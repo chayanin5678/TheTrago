@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
+import { View, StyleSheet, Image, Text, Dimensions  } from 'react-native';
 import Entypo from '@expo/vector-icons/Entypo';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+
 export default function Step({ logoUri }) { 
  
 
@@ -53,7 +55,7 @@ export default function Step({ logoUri }) {
 
       <View style={styles.col}>
         <View style={styles.circlepass}>
-        <Entypo name="check" size={22} color="white" />
+        <Entypo style name="check" size={22} color="white" />
         </View>
         <Text style={styles.step}>Shuttle Transfer</Text>
       </View>
@@ -122,41 +124,44 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 0
+    marginLeft: 0,
+    marginVertical: hp("2%"),
 
   },
   col: {
     flexDirection: 'column',
     margin: 10,
-    width: 95,
+    width: wp("22%"),
     height:50,
     alignItems: 'center',
   
   },
   circleactive: {
     backgroundColor: '#FD501E',
-    height: 40,
-    width: 40,
-    borderRadius: 30,
+    width: wp("10%"),
+    height: wp("10%"),
+    borderRadius: wp("5%"),
     justifyContent: 'center',
     alignItems: 'center',
   },
   circlepass: {
     backgroundColor: '#09a4f8',
-    height: 40,
-    width: 40,
-    borderRadius: 30,
+    width: wp("10%"),
+    height: wp("10%"),
+    borderRadius: wp("5%"),
     justifyContent: 'center',
     alignItems: 'center',
   },
   textactive: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: hp("2%"),
   },
   step: {
-    fontSize: 10,
-    flexWrap:'wrap',
-    maxWidth:100,
+    marginTop: hp("1%"),
+    fontSize: hp("1.5%"),
+    textAlign: "center",
+    width: wp("22%"),
+   
    
   },
   linerow: {

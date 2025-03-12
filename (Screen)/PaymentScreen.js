@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator  } from "react-native";
 import ipAddress from "../ipconfig";
 import LogoHeader from "./../(component)/Logo";
 import Step from "../(component)/Step";
@@ -10,6 +10,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import moment from "moment-timezone";
+import * as Linking from "expo-linking";  
 
 const PaymentScreen = ({ navigation, route }) => {
   const { timeTableDepartId, departDateTimeTable, adults, totalAdult, totalChild, children, selectedTitle, Firstname, Lastname, selectedTele, mobileNumber, email } = route.params;
@@ -63,9 +64,40 @@ const PaymentScreen = ({ navigation, route }) => {
 
     // ตั้งค่า expirationDate ใหม่
     setExpirationDate(formattedText);
+    
   };
+
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/bookingcode`)
+    const handleDeepLink = (event) => {
+      let url = event.url || "";
+      console.log("🔗 Deep Link Received:", url);
+
+      if (url.includes("payment/success")) {
+        Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+        navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+      } else if (url.includes("payment/failure")) {
+        Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
+        navigation.navigate("ResultScreen", { success: false });
+      }
+    };
+
+    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation]);
+
+  
+
+  useEffect(() => {
+    fetch(`${ipAddress}/bookingcode`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -144,25 +176,24 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
   const handlePayment = async () => {
-
     let newErrors = {};
     if (!cardName) newErrors.cardName = true;
     if (!cardNumber) newErrors.cardNumber = true;
     if (!expirationDate) newErrors.expirationDate = true;
     if (!cvv) newErrors.cvv = true;
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      Alert.alert("Incomplete Information", "Please fill in all required fields.");
+      Alert.alert("❌ Incomplete Information", "Please fill in all required fields.");
       return;
     }
-
-    setIsLoading(true); // ✅ เปิด loading ก่อนเริ่มทำงาน
-    console.log("Loading started...");
-
-
+  
+    setIsLoading(true); 
+    console.log("🔄 Loading started...");
+  
     try {
-      const tokenResponse = await fetch(`http://${ipAddress}:5000/create-token`, {
+      // ✅ 1. สร้าง Token ของบัตรเครดิต
+      const tokenResponse = await fetch(`${ipAddress}/create-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,56 +206,77 @@ const PaymentScreen = ({ navigation, route }) => {
           },
         }),
       });
-
-      if (!tokenResponse.ok) throw new Error("Failed to create payment token");
+  
+      if (!tokenResponse.ok) throw new Error("❌ Failed to create payment token");
       const tokenData = await tokenResponse.json();
       if (!tokenData.success) throw new Error(tokenData.error);
-
-      const paymentResponse = await fetch(`http://${ipAddress}:5000/charge`, {
+  
+      // ✅ 2. ทำการชำระเงิน
+      const paymentResponse = await fetch(`${ipAddress}/charge`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",  "ngrok-skip-browser-warning": "true",  },
         body: JSON.stringify({
           amount: totalPayment,
           token: tokenData.token,
+          return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
+       
         }),
       });
-
-      if (!paymentResponse.ok) throw new Error("Payment failed");
+      console.log(`${ipAddress}/redirect`);
+  
+      if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
-      if (!paymentResult.success) throw new Error("Payment declined");
-
+      if (!paymentResult.success) throw new Error("❌ Payment declined");
+  
+      // ✅ 3. เปิด Omise Authorize URL
+      if (paymentResult.charge.authorize_uri) {
+        console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
+        await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+     
+      } else {
+        throw new Error("❌ No authorize URI found.");
+      }
+  
+      // ✅ 4. บันทึก Payment Code และสร้าง Booking
       setpaymentcode(paymentResult.charge.id);
-      console.log('payment code '+paymentcode);
-      await createBooking(paymentcode);
-
+      console.log('✅ Payment code:', paymentResult.charge.id);
+  
+      await createBooking(paymentResult.charge.id);
+  
       updateCustomerData({
+        bookingcode: booking_code,
         bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
         totaladult: formatNumberWithComma(formatNumber(totalAdult)),
+        totalchild: formatNumberWithComma(formatNumber(totalChild)),
+        discount: formatNumberWithComma(formatNumber(Discount)),
+        ticketfare: formatNumberWithComma(formatNumber(subtotal)),
+        subtotal: formatNumberWithComma(formatNumber(subtotal)),
+        paymentfee: formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal))),
+        total: formatNumberWithComma(formatNumber(totalPayment)),
       });
 
-
-      setIsLoading(false); // ✅ ปิด loading หลังจากจ่ายเงินสำเร็จ
-      console.log("Loading stopped...");
-
-      Alert.alert("Success", "Booking created successfully");
-      navigation.navigate("ResultScreen", { success: paymentResult.success, booking_code: booking_code });
-
+   //   navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+      setIsLoading(false);
+      console.log("✅ Loading stopped...");
+  
     } catch (error) {
-      console.error("Error:", error);
-      setIsLoading(false); // ✅ ปิด loading แม้เกิด error
-      Alert.alert("Error", error.message);
+      console.error("❌ Error:", error);
+      setIsLoading(false);
+      Alert.alert("❌ Error", error.message);
     }
   };
+  
+  
 
 
   // 🛠️ ฟังก์ชันสำหรับสร้าง Booking
-  const createBooking = async (paymentcode) => {
-
+  const createBooking = async (paymentCode) => {
     try {
-      await axios.post(`http://${ipAddress}:5000/booking`, {
+      console.log("📌 Creating Booking with Payment Code:", paymentCode);
+      await axios.post(`${ipAddress}/booking`, {
         md_booking_code: booking_code,
         md_booking_companyid: customerData.companyid,
-        md_booking_paymentid: paymentcode,
+        md_booking_paymentid: paymentCode, // ✅ ใช้ค่าที่ส่งเข้ามา
         md_booking_boattypeid: customerData.boatypeid,
         md_booking_country: customerData.country,
         md_booking_countrycode: customerData.countrycode,
@@ -246,11 +298,14 @@ const PaymentScreen = ({ navigation, route }) => {
         md_booking_departdate: customerData.departdate,
         md_booking_departtime: customerData.departtime,
       });
+  
+      console.log("✅ Booking created successfully");
     } catch (error) {
-      console.error("Error submitting booking:", error);
-      throw new Error("Failed to create booking");
+      console.error("❌ Error submitting booking:", error);
+      throw new Error("❌ Failed to create booking");
     }
   };
+  
 
 
   const handleSelection = (option) => {
@@ -259,7 +314,7 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    fetch(`http://${ipAddress}:5000/timetable/${timeTableDepartId}`)
+    fetch(`${ipAddress}/timetable/${timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

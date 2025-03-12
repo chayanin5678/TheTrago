@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet } from 'react-native';
 
-// หน้าแต่ละหน้าที่จะไป
+// Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';  
 import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
@@ -15,18 +15,19 @@ import CustomerInfo from './(Screen)/CustomerInfo';
 import PaymentScreen from './(Screen)/PaymentScreen';
 import ResultScreen from './(Screen)/ResultScreen';
 import { CustomerProvider } from './(Screen)/CustomerContext';
+import LinkingConfiguration from './(Screen)/linking';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Settings Screen (หน้า Settings)
+// Settings Screen
 const SettingsScreen = () => (
   <View style={styles.screen}>
     <Text>Settings Screen</Text>
   </View>
 );
 
-// AppNavigator (ใช้ Stack Navigator สำหรับการจัดการหน้าต่างๆ)
+// AppNavigator (ใช้ Stack Navigator)
 const AppNavigator = () => (
   <Stack.Navigator initialRouteName="HomeScreen">
     <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
@@ -40,7 +41,7 @@ const AppNavigator = () => (
   </Stack.Navigator>
 );
 
-// Main Navigator (ใช้ Bottom Tab Navigator)
+// MainNavigator (ใช้ Bottom Tab Navigator)
 const MainNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -59,19 +60,16 @@ const MainNavigator = () => (
   >
     <Tab.Screen
       name="Home"
-      options={{
-        headerShown: false,
-      }}
-      component={AppNavigator}  // แสดง AppNavigator ที่มี Stack Navigator
+      options={{ headerShown: false }}
+      component={AppNavigator}  // ใช้ Stack Navigator ที่รวมทุกหน้าหลัก
     />
     <Tab.Screen name="Settings" component={SettingsScreen} />
   </Tab.Navigator>
 );
 
-// ส่วนหลักของแอปที่ใช้ Navigation Container
 export default function App() {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={LinkingConfiguration}>  
       <CustomerProvider>
         <MainNavigator />
       </CustomerProvider>
