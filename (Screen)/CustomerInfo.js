@@ -233,7 +233,7 @@ const  CustomerInfo =({navigation, route }) => {
           style={[styles.button, errors.selectedTitle && styles.errorInput]} 
           onPress={toggleModal}>
           <Text style={styles.buttonText}>{selectedTitle}</Text>
-          <Icon name="chevron-down" size={18} color="#A1A1A1" style={styles.icon} />
+          <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
         </TouchableOpacity>
 
         {/* Modal for title selection */}
@@ -287,7 +287,7 @@ const  CustomerInfo =({navigation, route }) => {
           style={[styles.button, errors.selectedTele && styles.errorInput]} 
           onPress={toggleTeleModal}>
           <Text style={styles.buttonText}>{selectedTele}</Text>
-          <Icon name="chevron-down" size={18} color="#A1A1A1" style={styles.icon} />
+          <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
         </TouchableOpacity>
 
         {/* Modal for selecting telephone */}
@@ -298,6 +298,7 @@ const  CustomerInfo =({navigation, route }) => {
                 placeholder="Search country"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
+                style={styles.textInput}
               />
               <FlatList
                 data={filteredTelePhones}
@@ -460,9 +461,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#A1A1A1',
+    borderColor: '#ced4da',
     borderRadius: 8,
-    width: '94%',
+    width: '93%',
     justifyContent: 'space-between',
     margin:10,
 
@@ -609,6 +610,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   
+  },
+  textInput: {
+    width: '100%',       // กำหนดความกว้าง
+    padding: 10,        // กำหนดช่องว่างภายใน
+    borderWidth: 1,     // กำหนดความหนาของขอบ
+    borderColor: '#ced4da', // กำหนดสีของขอบ
+    borderRadius: 5,    // ปรับมุมขอบให้โค้ง
   },
 
 });

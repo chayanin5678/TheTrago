@@ -11,6 +11,7 @@ import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import moment from "moment-timezone";
 import * as Linking from "expo-linking";  
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const PaymentScreen = ({ navigation, route }) => {
   const { timeTableDepartId, departDateTimeTable, adults, totalAdult, totalChild, children, selectedTitle, Firstname, Lastname, selectedTele, mobileNumber, email } = route.params;
@@ -204,13 +205,13 @@ const PaymentScreen = ({ navigation, route }) => {
       if (!paymentResult.success) throw new Error("❌ Payment declined");
   
       // ✅ 3. เปิด Omise Authorize URL
-      // if (paymentResult.charge.authorize_uri) {
-      //   console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
-      //   await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+      if (paymentResult.charge.authorize_uri) {
+        console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
+        await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
      
-      // } else {
-      //   throw new Error("❌ No authorize URI found.");
-      // }
+      } else {
+        throw new Error("❌ No authorize URI found.");
+      }
   
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
       setpaymentcode(paymentResult.charge.id);
@@ -230,7 +231,6 @@ const PaymentScreen = ({ navigation, route }) => {
         paymentfee: formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal))),
         total: formatNumberWithComma(formatNumber(totalPayment)),
       });
-      navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
 
    //   navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
@@ -378,7 +378,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 <View style={styles.logodown}>
                   <Text style={styles.labelHead}>Credit and Debit Card</Text>
                 </View>
-                <Entypo name="chevron-small-down" size={24} color="black" />
+              <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
               </TouchableOpacity>
               {selectedOption === "Option 1" && (
                 <>
@@ -386,7 +386,7 @@ const PaymentScreen = ({ navigation, route }) => {
                     <View style={styles.row}>
                       <Text style={styles.label}>We Accept:</Text>
                       <Image source={{ uri: 'https://www.thetrago.com/assets/images/credit1.png' }}
-                        style={{ width: 150, height: 20 }} />
+                        style={{ width: wp('35%'), height: hp('2%') }} />
                     </View>
                     <Text style={styles.label}>Card Holder Name </Text>
                     <TextInput
@@ -463,7 +463,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 <View style={styles.logodown}>
                   <Text style={styles.labelHead}>PromptPay</Text>
                 </View>
-                <Entypo name="chevron-small-down" size={24} color="black" />
+                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
 
 
               </TouchableOpacity>
@@ -483,7 +483,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 <View style={styles.logodown}>
                   <Text style={styles.labelHead}>eWallet</Text>
                 </View>
-                <Entypo name="chevron-small-down" size={24} color="black" />
+                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
               </TouchableOpacity>
             </View>
             <View style={styles.row}>

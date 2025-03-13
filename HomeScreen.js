@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect  } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import LogoTheTrago from './(component)/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import Loading from './(component)/Loading';
 
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
@@ -28,7 +29,8 @@ const HomeScreen = ({navigation }) => {
   });
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
+  
 
 
   const formatDate = (date) => {
@@ -57,6 +59,14 @@ const HomeScreen = ({navigation }) => {
   };
 
   return (
+       <View style={{ flex: 1 }}>
+      {isLoading && (
+             <View style={styles.loadingContainer}>
+               <ActivityIndicator size="large" color="#FD501E" />
+               <Text style={styles.loadingText}>Processing Payment...</Text>
+             </View>
+           )}
+
     <ScrollView  contentContainerStyle={styles.container}>
        <ImageBackground 
     source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
@@ -90,8 +100,15 @@ const HomeScreen = ({navigation }) => {
       <View style={styles.bookingSection}>
         <View style={styles.inputRow}>
         <TouchableOpacity
-              onPress={() => navigation.navigate('StartingPointScreen', {  setStartingPoint: (data) => setStartingPoint(data) })}
-              style={styles.inputBox} >         
+      onPress={() => {
+        setIsLoading(true);
+        navigation.navigate('StartingPointScreen', {
+          setStartingPoint: (data) => setStartingPoint(data), // ส่งฟังก์ชันไปยังหน้าจอใหม่
+        });
+        setIsLoading(false);
+      }}
+      style={styles.inputBox}
+    >     
               <Image
               source={require('./assets/directions_boat.png')}
               style={styles.logoDate}
@@ -115,7 +132,11 @@ const HomeScreen = ({navigation }) => {
         </TouchableOpacity>
 
           <TouchableOpacity
-              onPress={() => navigation.navigate('EndPointScreen', { setEndPoint ,startingPointId: startingPoint.id,})}
+              onPress={() =>{
+                setIsLoading(true);
+                navigation.navigate('EndPointScreen', { setEndPoint ,startingPointId: startingPoint.id,});
+                setIsLoading(false);
+              }}
               style={styles.inputBox} >     
             <Image
               source={require('./assets/location_on.png')}
@@ -208,7 +229,10 @@ const HomeScreen = ({navigation }) => {
 <TouchableOpacity 
   style={styles.searchButton}
   onPress={() => {
+
+    
     if (startingPoint.id !== '0' && endPoint.id !== '0') {
+      setIsLoading(true);
       navigation.navigate('SearchFerry',{
         startingPointId: startingPoint.id,
         endPointId: endPoint.id,
@@ -218,6 +242,7 @@ const HomeScreen = ({navigation }) => {
         returnDateInput: returnDate ? returnDate.toISOString().split("T")[0] : null
 
       });
+      setIsLoading(false);
     } else {
       alert('Please select both starting and end points.');
     }
@@ -225,7 +250,6 @@ const HomeScreen = ({navigation }) => {
 >
   <Text style={styles.searchButtonText}>Search</Text>
 </TouchableOpacity>
-
       <Text style={styles.titledeal}>
         <Text style={styles.highlight}>Hot</Text> Deal
       </Text>
@@ -279,6 +303,7 @@ const HomeScreen = ({navigation }) => {
 
 </ImageBackground>
     </ScrollView >
+    </View>
   );
 };
 
@@ -320,6 +345,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#002348',
     marginBottom: 20,
+    fontFamily: 'custom-font'
   },
   titledeal: {
     fontSize: 20,
@@ -333,6 +359,7 @@ const styles = StyleSheet.create({
 },
   highlight: {
     color: '#FD501E',
+    
   },
   tabContainer: {
     flexDirection: 'row',
@@ -585,7 +612,18 @@ const styles = StyleSheet.create({
   },
   background:{
     width:'100%'
-  }
+  },
+  loadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // พื้นหลังโปร่งใส
+    zIndex: 9999, // ✅ ให้ ActivityIndicator อยู่ด้านบนสุด
+  },
 })
 export default HomeScreen;
 

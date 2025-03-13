@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, use } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground } from 'react-native';
@@ -178,6 +178,10 @@ const SearchFerry = ({ navigation, route }) => {
   const formatDate = (dateString) => {
     return moment(dateString).format("ddd, DD MMM YYYY");
   };
+  useEffect(() => {
+    handleSearchStart();  // เรียกฟังก์ชัน sendTicket เมื่อคอมโพเนนต์โหลด
+  }, []);
+  
   
 
   const handleSearchStart = () => {
@@ -279,6 +283,7 @@ const SearchFerry = ({ navigation, route }) => {
         style={styles.searchBox}
         placeholder="Search Here..."
         placeholderTextColor="#999"
+        backgroundColor="white"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -1252,7 +1257,7 @@ const SearchFerry = ({ navigation, route }) => {
             fontWeight: 'bold',
             color: '#333',
             flexWrap: 'wrap',
-            maxWidth:'100',
+            maxWidth:'95',
           },
           tagContainer: {
             flexDirection: 'row',
@@ -1374,12 +1379,14 @@ const SearchFerry = ({ navigation, route }) => {
             color: 'white',  // สีของไอคอน
           },
           dashedLineTicket:{
-            width: '100%',
+            width: '92.5%',
             height: 1,  // ความหนาของเส้น
             borderWidth: 2,  // ความหนาของเส้น
             borderColor: '#EAEAEA',  // สีของเส้นประ
             borderStyle: 'dashed',  // ทำให้เส้นเป็นประ
             marginVertical: 10,  // ระยะห่างระหว่างเส้นประกับเนื้อหาภายใน
+            marginLeft: 10,
+            marginRight:10,
           },
           circleContainerLeft: {
             position: 'relative', // ทำให้สามารถจัดตำแหน่งภายใน container ได้
@@ -1394,7 +1401,7 @@ const SearchFerry = ({ navigation, route }) => {
           circleLeft1: {
             position: 'absolute',
             top: 0,
-            left: 0,
+            left: wp('1%'),
             width: 40,
             height: 40,
             backgroundColor: '#EAEAEA',
@@ -1403,7 +1410,7 @@ const SearchFerry = ({ navigation, route }) => {
           circleLeft2: {
             position: 'absolute',
             top: 0,
-            left:-3,
+            left:  wp('-0.1%'),
             width: 40,
             height: 40,
             backgroundColor: 'white',
@@ -1423,7 +1430,7 @@ const SearchFerry = ({ navigation, route }) => {
           circleRight1: {
             position: 'absolute',
             top: 0,
-            left: 0,
+            left: wp('-0.1%'),
             width: 40,
             height: 40,
             backgroundColor: '#EAEAEA',
@@ -1432,7 +1439,7 @@ const SearchFerry = ({ navigation, route }) => {
           circleRight2: {
             position: 'absolute',
             top: 0,
-            left:3,
+            left: wp('1%'),
             width: 40,
             height: 40,
             backgroundColor: 'white',

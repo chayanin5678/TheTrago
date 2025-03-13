@@ -121,11 +121,12 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     margin: '2%',
-    marginBottom: 20,
+    marginBottom:40,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 0,
     marginVertical: hp("2%"),
+
 
   },
   col: {

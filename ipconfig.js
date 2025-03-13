@@ -1,2 +1,2 @@
-const ipAddress = 'https://670c-1-20-61-190.ngrok-free.app';
+const ipAddress = 'https://771c-1-20-61-62.ngrok-free.app';
 export default ipAddress;

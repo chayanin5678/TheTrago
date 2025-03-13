@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
 import Step from './(component)/Step';
 import BackNextButton from './(component)/BackNextButton';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import moment from 'moment';
 
 const TripDetail = ({ navigation, route }) => {
@@ -971,8 +972,8 @@ const styles = StyleSheet.create({
 
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: '5%',
-    margin:'6%',
+    padding: wp('5%'),
+    margin:wp('1%'),
     marginLeft: -3,
     marginRight: -3,
     shadowColor: '#000',
@@ -1121,13 +1122,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 30,
-    marginLeft: 3,
+    marginLeft : 1,
+    paddingRight: wp('2%'),
   },
   tripInfo: {
     alignItems: 'flex-start',
     marginBottom: 0,
     justifyContent: 'center',
-    flexDirection: 'row'
+    flexDirection: 'row',
+    marginLeft:wp('5%'),
+    marginRight:wp('5%'),
   },
   date: {
     fontSize: 12,
@@ -1166,7 +1170,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     margin: 10,
     width: 100,
-    alignItems: 'center'
+    alignItems: 'center',
+    padding: wp('3%')
   },
   ship: {
     fontSize: 12,

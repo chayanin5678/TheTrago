@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Button, Alert, Platform } from "react-native";
 import LogoHeader from "./../(component)/Logo";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as FileSystem from 'expo-file-system';
 import ipAddress from "../ipconfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from "axios";
 import { useCustomer } from './CustomerContext';
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
   const { success, booking_code } = route.params ;
@@ -227,60 +225,32 @@ const ResultScreen = ({ navigation, route }) => {
   </html>
   `;
 
-  useEffect(() => {
-    const generatePDF = async () => {
-      try {
-        const { uri } = await Print.printToFileAsync({ html: htmlContent });
-        setPdfUri(uri);  // Set the URI when PDF is generated
-      } catch (error) {
-        console.error('PDF Generation Error:', error);
-        Alert.alert('Error', 'Failed to generate PDF');
-      }
-    };
 
-    generatePDF();  // Generate PDF as soon as the component is mounted
+  const sendTicket = async () => {
+    try {
+      const response = await axios.post(`${ipAddress}/send-ticket`, {
+        email: customerData.email,  // อีเมลผู้รับ
+        htmlContent: htmlContent,        // HTML ที่เราจะส่งไป
+      });
+      console.log('Email sent successfully: ', response.data);
+    } catch (error) {
+      console.error('Error sending email: ', error);
+    }
+  };
+  
+  useEffect(() => {
+    sendTicket();  // เรียกฟังก์ชัน sendTicket เมื่อคอมโพเนนต์โหลด
   }, []);
-
-  useEffect(() => {
-    if (pdfUri) {
-      sendEmail(pdfUri);  // Send email immediately once the PDF URI is available
-    }
-  }, [pdfUri]);
-
-  const sendEmail = async (pdfUri) => {
+  
+  const printTicket = async () => {
     try {
-      const base64File = await convertUriToBase64(pdfUri);
-      const response = await axios.post(`${ipAddress}/upload`, {
-        email: customerData.email,
-        file: base64File,
-      }, {
-        headers: { 'Content-Type': 'application/json' },
+      await Print.printAsync({
+        html: htmlContent, // พิมพ์ HTML ที่กำหนด
       });
-
-      if (response.data.success) {
-        Alert.alert('Success', 'The email has been sent successfully.');
-      } else {
-        Alert.alert('Error', 'Failed to send the email.');
-      }
     } catch (error) {
-      console.error('Error sending email:', error);
-      Alert.alert('Error', 'There was an error sending the email.');
+      console.error('Error printing ticket: ', error);
     }
   };
-
-  const convertUriToBase64 = async (uri) => {
-    try {
-      const file = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      return file;
-    } catch (error) {
-      console.error('Error converting URI to base64:', error);
-      return null;
-    }
-  };
-  
-  
 
 
   const handleGoBack = () => {
@@ -303,6 +273,9 @@ const ResultScreen = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+       <ImageBackground
+                source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+                style={styles.background}>
       <LogoHeader />
       <View style={styles.card}>
         <View style={styles.row}>
@@ -402,19 +375,19 @@ const ResultScreen = ({ navigation, route }) => {
           <Text>Booking Code:</Text>
           <Text>{customerData.bookingcode || "N/A"}</Text>
           </View>
-          <TouchableOpacity style={styles.BackButton} onPress={handleGoBack}>
-          <Text style={styles.BackButtonText}>Go Back</Text>
+          <TouchableOpacity style={styles.BackButton} onPress={printTicket}>
+          <Text style={styles.BackButtonText}>Print Ticket</Text>
         </TouchableOpacity>
         </View>
 
 
       
-        <Button title="Generate and Send PDF" onPress={() => sendEmail(pdfUri)} />
-
+       
       </View>
       {orderStatus === "Failed" && (
           <Text style={styles.errorText}>Please try again later or contact support.</Text>
         )}
+        </ImageBackground>
     </ScrollView>
   );
 };
@@ -506,6 +479,9 @@ const styles = StyleSheet.create({
   greenText: {
     color: 'green',
   },
+  background :{
+    width:'100%',
+  }
 
 });
 
