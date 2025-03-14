@@ -11,14 +11,14 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
-# Keep CardIO classes
--keep class io.card.payment.CardIOActivity { *; }
--keep class io.card.payment.CreditCard { *; }
+# Suppress warnings for missing CardIO classes
+-dontwarn io.card.payment.CardIOActivity
+-dontwarn io.card.payment.CreditCard
 
-# Keep Joda Time classes
--keep class org.joda.convert.FromString { *; }
--keep class org.joda.convert.ToString { *; }
--keep class org.joda.time.DateTimeZone { *; }
+# Suppress warnings for missing Joda Time classes
+-dontwarn org.joda.convert.FromString
+-dontwarn org.joda.convert.ToString
+
 
 
 # Add any project specific keep options here:

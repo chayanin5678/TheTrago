@@ -311,8 +311,7 @@ const TripDetail = ({ navigation, route }) => {
               <View style={styles.tripInfo}>
                 <View style={styles.col} />
                 <View style={styles.col}>
-                  <Image source={require('./assets/boat.png')}
-                    style={styles.boat} />
+                  <Image source={require('./assets/boat.png')}/>
                   <Image source={require('./assets/Line 14.png')}
                     style={styles.line} />
                 </View>
@@ -938,7 +937,7 @@ const styles = StyleSheet.create({
   ArriveText: {
     fontSize: 16,
     color: '#333',
-    marginRight: 65,
+    marginRight: wp('10%'),
   },
   modalOverlay: {
     flex: 1,
@@ -999,7 +998,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: hp('1%'),
   },
   shipName: {
     fontSize: 16,
@@ -1168,7 +1167,7 @@ const styles = StyleSheet.create({
   },
   col: {
     flexDirection: 'column',
-    margin: 10,
+    margin: wp('1%'),
     width: 100,
     alignItems: 'center',
     padding: wp('3%')
@@ -1187,7 +1186,7 @@ const styles = StyleSheet.create({
   },
   line: {
     alignItems: 'center',
-    margin: 10,
+    margin: 5,
     marginTop: 30,
     marginBottom: 0
   },

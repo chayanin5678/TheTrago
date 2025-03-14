@@ -195,7 +195,7 @@ const HomeScreen = ({navigation }) => {
       setShowDepartPicker(false);
       if (selectedDate) {
         setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
-        if (returnDate < selectedDate) {
+        if (returnDate <= selectedDate) {
         const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
         newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
         setReturnDate(newReturnDate); 

@@ -14,7 +14,8 @@ const itemsPerPage = 5;
 const SearchFerry = ({ navigation, route }) => {
   
   const { startingPointId, endPointId, startingPointName, endPointName,departureDateInput, returnDateInput} = route.params;
-  const detaDepart = new Date(departureDateInput); // แปลงวันที่จาก input
+  const [detaDepart , setDetaDepart] = useState(new Date(departureDateInput)); // แปลงวันที่จาก input
+  const detaReturn = new Date(returnDateInput); // แปลงวันที่จาก input
   const formattedDate = detaDepart.toISOString().split('T')[0];
   const [startingPoint, setStartingPoint] = useState({ id: startingPointId, name: startingPointName });
   const [endPoint, setEndPoint] = useState({ id: endPointId, name: endPointName });
@@ -46,14 +47,10 @@ const SearchFerry = ({ navigation, route }) => {
 };
 
  const [departureDate, setDepartureDate] = useState(detaDepart); 
-   const [returnDate, setReturnDate] = useState(() => {
-     const returnDay = new Date(departureDate);
-     returnDay.setDate(returnDay.getDate() + 1);
-     return returnDay;
-   });
+   const [returnDate, setReturnDate] = useState(detaReturn);
     const [showDepartPicker, setShowDepartPicker] = useState(false);
     const [showReturnPicker, setShowReturnPicker] = useState(false);
-    const departureDateSend = departureDate.toISOString().split('T')[0];
+    const departureDateSend = detaDepart.toISOString().split('T')[0];
     const day = departureDateSend.substring(8,10);
     console.log(day);
     const month = departureDateSend.substring(5,7);
@@ -439,10 +436,15 @@ const SearchFerry = ({ navigation, route }) => {
         </View>
 
         <View style={styles.inputRow}>
-       
+     
        <View style={styles.inputBox}>
        <TouchableOpacity onPress={() => setShowDepartPicker(true)}
-       style={styles.rowdepart}>
+         style={[
+          styles.rowdepart, 
+          { width: tripType === "One Way Trip" ? wp('100%') : 'auto' } // Apply 100% width conditionally
+        ]}
+      >
+          
 
          <Image
            source={require('./assets/solar_calendar-bold.png')}
@@ -455,6 +457,8 @@ const SearchFerry = ({ navigation, route }) => {
          </View>
          </TouchableOpacity>
 
+         {tripType === "Round Trip" && (
+          <>
          <Image
            source={require('./assets/Line 2.png')}
            style={styles.logoLine}
@@ -473,7 +477,10 @@ const SearchFerry = ({ navigation, route }) => {
            <Text style={styles.inputText}>{returnDate ? formatDateInput(returnDate.toString()) : "No Date Available"}</Text>
          </View>
          </TouchableOpacity>
+         </>
+         )}
        </View>
+      
        {showDepartPicker && (
 <DateTimePicker
  value={departureDate || new Date()} // ถ้ายังไม่มีการเลือกวันที่ให้ใช้วันที่ปัจจุบัน
@@ -483,7 +490,7 @@ const SearchFerry = ({ navigation, route }) => {
    setShowDepartPicker(false);
    if (selectedDate) {
      setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
-     if (returnDate < selectedDate) {
+     if (returnDate <= selectedDate) {
      const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
      newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
      setReturnDate(newReturnDate); 
@@ -520,6 +527,8 @@ const SearchFerry = ({ navigation, route }) => {
     setTripTypeSearch(tripType); // Call the function within onPress, not in style
     handleSearchStart();
     handleSearchEnd();
+    console.log(departureDate);
+    setDetaDepart(departureDate);
   }}>
   <Text style={styles.searchButtonText}>Search</Text>
 </TouchableOpacity>
@@ -549,7 +558,7 @@ const SearchFerry = ({ navigation, route }) => {
               <Text style={styles.location}>{item.start_location_name}</Text>
               <Text style={styles.subtext}>{item.name_pierstart}</Text>
               <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-              <Text style={styles.subtext}>{formatDate(departureDate)}</Text>
+              <Text style={styles.subtext}>{formatDate(formattedDate)}</Text>
             </View>
 
             <View style={styles.middleContainer}>
@@ -568,7 +577,7 @@ const SearchFerry = ({ navigation, route }) => {
               <Text style={styles.location}>{item.end_location_name}</Text>
               <Text style={styles.subtext}>{item.name_pierend}</Text>
               <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-              <Text style={styles.subtext}>{formatDate(departureDate)}</Text>
+              <Text style={styles.subtext}>{formatDate(formattedDate)}</Text>
             </View>
           </View>
 
@@ -585,7 +594,7 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>THB {formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} / person</Text>
+            <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
             <TouchableOpacity style={styles.bookNowButton}
             onPress={()=>{
             
@@ -716,7 +725,9 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>THB {item.md_timetable_priceadult} / person</Text>
+            <Text style={styles.price}>THB </Text>
+              <Text style={styles.pricebig}>{item.md_timetable_priceadult}</Text> 
+              <Text style={styles.price}> / person</Text>
             <TouchableOpacity style={styles.bookNowButton}>
               <Text style={styles.bookNowText}>Book Now</Text>
             
@@ -777,7 +788,9 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>THB {item.md_timetable_priceadult} / person</Text>
+          <Text style={styles.price}>THB </Text>
+              <Text style={styles.pricebig}>{item.md_timetable_priceadult}</Text> 
+              <Text style={styles.price}> / person</Text>
             <TouchableOpacity style={styles.bookNowButton}>
               <Text style={styles.bookNowText}>Book Now</Text>
               
@@ -1257,7 +1270,7 @@ const SearchFerry = ({ navigation, route }) => {
             fontWeight: 'bold',
             color: '#333',
             flexWrap: 'wrap',
-            maxWidth:'95',
+            maxWidth: wp('30%'),
           },
           tagContainer: {
             flexDirection: 'row',
@@ -1351,9 +1364,17 @@ const SearchFerry = ({ navigation, route }) => {
             alignItems: 'center',
           },
           price: {
+            fontSize: wp('3%'),
+            fontWeight: 'bold',
+            color: '#333',
+          },
+          pricebig: {
             fontSize: wp('4%'),
             fontWeight: 'bold',
             color: '#333',
+          },
+          discount: {
+            color: '#FD501E',
           },
           bookNowButton: {
             backgroundColor: '#FD501E',
