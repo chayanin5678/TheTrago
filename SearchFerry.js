@@ -34,6 +34,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [currentPageDepart, setcurrentPageDepart] = useState(1);
   const [currentPageReturn, setcurrentPageReturn] = useState(1);
   const { customerData, updateCustomerData } = useCustomer();
+  const [selectedPickup, setSelectedPickup] = useState(null);
+
 
   
 
@@ -74,6 +76,11 @@ const SearchFerry = ({ navigation, route }) => {
 
     return formattedValue;
   }
+
+  const removeHtmlTags = (htmlString) => {
+    if (!htmlString) return ""; // ป้องกัน undefined และ null
+    return htmlString.replace(/<\/?[^>]+(>|$)/g, "").trim(); // ลบ HTML Tags และ Trim Space
+  };
  
 
   const swapPoints = () => {
@@ -539,6 +546,7 @@ const SearchFerry = ({ navigation, route }) => {
         <>
       {pagedDataDepart.map((item, index) => (
         <View key={index} style={styles.cardContainer}>
+        <TouchableOpacity onPress={() => setSelectedPickup(selectedPickup === item.md_timetable_id ? null : item.md_timetable_id)}>
           <ImageBackground 
           source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
           style={styles.background}>
@@ -627,12 +635,22 @@ const SearchFerry = ({ navigation, route }) => {
              
             </TouchableOpacity>
           </View>
-          {item.md_timetable_remarkthai && (
+          {item.md_timetable_remarkeng && (
           <View>
-            <Text>Remark: {item.md_timetable_remarkthai}</Text>
+            <Text>Remark: {item.md_timetable_remarkeng}</Text>
           </View>
           )}
+          {selectedPickup === item.md_timetable_id &&(
+         <View>
+         {[...new Set([
+           removeHtmlTags(item.md_timetabledetail_detaileng1 || "") // ถ้าค่าเป็น undefined/null จะใช้ ""
+         ])].map((text, index) => (
+           text ? <Text key={index}>• {text}</Text> : null // แสดงเฉพาะข้อมูลที่ไม่ใช่ค่าว่าง
+         ))}
+       </View>
+          )}
           </ImageBackground>
+          </TouchableOpacity>
         </View>
       ))}
       </>)}

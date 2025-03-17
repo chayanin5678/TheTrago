@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect  } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator, Modal } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import LogoTheTrago from './(component)/Logo';
@@ -30,6 +30,8 @@ const HomeScreen = ({navigation }) => {
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
   
 
 
@@ -43,7 +45,7 @@ const HomeScreen = ({navigation }) => {
   };
 
 
-  
+
   
 
   const swapPoints = () => {
@@ -244,12 +246,30 @@ const HomeScreen = ({navigation }) => {
       });
       setIsLoading(false);
     } else {
-      alert('Please select both starting and end points.');
+      setIsModalVisible(true);
     }
   }}
 >
   <Text style={styles.searchButtonText}>Search</Text>
 </TouchableOpacity>
+<Modal
+  visible={isModalVisible}
+  transparent={true}
+  animationType="fade"
+  onRequestClose={() => setIsModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalText}>Please select starting points and end points.</Text>
+      <TouchableOpacity 
+        style={styles.modalButton} 
+        onPress={() => setIsModalVisible(false)}
+      >
+        <Text style={styles.modalButtonText}>OK</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
       <Text style={styles.titledeal}>
         <Text style={styles.highlight}>Hot</Text> Deal
       </Text>
@@ -623,6 +643,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // พื้นหลังโปร่งใส
     zIndex: 9999, // ✅ ให้ ActivityIndicator อยู่ด้านบนสุด
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // พื้นหลังโปร่งแสง
+  },
+  modalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    alignItems: 'flex-end',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+    marginBottom: 15,
+  },
+  modalButton: {
+    backgroundColor: '#FD501E',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 })
 export default HomeScreen;
