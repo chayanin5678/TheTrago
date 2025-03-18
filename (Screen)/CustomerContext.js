@@ -47,6 +47,8 @@ export const CustomerProvider = ({ children }) => {
     ip:'',
     paymentid:'',
     bookingdate:'',
+    pickupprice:0,
+    dropoffprice:0,
   });
 
   const updateCustomerData = (newData) => {

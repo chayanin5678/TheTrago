@@ -175,7 +175,7 @@ const  CustomerInfo =({navigation, route }) => {
     return `${hours} h ${minutes} min`;
   }
    useEffect(() => {
-    setSubtotal(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild)))); 
+    setSubtotal(formatNumber((parseFloat(customerData.dropoffprice))+(parseFloat(customerData.pickupprice))+(parseFloat((calculateDiscountedPrice(parseFloat(totalAdult) + parseFloat(totalChild))))))); 
       
     }, [subtotal]);
 
@@ -360,9 +360,21 @@ const  CustomerInfo =({navigation, route }) => {
     <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
   </View>
 )}
+        {customerData.pickupprice != 0 &&(
+            <View style={styles.rowpromo}>
+            <Text>Pick up</Text>
+            <Text style={{color:'green'}}>฿ {formatNumberWithComma(formatNumber(customerData.pickupprice))}</Text>
+            </View>
+        )}
+          {customerData.dropoffprice != 0 &&(
+            <View style={styles.rowpromo}>
+            <Text>Drop off</Text>
+            <Text style={{color:'green'}}>฿ {formatNumberWithComma(formatNumber(customerData.dropoffprice))}</Text>
+            </View>
+        )}
         <View style={styles.rowpromo}>
         <Text>Discount</Text>
-        <Text style={styles.redText}>฿ {formatNumberWithComma(formatNumber((parseFloat(totalAdult)+ parseFloat(totalChild))-parseFloat(subtotal)))}</Text>
+        <Text style={styles.redText}>฿ {formatNumberWithComma(formatNumber((calculateDiscountedPrice(parseFloat(totalAdult)+ parseFloat(totalChild)))-(parseFloat(totalAdult)+parseFloat(totalChild))))}</Text>
         </View>
         <View style={styles.rowpromo}>
         <Text>Ticket fare</Text>

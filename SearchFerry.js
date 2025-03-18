@@ -49,7 +49,7 @@ const SearchFerry = ({ navigation, route }) => {
     } else {
       setSelectedPickup(id);
       Animated.timing(animatedHeight, {
-        toValue: contentHeights[id] || 0,
+        toValue: contentHeights[id] || 470,
         duration: 500,
         useNativeDriver: false,
       }).start();
@@ -95,14 +95,18 @@ const SearchFerry = ({ navigation, route }) => {
   }
   const removeHtmlTags = (html) => {
     if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
-
+  
     return html
       .replace(/<ul>/g, "") // ลบ <ul>
       .replace(/<\/ul>/g, "") // ลบ </ul>
       .replace(/<\/li>/g, "") // ลบ </li>
       .replace(/<li>/g, "\n• ") // แทนที่ <li> ด้วยขึ้นบรรทัดใหม่ + จุด
-      .replace(/<br\s*\/?>/g, "\n\n"); // แทนที่ <br> ด้วยขึ้นบรรทัดใหม่ 2 ครั้ง
+      .replace(/<br\s*\/?>/g, "\n\n") // แทนที่ <br> ด้วยขึ้นบรรทัดใหม่ 2 ครั้ง
+      .replace(/<\/p>/g, "\n\n") // แทนที่ </p> ด้วยย่อหน้าใหม่
+      .replace(/<p>/g, "") // ลบ <p>
+      .replace(/&nbsp;/g, " "); // แทนที่ &nbsp; ด้วยช่องว่าง
   };
+  
 
 
   const swapPoints = () => {
@@ -669,24 +673,15 @@ const SearchFerry = ({ navigation, route }) => {
                         </Text>
                       </View>
                     )}
-                   <View
-                style={{ position: 'absolute', opacity: 0, left: 0, right: 0 }}
-                onLayout={(event) => {
-                  contentHeights[item.md_timetable_id] = event.nativeEvent.layout.height;
-                }}
-              >
-                <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
-                  style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                />
-              </View>
-
+   
               <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
                 <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
                 <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
                   style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
                 />
               </Animated.View>
+     
+
 
                   </ImageBackground>
                 </TouchableOpacity>
