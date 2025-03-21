@@ -1,2 +1,2 @@
-const ipAddress = 'https://e67a-1-20-63-190.ngrok-free.app';
+const ipAddress = 'https://thetrago.com/AppApi';
 export default ipAddress;

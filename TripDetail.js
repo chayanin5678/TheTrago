@@ -47,6 +47,8 @@ const TripDetail = ({ navigation, route }) => {
   const { customerData, updateCustomerData } = useCustomer();
   const [modaladultVisible, setModalAdultVisible] = useState(false);
   const [modalchildVisible, setModalChildVisible] = useState(false);
+  const [isTransportModalVisible, setIsTransportModalVisible] = useState(false);  // State สำหรับเปิด/ปิด Modal
+  const [selectedTransportType, setSelectedTransportType] = useState('');
   console.log(timeTablecCmpanyId);
   console.log(timeTablecPierStartId);
   console.log(timeTablecPierEndId);
@@ -325,6 +327,22 @@ const TripDetail = ({ navigation, route }) => {
     });
   };
 
+  const handleTransportSelect = (type) => {
+    setSelectedTransportType(type);  // เลือกประเภทการขนส่ง
+    setIsTransportModalVisible(false);  // ปิด Modal หลังจากเลือก
+  };
+
+  const renderTransportOption = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => handleTransportSelect(item.md_cartype_nameeng)}  // เลือกประเภทจาก TranSportPickup
+      key={item.md_pickup_cartypeid.toString()}  // ใช้ ID ที่ไม่ซ้ำเพื่อเป็นคีย์
+    >
+      <Text style={styles.modalOptionText}>{item.md_cartype_nameeng}</Text>  {/* แสดงชื่อประเภทการขนส่ง */}
+    </TouchableOpacity>
+  );
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ImageBackground
@@ -464,6 +482,8 @@ const TripDetail = ({ navigation, route }) => {
                   {pickup && (
                     <View>
                       <Text style={styles.inputLabel}>Transport type</Text>
+                      {/* Button ที่คลิกเพื่อเปิด Modal */}
+     
                       <View style={styles.pickerContainer}>
                         <Picker selectedValue={selectedTranSportPickup} onValueChange={(itemValue) => setSelectedTranSportPickup(itemValue)}>
                           <Picker.Item label="Select Transport Type" value="0" style={styles.pickup} key="default" />

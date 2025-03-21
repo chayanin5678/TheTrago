@@ -36,7 +36,8 @@ const PaymentScreen = ({ navigation, route }) => {
     : "N/A"; // ใช้ "N/A" แทนค่าที่ไม่มี
 
   const [paymentcode, setpaymentcode] = useState('');
-  const [paymentfee, setPaymentfee] = useState('');
+  const [paymentfee, setPaymentfee] = useState(0);
+  const [totalpaymentfee, setTotalPaymentfee] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,6 +51,9 @@ const PaymentScreen = ({ navigation, route }) => {
   console.log(selectedTele);
   console.log(mobileNumber);
   console.log(email);
+  console.log(paymentfee);
+
+ 
 
   console.log("Booking DateTime:", currentDateTime);
 
@@ -67,13 +71,9 @@ const PaymentScreen = ({ navigation, route }) => {
     setExpirationDate(formattedText);
     
   };
-
-
-
-  
-
+ 
   useEffect(() => {
-    fetch(`${ipAddress}/bookingcode`)
+    fetch(`${ipAddress}/paymentfee/${selectedOption}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -81,17 +81,41 @@ const PaymentScreen = ({ navigation, route }) => {
         return response.json();
       })
       .then((data) => {
+        // Check if data.data is valid and contains items
+        if (data && Array.isArray(data.data) && data.data.length > 0) {
+          // Extract the fee value from the first item
+          const fee = data.data[0]?.md_paytype_fee ?? 0;
+          setPaymentfee(fee); // Set fee directly if available
+        } else {
+          console.warn('No data found, using default fee value');
+          setPaymentfee(0); // Set default fee value if the array is empty
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+        setPaymentfee(0); // Default to 0 if there is an error fetching the data
+      });
+  }, [selectedOption]);
+  
+
+  
+    const fetchBookingCode = async () => {
+      try {
+        const response = await fetch(`${ipAddress}/bookingcode`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
         if (data && Array.isArray(data.data)) {
           setBookingcode(data.data);
         } else {
           console.error('Data is not an array', data);
           setBookingcode([]);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Error fetching data:', error);
-      });
-  }, []);
+      }
+    };
 
 
   function formatDate(dateString) {
@@ -131,11 +155,11 @@ const PaymentScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult) + parseFloat(totalChild))));
-    setSubtotal(formatNumber((parseFloat(totalAdult) + parseFloat(totalChild)) - (Discount)));
-    settotalPayment(formatNumber(parseFloat(subtotal) + parseFloat(calculatePaymentFee(subtotal))));
-    setPaymentfee(calculatePaymentFee(subtotal));
+    setSubtotal(formatNumber((parseFloat(totalAdult) + parseFloat(totalChild) + parseFloat(customerData.pickupprice)+ parseFloat(customerData.dropoffprice)) - (Discount)));
+    setTotalPaymentfee( subtotal * (paymentfee/100));
+    settotalPayment(formatNumber(parseFloat(subtotal) + totalpaymentfee));
     console.log(subtotal);
-  }, [Discount, subtotal]);
+  }, [Discount, subtotal,paymentfee,totalpaymentfee]);
 
 
   const calculateDiscountedPrice = (price) => {
@@ -218,21 +242,7 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log('✅ Payment code:', paymentResult.charge.id);
       console.log('✅ booking code:', booking_code);
   
-      await createBooking(paymentResult.charge.id);
-  
-      updateCustomerData({
-        bookingcode: `${booking_code}`,
-        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        totaladult: formatNumberWithComma(formatNumber(totalAdult)),
-        totalchild: formatNumberWithComma(formatNumber(totalChild)),
-        discount: formatNumberWithComma(formatNumber(Discount)),
-        ticketfare: formatNumberWithComma(formatNumber(subtotal)),
-        subtotal: formatNumberWithComma(formatNumber(subtotal)),
-        paymentfee: formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal))),
-        total: formatNumberWithComma(formatNumber(totalPayment)),
-      });
-
-   //   navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+    //  navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
       console.log("✅ Loading stopped...");
   
@@ -289,6 +299,21 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("🔗 Deep Link Received:", url);
 
       if (url.includes("payment/success")) {
+        fetchBookingCode();
+        
+       createBooking(paymentcode);
+  
+      updateCustomerData({
+        bookingcode: `${booking_code}`,
+        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+        totaladult: formatNumberWithComma(formatNumber(totalAdult)),
+        totalchild: formatNumberWithComma(formatNumber(totalChild)),
+        discount: formatNumberWithComma(formatNumber(Discount)),
+        ticketfare: formatNumberWithComma(formatNumber(subtotal)),
+        subtotal: formatNumberWithComma(formatNumber(subtotal)),
+        paymentfee: formatNumberWithComma(formatNumber(totalpaymentfee)),
+        total: formatNumberWithComma(formatNumber(totalPayment)),
+      });
         Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
         navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       } else if (url.includes("payment/failure")) {
@@ -367,12 +392,12 @@ const PaymentScreen = ({ navigation, route }) => {
             <View style={styles.radioContian}>
               <TouchableOpacity
                 style={styles.optionContainer}
-                onPress={() => handleSelection("Option 1")}
+                onPress={() => handleSelection("7")}
               >
                 <View
                   style={[
                     styles.radioButton,
-                    selectedOption === "Option 1" && styles.selectedRadio,
+                    selectedOption === "7" && styles.selectedRadio,
                   ]}
                 />
                 <View style={styles.logodown}>
@@ -380,7 +405,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 </View>
               <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
               </TouchableOpacity>
-              {selectedOption === "Option 1" && (
+              {selectedOption === "7" && (
                 <>
                   <View style={styles.payment}>
                     <View style={styles.row}>
@@ -452,12 +477,12 @@ const PaymentScreen = ({ navigation, route }) => {
             <View style={styles.radioContian}>
               <TouchableOpacity
                 style={styles.optionContainer}
-                onPress={() => handleSelection("Option 2")}
+                onPress={() => handleSelection("2")}
               >
                 <View
                   style={[
                     styles.radioButton,
-                    selectedOption === "Option 2" && styles.selectedRadio,
+                    selectedOption === "2" && styles.selectedRadio,
                   ]}
                 />
                 <View style={styles.logodown}>
@@ -502,30 +527,57 @@ const PaymentScreen = ({ navigation, route }) => {
               <Text style={styles.title}>Booking Summary</Text>
               <View style={styles.divider} />
               <Text>Depart</Text>
-              <Text>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="black" /> {item.endpoint_name}</Text>
-              <Text>Company : {item.md_company_nameeng}</Text>
-              <Text>Seat : {item.md_seat_nameeng}</Text>
-              <Text>Boat : {item.md_boattype_nameeng}</Text>
-              <Text>Departure Data : {formatDate(departDateTimeTable)}</Text>
-              <Text>Departure Time : {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+            <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+            <View style={styles.row}>
+              <Text style={{ color: '#666666' }}>Company </Text>
+              <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={{ color: '#666666' }}>Seat</Text>
+              <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={{ color: '#666666' }}>Boat </Text>
+              <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={{ color: '#666666' }}>Departure Data</Text>
+              <Text style={{ color: '#666666' }}> {formatDate(departDateTimeTable)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={{ color: '#666666' }}>Departure Time : </Text>
+              <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+            </View>
+            <View style={[styles.row, { marginTop: 5 }]}>
+              <Text>Adult x {adults}</Text>
+              <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
+            </View>
+            {parseFloat(totalChild) !== 0 && (
               <View style={styles.row}>
-                <Text>Adult x {adults}</Text>
-                <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
+                <Text>Child x {children}</Text>
+                <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
               </View>
-              {parseFloat(totalChild) !== 0 && (
-                <View style={styles.row}>
-                  <Text>Child x {children}</Text>
-                  <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
-                </View>
-              )}
+            )}
+            {customerData.pickupprice != 0 && (
               <View style={styles.row}>
-                <Text>Discount</Text>
-                <Text style={styles.redText}>- ฿  {formatNumberWithComma(formatNumber(Discount))}</Text>
+                <Text>Pick up</Text>
+                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(formatNumber(customerData.pickupprice))}</Text>
               </View>
+            )}
+            {customerData.dropoffprice != 0 && (
               <View style={styles.row}>
-                <Text>Ticket fare</Text>
-                <Text>฿ {formatNumberWithComma(formatNumber(subtotal))}</Text>
+                <Text>Drop off</Text>
+                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(formatNumber(customerData.dropoffprice))}</Text>
               </View>
+            )}
+            <View style={styles.row}>
+              <Text>Discount</Text>
+              <Text style={styles.redText}>- ฿ {Discount}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text>Ticket fare</Text>
+              <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotal)}</Text>
+            </View>
               <View style={styles.divider} />
               <View style={styles.row}>
                 <Text>Subtotal </Text>
@@ -534,7 +586,7 @@ const PaymentScreen = ({ navigation, route }) => {
               <View style={styles.divider} />
               <View style={styles.row}>
                 <Text>Payment Fee </Text>
-                <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(calculatePaymentFee(subtotal)))}</Text>
+                <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(totalpaymentfee))}</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.row}>
@@ -552,7 +604,7 @@ const PaymentScreen = ({ navigation, route }) => {
             onPress={() => {
               if (!pickup) {
                 Alert.alert('Terms and Conditions', 'Please check the Terms and Conditions before proceeding.');
-              } else if (selectedOption == "Option 1") {
+              } else if (selectedOption == "7") {
                 handlePayment();
               } else {
                 Alert.alert('Payment Option', 'Please select a payment option.');

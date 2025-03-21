@@ -91,8 +91,8 @@ android {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion 24
         targetSdkVersion 34
-        versionCode 16
-        versionName "1.1.6"
+        versionCode 24
+        versionName "1.2.4"
     }
     signingConfigs {
         debug {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Button, Alert, Platform } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ImageBackground, Alert, Platform } from "react-native";
 import LogoHeader from "./../(component)/Logo";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import ipAddress from "../ipconfig";
@@ -7,6 +7,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from "axios";
 import { useCustomer } from './CustomerContext';
 import * as Print from 'expo-print';
+
+
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
   const { success, booking_code } = route.params ;
@@ -251,12 +253,9 @@ const ResultScreen = ({ navigation, route }) => {
       console.error('Error printing ticket: ', error);
     }
   };
-
-
   const handleGoBack = () => {
     navigation.goBack();
   };
-
   function formatDate(dateString) {
     const date = new Date(Date.parse(dateString)); // Parses "14 Feb 2025" correctly
     return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
