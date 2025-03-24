@@ -87,11 +87,11 @@ const EndPointScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select End Point</Text>
+      <Text style={styles.title}>Select Destination</Text>
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search end point..."
+          placeholder="Search Destination..."
           value={searchText}
           onChangeText={setSearchText}
         />

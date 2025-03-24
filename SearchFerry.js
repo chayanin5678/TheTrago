@@ -37,6 +37,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [selectedPickup, setSelectedPickup] = useState(null);
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const contentHeights = useRef({}).current;
+  const [isonewaystatus, setIsonewaystatus] = useState(false);
+  const [isroudstatus, setIsroudstatus] = useState(false);
 
 
   const toggleDetails = (id) => {
@@ -95,7 +97,7 @@ const SearchFerry = ({ navigation, route }) => {
   }
   const removeHtmlTags = (html) => {
     if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
-  
+
     return html
       .replace(/<ul>/g, "") // ลบ <ul>
       .replace(/<\/ul>/g, "") // ลบ </ul>
@@ -106,7 +108,7 @@ const SearchFerry = ({ navigation, route }) => {
       .replace(/<p>/g, "") // ลบ <p>
       .replace(/&nbsp;/g, " "); // แทนที่ &nbsp; ด้วยช่องว่าง
   };
-  
+
 
 
   const swapPoints = () => {
@@ -209,8 +211,11 @@ const SearchFerry = ({ navigation, route }) => {
     return moment(dateString).format("ddd, DD MMM YYYY");
   };
   useEffect(() => {
-    handleSearchStart();  // เรียกฟังก์ชัน sendTicket เมื่อคอมโพเนนต์โหลด
-  }, []);
+    handleSearchStart();
+    handleSearchEnd();
+    setDetaDepart(departureDate);
+    setTripTypeSearch(tripType);
+  }, [startingPoint, endPoint, departureDate, returnDate, tripType]);
 
 
 
@@ -326,7 +331,10 @@ const SearchFerry = ({ navigation, route }) => {
                 styles.tripTypeOneWayButton,
                 tripType === "One Way Trip" && styles.activeButton,
               ]}
-              onPress={() => setTripType("One Way Trip")}
+              onPress={() => {
+                setTripType("One Way Trip");
+
+              }}
             >
               <Text
                 style={[
@@ -343,7 +351,9 @@ const SearchFerry = ({ navigation, route }) => {
                 styles.tripTypeRoundButton,
                 tripType === "Round Trip" && styles.activeButton,
               ]}
-              onPress={() => setTripType("Round Trip")}
+              onPress={() => {
+                setTripType("Round Trip");
+              }}
             >
               <Text
                 style={[
@@ -430,7 +440,8 @@ const SearchFerry = ({ navigation, route }) => {
           <View style={styles.inputRow}>
             <TouchableOpacity
               onPress={() => navigation.navigate('StartingPointScreen', { setStartingPoint })}
-              style={styles.inputBox} >
+              style={styles.inputBox}
+            >
               <Image
                 source={require('./assets/directions_boat.png')}
                 style={styles.logoDate}
@@ -455,7 +466,8 @@ const SearchFerry = ({ navigation, route }) => {
 
             <TouchableOpacity
               onPress={() => navigation.navigate('EndPointScreen', { setEndPoint, startingPointId: startingPoint.id, })}
-              style={styles.inputBox} >
+              style={styles.inputBox}
+            >
               <Image
                 source={require('./assets/location_on.png')}
                 style={styles.logoDate}
@@ -471,7 +483,11 @@ const SearchFerry = ({ navigation, route }) => {
           <View style={styles.inputRow}>
 
             <View style={styles.inputBox}>
-              <TouchableOpacity onPress={() => setShowDepartPicker(true)}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowDepartPicker(true);  // Show the date picker
+
+                }}
                 style={[
                   styles.rowdepart,
                   { width: tripType === "One Way Trip" ? wp('100%') : 'auto' } // Apply 100% width conditionally
@@ -554,17 +570,15 @@ const SearchFerry = ({ navigation, route }) => {
 
 
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.searchButton]} // Use an array if you want to combine styles
           onPress={() => {
-            setTripTypeSearch(tripType); // Call the function within onPress, not in style
-            handleSearchStart();
-            handleSearchEnd();
-            console.log(departureDate);
-            setDetaDepart(departureDate);
+           
+
+           
           }}>
           <Text style={styles.searchButtonText}>Search</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* แสดงรายการแต่ละหน้า */}
 
@@ -635,9 +649,9 @@ const SearchFerry = ({ navigation, route }) => {
                       <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
                       <TouchableOpacity style={styles.bookNowButton}
                         onPress={() => {
-                    
+
                           updateCustomerData({
-                            roud: tripTypeSearch === "One Way Trip" ? 1 : tripTypeSearch === "Round Trip" ? 2 : null,
+                            roud: 1,
                             day: day,
                             month: month,
                             year: year,
@@ -673,14 +687,14 @@ const SearchFerry = ({ navigation, route }) => {
                         </Text>
                       </View>
                     )}
-   
-              <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
-                <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
-                  style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                />
-              </Animated.View>
-     
+
+                    <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
+                      <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
+                      <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
+                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                      />
+                    </Animated.View>
+
 
 
                   </ImageBackground>
@@ -777,10 +791,42 @@ const SearchFerry = ({ navigation, route }) => {
                   </View>
 
                   <View style={styles.footerRow}>
-                    <Text style={styles.price}>THB </Text>
-                    <Text style={styles.pricebig}>{item.md_timetable_priceadult}</Text>
-                    <Text style={styles.price}> / person</Text>
-                    <TouchableOpacity style={styles.bookNowButton}>
+
+                    <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                    <TouchableOpacity
+                      style={styles.bookNowButton}
+                      onPress={() => {
+                        // Update customer data
+                        setIsonewaystatus(true);
+                        updateCustomerData({
+                          roud:2 ,
+                          day: day,
+                          month: month,
+                          year: year,
+                          departdate: departureDateSend,
+                      
+                        });
+
+                        // Check if round trip status is true before navigating
+                        if (isroudstatus) {
+                          navigation.navigate('TripDetail', {
+                            timeTableDepartId: item.md_timetable_id,
+                            departDateTimeTable: departureDateSend,
+                            startingPointId: startingPointId,
+                            startingPointName: startingPointName,
+                            endPointId: endPointId,
+                            endPointName: endPointName,
+                            timeTablecCmpanyId: item.md_timetable_companyid,
+                            timeTablecPierStartId: item.md_timetable_pierstart,
+                            timeTablecPierEndId: item.md_timetable_pierend,
+                            adults: adults,
+                            children: children
+                          });
+                        } else {
+                            settripTypeSearchResult("Round Trip");
+                        }
+                      }}
+                    >
                       <Text style={styles.bookNowText}>Book Now</Text>
 
                     </TouchableOpacity>
@@ -840,10 +886,41 @@ const SearchFerry = ({ navigation, route }) => {
                   </View>
 
                   <View style={styles.footerRow}>
-                    <Text style={styles.price}>THB </Text>
-                    <Text style={styles.pricebig}>{item.md_timetable_priceadult}</Text>
-                    <Text style={styles.price}> / person</Text>
-                    <TouchableOpacity style={styles.bookNowButton}>
+                    <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+
+                    <TouchableOpacity
+                      style={styles.bookNowButton}
+                      onPress={() => {
+                        setIsroudstatus(true);
+                        updateCustomerData({
+                          roud:  2,
+                          day: day,
+                          month: month,
+                          year: year,
+                          departdate: departureDateSend,
+                         
+                        });
+
+                        // Check if round trip status is true before navigating
+                        if (isonewaystatus) {
+                          navigation.navigate('TripDetail', {
+                            timeTableDepartId: item.md_timetable_id,
+                            departDateTimeTable: departureDateSend,
+                            startingPointId: startingPointId,
+                            startingPointName: startingPointName,
+                            endPointId: endPointId,
+                            endPointName: endPointName,
+                            timeTablecCmpanyId: item.md_timetable_companyid,
+                            timeTablecPierStartId: item.md_timetable_pierstart,
+                            timeTablecPierEndId: item.md_timetable_pierend,
+                            adults: adults,
+                            children: children
+                          });
+                        } else {
+                            settripTypeSearchResult("One Way Trip");
+                        }
+                      }}
+                    >
                       <Text style={styles.bookNowText}>Book Now</Text>
 
                     </TouchableOpacity>

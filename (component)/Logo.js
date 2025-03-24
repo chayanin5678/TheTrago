@@ -20,7 +20,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 20,
         flexDirection: 'row',
-        marginLeft:-20,
+        marginLeft:0,
+
       },
       logo: {
         width: '40%',

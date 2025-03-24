@@ -15,7 +15,7 @@ const destinations = [
 const HomeScreen = ({navigation }) => {
   const [activeTab, setActiveTab] = useState('Ferry');  // ใช้ state เพื่อจัดการเมนูที่เลือก
   const [startingPoint, setStartingPoint] = useState({ id: '0' ,name: 'Starting Point'});
-  const [endPoint, setEndPoint] = useState({ id: '0' ,name: 'End Point'});
+  const [endPoint, setEndPoint] = useState({ id: '0' ,name: 'Destination'});
   const [departureDate, setDepartureDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -260,7 +260,7 @@ const HomeScreen = ({navigation }) => {
 >
   <View style={styles.modalOverlay}>
     <View style={styles.modalContainer}>
-      <Text style={styles.modalText}>Please select starting points and end points.</Text>
+      <Text style={styles.modalText}>Please select starting points and destination.</Text>
       <TouchableOpacity 
         style={styles.modalButton} 
         onPress={() => setIsModalVisible(false)}
