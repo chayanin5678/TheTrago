@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet } from 'react-native';
 
 // Import หน้าต่างๆ
+import * as SplashScreen from 'expo-splash-screen';
 import StartingPointScreen from './StartingPointScreen';  
 import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
@@ -19,6 +20,8 @@ import LinkingConfiguration from './(Screen)/linking';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+
 
 // Settings Screen
 const SettingsScreen = () => (
@@ -68,6 +71,16 @@ const MainNavigator = () => (
 );
 
 export default function App() {
+
+  useEffect(() => {
+    // Prevent the Splash Screen from auto-hiding
+    SplashScreen.preventAutoHideAsync();
+  
+    // Set a timeout to hide the splash screen after a specific time (e.g., 3 seconds)
+    setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 3000); // 3000 ms = 3 seconds
+  }, []);
   return (
     <NavigationContainer linking={LinkingConfiguration}>  
       <CustomerProvider>

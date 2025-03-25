@@ -168,11 +168,7 @@ const PaymentScreen = ({ navigation, route }) => {
     return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
   };
 
-  const calculatePaymentFee = (price) => {
 
-    const PaymentFee = price * 0.04; // ลด 10%
-    return PaymentFee.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-  };
 
 
   const handlePayment = async () => {
@@ -297,13 +293,11 @@ const PaymentScreen = ({ navigation, route }) => {
     const handleDeepLink = (event) => {
       let url = event.url || "";
       console.log("🔗 Deep Link Received:", url);
-
       if (url.includes("payment/success")) {
-        fetchBookingCode();
-        
-       createBooking(paymentcode);
-  
-      updateCustomerData({
+       fetchBookingCode(); 
+        createBooking(paymentcode);
+        console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+        updateCustomerData({
         bookingcode: `${booking_code}`,
         bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
         totaladult: formatNumberWithComma(formatNumber(totalAdult)),

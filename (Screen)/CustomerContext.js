@@ -13,9 +13,12 @@ export const CustomerProvider = ({ children }) => {
     selectedTitle: 'Please Select', //คำนำหน้า
     tel: '', //เบอร์โทร
     email: '', //อีเมล
-    companyid: '', //รหัสบริษัท
+    companyDepartId: '', //รหัสบริษัท
+    companyReturnId: '', //รหัสบริษัทกลับ
     companyname: '', //ชื่อบริษัท
+    startingPointId: '', //รหัสจุดเริ่มต้น
     startingpoint_name: '', //จุดเริ่มต้น
+    endPointId: '', //รหัสจุดหมายปลายทาง
     endpoint_name: '', //จุดหมายปลายทาง
     boatypeid: '', //ประเภทเรือ
     country: '', //ประเทศ
@@ -41,6 +44,7 @@ export const CustomerProvider = ({ children }) => {
     time:'', //เวลา
     date:'', //วันที่
     departdate:'', //วันที่เดินทาง
+    returndate:'', //วันที่กลับ
     departtime:'', //เวลาเดินทาง
     ip:'', //ไอพี
     paymentid:'', //รหัสการชำระ
@@ -50,6 +54,13 @@ export const CustomerProvider = ({ children }) => {
     onewaystatus:false, //สถานะเที่ยวเดียว
     roudtripstatus:false, //สถานะไปกลับ
     timeTableDepartId:'', //รหัสตารางเวลาเดินทาง
+    departDateTimeTable:'', //วันเวลาเดินทาง
+    pierStartDepartId:'', //รหัสท่าเริ่มต้น
+    pierEndDepartId:'', //รหัสท่าปลายทาง
+    pierStartReturntId:'', //รหัสท่าเริ่มต้นกลับ
+    pierEndReturntId:'',
+    timeTableReturnId:'', //รหัสตารางเวลากลับ
+    tripTypeinput:'',
   });
 
   const updateCustomerData = (newData) => {

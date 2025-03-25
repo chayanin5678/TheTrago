@@ -4,8 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import LogoTheTrago from './(component)/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import Loading from './(component)/Loading';
-
+import { useCustomer } from './(Screen)/CustomerContext';
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
   { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./assets/destination2.png') },
@@ -31,8 +30,8 @@ const HomeScreen = ({navigation }) => {
   const [showReturnPicker, setShowReturnPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  
+    const { customerData, updateCustomerData } = useCustomer();
+   const [tripType, setTripType] = useState("One Way Trip"); 
 
 
   const formatDate = (date) => {
@@ -98,8 +97,50 @@ const HomeScreen = ({navigation }) => {
           </View>
         ))}
       </View> */}
-
+      
       <View style={styles.bookingSection}>
+      <View style={styles.tripTypeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.tripTypeOneWayButton,
+                      tripType === "One Way Trip" && styles.activeButton,
+                    ]}
+                    onPress={() => {
+                      setTripType("One Way Trip");
+      
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.tripTypeText,
+                        tripType === "One Way Trip" && styles.activeText,
+      
+                      ]}
+                    >
+                      One Way Trip
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.tripTypeRoundButton,
+                      tripType === "Return Trip" && styles.activeButton,
+                    ]}
+                    onPress={() => {
+                      setTripType("Return Trip");
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.tripTypeText,
+                        tripType === "Return Trip" && styles.activeText,
+      
+                      ]}
+                    >
+                      Round Trip
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
         <View style={styles.inputRow}>
         <TouchableOpacity
       onPress={() => {
@@ -156,7 +197,10 @@ const HomeScreen = ({navigation }) => {
        
           <View style={styles.inputBox}>
           <TouchableOpacity onPress={() => setShowDepartPicker(true)}
-          style={styles.rowdepart}>
+          style={[
+                           styles.rowdepart,
+                           { width: tripType === "One Way Trip" ? wp('73.5%') : 'auto' } // Apply 100% width conditionally
+                         ]}>
 
             <Image
               source={require('./assets/solar_calendar-bold.png')}
@@ -168,6 +212,8 @@ const HomeScreen = ({navigation }) => {
               <Text style={styles.inputText}>{departureDate ? formatDate(departureDate.toString()): "Select Date"}</Text>
             </View>
             </TouchableOpacity>
+            {tripType === "Return Trip" && (
+                <>
 
             <Image
               source={require('./assets/Line 2.png')}
@@ -187,6 +233,8 @@ const HomeScreen = ({navigation }) => {
               <Text style={styles.inputText}>{returnDate ? formatDate(returnDate.toString()) : "No Date Available"}</Text>
             </View>
             </TouchableOpacity>
+            </>
+            )}
           </View>
           {showDepartPicker && (
   <DateTimePicker
@@ -235,15 +283,16 @@ const HomeScreen = ({navigation }) => {
     
     if (startingPoint.id !== '0' && endPoint.id !== '0') {
       setIsLoading(true);
-      navigation.navigate('SearchFerry',{
-        startingPointId: startingPoint.id,
-        endPointId: endPoint.id,
-        startingPointName: startingPoint.name,
-        endPointName: endPoint.name,
-        departureDateInput: departureDate ? departureDate.toISOString().split("T")[0] : null,
-        returnDateInput: returnDate ? returnDate.toISOString().split("T")[0] : null
-
+      updateCustomerData({
+        startingPointId:startingPoint.id,
+        startingpoint_name: startingPoint.name,
+        endPointId:endPoint.id,
+        endpoint_name: endPoint.name,
+        departdate:departureDate ? departureDate.toISOString().split("T")[0] : null,
+        returndate:returnDate ? returnDate.toISOString().split("T")[0] : null,
+        tripTypeinput: tripType,
       });
+      navigation.navigate('SearchFerry');
       setIsLoading(false);
     } else {
       setIsModalVisible(true);
@@ -673,6 +722,66 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  tripTypeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  tripTypeOneWayButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    padding: 10,
+    borderRadius: 15,
+    borderBottomRightRadius: 0,
+    borderTopRightRadius: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    marginHorizontal: 5,
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: 0,
+    width: '100%',
+    height: 50,
+    alignItems: 'center',
+
+  },
+  tripTypeRoundButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    padding: 10,
+    borderRadius: 15,
+    borderBottomLeftRadius: 0,
+    borderTopLeftRadius: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    marginHorizontal: 5,
+    flex: 1,
+    justifyContent: 'center',
+    marginLeft: 0,
+    marginRight: 5,
+    width: '100%',
+    height: 50,
+    alignItems: 'center',
+
+  },
+  activeButton: {
+    backgroundColor: "#FD501E",
+
+  },
+  tripTypeText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: 'bold'
+  },
+  activeText: {
+    color: "#FFF",
   },
 })
 export default HomeScreen;
