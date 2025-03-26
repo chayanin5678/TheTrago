@@ -25,33 +25,47 @@ const TripDetail = ({ navigation, route }) => {
   const [salechild, setSalechild] = useState();
   const [adultPrice, setAdultPrice] = useState();
   const [childPrice, setChildPrice] = useState();
-  const [hour, setHour] = useState("HH");
-  const [minutes, setMinutes] = useState("MM");
+  const [pickuphourDepart, setPickuphourDepart] = useState("HH");
+  const [dropoffhourDepart, setDropoffhourDepart] = useState("HH");
+  const [pickupminutesDepart, setpickupMinutesDepart] = useState("MM");
+  const [dropoffminutesDepart, setDropoffminutesDepart] = useState("MM");
+  const [pickuphourReturn, setPickupHourReturn] = useState("HH");
+  const [pickupminutesreturn, setpickupMinutesReturn] = useState("MM");
 
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
   const [pickupDepart, setpickupDepart] = useState(false);
   const [pickupReturn, setpickupReturn] = useState(false);
-  const [dropoff, setDropoff] = useState(false);
-  const [selectedTranSportPickup, setSelectedTranSportPickup] = useState('');
-  
-  const [selectedPickup, setSelectedPickup] = useState('');
+  const [dropoffDepart, setDropoffDepart] = useState(false);
+  const [dropoffReturn, setDropoffReturn] = useState(false);
+  const [selectedTranSportPickupDepart, setSelectedTranSportPickupDepart] = useState('');
+  const [selectedTranSportPickupReturn, setSelectedTranSportPickupReturn] = useState('');
+  const [selectedPickupDepart, setSelectedPickupDepart] = useState('');
+  const [selectedPickupReturn, setSelectedPickupReturn] = useState('');
   const [TranSportDepartPickup, setTranSportDepartPickup] = useState([]);
   const [TranSportReturnPickup, setTranSportReturnPickup] = useState([]);
-  const [selectedTranSportDropoff, setSelectedTranSportDropoff] = useState('');
+  const [selectedTranSportDropoffDepart, setSelectedTranSportDropoffDepart] = useState('');
+  const [selectedDropoffDepart, setSelectedDropoffDepart] = useState('');
   const [selectedDropoff, setSelectedDropoff] = useState('');
-  const [TranSportDropoff, setTranSportDropoff] = useState([]);
-  const [pickupArea, setPickupArea] = useState([]);
+  const [TranSportDropoffDepart, setTranSportDropoffDepart] = useState([]);
+  const [TranSportDropoffReturn, setTranSportDropoffReturn] = useState([]);
+  const [pickupAreaDepart, setPickupAreaDepart] = useState([]);
+  const [pickupAreaReturn, setPickupAreaReturn] = useState([]);
+  const [DropoffAreaDepart, setDropoffAreaDepart] = useState([]);
   const [DropoffArea, setDropoffArea] = useState([]);
-  const [airPortPickup, setAirPortPickup] = useState('');
+  const [airPortPickupDepart, setAirPortPickupDepart] = useState('');
+  const [airPortPickupReturn, setAirPortPickupReturn] = useState('');
+  const [airPortDropoffDepart, setAirPortDropoffDepart] = useState('');
   const [airPortDropoff, setAirPortDropoff] = useState('');
-  const [isHourModalVisible, setisHourModalVisible] = useState(false);
-  const [isMinuteModalVisible, setisMinuteModalVisible] = useState(false);
+  const [ispickupHourModalVisibleDepart, setispickupHourModalVisibleDepart] = useState(false);
+  const [isdropoffHourModalVisibleDepart, setisdropoffHourModalVisibleDepart] = useState(false);
+  const [ispickupMinuteModalVisibleDepart, setispickupMinuteModalVisibleDepart] = useState(false);
+  const [isdropoffMinuteModalVisibleDepart, setisdropoffMinuteModalVisibleDepart] = useState(false);
+  const [ispickupHourModalVisibleReturn, setispickupHourModalVisibleReturn] = useState(false);
+  const [ispickupMinuteModalVisibleReturn, setispickupMinuteModalVisibleReturn] = useState(false);
   const { customerData, updateCustomerData } = useCustomer();
   const [modaladultVisible, setModalAdultVisible] = useState(false);
   const [modalchildVisible, setModalChildVisible] = useState(false);
-  const [isTransportModalVisible, setIsTransportModalVisible] = useState(false);  // State สำหรับเปิด/ปิด Modal
-  const [selectedTransportType, setSelectedTransportType] = useState('');
   console.log(customerData.timeTableDepartId);
   console.log(customerData.departdate);
   // console.log(timeTablecCmpanyId);
@@ -85,19 +99,56 @@ const TripDetail = ({ navigation, route }) => {
   }
 
 
-  const toggleHourtModal = () => {
-    setisHourModalVisible(!isHourModalVisible);
+  const pickuptoggleHourtModalDepart = () => {
+    setispickupHourModalVisibleDepart(!ispickupHourModalVisibleDepart);
   };
 
-  const handleHourSelect = (value) => {
-    setHour(value);
-    toggleHourtModal();
+  const dropofftoggleHourtModalDepart = () => {
+    setisdropoffHourModalVisibleDepart(!isdropoffHourModalVisibleDepart);
   };
 
-  const renderHourOption = ({ item }) => (
+  const  pickuptoggleHourtModalReturn = () => {
+    setispickupHourModalVisibleReturn(!ispickupHourModalVisibleReturn);
+  };
+
+  const pickuphandleHourSelectDepart = (value) => {
+    setPickuphourDepart(value);
+    pickuptoggleHourtModalDepart();
+  };
+
+  const dropoffhandleHourSelectDepart = (value) => {
+    setDropoffhourDepart(value);
+    dropofftoggleHourtModalDepart();
+  };
+
+  const pickuphandleHourSelectReturn = (value) => {
+    setPickupHourReturn(value);
+    pickuptoggleHourtModalReturn();
+  };
+
+
+  const pickuprenderHourOptionDepart = ({ item }) => (
     <TouchableOpacity
       style={styles.modalOption}
-      onPress={() => handleHourSelect(item)}
+      onPress={() => pickuphandleHourSelectDepart(item)}
+      key={item.toString()} // Add unique key here
+    >
+      <Text style={styles.modalOptionText}>{item}</Text>
+    </TouchableOpacity>
+  );
+  const dropoffrenderHourOptionDepart = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => dropoffhandleHourSelectDepart(item)}
+      key={item.toString()} // Add unique key here
+    >
+      <Text style={styles.modalOptionText}>{item}</Text>
+    </TouchableOpacity>
+  );
+  const pickuprenderHourOptionReturn = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => pickuphandleHourSelectReturn(item)}
       key={item.toString()} // Add unique key here
     >
       <Text style={styles.modalOptionText}>{item}</Text>
@@ -106,19 +157,58 @@ const TripDetail = ({ navigation, route }) => {
 
   const HourOption = ['HH', ...Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))];
 
-  const toggleMinuteModal = () => {
-    setisMinuteModalVisible(!isMinuteModalVisible);
+  const pickuptoggleMinuteModalDepart = () => {
+    setispickupMinuteModalVisibleDepart(!ispickupMinuteModalVisibleDepart);
   };
 
-  const handleMinuteSelect = (value) => {
-    setMinutes(value);
-    toggleMinuteModal();
+  const dropofftoggleMinuteModalDepart = () => {
+    setisdropoffMinuteModalVisibleDepart(!isdropoffMinuteModalVisibleDepart);
   };
 
-  const renderMinuteOption = ({ item }) => (
+  const pickuptoggleMinuteModalReturn = () => {
+    setispickupMinuteModalVisibleReturn(!ispickupMinuteModalVisibleReturn);
+  };
+
+  const pickuphandleMinuteSelectDepart = (value) => {
+    setpickupMinutesDepart(value);
+    pickuptoggleMinuteModalDepart();
+  };
+
+  const dropoffhandleMinuteSelectDepart = (value) => {
+    setDropoffminutesDepart(value);
+    dropofftoggleMinuteModalDepart();
+  };
+
+  const pickuphandleMinuteSelectReturn = (value) => {
+    setpickupMinutesReturn(value);
+    dropofftoggleMinuteModalReturn();
+  };
+
+  const pickuprenderMinuteOptionDepart = ({ item }) => (
     <TouchableOpacity
       style={styles.modalOption}
-      onPress={() => handleMinuteSelect(item)}
+      onPress={() => pickuphandleMinuteSelectDepart(item)}
+      key={item.toString()} // Add unique key here
+    >
+      <Text style={styles.modalOptionText}>{item}</Text>
+    </TouchableOpacity>
+  );
+
+  
+  const dropoffrenderMinuteOptionDepart = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => dropoffhandleMinuteSelectDepart(item)}
+      key={item.toString()} // Add unique key here
+    >
+      <Text style={styles.modalOptionText}>{item}</Text>
+    </TouchableOpacity>
+  );
+
+  const pickuprenderMinuteOptionReturn = ({ item }) => (
+    <TouchableOpacity
+      style={styles.modalOption}
+      onPress={() => pickuphandleMinuteSelectReturn(item)}
       key={item.toString()} // Add unique key here
     >
       <Text style={styles.modalOptionText}>{item}</Text>
@@ -221,24 +311,26 @@ const TripDetail = ({ navigation, route }) => {
     if (customerData.roud === 2) {
         fetchTimetableReturn();
         fetchPickupData();
+        fetchPickupDataReturn();
+        fetchDropoffData();
     }
     if (!pickupDepart) {
       setpickupPrice(0);
     }
 
-    if (pickupDepart && selectedPickup != 0) {
+    if (pickupDepart && selectedPickupDepart != 0) {
       setpickupPrice(customerData.pickupprice);
     }
 
-    if (!dropoff) {
+    if (!dropoffDepart) {
       setDropoffPrice(0);
     }
 
-    if (dropoff && selectedDropoff != 0) {
+    if (dropoffDepart && selectedDropoffDepart != 0) {
       setDropoffPrice(customerData.dropoffprice)
     }
 
-  }, [pickupDepart, pickupPrice, dropoff, dropoffPrice,customerData.roud,customerData.companyReturnId,customerData.pierStartReturntId]);
+  }, [pickupDepart, pickupPrice, dropoffDepart, dropoffPrice, customerData.roud, customerData.companyDepartId, customerData.companyReturnId, customerData.pierStartReturntId, customerData.pierEndDepartId]);
 
 
   useEffect(() => {
@@ -293,7 +385,7 @@ const TripDetail = ({ navigation, route }) => {
     }
   };
   useEffect(() => {
-    fetch(`${ipAddress}/pickup/${customerData.companyDepartId}/${customerData.pierStartDepartId}/${selectedTranSportPickup}`)
+    fetch(`${ipAddress}/pickup/${customerData.companyDepartId}/${customerData.pierStartDepartId}/${selectedTranSportPickupDepart}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -302,16 +394,37 @@ const TripDetail = ({ navigation, route }) => {
       })
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setPickupArea(data.data);
+          setPickupAreaDepart(data.data);
         } else {
           console.error('Data is not an array', data);
-          setPickupArea([]);
+          setPickupAreaDepart([]);
         }
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
-  }, [customerData.companyDepartId, customerData.pierStartDepartId, selectedTranSportPickup]);
+  }, [customerData.companyDepartId, customerData.pierStartDepartId, selectedTranSportPickupDepart]);
+
+  const fetchPickupDataReturn = async () => {
+    try {
+      const response = await fetch(
+        `${ipAddress}/pickup/${customerData.companyReturnId}/${customerData.pierStartReturntId}/${selectedTranSportPickupReturn}`
+      );
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.data)) {
+        setPickupAreaReturn(data.data);
+      } else {
+        console.error('Data is not an array', data);
+        setPickupAreaReturn([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
 
   useEffect(() => {
     fetch(`${ipAddress}/dropoff/${customerData.companyDepartId}/${customerData.pierEndDepartId}`)
@@ -323,10 +436,10 @@ const TripDetail = ({ navigation, route }) => {
       })
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setTranSportDropoff(data.data);
+          setTranSportDropoffDepart(data.data);
         } else {
           console.error('Data is not an array', data);
-          setTranSportDropoff([]);
+          setTranSportDropoffDepart([]);
         }
       })
       .catch((error) => {
@@ -334,8 +447,30 @@ const TripDetail = ({ navigation, route }) => {
       });
   }, [customerData.companyDepartId, customerData.pierStartDepartId]);
 
+  
+  const fetchDropoffData = async () => {
+    try {
+      const response = await fetch(
+        `${ipAddress}/dropoff/${customerData.companyDepartId}/${customerData.pierEndDepartId}`
+      );
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.data)) {
+        setTranSportDropoffReturn(data.data);
+      } else {
+        console.error('Data is not an array', data);
+        setTranSportDropoffReturn([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+ 
+
   useEffect(() => {
-    fetch(`${ipAddress}/dropoff/${customerData.companyDepartId}/${customerData.pierEndDepartId}/${selectedTranSportDropoff}`)
+    fetch(`${ipAddress}/dropoff/${customerData.companyDepartId}/${customerData.pierEndDepartId}/${selectedTranSportDropoffDepart}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -344,16 +479,16 @@ const TripDetail = ({ navigation, route }) => {
       })
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setDropoffArea(data.data);
+          setDropoffAreaDepart(data.data);
         } else {
           console.error('Data is not an array', data);
-          setDropoffArea([]);
+          setDropoffAreaDepart([]);
         }
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
-  }, [customerData.companyDepartId, customerData.pierEndDepartId, selectedTranSportDropoff]);
+  }, [customerData.companyDepartId, customerData.pierEndDepartId, selectedTranSportDropoffDepart]);
 
  const handleNext = () => {
 
@@ -374,20 +509,7 @@ const TripDetail = ({ navigation, route }) => {
     });
   };
 
-  const handleTransportSelect = (type) => {
-    setSelectedTransportType(type);  // เลือกประเภทการขนส่ง
-    setIsTransportModalVisible(false);  // ปิด Modal หลังจากเลือก
-  };
-
-  const renderTransportOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleTransportSelect(item.md_cartype_nameeng)}  // เลือกประเภทจาก TranSportPickup
-      key={item.md_pickup_cartypeid.toString()}  // ใช้ ID ที่ไม่ซ้ำเพื่อเป็นคีย์
-    >
-      <Text style={styles.modalOptionText}>{item.md_cartype_nameeng}</Text>  {/* แสดงชื่อประเภทการขนส่ง */}
-    </TouchableOpacity>
-  );
+  
 
 
   return (
@@ -468,45 +590,45 @@ const TripDetail = ({ navigation, route }) => {
                   <Text style={styles.inputLabel}>Arrive Time</Text>
                   <View style={styles.inputRow}>
                     <View style={styles.inputBoxArrive}>
-                      <TouchableOpacity style={styles.button} onPress={toggleHourtModal}>
-                        <Text style={styles.ArriveText}>{hour}</Text>
+                      <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
+                        <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                       </TouchableOpacity>
 
                       {/* Adult Modal */}
                       <Modal
-                        visible={isHourModalVisible}
+                        visible={ispickupHourModalVisibleDepart}
                         transparent={true}
                         animationType="fade"
-                        onRequestClose={toggleHourtModal}
+                        onRequestClose={pickuptoggleHourtModalDepart}
                       >
                         <View style={styles.modalOverlay}>
                           <View style={styles.modalContent}>
                             <FlatList
                               data={HourOption}
-                              renderItem={renderHourOption}
+                              renderItem={pickuprenderHourOptionDepart}
                               keyExtractor={(item, index) => index.toString()}  // Use index as key
                             />
                           </View>
                         </View>
                       </Modal>
-                      <TouchableOpacity style={styles.button} onPress={toggleMinuteModal}>
-                        <Text style={styles.ArriveText}>{minutes} </Text>
+                      <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
+                        <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                       </TouchableOpacity>
 
                       {/* Child Modal */}
                       <Modal
-                        visible={isMinuteModalVisible}
+                        visible={ispickupMinuteModalVisibleDepart}
                         transparent={true}
                         animationType="fade"
-                        onRequestClose={toggleMinuteModal}
+                        onRequestClose={pickuptoggleMinuteModalDepart}
                       >
                         <View style={styles.modalOverlay}>
                           <View style={styles.modalContent}>
                             <FlatList
                               data={minuteOption}
-                              renderItem={renderMinuteOption}
+                              renderItem={pickuprenderMinuteOptionDepart}
                               keyExtractor={(item, index) => index.toString()}  // Use index as key
                             />
                           </View>
@@ -532,7 +654,7 @@ const TripDetail = ({ navigation, route }) => {
                       {/* Button ที่คลิกเพื่อเปิด Modal */}
      
                       <View style={styles.pickerContainer}>
-                        <Picker selectedValue={selectedTranSportPickup} onValueChange={(itemValue) => setSelectedTranSportPickup(itemValue)}>
+                        <Picker selectedValue={selectedTranSportPickupDepart} onValueChange={(itemValue) => setSelectedTranSportPickupDepart(itemValue)}>
                           <Picker.Item label="Select Transport Type" value="0" style={styles.pickup} key="default" />
                           {TranSportDepartPickup.map((item) => (
                             <Picker.Item
@@ -547,9 +669,9 @@ const TripDetail = ({ navigation, route }) => {
                       <Text style={styles.inputLabel}>Pick up area</Text>
                       <View style={styles.pickerContainer}>
                         <Picker
-                          selectedValue={selectedPickup}
+                          selectedValue={selectedPickupDepart}
                           onValueChange={(itemValue) => {
-                            setSelectedPickup(itemValue);
+                            setSelectedPickupDepart(itemValue);
 
                             if (itemValue === "0") {
                               // เมื่อเลือก "Please Select" ให้ set pickupPrice เป็น 0
@@ -557,22 +679,22 @@ const TripDetail = ({ navigation, route }) => {
 
                             } else {
                               // ค้นหาข้อมูลของ Pickup ที่ถูกเลือก
-                              const selectedItem = pickupArea.find((item) => item.md_pickup_id === itemValue);
+                              const selectedItempickupDepart = pickupAreaDepart.find((item) => item.md_pickup_id === itemValue);
 
                               // ถ้าพบค่าให้เซ็ตค่า airPort และ pickupPrice
-                              if (selectedItem) {
-                                setAirPortPickup(selectedItem.md_transfer_airport);
-                                setpickupPrice(selectedItem.md_pickup_price);
+                              if (selectedItempickupDepart) {
+                                setAirPortPickupDepart(selectedItempickupDepart.md_transfer_airport);
+                                setpickupPrice(selectedItempickupDepart.md_pickup_price);
                                 updateCustomerData({
                                   // อัปเดตข้อมูลลูกค้าหรือข้อมูลที่ต้องการในฐานข้อมูล
-                                  pickupprice: selectedItem.md_pickup_price,  // ตัวอย่างการอัปเดตข้อมูล
+                                  pickupprice: selectedItempickupDepart.md_pickup_price,  // ตัวอย่างการอัปเดตข้อมูล
                                 });
                               }
                             }
                           }}
                         >
                           <Picker.Item label="Please Select" value="0" style={styles.pickup} key="default" />
-                          {pickupArea.map((item) => (
+                          {pickupAreaDepart.map((item) => (
                             <Picker.Item
                               key={item.md_pickup_id ? item.md_pickup_id.toString() : item.md_pickup_id || "default"}  // Check for undefined value
                               label={item.md_transfer_nameeng}
@@ -582,7 +704,7 @@ const TripDetail = ({ navigation, route }) => {
                         </Picker>
 
                       </View>
-                      {airPortPickup === 1 && (
+                      {airPortPickupDepart === 1 && (
 
                         <>
                           <Text style={styles.inputLabel}>Filght Number</Text>
@@ -590,45 +712,45 @@ const TripDetail = ({ navigation, route }) => {
                           <Text style={styles.inputLabel}>Arrive Time</Text>
                           <View style={styles.inputRow}>
                             <View style={styles.inputBoxArrive}>
-                              <TouchableOpacity style={styles.button} onPress={toggleHourtModal}>
-                                <Text style={styles.ArriveText}>{hour}</Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
+                                <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Adult Modal */}
                               <Modal
-                                visible={isHourModalVisible}
+                                visible={ispickupHourModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleHourtModal}
+                                onRequestClose={pickuptoggleHourtModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={HourOption}
-                                      renderItem={renderHourOption}
+                                      renderItem={pickuprenderHourOptionDepart}
                                       keyExtractor={(item) => item.toString()}
                                     />
                                   </View>
                                 </View>
                               </Modal>
-                              <TouchableOpacity style={styles.button} onPress={toggleMinuteModal}>
-                                <Text style={styles.ArriveText}>{minutes} </Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
+                                <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Child Modal */}
                               <Modal
-                                visible={isMinuteModalVisible}
+                                visible={ispickupMinuteModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleMinuteModal}
+                                onRequestClose={pickuptoggleMinuteModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={minuteOption}
-                                      renderItem={renderMinuteOption}
+                                      renderItem={pickuprenderMinuteOptionDepart}
                                       keyExtractor={(item) => item.toString()}
                                     />
                                   </View>
@@ -654,20 +776,20 @@ const TripDetail = ({ navigation, route }) => {
 
 
               {/* Dropoff Section */}
-              {Array.isArray(TranSportDropoff) && TranSportDropoff.length > 0 ? (
+              {Array.isArray(TranSportDropoffDepart) && TranSportDropoffDepart.length > 0 ? (
                 <View style={styles.section}>
-                  <TouchableOpacity onPress={() => setDropoff(!dropoff)} style={styles.checkboxContainer}>
-                    <MaterialIcons name={dropoff ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                  <TouchableOpacity onPress={() => setDropoffDepart(!dropoffDepart)} style={styles.checkboxContainer}>
+                    <MaterialIcons name={dropoffDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                     <Text style={styles.label}>I need a drop off</Text>
                   </TouchableOpacity>
 
-                  {dropoff && (
+                  {dropoffDepart && (
                     <View>
                       <Text style={styles.inputLabel}>Transport type</Text>
                       <View style={styles.pickerContainer}>
-                        <Picker selectedValue={selectedTranSportDropoff} onValueChange={(itemValue) => setSelectedTranSportDropoff(itemValue)}>
+                        <Picker selectedValue={selectedTranSportDropoffDepart} onValueChange={(itemValue) => setSelectedTranSportDropoffDepart(itemValue)}>
                           <Picker.Item label="Select Transport Type" value="0" style={styles.pickup} key="default" />
-                          {TranSportDropoff.map((item) => (
+                          {TranSportDropoffDepart.map((item) => (
                             <Picker.Item
                               key={item.md_dropoff_cartypeid ? item.md_dropoff_cartypeid.toString() : item.md_dropoff_cartypeid || "default"}  // Check for undefined value
                               label={item.md_cartype_nameeng}
@@ -681,31 +803,31 @@ const TripDetail = ({ navigation, route }) => {
                       <Text style={styles.inputLabel}>Drop off area</Text>
                       <View style={styles.pickerContainer}>
                         <Picker
-                          selectedValue={selectedDropoff}
+                          selectedValue={selectedDropoffDepart}
                           onValueChange={(itemValue) => {
-                            setSelectedDropoff(itemValue);
+                            setSelectedDropoffDepart(itemValue);
                             if (itemValue === "0") {
                               // เมื่อเลือก "Please Select" ให้ set pickupPrice เป็น 0
                               setDropoffPrice(0);
 
                             } else {
                               // ค้นหาข้อมูลของ Pickup ที่ถูกเลือก
-                              const selectedItem = DropoffArea.find((item) => item.md_dropoff_id === itemValue);
+                              const selectedItemdropoffDepart = DropoffAreaDepart.find((item) => item.md_dropoff_id === itemValue);
 
                               // ถ้าพบค่าให้เซ็ตค่า airPort และ pickupPrice
-                              if (selectedItem) {
-                                setAirPortDropoff(selectedItem.md_transfer_airport);
-                                setDropoffPrice(selectedItem.md_dropoff_price);
+                              if (selectedItemdropoffDepart) {
+                                setAirPortDropoffDepart(selectedItemdropoffDepart.md_transfer_airport);
+                                setDropoffPrice(selectedItemdropoffDepart.md_dropoff_price);
                                 updateCustomerData({
                                   // อัปเดตข้อมูลลูกค้าหรือข้อมูลที่ต้องการในฐานข้อมูล
-                                  dropoffprice: selectedItem.md_dropoff_price,  // ตัวอย่างการอัปเดตข้อมูล
+                                  dropoffprice: selectedItemdropoffDepart.md_dropoff_price,  // ตัวอย่างการอัปเดตข้อมูล
                                 });
                               }
                             }
                           }}
                         >
                           <Picker.Item label="Please Select" value="0" style={styles.pickup} key="default" />
-                          {DropoffArea.map((item) => (
+                          {DropoffAreaDepart.map((item) => (
                             <Picker.Item
                               key={item.md_dropoff_id ? item.md_dropoff_id.toString() : item.md_dropoff_id || "default"}  // Check for undefined value
                               label={item.md_transfer_nameeng}
@@ -714,52 +836,52 @@ const TripDetail = ({ navigation, route }) => {
                           ))}
                         </Picker>
                       </View>
-                      {airPortDropoff === 1 && (
+                      {airPortDropoffDepart === 1 && (
                         <>
                           <Text style={styles.inputLabel}>Filght Number</Text>
                           <TextInput style={styles.input} />
                           <Text style={styles.inputLabel}>Arrive Time</Text>
                           <View style={styles.inputRow}>
                             <View style={styles.inputBoxArrive}>
-                              <TouchableOpacity style={styles.button} onPress={toggleHourtModal}>
-                                <Text style={styles.ArriveText}>{hour}</Text>
+                              <TouchableOpacity style={styles.button} onPress={dropofftoggleHourtModalDepart}>
+                                <Text style={styles.ArriveText}>{dropoffhourDepart}</Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Hour Modal */}
                               <Modal
-                                visible={isHourModalVisible}
+                                visible={isdropoffHourModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleHourtModal}
+                                onRequestClose={dropofftoggleHourtModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={HourOption}
-                                      renderItem={renderHourOption}
+                                      renderItem={dropoffrenderHourOptionDepart}
                                       keyExtractor={(item) => item.toString()}  // Use item as key
                                     />
                                   </View>
                                 </View>
                               </Modal>
-                              <TouchableOpacity style={styles.button} onPress={toggleMinuteModal}>
-                                <Text style={styles.ArriveText}>{minutes} </Text>
+                              <TouchableOpacity style={styles.button} onPress={dropofftoggleMinuteModalDepart}>
+                                <Text style={styles.ArriveText}>{dropoffminutesDepart} </Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Minute Modal */}
                               <Modal
-                                visible={isMinuteModalVisible}
+                                visible={isdropoffMinuteModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleMinuteModal}
+                                onRequestClose={dropofftoggleMinuteModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={minuteOption}
-                                      renderItem={renderMinuteOption}
+                                      renderItem={dropoffrenderMinuteOptionDepart}
                                       keyExtractor={(item) => item.toString()}  // Use item as key
                                     />
                                   </View>
@@ -867,45 +989,45 @@ const TripDetail = ({ navigation, route }) => {
                   <Text style={styles.inputLabel}>Arrive Time</Text>
                   <View style={styles.inputRow}>
                     <View style={styles.inputBoxArrive}>
-                      <TouchableOpacity style={styles.button} onPress={toggleHourtModal}>
-                        <Text style={styles.ArriveText}>{hour}</Text>
+                      <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
+                        <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                       </TouchableOpacity>
 
                       {/* Adult Modal */}
                       <Modal
-                        visible={isHourModalVisible}
+                        visible={ispickupHourModalVisibleReturn}
                         transparent={true}
                         animationType="fade"
-                        onRequestClose={toggleHourtModal}
+                        onRequestClose={pickuptoggleHourtModalReturn}
                       >
                         <View style={styles.modalOverlay}>
                           <View style={styles.modalContent}>
                             <FlatList
                               data={HourOption}
-                              renderItem={renderHourOption}
+                              renderItem={pickuprenderHourOptionReturn}
                               keyExtractor={(item, index) => index.toString()}  // Use index as key
                             />
                           </View>
                         </View>
                       </Modal>
-                      <TouchableOpacity style={styles.button} onPress={toggleMinuteModal}>
-                        <Text style={styles.ArriveText}>{minutes} </Text>
+                      <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
+                        <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                       </TouchableOpacity>
 
                       {/* Child Modal */}
                       <Modal
-                        visible={isMinuteModalVisible}
+                        visible={ispickupMinuteModalVisibleReturn}
                         transparent={true}
                         animationType="fade"
-                        onRequestClose={toggleMinuteModal}
+                        onRequestClose={pickuptoggleMinuteModalReturn}
                       >
                         <View style={styles.modalOverlay}>
                           <View style={styles.modalContent}>
                             <FlatList
                               data={minuteOption}
-                              renderItem={renderMinuteOption}
+                              renderItem={pickuprenderMinuteOptionReturn}
                               keyExtractor={(item, index) => index.toString()}  // Use index as key
                             />
                           </View>
@@ -931,7 +1053,7 @@ const TripDetail = ({ navigation, route }) => {
                       {/* Button ที่คลิกเพื่อเปิด Modal */}
      
                       <View style={styles.pickerContainer}>
-                        <Picker selectedValue={selectedTranSportPickup} onValueChange={(itemValue) => setSelectedTranSportPickup(itemValue)}>
+                        <Picker selectedValue={selectedTranSportPickupReturn} onValueChange={(itemValue) => setSelectedTranSportPickupReturn(itemValue)}>
                           <Picker.Item label="Select Transport Type" value="0" style={styles.pickup} key="default" />
                           {TranSportReturnPickup.map((item) => (
                             <Picker.Item
@@ -946,9 +1068,9 @@ const TripDetail = ({ navigation, route }) => {
                       <Text style={styles.inputLabel}>Pick up area</Text>
                       <View style={styles.pickerContainer}>
                         <Picker
-                          selectedValue={selectedPickup}
+                          selectedValue={selectedPickupReturn}
                           onValueChange={(itemValue) => {
-                            setSelectedPickup(itemValue);
+                            setSelectedPickupReturn(itemValue);
 
                             if (itemValue === "0") {
                               // เมื่อเลือก "Please Select" ให้ set pickupPrice เป็น 0
@@ -956,22 +1078,22 @@ const TripDetail = ({ navigation, route }) => {
 
                             } else {
                               // ค้นหาข้อมูลของ Pickup ที่ถูกเลือก
-                              const selectedItem = pickupArea.find((item) => item.md_pickup_id === itemValue);
+                              const selectedItemReturn = pickupAreaReturn.find((item) => item.md_pickup_id === itemValue);
 
                               // ถ้าพบค่าให้เซ็ตค่า airPort และ pickupPrice
-                              if (selectedItem) {
-                                setAirPortPickup(selectedItem.md_transfer_airport);
-                                setpickupPrice(selectedItem.md_pickup_price);
+                              if (selectedItemReturn) {
+                                setAirPortPickupReturn(selectedItemReturn.md_transfer_airport);
+                                setpickupPrice(selectedItemReturn.md_pickup_price);
                                 updateCustomerData({
                                   // อัปเดตข้อมูลลูกค้าหรือข้อมูลที่ต้องการในฐานข้อมูล
-                                  pickupprice: selectedItem.md_pickup_price,  // ตัวอย่างการอัปเดตข้อมูล
+                                  pickupprice: selectedItemReturn.md_pickup_price,  // ตัวอย่างการอัปเดตข้อมูล
                                 });
                               }
                             }
                           }}
                         >
                           <Picker.Item label="Please Select" value="0" style={styles.pickup} key="default" />
-                          {pickupArea.map((item) => (
+                          {pickupAreaReturn.map((item) => (
                             <Picker.Item
                               key={item.md_pickup_id ? item.md_pickup_id.toString() : item.md_pickup_id || "default"}  // Check for undefined value
                               label={item.md_transfer_nameeng}
@@ -981,7 +1103,7 @@ const TripDetail = ({ navigation, route }) => {
                         </Picker>
 
                       </View>
-                      {airPortPickup === 1 && (
+                      {airPortPickupReturn === 1 && (
 
                         <>
                           <Text style={styles.inputLabel}>Filght Number</Text>
@@ -989,45 +1111,45 @@ const TripDetail = ({ navigation, route }) => {
                           <Text style={styles.inputLabel}>Arrive Time</Text>
                           <View style={styles.inputRow}>
                             <View style={styles.inputBoxArrive}>
-                              <TouchableOpacity style={styles.button} onPress={toggleHourtModal}>
-                                <Text style={styles.ArriveText}>{hour}</Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
+                                <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Adult Modal */}
                               <Modal
-                                visible={isHourModalVisible}
+                                visible={ispickupHourModalVisibleReturn}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleHourtModal}
+                                onRequestClose={pickuptoggleHourtModalReturn}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={HourOption}
-                                      renderItem={renderHourOption}
+                                      renderItem={pickuprenderHourOptionReturn}
                                       keyExtractor={(item) => item.toString()}
                                     />
                                   </View>
                                 </View>
                               </Modal>
-                              <TouchableOpacity style={styles.button} onPress={toggleMinuteModal}>
-                                <Text style={styles.ArriveText}>{minutes} </Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
+                                <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Child Modal */}
                               <Modal
-                                visible={isMinuteModalVisible}
+                                visible={ispickupMinuteModalVisibleReturn}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={toggleMinuteModal}
+                                onRequestClose={pickuptoggleMinuteModalReturn}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={minuteOption}
-                                      renderItem={renderMinuteOption}
+                                      renderItem={pickuprenderMinuteOptionReturn}
                                       keyExtractor={(item) => item.toString()}
                                     />
                                   </View>
@@ -1053,20 +1175,20 @@ const TripDetail = ({ navigation, route }) => {
 
 
               {/* Dropoff Section */}
-              {Array.isArray(TranSportDropoff) && TranSportDropoff.length > 0 ? (
+              {Array.isArray(TranSportDropoffReturn) && TranSportDropoffReturn.length > 0 ? (
                 <View style={styles.section}>
-                  <TouchableOpacity onPress={() => setDropoff(!dropoff)} style={styles.checkboxContainer}>
-                    <MaterialIcons name={dropoff ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                  <TouchableOpacity onPress={() => setDropoffReturn(!dropoffReturn)} style={styles.checkboxContainer}>
+                    <MaterialIcons name={dropoffReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                     <Text style={styles.label}>I need a drop off</Text>
                   </TouchableOpacity>
 
-                  {dropoff && (
+                  {dropoffReturn && (
                     <View>
                       <Text style={styles.inputLabel}>Transport type</Text>
                       <View style={styles.pickerContainer}>
                         <Picker selectedValue={selectedTranSportDropoff} onValueChange={(itemValue) => setSelectedTranSportDropoff(itemValue)}>
                           <Picker.Item label="Select Transport Type" value="0" style={styles.pickup} key="default" />
-                          {TranSportDropoff.map((item) => (
+                          {TranSportDropoffReturn.map((item) => (
                             <Picker.Item
                               key={item.md_dropoff_cartypeid ? item.md_dropoff_cartypeid.toString() : item.md_dropoff_cartypeid || "default"}  // Check for undefined value
                               label={item.md_cartype_nameeng}
@@ -1286,7 +1408,7 @@ const TripDetail = ({ navigation, route }) => {
 
               </View>
             )}
-            {dropoff && dropoffPrice != 0 && (
+            {dropoffDepart && dropoffPrice != 0 && (
               <View style={styles.rowpromo}>
                 <Text>
                   Drop off

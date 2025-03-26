@@ -219,7 +219,7 @@ const SearchFerry = ({ navigation, route }) => {
     setTripTypeSearch(tripType);
     setIsonewaystatus(false);
     setIsroudstatus(false);
-  }, [startingPoint, endPoint, departureDate, returnDate, tripType]);
+  }, [startingPoint, endPoint, departureDate, returnDate, tripType,adults,children]);
 
 
 

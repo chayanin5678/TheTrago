@@ -234,6 +234,19 @@ const PaymentScreen = ({ navigation, route }) => {
       }
   
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
+      fetchBookingCode(); 
+      console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+      updateCustomerData({
+      bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+      totaladult: formatNumberWithComma(formatNumber(totalAdult)),
+      totalchild: formatNumberWithComma(formatNumber(totalChild)),
+      discount: formatNumberWithComma(formatNumber(Discount)),
+      ticketfare: formatNumberWithComma(formatNumber(subtotal)),
+      subtotal: formatNumberWithComma(formatNumber(subtotal)),
+      paymentfee: formatNumberWithComma(formatNumber(totalpaymentfee)),
+      total: formatNumberWithComma(formatNumber(totalPayment)),
+       });
+       
       setpaymentcode(paymentResult.charge.id);
       console.log('✅ Payment code:', paymentResult.charge.id);
       console.log('✅ booking code:', booking_code);
@@ -294,22 +307,9 @@ const PaymentScreen = ({ navigation, route }) => {
       let url = event.url || "";
       console.log("🔗 Deep Link Received:", url);
       if (url.includes("payment/success")) {
-       fetchBookingCode(); 
-        createBooking(paymentcode);
-        console.log("📌 Updating Customer Data with Booking Code:", booking_code);
-        updateCustomerData({
-        bookingcode: `${booking_code}`,
-        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        totaladult: formatNumberWithComma(formatNumber(totalAdult)),
-        totalchild: formatNumberWithComma(formatNumber(totalChild)),
-        discount: formatNumberWithComma(formatNumber(Discount)),
-        ticketfare: formatNumberWithComma(formatNumber(subtotal)),
-        subtotal: formatNumberWithComma(formatNumber(subtotal)),
-        paymentfee: formatNumberWithComma(formatNumber(totalpaymentfee)),
-        total: formatNumberWithComma(formatNumber(totalPayment)),
-      });
         Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
-        navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+        createBooking(paymentcode);   
+        navigation.navigate("ResultScreen", { success: true});
       } else if (url.includes("payment/failure")) {
         Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
         navigation.navigate("ResultScreen", { success: false });
@@ -543,12 +543,12 @@ const PaymentScreen = ({ navigation, route }) => {
               <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
             </View>
             <View style={[styles.row, { marginTop: 5 }]}>
-              <Text>Adult x {adults}</Text>
+              <Text>Adult x {customerData.adult}</Text>
               <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
             </View>
             {parseFloat(totalChild) !== 0 && (
               <View style={styles.row}>
-                <Text>Child x {children}</Text>
+                <Text>Child x {customerData.child}</Text>
                 <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
               </View>
             )}
