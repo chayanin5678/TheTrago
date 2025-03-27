@@ -10,9 +10,7 @@ import { useCustomer } from './CustomerContext';
 
 const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
 
-const CustomerInfo = ({ navigation, route }) => {
-  const { timeTableDepartId, departDateTimeTable, adults, children, totalAdult, totalChild } = route.params;
-  const [subtotal, setSubtotal] = useState('');
+const CustomerInfo = ({ navigation }) => {
   const [code, setcode] = useState('');
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
@@ -25,6 +23,7 @@ const CustomerInfo = ({ navigation, route }) => {
   const [mobileNumber, setmobileNumber] = useState('');
   const [email, setemail] = useState('');
   const [timetableDepart, settimetableDepart] = useState([]);
+  const [timetableReturn, settimetableReturn] = useState([]);
   const { customerData, updateCustomerData } = useCustomer();
   const [country, setCountry] = useState('');
   const [countrycode, setCountrycode] = useState('');
@@ -33,8 +32,6 @@ const CustomerInfo = ({ navigation, route }) => {
     if (!timeString) return ""; // Handle empty input
     return timeString.slice(0, 5); // Extracts "HH:mm"
   }
-  console.log(timeTableDepartId);
-  console.log(departDateTimeTable);
 
 
 
@@ -62,18 +59,12 @@ const CustomerInfo = ({ navigation, route }) => {
       Lastname: Lastname,
       tel: mobileNumber,
       email: email,
-      adult: adults,
-      child: children,
-      timetable: timeTableDepartId,
-      departtime: departDateTimeTable,
-      companyid: timetableDepart[0].md_timetable_companyid,
       companyname: timetableDepart[0].md_company_nameeng,
       startingpoint_name: timetableDepart[0].startingpoint_name,
       endpoint_name: timetableDepart[0].endpoint_name,
       boatypeid: timetableDepart[0].md_timetable_boattypeid,
       country: country,
       countrycode: '+' + countrycode,
-      timetableid: timetableDepart[0].md_timetable_id,
       time: timetableDepart[0].md_timetable_time,
       departtime: timetableDepart[0].md_timetable_departuretime,
     });
@@ -97,20 +88,7 @@ const CustomerInfo = ({ navigation, route }) => {
 
 
     // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
-    navigation.navigate('PaymentScreen', {
-      timeTableDepartId,
-      departDateTimeTable,
-      adults,
-      totalAdult,
-      totalChild,
-      children,
-      selectedTitle,
-      Firstname,
-      Lastname,
-      selectedTele,
-      mobileNumber,
-      email
-    });
+    navigation.navigate('PaymentScreen');
   };
 
   const toggleModal = () => setModalVisible(!isModalVisible);
@@ -174,13 +152,10 @@ const CustomerInfo = ({ navigation, route }) => {
 
     return `${hours} h ${minutes} min`;
   }
-  useEffect(() => {
-    setSubtotal(formatNumber((parseFloat(customerData.dropoffprice)) + (parseFloat(customerData.pickupprice)) + (parseFloat((calculateDiscountedPrice(parseFloat(totalAdult) + parseFloat(totalChild)))))));
 
-  }, [subtotal]);
 
   useEffect(() => {
-    fetch(`${ipAddress}/timetable/${timeTableDepartId}`)
+    fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -199,6 +174,34 @@ const CustomerInfo = ({ navigation, route }) => {
         console.error('Error fetching data:', error);
       });
   }, []);
+
+  const fetchTimetableReturn = async () => {
+    try {
+      const response = await fetch(`${ipAddress}/timetable/${customerData.timeTableReturnId}`);
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+  
+      if (data && Array.isArray(data.data)) {
+        settimetableReturn(data.data);
+      } else {
+        console.error('Data is not an array', data);
+        settimetableReturn([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  
+  useEffect(() => {
+    if(customerData.roud===2){
+    fetchTimetableReturn();
+    }
+  }, [customerData.timeTableReturnId]);
+
 
 
   useEffect(() => {
@@ -320,6 +323,7 @@ const CustomerInfo = ({ navigation, route }) => {
           <TextInput
             placeholder="Mobile Number"
             value={mobileNumber}
+            keyboardType="number-pad"
             onChangeText={(text) => {
               setmobileNumber(text);
               setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
@@ -339,11 +343,13 @@ const CustomerInfo = ({ navigation, route }) => {
           />
         </View>
 
-        {timetableDepart.map((item, index) => (
-          <View key={index} style={styles.promo}>
+        
+          <View style={styles.promo}>
             <Text style={styles.title}>Booking Summary</Text>
             <View style={styles.divider} />
-            <Text>Depart</Text>
+            {timetableDepart.map((item, index) => (
+                <>
+            <Text  key={index}>Depart</Text>
             <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
             <View style={styles.rowpromo}>
               <Text style={{ color: '#666666' }}>Company </Text>
@@ -359,54 +365,129 @@ const CustomerInfo = ({ navigation, route }) => {
             </View>
             <View style={styles.rowpromo}>
               <Text style={{ color: '#666666' }}>Departure Data</Text>
-              <Text style={{ color: '#666666' }}> {formatDate(departDateTimeTable)}</Text>
+              <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
             </View>
             <View style={styles.rowpromo}>
               <Text style={{ color: '#666666' }}>Departure Time : </Text>
               <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
             </View>
             <View style={[styles.rowpromo, { marginTop: 5 }]}>
-              <Text>Adult x {adults}</Text>
-              <Text>฿ {formatNumberWithComma(formatNumber(totalAdult))}</Text>
+              <Text>Adult x {customerData.adult}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
             </View>
-            {parseFloat(totalChild) !== 0 && (
+            {customerData.child !== 0 && (
               <View style={styles.rowpromo}>
-                <Text>Child x {children}</Text>
-                <Text>฿ {formatNumberWithComma(formatNumber(totalChild))}</Text>
+                <Text>Child x {customerData.child}</Text>
+                <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
               </View>
             )}
-            {customerData.pickupprice != 0 && (
+            {customerData.infant !== 0 && (
+              <View style={styles.rowpromo}>
+                <Text>infant x {customerData.infant}</Text>
+                <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+              </View>
+            )}
+            {customerData.pickupPriceDepart != 0 && (
               <View style={styles.rowpromo}>
                 <Text>Pick up</Text>
-                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(formatNumber(customerData.pickupprice))}</Text>
+                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
               </View>
             )}
-            {customerData.dropoffprice != 0 && (
+            {customerData.dropoffPriceDepart != 0 && (
               <View style={styles.rowpromo}>
                 <Text>Drop off</Text>
-                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(formatNumber(customerData.dropoffprice))}</Text>
+                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
               </View>
             )}
             <View style={styles.rowpromo}>
               <Text>Discount</Text>
-              <Text style={styles.redText}>- ฿ {formatNumberWithComma(formatNumber((parseFloat(totalAdult) + parseFloat(totalChild)) - (calculateDiscountedPrice(parseFloat(totalAdult) + parseFloat(totalChild)))))}</Text>
+              <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
             </View>
             <View style={styles.rowpromo}>
               <Text>Ticket fare</Text>
-              <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotal)}</Text>
+              <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
             </View>
             <View style={styles.divider} />
+          </>
+          ))}
+          {customerData.roud === 2 && (
+            <>
+                {timetableReturn.map((item, index) => (
+                  <>
+              <Text  key={index}>Return</Text>
+              <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#666666' }}>Company </Text>
+                <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
+              </View>
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#666666' }}>Seat</Text>
+                <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+              </View>
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#666666' }}>Boat </Text>
+                <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+              </View>
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#666666' }}>Departure Data</Text>
+                <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+              </View>
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+              </View>
+              <View style={[styles.rowpromo, { marginTop: 5 }]}>
+                <Text>Adult x {customerData.adult}</Text>
+                <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+              </View>
+              {customerData.child !== 0 && (
+                <View style={styles.rowpromo}>
+                  <Text>Child x {customerData.child}</Text>
+                  <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                </View>
+              )}
+              {customerData.infant !== 0 && (
+                <View style={styles.rowpromo}>
+                  <Text>infant x {customerData.infant}</Text>
+                  <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                </View>
+              )}
+              {customerData.pickupPriceReturn != 0 && (
+                <View style={styles.rowpromo}>
+                  <Text>Pick up</Text>
+                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                </View>
+              )}
+              {customerData.dropoffPriceReturn != 0 && (
+                <View style={styles.rowpromo}>
+                  <Text>Drop off</Text>
+                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                </View>
+              )}
+              <View style={styles.rowpromo}>
+                <Text>Discount</Text>
+                <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+              </View>
+              <View style={styles.rowpromo}>
+                <Text>Ticket fare</Text>
+                <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+              </View>
+              <View style={styles.divider} />
+            </>
+            ))}
+            </>
+          )}
             <View style={styles.rowpromo}>
               <Text>Subtotal </Text>
-              <Text>฿ {formatNumberWithComma(subtotal)}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.rowpromo}>
               <Text style={{color:'#FD501E'}}>total </Text>
-              <Text style={{color:'#FD501E'}}>฿ {formatNumberWithComma(subtotal)}</Text>
+              <Text style={{color:'#FD501E'}}>฿ {formatNumberWithComma(customerData.total)}</Text>
             </View>
           </View>
-        ))}
+
         <View style={styles.promo}>
           <Text style={styles.promoLabel}>Promotion Code</Text>
 

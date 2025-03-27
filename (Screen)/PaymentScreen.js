@@ -14,7 +14,7 @@ import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const PaymentScreen = ({ navigation, route }) => {
-  const { timeTableDepartId, departDateTimeTable, adults, totalAdult, totalChild, children, selectedTitle, Firstname, Lastname, selectedTele, mobileNumber, email } = route.params;
+ 
   const [Discount, setDiscount] = useState('');
   const [subtotal, setSubtotal] = useState('');
   const [cardNumber, setCardNumber] = useState("");
@@ -40,18 +40,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const [totalpaymentfee, setTotalPaymentfee] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-
-
-  console.log(booking_code);
-  console.log(year);
-  console.log(selectedTitle);
-  console.log(Firstname);
-  console.log(Lastname);
-  console.log(selectedTele);
-  console.log(mobileNumber);
-  console.log(email);
-  console.log(paymentfee);
 
  
 
@@ -154,12 +142,11 @@ const PaymentScreen = ({ navigation, route }) => {
   }
 
   useEffect(() => {
-    setDiscount(formatNumber(calculateDiscountedPrice(parseFloat(totalAdult) + parseFloat(totalChild))));
-    setSubtotal(formatNumber((parseFloat(totalAdult) + parseFloat(totalChild) + parseFloat(customerData.pickupprice)+ parseFloat(customerData.dropoffprice)) - (Discount)));
-    setTotalPaymentfee( subtotal * (paymentfee/100));
-    settotalPayment(formatNumber(parseFloat(subtotal) + totalpaymentfee));
-    console.log(subtotal);
-  }, [Discount, subtotal,paymentfee,totalpaymentfee]);
+  
+    setTotalPaymentfee( customerData.total * (paymentfee/100));
+    settotalPayment(formatNumber(parseFloat(customerData.total) + totalpaymentfee));
+ 
+  }, [Discount, customerData.total,paymentfee,totalpaymentfee]);
 
 
   const calculateDiscountedPrice = (price) => {
@@ -337,7 +324,7 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    fetch(`${ipAddress}/timetable/${timeTableDepartId}`)
+    fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -536,7 +523,7 @@ const PaymentScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.row}>
               <Text style={{ color: '#666666' }}>Departure Data</Text>
-              <Text style={{ color: '#666666' }}> {formatDate(departDateTimeTable)}</Text>
+              <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
             </View>
             <View style={styles.row}>
               <Text style={{ color: '#666666' }}>Departure Time : </Text>

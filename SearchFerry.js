@@ -661,7 +661,6 @@ const SearchFerry = ({ navigation, route }) => {
                             year: year,
                             departdate: formattedDateDepart,
                             timeTableDepartId: item.md_timetable_id,
-                            departDateTimeTable: formattedDateDepart,
                             startingPointId: startingPoint.id,
                             startingpoint_name:startingPoint.name,
                             endPointId: endPoint.id,
@@ -671,6 +670,7 @@ const SearchFerry = ({ navigation, route }) => {
                             pierEndDepartId: item.md_timetable_pierend,
                             adult:adults,
                             child:children,
+                            infant:infant,
                             timetableReturn:item.md_timetable_id,
 
                           });
@@ -816,8 +816,8 @@ const SearchFerry = ({ navigation, route }) => {
                           month: month,
                           year: year,
                           departdate: formattedDateDepart,
+                          returnDate: formattedDateReturn,
                           timeTableDepartId: item.md_timetable_id,
-                          departDateTimeTable: formattedDateDepart,
                           startingPointId: startingPoint.id,
                           startingpoint_name: startingPoint.name,
                           endPointId: endPoint.id,
@@ -827,6 +827,7 @@ const SearchFerry = ({ navigation, route }) => {
                           pierEndDepartId: item.md_timetable_pierend,
                           adult:adults,
                           child:children,
+                          infant:infant,
 
                         });
 

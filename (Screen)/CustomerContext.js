@@ -24,7 +24,6 @@ export const CustomerProvider = ({ children }) => {
     country: '', //ประเทศ
     countrycode: '', //รหัสประเทศ
     roud: '', //ประเภทการเดินทาง
-    timetableid: '', //รหัสตารางเวลา
     price:'', //ราคา
     total:'', //ราคารวม
     currency:'THB', //สกุลเงิน
@@ -32,12 +31,18 @@ export const CustomerProvider = ({ children }) => {
     adult:0, //จำนวนผู้ใหญ่
     child:0, //จำนวนเด็ก
     infant:0, //จำนวนทารก
-    totaladult:'', //รวมราคาจำนวนผู้ใหญ่
-    totalchild:'', //รวมราคาจำนวนเด็ก
-    discount:'', //ส่วนลด
-    ticketfare:'', //ค่าโดยสาร
-    subtotal:'', //ราคารวม
-    paymentfee:'', //ค่าธรรมเนียมการชำระ
+    totaladultDepart:0, //รวมราคาจำนวนผู้ใหญ่
+    totaladultReturn:0, //รวมราคาจำนวนผู้ใหญ่
+    totalchildDepart:0, //รวมราคาจำนวนเด็ก
+    totalchildReturn:0, //รวมราคาจำนวนเด็ก
+    totalinfantDepart:0, //รวมราคาจำนวนเด็ก
+    totalinfantReturn:0, //รวมราคาจำนวนเด็ก
+    discountDepart:0, //ส่วนลด
+    discountReturn:0, //ส่วนลด
+    subtotalDepart:0, //ราคารวม
+    subtotalReturn:0, //ราคารวม
+    ticketfare:0, //ค่าโดยสาร
+    paymentfee:0, //ค่าธรรมเนียมการชำระ
     day:'', //วัน
     month:'', //เดือน
     year:'', //ปี
@@ -49,8 +54,10 @@ export const CustomerProvider = ({ children }) => {
     ip:'', //ไอพี
     paymentid:'', //รหัสการชำระ
     bookingdate:'', //วันที่จอง
-    pickupprice:0, //ราคารถรับส่ง
-    dropoffprice:0, //ราคารถส่ง
+    pickupPriceDepart:0, //ราคารถรับส่ง
+    pickupPriceReturn:0, //ราคารถรับส่งกลับ
+    dropoffPriceDepart:0, //ราคารถส่ง
+    dropoffPriceReturn:0, //ราคารถส่งกลับ
     onewaystatus:false, //สถานะเที่ยวเดียว
     roudtripstatus:false, //สถานะไปกลับ
     timeTableDepartId:'', //รหัสตารางเวลาเดินทาง
