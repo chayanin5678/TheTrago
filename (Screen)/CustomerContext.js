@@ -25,7 +25,7 @@ export const CustomerProvider = ({ children }) => {
     countrycode: '', //รหัสประเทศ
     roud: '', //ประเภทการเดินทาง
     price:'', //ราคา
-    total:'', //ราคารวม
+    total:0, //ราคารวม
     currency:'THB', //สกุลเงิน
     net:'', //ราคาสุทธิ
     adult:0, //จำนวนผู้ใหญ่

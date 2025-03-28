@@ -178,13 +178,13 @@ const CustomerInfo = ({ navigation }) => {
   const fetchTimetableReturn = async () => {
     try {
       const response = await fetch(`${ipAddress}/timetable/${customerData.timeTableReturnId}`);
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
-  
+
       if (data && Array.isArray(data.data)) {
         settimetableReturn(data.data);
       } else {
@@ -195,10 +195,10 @@ const CustomerInfo = ({ navigation }) => {
       console.error('Error fetching data:', error);
     }
   };
-  
+
   useEffect(() => {
-    if(customerData.roud===2){
-    fetchTimetableReturn();
+    if (customerData.roud === 2) {
+      fetchTimetableReturn();
     }
   }, [customerData.timeTableReturnId]);
 
@@ -343,78 +343,13 @@ const CustomerInfo = ({ navigation }) => {
           />
         </View>
 
-        
-          <View style={styles.promo}>
-            <Text style={styles.title}>Booking Summary</Text>
-            <View style={styles.divider} />
-            {timetableDepart.map((item, index) => (
-                <>
-            <Text  key={index}>Depart</Text>
-            <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
-            <View style={styles.rowpromo}>
-              <Text style={{ color: '#666666' }}>Company </Text>
-              <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
-            </View>
-            <View style={styles.rowpromo}>
-              <Text style={{ color: '#666666' }}>Seat</Text>
-              <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-            </View>
-            <View style={styles.rowpromo}>
-              <Text style={{ color: '#666666' }}>Boat </Text>
-              <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-            </View>
-            <View style={styles.rowpromo}>
-              <Text style={{ color: '#666666' }}>Departure Data</Text>
-              <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
-            </View>
-            <View style={styles.rowpromo}>
-              <Text style={{ color: '#666666' }}>Departure Time : </Text>
-              <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-            </View>
-            <View style={[styles.rowpromo, { marginTop: 5 }]}>
-              <Text>Adult x {customerData.adult}</Text>
-              <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-            </View>
-            {customerData.child !== 0 && (
-              <View style={styles.rowpromo}>
-                <Text>Child x {customerData.child}</Text>
-                <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
-              </View>
-            )}
-            {customerData.infant !== 0 && (
-              <View style={styles.rowpromo}>
-                <Text>infant x {customerData.infant}</Text>
-                <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
-              </View>
-            )}
-            {customerData.pickupPriceDepart != 0 && (
-              <View style={styles.rowpromo}>
-                <Text>Pick up</Text>
-                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
-              </View>
-            )}
-            {customerData.dropoffPriceDepart != 0 && (
-              <View style={styles.rowpromo}>
-                <Text>Drop off</Text>
-                <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
-              </View>
-            )}
-            <View style={styles.rowpromo}>
-              <Text>Discount</Text>
-              <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
-            </View>
-            <View style={styles.rowpromo}>
-              <Text>Ticket fare</Text>
-              <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-            </View>
-            <View style={styles.divider} />
-          </>
-          ))}
-          {customerData.roud === 2 && (
-            <>
-                {timetableReturn.map((item, index) => (
-                  <>
-              <Text  key={index}>Return</Text>
+
+        <View style={styles.promo}>
+          <Text style={styles.title}>Booking Summary</Text>
+          <View style={styles.divider} />
+          {timetableDepart.map((item, index) => (
+            <View key={index}>
+              <Text>Depart</Text>
               <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
               <View style={styles.rowpromo}>
                 <Text style={{ color: '#666666' }}>Company </Text>
@@ -430,7 +365,7 @@ const CustomerInfo = ({ navigation }) => {
               </View>
               <View style={styles.rowpromo}>
                 <Text style={{ color: '#666666' }}>Departure Data</Text>
-                <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
               </View>
               <View style={styles.rowpromo}>
                 <Text style={{ color: '#666666' }}>Departure Time : </Text>
@@ -438,55 +373,124 @@ const CustomerInfo = ({ navigation }) => {
               </View>
               <View style={[styles.rowpromo, { marginTop: 5 }]}>
                 <Text>Adult x {customerData.adult}</Text>
-                <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
               </View>
               {customerData.child !== 0 && (
                 <View style={styles.rowpromo}>
                   <Text>Child x {customerData.child}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                  <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
                 </View>
               )}
               {customerData.infant !== 0 && (
                 <View style={styles.rowpromo}>
                   <Text>infant x {customerData.infant}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                  <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
                 </View>
               )}
-              {customerData.pickupPriceReturn != 0 && (
+              {customerData.pickupPriceDepart != 0 && (
                 <View style={styles.rowpromo}>
                   <Text>Pick up</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
                 </View>
               )}
-              {customerData.dropoffPriceReturn != 0 && (
+              {customerData.dropoffPriceDepart != 0 && (
                 <View style={styles.rowpromo}>
                   <Text>Drop off</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
                 </View>
               )}
               <View style={styles.rowpromo}>
                 <Text>Discount</Text>
-                <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
               </View>
               <View style={styles.rowpromo}>
                 <Text>Ticket fare</Text>
-                <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
               </View>
               <View style={styles.divider} />
-            </>
-            ))}
+            </View>
+          ))}
+          {customerData.roud === 2 && (
+            <>
+              {timetableReturn.map((item, index) => (
+                <View key={index}>
+                  <Text>Return</Text>
+                  <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                    {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                  </Text>
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#666666' }}>Company </Text>
+                    <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                  </View>
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#666666' }}>Seat</Text>
+                    <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                  </View>
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#666666' }}>Boat </Text>
+                    <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                  </View>
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#666666' }}>Departure Data</Text>
+                    <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                  </View>
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                    <Text style={{ color: '#666666' }}>
+                      {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+                    </Text>
+                  </View>
+                  <View style={[styles.rowpromo, { marginTop: 5 }]}>
+                    <Text>Adult x {customerData.adult}</Text>
+                    <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                  </View>
+                  {customerData.child !== 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>Child x {customerData.child}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                    </View>
+                  )}
+                  {customerData.infant !== 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>infant x {customerData.infant}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                    </View>
+                  )}
+                  {customerData.pickupPriceReturn != 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>Pick up</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                    </View>
+                  )}
+                  {customerData.dropoffPriceReturn != 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>Drop off</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.rowpromo}>
+                    <Text>Discount</Text>
+                    <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                  </View>
+                  <View style={styles.rowpromo}>
+                    <Text>Ticket fare</Text>
+                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                  </View>
+                  <View style={styles.divider} />
+                </View>
+              ))}
             </>
           )}
-            <View style={styles.rowpromo}>
-              <Text>Subtotal </Text>
-              <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.rowpromo}>
-              <Text style={{color:'#FD501E'}}>total </Text>
-              <Text style={{color:'#FD501E'}}>฿ {formatNumberWithComma(customerData.total)}</Text>
-            </View>
+          <View style={styles.rowpromo}>
+            <Text>Subtotal </Text>
+            <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
           </View>
+          <View style={styles.divider} />
+          <View style={styles.rowpromo}>
+            <Text style={{ color: '#FD501E' }}>total </Text>
+            <Text style={{ color: '#FD501E' }}>฿ {formatNumberWithComma(customerData.total)}</Text>
+          </View>
+        </View>
 
         <View style={styles.promo}>
           <Text style={styles.promoLabel}>Promotion Code</Text>
