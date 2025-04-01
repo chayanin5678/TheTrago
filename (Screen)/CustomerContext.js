@@ -68,6 +68,10 @@ export const CustomerProvider = ({ children }) => {
     pierEndReturntId:'',
     timeTableReturnId:'', //รหัสตารางเวลากลับ
     tripTypeinput:'',
+    piccompanyDepart:'',
+    pictimetableDepart:'',
+    piccompanyReturn:'',
+    pictimetableReturn:'',
   });
 
   const updateCustomerData = (newData) => {

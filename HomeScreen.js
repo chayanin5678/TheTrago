@@ -73,10 +73,12 @@ const HomeScreen = ({navigation }) => {
     source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
     style={styles.background}>
       <LogoTheTrago/>
+      
 
       <Text style={styles.title}>
-        The <Text style={styles.highlight}>journey</Text> is endless, Book now
-      </Text>
+   
+  The <Text style={[styles.highlight]}>journey</Text> is endless, Book now
+</Text>
 
       {/* <View style={styles.tabContainer}>
         {['Ferry', 'Flight', 'Car', 'Hotel'].map(tab => (
@@ -383,6 +385,7 @@ const HomeScreen = ({navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    fontFamily: 'Domestos',
     flexGrow: 1,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#002348',
     marginBottom: 20,
-    fontFamily: 'custom-font'
+   
   },
   titledeal: {
     fontSize: 20,
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
 },
   highlight: {
     color: '#FD501E',
-    
+  
   },
   tabContainer: {
     flexDirection: 'row',

@@ -9,6 +9,8 @@ import { useCustomer } from './CustomerContext';
 import * as Print from 'expo-print';
 
 
+
+
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
   const { success, booking_code } = route.params ;
@@ -16,216 +18,194 @@ const ResultScreen = ({ navigation, route }) => {
   const [pdfUri, setPdfUri] = useState(null);
 
   const htmlContent = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Itinerary</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-        }
-
-        .logo img {
-            width: 150px;
-        }
-
-        /* ✅ ปรับระยะห่างของ Booking Number และ Booking Date ให้พอดี */
-        .booking-info {
-            display: flex;
-            gap: 20px;
-            /* ปรับค่าตามต้องการ */
-            align-items: center;
-            /* ทำให้ข้อความอยู่ตรงกลาง */
-        }
-
-        .bold {
-            font-weight: bold;
-
-        }
-
-        .wrap {
-            flex-wrap: wrap;
-            max-width: 350px;
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .card-header {
-            background: #f0f0f0;
-            padding: 15px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .card-body {
-            display: flex;
-            padding: 20px;
-        }
-
-        .card-body img {
-            width: 150px;
-            height: 150px;
-            border-radius: 10px;
-        }
-
-        .info {
-            flex-grow: 1;
-            padding-left: 20px;
-        }
-
-        .info p {
-            margin: 5px 0;
-        }
-
-        .passenger-info {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .passenger-info p {
-            display: flex;
-            justify-content: space-between;
-            gap: 50px;
-        }
-
-        .important-info {
-            background: #fff;
-            padding: 20px;
-            margin-top: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .important-info ul {
-            padding-left: 20px;
-        }
-
-        .qr-code {
-            text-align: right;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 10px;
-        }
-
-        .footer a {
-            color: #FD501E;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .itinerary-header {
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-
-        .itinerary-title {
-            font-size: 25px;
-            font-weight: bold;
-            margin-right: 10px;
-            white-space: nowrap;
-            /* ป้องกันขึ้นบรรทัดใหม่ */
-        }
-
-        .line {
-            flex-grow: 1;
-            height: 1px;
-            background-color: #000;
-        }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <img src="https://www.thetrago.com/assets/images/logo.png" width="20%" />
-        <div class="booking-info">
-          <div>
-            <p><span class="bold">Booking Number:</span> ${booking_code}</p>
-          </div>
-          <div>
-            <p><span class="bold">Booking Date:</span> ${formatDate(customerData.bookingdate)}</p>
-          </div>
-        </div>
-      </div>
-      <div class="itinerary-header">
-        <span class="itinerary-title">Travel Itinerary</span>
-        <div class="line"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">${formatDate(customerData.departdate)}</div>
-        <div class="card-body">
-          <img src="https://f.ptcdn.info/332/077/000/rc7v6a3t5pj51YoI6fMg-o.jpg" alt="Statue of Liberty" width="30%" height="auto" />
-          <div class="info">
-            <p class="wrap"><span class="bold">${customerData.companyname}</span></p>
-            <p>⭐⭐⭐⭐⭐ 5.0</p>
-            <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FD501E"><path d="M12 2C8.69 2 6 4.69 6 8c0 4.58 6 13 6 13s6-8.42 6-13c0-3.31-2.69-6-6-6zm0 8.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 5.5 12 5.5s2.5 1.12 2.5 2.5S13.38 10.5 12 10.5z" /></svg> ${customerData.startingpoint_name} <i class="fa-solid fa-arrow-right"></i> ${customerData.endpoint_name}</p>
-            <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FD501E"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z"></path></svg> ${formatDate(customerData.departdate)}</p>
-            <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FD501E"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg> ${customerData.adult} Adult</p>
-            <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FD501E"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg> Free cancellation</p>
-          </div>
-          <div class="passenger-info">
-            <p><span class="bold">Passenger</span></p>
-            <p>Adult <span>${customerData.adult} Persons</span></p>
-            <p>Passenger name <span>${customerData.Firstname} ${customerData.Lastname}</span></p>
-            <p>Phone number <span>${customerData.countrycode} ${formatPhoneNumber(customerData.tel)}</span></p>
-            <p>Email address <span>${customerData.email}</span></p>
-            <div class="qr-code">
-              <img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=https://g.co/kgs/PhnkPFm&choe=UTF-8" alt="QR Code for Google Maps">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <p class="bold">Important information</p>
-      <ul>
-        <li>The ticket is valid only for the specified trip, date, time, and passenger name.</li>
-        <li>Passengers must present documents and collect their boarding pass at the counter at least 45 minutes before departure.</li>
-        <li>Each passenger is allowed 20kg of baggage. For more details, contact us.</li>
-        <li>Reservation may be canceled if the passenger is not on board by the specified departure time.</li>
-        <li>If the number of passengers or age exceeds the boat company’s conditions, the customer will be charged the difference at the counter.</li>
-      </ul>
-
-      <div class="footer">
-        <p>Explore the best travel and lifestyle web here!</p>
-        <a href="https://www.thetrago.com">www.thetrago.com</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-TICKET</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #002348;
+    }
+    .container {
+      background-color: #fff;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .header img {
+      height: 50px;
+    }
+    .ref-number {
+      font-size: 14px;
+      text-align: right;
+    }
+    .title-bar {
+      background-color: #002348;
+      color: white;
+      padding: 10px;
+      margin: 20px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    .location-row {
+      display: flex;
+      justify-content: space-between;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .location-row div {
+      flex: 1;
+    }
+    .icon {
+      font-size: 24px;
+    }
+    .section {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .section > div {
+      width: 48%;
+    }
+    .section h3 {
+      margin-bottom: 10px;
+    }
+    .info-table td {
+      padding: 4px 0;
+      vertical-align: top;
+    }
+    .highlight {
+      color: green;
+      font-weight: bold;
+    }
+    .operator {
+      margin-top: 20px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding: 10px 0;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+    .timeline div {
+      text-align: center;
+      flex: 1;
+    }
+    .important {
+      font-size: 12px;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    .logo {
+      height: 30px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://www.thetrago.com/assets/images/logo.png" alt="The Trago">
+      <div class="ref-number">
+        Ref. number<br>
+        <strong>TG680912093</strong>
       </div>
     </div>
-  </body>
-  </html>
+
+    <div class="title-bar">E-TICKET</div>
+
+    <div class="location-row">
+      <div>
+        <strong>Departure</strong><br>
+        Phuket<br>
+        (Phuket Bus Terminal 2)
+      </div>
+      <div>
+        <span class="icon">⏱</span><br>
+        8 h 30 m<br>
+        🚤
+      </div>
+      <div>
+        <strong>Arrival</strong><br>
+        Koh Samui<br>
+        (Hotel in Koh Samui (Located in Chaweng Bohput))
+      </div>
+    </div>
+
+    <div class="section">
+      <div>
+        <h3>Departure</h3>
+        <table class="info-table">
+          <tr><td><strong>Date:</strong></td><td>04 April 2025</td></tr>
+          <tr><td><strong>Time:</strong></td><td>08:00 - 16:30 | 8 h 30 m</td></tr>
+          <tr><td><strong>From:</strong></td><td>Phuket (Phuket Bus Terminal 2)</td></tr>
+          <tr><td><strong>To:</strong></td><td>Koh Samui (Hotel in Koh Samui...)</td></tr>
+          <tr><td><strong>Seat:</strong></td><td>Economy</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Passenger</h3>
+        <table class="info-table">
+          <tr><td><strong>Name:</strong></td><td>Mr. Christopher Brown</td></tr>
+          <tr><td><strong>Tel.:</strong></td><td>(+66)0842293612</td></tr>
+          <tr><td><strong>Adult:</strong></td><td>2 persons</td></tr>
+          <tr><td><strong>Child:</strong></td><td>1 persons</td></tr>
+          <tr><td><strong>Payment Status:</strong></td><td><span class="highlight">Paid</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="operator">
+      <h3>Operated By</h3>
+      <img src="https://www.phantiptravel.com/wp-content/uploads/2019/09/logo-phantip.png" alt="Phantip" class="logo">
+      <p><strong>Tel.:</strong> +66611722751<br>
+      <strong>Email:</strong> info@phantiptravel.com</p>
+    </div>
+
+    <div class="timeline">
+      <div>
+        <strong>08:00</strong><br>04 April 2025<br><small>Phuket Bus Terminal 2</small>
+      </div>
+      <div>
+        🚤<br>
+        Ferry<br>
+        8 h 30 m
+      </div>
+      <div>
+        <strong>16:30</strong><br>04 April 2025<br><small>Koh Samui Hotel</small>
+      </div>
+    </div>
+
+    <div class="important">
+      <strong>Important information</strong><br>
+      • The ticket is valid only for the specified trip, date, time, and passenger name.<br>
+      • Passengers must present documents and collect their boarding pass at the counter at least 45 minutes before departure.<br>
+      • Each passenger is allowed 20kg of baggage. For more details, contact us.<br>
+      • Reservation may be canceled if the passenger is not on board by the specified departure time.<br>
+      • If the number of passengers or age exceeds the boat company’s conditions, the customer will be charged the difference at the counter.
+    </div>
+  </div>
+</body>
+</html>
+
   `;
+
 
 
   const sendTicket = async () => {
@@ -269,6 +249,17 @@ const ResultScreen = ({ navigation, route }) => {
     return `${phoneNumber.slice(1, 3)}-${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
   }
 
+  function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    console.log("Formatted Value:", formattedValue);
+    return formattedValue;
+  }
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -280,7 +271,7 @@ const ResultScreen = ({ navigation, route }) => {
         <View style={styles.row}>
           <View style={styles.col}>
             <Image
-              source={require('./../assets/result.png')} // Correct way to reference a local image
+               source={{ uri: `https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}` }}// Correct way to reference a local image
               style={styles.logo}
               resizeMode="contain"
             />
@@ -299,7 +290,7 @@ const ResultScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.row}>
               <Ionicons name="person-outline" size={16} color="#FD501E" />
-              <Text> {customerData.adult} Adult, {customerData.child} Child</Text>
+              <Text> {customerData.adult} Adult, {customerData.child} Child, {customerData.infant} Infant</Text>
             </View>
             <View style={styles.row}>
               <Ionicons name="checkmark-circle-outline" size={16} color="#FD501E" />
@@ -337,36 +328,42 @@ const ResultScreen = ({ navigation, route }) => {
 
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text >Adult x {customerData.adult} </Text>
-          <Text>฿ {customerData.totaladult}</Text>
+          <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
         </View>
-        {parseFloat(customerData.child) !== 0 && (
+        {customerData.child !== 0 && (
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>Child x {customerData.child}</Text>
-            <Text>฿ {customerData.totalchild}</Text>
+            <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+          </View>
+        )}
+         {customerData.infant !== 0 && (
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>Infant x {customerData.infant}</Text>
+            <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
           </View>
         )}
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text>Discount</Text>
-          <Text style={styles.redText}>- ฿  {customerData.discount}</Text>
+          <Text style={styles.redText}>- ฿  {formatNumberWithComma(customerData.discountDepart)}</Text>
         </View>
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text>Ticket fare</Text>
-          <Text>฿ {customerData.ticketfare}</Text>
+          <Text>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
         </View>
         <View style={styles.divider} />
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text>Subtotal </Text>
-          <Text>฿ {customerData.subtotal}</Text>
+          <Text>฿ {formatNumberWithComma((parseFloat(customerData.subtotalDepart)+parseFloat(customerData.subtotalReturn)))}</Text>
         </View>
         <View style={styles.divider} />
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text>Payment Fee </Text>
-          <Text style={styles.greenText}>+ ฿ {customerData.paymentfee}</Text>
+          <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(customerData.paymentfee)}</Text>
         </View>
         <View style={styles.divider} />
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text>total </Text>
-          <Text> ฿ {customerData.total}</Text>
+          <Text> ฿ {formatNumberWithComma(customerData.total)}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.bookingCodeText}>

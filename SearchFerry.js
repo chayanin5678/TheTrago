@@ -600,7 +600,12 @@ const SearchFerry = ({ navigation, route }) => {
                     style={styles.background}>
                     <View style={styles.headerRow}>
                       <View style={styles.inputBoxCol}>
-                        <Image source={require('./assets/Ship.png')} />
+                      <Image
+                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                          style={{ width: wp('10.6%'), height: hp('5%')}}
+                          resizeMode="cover"
+                        />
+
                         <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                       </View>
                       <View style={styles.tagContainer}>
@@ -672,6 +677,8 @@ const SearchFerry = ({ navigation, route }) => {
                             child:children,
                             infant:infant,
                             timetableReturn:item.md_timetable_id,
+                            piccompanyDepart:item.md_company_picname,
+                            pictimetableDepart:item.md_timetabledetail_picname1,
 
                           });
 
@@ -681,7 +688,7 @@ const SearchFerry = ({ navigation, route }) => {
 
                       </TouchableOpacity>
                     </View>
-                    {item.md_timetable_remarkeng && (
+                    {item.md_timetable_remarkeng && console.log("รูป timetable:", item.md_timetabledetail_picname1) && (
                       <View style={styles.remarkContainer}>
                         <Text style={styles.remarkText}>
                           <Text style={styles.remarkLabel}>Remark: </Text>
@@ -692,7 +699,7 @@ const SearchFerry = ({ navigation, route }) => {
 
                     <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
                       <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                      <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
+                      <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
                         style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
                       />
                     </Animated.View>
@@ -754,7 +761,11 @@ const SearchFerry = ({ navigation, route }) => {
                       style={styles.background}>
                       <View style={styles.headerRow}>
                         <View style={styles.inputBoxCol}>
-                          <Image source={require('./assets/Ship.png')} />
+                        <Image
+                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                          style={{ width: wp('10.6%'), height: hp('5%')}}
+                          resizeMode="cover"
+                        />
                           <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                         </View>
                         <View style={styles.tagContainer}>
@@ -828,6 +839,8 @@ const SearchFerry = ({ navigation, route }) => {
                           adult:adults,
                           child:children,
                           infant:infant,
+                          piccompanyDepart:item.md_company_picname,
+                          pictimetableDepart:item.md_timetabledetail_picname1,
 
                         });
 
@@ -855,9 +868,9 @@ const SearchFerry = ({ navigation, route }) => {
   
                       <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
                         <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                        <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
+                        <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                      />
                       </Animated.View>
   
   
@@ -881,7 +894,11 @@ const SearchFerry = ({ navigation, route }) => {
                      style={styles.background}>
                      <View style={styles.headerRow}>
                        <View style={styles.inputBoxCol}>
-                         <Image source={require('./assets/Ship.png')} />
+                       <Image
+                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                          style={{ width: wp('10.6%'), height: hp('5%')}}
+                          resizeMode="cover"
+                        />
                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                        </View>
                        <View style={styles.tagContainer}>
@@ -942,6 +959,8 @@ const SearchFerry = ({ navigation, route }) => {
                           companyReturnId: item.md_timetable_companyid,
                           pierStartReturntId: item.md_timetable_pierstart,
                           pierEndReturntId: item.md_timetable_pierend,
+                          piccompanyReturn:item.md_company_picname,
+                          pictimetableReturn:item.md_timetabledetail_picname1,
                         });
 
                         // Check if round trip status is true before navigating
@@ -967,9 +986,9 @@ const SearchFerry = ({ navigation, route }) => {
  
                      <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
                        <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                       <Image source={{ uri: 'https://www.thetrago.com/Api/uploads/timetabledetail/KohPhangan-samui-16637.webp' }}
-                         style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                       />
+                       <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                      />
                      </Animated.View>
  
  

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator  } from "react-native";
+import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator } from "react-native";
 import ipAddress from "../ipconfig";
 import LogoHeader from "./../(component)/Logo";
 import Step from "../(component)/Step";
@@ -10,11 +10,19 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import moment from "moment-timezone";
-import * as Linking from "expo-linking";  
+import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
+const brandIcons = {
+  Visa: require("./../assets/visa.png"),
+  MasterCard: require("./../assets/mastercard.png"),
+  JCB: require("./../assets/jcb.png"),
+  "American Express": require("./../assets/amex.png"),
+  Unknown: require("./../assets/default-card.png"),
+};
+
 const PaymentScreen = ({ navigation, route }) => {
- 
+
   const [Discount, setDiscount] = useState('');
   const [subtotal, setSubtotal] = useState('');
   const [cardNumber, setCardNumber] = useState("");
@@ -25,7 +33,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const [pickup, setPickup] = useState(false);
   const [errors, setErrors] = useState({}); // New state for errors
   const month = expirationDate.substring(0, 2);
-  const year = expirationDate.substring(3, 7);
+  const year = '20' + expirationDate.substring(3, 5);
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
   const [totalPayment, settotalPayment] = useState('');
@@ -41,11 +49,12 @@ const PaymentScreen = ({ navigation, route }) => {
   const [totalpaymentfee, setTotalPaymentfee] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [brand, setBrand] = useState(null);
 
- 
 
+  console.log("Year:", year);
   console.log("Booking DateTime:", currentDateTime);
-
+  console.log("Brand:", brand);
   console.log(customerData.departtime);
   const handleChange = (text) => {
     // กำจัดสิ่งที่ไม่ใช่ตัวเลข
@@ -58,9 +67,9 @@ const PaymentScreen = ({ navigation, route }) => {
 
     // ตั้งค่า expirationDate ใหม่
     setExpirationDate(formattedText);
-    
+
   };
- 
+
   useEffect(() => {
     fetch(`${ipAddress}/paymentfee/${selectedOption}`)
       .then((response) => {
@@ -85,26 +94,26 @@ const PaymentScreen = ({ navigation, route }) => {
         setPaymentfee(0); // Default to 0 if there is an error fetching the data
       });
   }, [selectedOption]);
-  
 
-  
-    const fetchBookingCode = async () => {
-      try {
-        const response = await fetch(`${ipAddress}/bookingcode`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        if (data && Array.isArray(data.data)) {
-          setBookingcode(data.data);
-        } else {
-          console.error('Data is not an array', data);
-          setBookingcode([]);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
+
+
+  const fetchBookingCode = async () => {
+    try {
+      const response = await fetch(`${ipAddress}/bookingcode`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
+      const data = await response.json();
+      if (data && Array.isArray(data.data)) {
+        setBookingcode(data.data);
+      } else {
+        console.error('Data is not an array', data);
+        setBookingcode([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
 
   function formatDate(dateString) {
@@ -170,11 +179,11 @@ const PaymentScreen = ({ navigation, route }) => {
     if (customerData.roud === 2) {
       fetchTimetableReturn();
     }
-  
-    setTotalPaymentfee( customerData.total * (paymentfee/100));
+
+    setTotalPaymentfee(customerData.total * (paymentfee / 100));
     settotalPayment(formatNumber(parseFloat(customerData.total) + totalpaymentfee));
- 
-  }, [Discount, customerData.total,paymentfee,totalpaymentfee,customerData.timeTableReturnId]);
+
+  }, [Discount, customerData.total, paymentfee, totalpaymentfee, customerData.timeTableReturnId]);
 
 
   const calculateDiscountedPrice = (price) => {
@@ -192,16 +201,16 @@ const PaymentScreen = ({ navigation, route }) => {
     if (!cardNumber) newErrors.cardNumber = true;
     if (!expirationDate) newErrors.expirationDate = true;
     if (!cvv) newErrors.cvv = true;
-  
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       Alert.alert("❌ Incomplete Information", "Please fill in all required fields.");
       return;
     }
-  
-    setIsLoading(true); 
+
+    setIsLoading(true);
     console.log("🔄 Loading started...");
-  
+
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
@@ -217,67 +226,71 @@ const PaymentScreen = ({ navigation, route }) => {
           },
         }),
       });
-  
+
+
       if (!tokenResponse.ok) throw new Error("❌ Failed to create payment token");
       const tokenData = await tokenResponse.json();
       if (!tokenData.success) throw new Error(tokenData.error);
-  
+
       // ✅ 2. ทำการชำระเงิน
       const paymentResponse = await fetch(`${ipAddress}/charge`, {
         method: "POST",
-        headers: { "Content-Type": "application/json",  "ngrok-skip-browser-warning": "true",  },
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
           amount: totalPayment,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
-       
+
         }),
       });
       console.log(`${ipAddress}/redirect`);
-  
+
+      fetchBookingCode();
+      console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+      updateCustomerData({
+        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+        paymentfee: paymentfee,
+        total: totalPayment,
+      });
+      navigation.navigate("ResultScreen", { success: true, booking_code: booking_code });
+
       if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
       if (!paymentResult.success) throw new Error("❌ Payment declined");
-  
+
       // ✅ 3. เปิด Omise Authorize URL
       if (paymentResult.charge.authorize_uri) {
         console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
         await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
-     
+
       } else {
         throw new Error("❌ No authorize URI found.");
       }
-  
+
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
-      fetchBookingCode(); 
+      fetchBookingCode();
       console.log("📌 Updating Customer Data with Booking Code:", booking_code);
       updateCustomerData({
-      bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-      totaladult: formatNumberWithComma(formatNumber(totalAdult)),
-      totalchild: formatNumberWithComma(formatNumber(totalChild)),
-      discount: formatNumberWithComma(formatNumber(Discount)),
-      ticketfare: formatNumberWithComma(formatNumber(subtotal)),
-      subtotal: formatNumberWithComma(formatNumber(subtotal)),
-      paymentfee: formatNumberWithComma(formatNumber(totalpaymentfee)),
-      total: formatNumberWithComma(formatNumber(totalPayment)),
-       });
-       
+        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+        paymentfee: paymentfee,
+        total: totalPayment,
+      });
       setpaymentcode(paymentResult.charge.id);
       console.log('✅ Payment code:', paymentResult.charge.id);
       console.log('✅ booking code:', booking_code);
-  
-    //  navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
+
+      //  navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
       console.log("✅ Loading stopped...");
-  
+
     } catch (error) {
       console.error("❌ Error:", error);
       setIsLoading(false);
       Alert.alert("❌ Error", error.message);
     }
   };
-  
-  
+
+
 
 
   // 🛠️ ฟังก์ชันสำหรับสร้าง Booking
@@ -309,7 +322,7 @@ const PaymentScreen = ({ navigation, route }) => {
         md_booking_departdate: customerData.departdate,
         md_booking_departtime: customerData.departtime,
       });
-  
+
       console.log("✅ Booking created successfully");
     } catch (error) {
       console.error("❌ Error submitting booking:", error);
@@ -323,8 +336,8 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("🔗 Deep Link Received:", url);
       if (url.includes("payment/success")) {
         Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
-        createBooking(paymentcode);   
-        navigation.navigate("ResultScreen", { success: true});
+        createBooking(paymentcode);
+        navigation.navigate("ResultScreen", { success: true });
       } else if (url.includes("payment/failure")) {
         Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
         navigation.navigate("ResultScreen", { success: false });
@@ -343,7 +356,7 @@ const PaymentScreen = ({ navigation, route }) => {
       subscription.remove();
     };
   }, [navigation]);
-  
+
 
 
   const handleSelection = (option) => {
@@ -372,7 +385,7 @@ const PaymentScreen = ({ navigation, route }) => {
       });
   }, []);
 
-  
+  const icon = brandIcons[brand] || brandIcons.Unknown;
 
   return (
     <View style={{ flex: 1 }}>
@@ -412,7 +425,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 <View style={styles.logodown}>
                   <Text style={styles.labelHead}>Credit and Debit Card</Text>
                 </View>
-              <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
               </TouchableOpacity>
               {selectedOption === "7" && (
                 <>
@@ -433,16 +446,55 @@ const PaymentScreen = ({ navigation, route }) => {
                       style={[styles.input, errors.cardName && styles.errorInput]}
                     />
                     <Text style={styles.label}>Card Number </Text>
-                    <TextInput
-                      value={cardNumber}
-                      onChangeText={(text) => {
-                        setCardNumber(text);
-                        setErrors((prev) => ({ ...prev, cardNumber: false }));
-                      }}
-                      placeholder="**** **** **** ****"
-                      keyboardType="number-pad"
-                      style={[styles.input, errors.cardNumber && styles.errorInput]}
-                    />
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        value={cardNumber}
+                        onChangeText={async (text) => {
+                          // ลบช่องว่างทั้งหมดก่อน
+                          const clean = text.replace(/\D/g, "").slice(0, 16);
+
+                          // ใส่ช่องว่างทุก 4 ตัว
+                          const formatted = clean.replace(/(.{4})/g, "$1 ").trim();
+
+                          setCardNumber(formatted);
+                          setErrors((prev) => ({ ...prev, cardNumber: false }));
+
+                          // ส่งไปเช็ค brand เมื่อพิมพ์ครบ 6 ตัว (แบบไม่เว้นวรรค)
+                          if (clean.length >= 6) {
+                            try {
+                              const res = await axios.post(`${ipAddress}/create-token`, {
+                                card: {
+                                  name: "Test",
+                                  number: clean,
+                                  expiration_month: 12,
+                                  expiration_year: 2026,
+                                  security_code: "123",
+                                },
+                              });
+                              const brandFromToken = res.data.brand || "Unknown";
+                              setBrand(brandFromToken);
+                            } catch (err) {
+                              setBrand("Unknown");
+                            }
+                          } else {
+                            setBrand(null);
+                          }
+                        }}
+                        placeholder="**** **** **** ****"
+                        keyboardType="number-pad"
+                        style={styles.textInput}
+                      />
+
+                      {brand && (
+                        <Image
+                          source={brandIcons[brand] || brandIcons.Unknown}
+                          style={styles.brandIcon}
+                          resizeMode="contain"
+                        />
+                      )}
+                    </View>
+
+
                     <View style={styles.row}>
                       <View style={styles.inputContainer}>
                         <Text style={styles.label}>Expiry Date</Text>
@@ -454,7 +506,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           }}
                           keyboardType="number-pad"
                           placeholder="MM/YY"
-                          maxLength={7}  // จำกัดให้กรอกได้สูงสุด 5 ตัวอักษร (เช่น 12/34)
+                          maxLength={5}  // จำกัดให้กรอกได้สูงสุด 5 ตัวอักษร (เช่น 12/34)
                           style={[styles.input, errors.expirationDate && styles.errorInput]}
                         />
 
@@ -463,7 +515,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
                       <View style={styles.inputContainer}>
 
-                        <Text style={styles.label}>CVV</Text>
+                        <Text style={styles.label}>CVV / CVC *</Text>
                         <TextInput
                           value={cvv}
                           onChangeText={(text) => {
@@ -473,6 +525,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           keyboardType="number-pad"
                           placeholder="***"
                           secureTextEntry
+                          maxLength={3} 
                           style={[styles.input, errors.cvv && styles.errorInput]}
                         />
                       </View>
@@ -503,7 +556,7 @@ const PaymentScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
             {/* Radio Button 3 */}
-            <View style={styles.radioContian}>
+            {/* <View style={styles.radioContian}>
               <TouchableOpacity
                 style={styles.optionContainer}
                 onPress={() => handleSelection("Option 3")}
@@ -519,7 +572,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 </View>
                 <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
               </TouchableOpacity>
-            </View>
+            </View> */}
             <View style={styles.row}>
               <View style={styles.checkboxContainer}>
                 <TouchableOpacity onPress={() => setPickup(!pickup)}>
@@ -531,161 +584,161 @@ const PaymentScreen = ({ navigation, route }) => {
               </View>
             </View>
           </View>
-         
-            <View  style={styles.card}>
-              <Text style={styles.title}>Booking Summary</Text>
-              <View style={styles.divider} />
-              {timetableDepart.map((item, index) => (
-            <View key={index}>
-              <Text>Depart</Text>
-              <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
-              <View style={styles.row}>
-                <Text style={{ color: '#666666' }}>Company </Text>
-                <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: '#666666' }}>Seat</Text>
-                <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: '#666666' }}>Boat </Text>
-                <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: '#666666' }}>Departure Data</Text>
-                <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-              </View>
-              <View style={[styles.row, { marginTop: 5 }]}>
-                <Text>Adult x {customerData.adult}</Text>
-                <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-              </View>
-              {customerData.child !== 0 && (
+
+          <View style={styles.card}>
+            <Text style={styles.title}>Booking Summary</Text>
+            <View style={styles.divider} />
+            {timetableDepart.map((item, index) => (
+              <View key={index}>
+                <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+                <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                 <View style={styles.row}>
-                  <Text>Child x {customerData.child}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                  <Text style={{ color: '#666666' }}>Company </Text>
+                  <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
                 </View>
-              )}
-              {customerData.infant !== 0 && (
                 <View style={styles.row}>
-                  <Text>infant x {customerData.infant}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                  <Text style={{ color: '#666666' }}>Seat</Text>
+                  <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
                 </View>
-              )}
-              {customerData.pickupPriceDepart != 0 && (
                 <View style={styles.row}>
-                  <Text>Pick up</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+                  <Text style={{ color: '#666666' }}>Boat </Text>
+                  <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                 </View>
-              )}
-              {customerData.dropoffPriceDepart != 0 && (
                 <View style={styles.row}>
-                  <Text>Drop off</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+                  <Text style={{ color: '#666666' }}>Departure Data</Text>
+                  <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
                 </View>
-              )}
-              <View style={styles.row}>
-                <Text>Discount</Text>
-                <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
+                <View style={styles.row}>
+                  <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                  <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                </View>
+                <View style={[styles.row, { marginTop: 5 }]}>
+                  <Text>Adult x {customerData.adult}</Text>
+                  <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+                </View>
+                {customerData.child !== 0 && (
+                  <View style={styles.row}>
+                    <Text>Child x {customerData.child}</Text>
+                    <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                  </View>
+                )}
+                {customerData.infant !== 0 && (
+                  <View style={styles.row}>
+                    <Text>infant x {customerData.infant}</Text>
+                    <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                  </View>
+                )}
+                {customerData.pickupPriceDepart != 0 && (
+                  <View style={styles.row}>
+                    <Text>Pick up</Text>
+                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+                  </View>
+                )}
+                {customerData.dropoffPriceDepart != 0 && (
+                  <View style={styles.row}>
+                    <Text>Drop off</Text>
+                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+                  </View>
+                )}
+                <View style={styles.row}>
+                  <Text>Discount</Text>
+                  <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text>Ticket fare</Text>
+                  <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+                </View>
+                <View style={styles.divider} />
               </View>
-              <View style={styles.row}>
-                <Text>Ticket fare</Text>
-                <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-              </View>
-              <View style={styles.divider} />
-            </View>
-          ))}
-          {customerData.roud === 2 && (
-            <>
-              {timetableReturn.map((item, index) => (
-                <View key={index}>
-                  <Text>Return</Text>
-                  <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                    {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
-                  </Text>
-                  <View style={styles.row}>
-                    <Text style={{ color: '#666666' }}>Company </Text>
-                    <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={{ color: '#666666' }}>Seat</Text>
-                    <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={{ color: '#666666' }}>Boat </Text>
-                    <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={{ color: '#666666' }}>Departure Data</Text>
-                    <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                    <Text style={{ color: '#666666' }}>
-                      {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+            ))}
+            {customerData.roud === 2 && (
+              <>
+                {timetableReturn.map((item, index) => (
+                  <View key={index}>
+                    <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                    <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                      {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                     </Text>
-                  </View>
-                  <View style={[styles.row, { marginTop: 5 }]}>
-                    <Text>Adult x {customerData.adult}</Text>
-                    <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
-                  </View>
-                  {customerData.child !== 0 && (
                     <View style={styles.row}>
-                      <Text>Child x {customerData.child}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                      <Text style={{ color: '#666666' }}>Company </Text>
+                      <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
                     </View>
-                  )}
-                  {customerData.infant !== 0 && (
                     <View style={styles.row}>
-                      <Text>infant x {customerData.infant}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                      <Text style={{ color: '#666666' }}>Seat</Text>
+                      <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
                     </View>
-                  )}
-                  {customerData.pickupPriceReturn != 0 && (
                     <View style={styles.row}>
-                      <Text>Pick up</Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                      <Text style={{ color: '#666666' }}>Boat </Text>
+                      <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                     </View>
-                  )}
-                  {customerData.dropoffPriceReturn != 0 && (
                     <View style={styles.row}>
-                      <Text>Drop off</Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                      <Text style={{ color: '#666666' }}>Departure Data</Text>
+                      <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
                     </View>
-                  )}
-                  <View style={styles.row}>
-                    <Text>Discount</Text>
-                    <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                    <View style={styles.row}>
+                      <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                      <Text style={{ color: '#666666' }}>
+                        {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+                      </Text>
+                    </View>
+                    <View style={[styles.row, { marginTop: 5 }]}>
+                      <Text>Adult x {customerData.adult}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                    </View>
+                    {customerData.child !== 0 && (
+                      <View style={styles.row}>
+                        <Text>Child x {customerData.child}</Text>
+                        <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                      </View>
+                    )}
+                    {customerData.infant !== 0 && (
+                      <View style={styles.row}>
+                        <Text>infant x {customerData.infant}</Text>
+                        <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                      </View>
+                    )}
+                    {customerData.pickupPriceReturn != 0 && (
+                      <View style={styles.row}>
+                        <Text>Pick up</Text>
+                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                      </View>
+                    )}
+                    {customerData.dropoffPriceReturn != 0 && (
+                      <View style={styles.row}>
+                        <Text>Drop off</Text>
+                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                      </View>
+                    )}
+                    <View style={styles.row}>
+                      <Text>Discount</Text>
+                      <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text>Ticket fare</Text>
+                      <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                    </View>
+                    <View style={styles.divider} />
                   </View>
-                  <View style={styles.row}>
-                    <Text>Ticket fare</Text>
-                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
-                  </View>
-                  <View style={styles.divider} />
-                </View>
-              ))}
-            </>
-          )}
-           
-              <View style={styles.row}>
-                <Text>Subtotal </Text>
-                <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.row}>
-                <Text>Payment Fee </Text>
-                <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(totalpaymentfee))}</Text>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.row}>
-                <Text>total </Text>
-                <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
-              </View>
+                ))}
+              </>
+            )}
+
+            <View style={styles.row}>
+              <Text>Subtotal </Text>
+              <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
             </View>
-          
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <Text>Payment Fee </Text>
+              <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(totalpaymentfee))}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <Text>total </Text>
+              <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
+            </View>
+          </View>
+
 
 
 
@@ -698,7 +751,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 handlePayment();
               } else if (selectedOption == "2") {
                 updateCustomerData({
-                  total:totalPayment
+                  total: totalPayment
                 });
                 navigation.navigate("PromptPayQR");
               } else {
@@ -833,7 +886,7 @@ const styles = StyleSheet.create({
     color: '#FD501E'
   },
   divider: {
-    height: 2, // ความหนาของเส้น
+    height: 1, // ความหนาของเส้น
     width: '100%', // ทำให้ยาวเต็มจอ
     backgroundColor: '#CCCCCC', // สีของเส้น
     marginVertical: 10, // ระยะห่างระหว่าง element
@@ -887,6 +940,28 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 18,
   },
+  inputWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  textInput: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingLeft: 15,
+    paddingRight: 50, // ให้เว้นที่สำหรับ icon ด้านขวา
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  brandIcon: {
+    position: 'absolute',
+    right: 15,
+    width: 45,
+    height: 35,
+  },
+
 
 });
 

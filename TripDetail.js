@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback,Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
@@ -689,24 +689,24 @@ const TripDetail = ({ navigation, route }) => {
 
     });
 
-     if (Object.keys(newErrors).length > 0) {
-          setErrors(newErrors); // Update the errors state
-    
-          // Show an alert if there are missing fields or invalid email
-          if (newErrors.email) {
-            Alert.alert('Invalid Email', 'Please enter a valid email address.', [
-              { text: 'OK', onPress: () => console.log('OK Pressed') }
-            ]);
-          } else {
-            Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
-              { text: 'OK', onPress: () => console.log('OK Pressed') }
-            ]);
-          }
-    
-          return;
-        }
-    
-    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors); // Update the errors state
+
+      // Show an alert if there are missing fields or invalid email
+      if (newErrors.email) {
+        Alert.alert('Invalid Email', 'Please enter a valid email address.', [
+          { text: 'OK', onPress: () => console.log('OK Pressed') }
+        ]);
+      } else {
+        Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
+          { text: 'OK', onPress: () => console.log('OK Pressed') }
+        ]);
+      }
+
+      return;
+    }
+
+
 
 
     // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
@@ -736,8 +736,11 @@ const TripDetail = ({ navigation, route }) => {
               source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
               style={styles.background}>
               <View style={styles.headerRow}>
-                <Image source={require('./assets/image.png')}
-                  style={styles.ImageLogo} />
+                <Image
+                  source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                  style={{ width: wp('10.6%'), height: hp('5%'),marginRight: 10 }}
+                  resizeMode="cover"
+                />
                 <View style={styles.coltitle}>
                   <Text style={styles.titlehead}>{item.md_company_nameeng}</Text>
                   <Text style={styles.timetable}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
@@ -1150,8 +1153,11 @@ const TripDetail = ({ navigation, route }) => {
                   source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
                   style={styles.background}>
                   <View style={styles.headerRow}>
-                    <Image source={require('./assets/image.png')}
-                      style={styles.ImageLogo} />
+                    <Image
+                      source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                      style={{ width: wp('10.6%'), height: hp('5%') }}
+                      resizeMode="cover"
+                    />
                     <View style={styles.coltitle}>
                       <Text style={styles.titlehead}>{item.md_company_nameeng}</Text>
                       <Text style={styles.timetable}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
@@ -1389,14 +1395,14 @@ const TripDetail = ({ navigation, route }) => {
 
                           <Text style={styles.inputLabel}>Hotel / Pick up point</Text>
                           <TextInput
-                        placeholder="Input Hotel / Pick up point"
-                        value={HotelpickupReturn}
-                        onChangeText={(text) => {
-                          setHotelpickupReturn(text);
-                          setErrors((prev) => ({ ...prev, HotelpickupReturn: false }));
-                        }}
-                        style={[styles.input, errors.HotelpickupReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                      />
+                            placeholder="Input Hotel / Pick up point"
+                            value={HotelpickupReturn}
+                            onChangeText={(text) => {
+                              setHotelpickupReturn(text);
+                              setErrors((prev) => ({ ...prev, HotelpickupReturn: false }));
+                            }}
+                            style={[styles.input, errors.HotelpickupReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                          />
                         </View>
                       )}
                     </View>
@@ -1525,14 +1531,14 @@ const TripDetail = ({ navigation, route }) => {
 
                           <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
                           <TextInput
-                        placeholder="Input Hotel / Drop off point"
-                        value={HoteldropoffReturn}
-                        onChangeText={(text) => {
-                          setHoteldropoffReturn(text);
-                          setErrors((prev) => ({ ...prev, HoteldropoffReturn: false }));
-                        }}
-                        style={[styles.input, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                      />
+                            placeholder="Input Hotel / Drop off point"
+                            value={HoteldropoffReturn}
+                            onChangeText={(text) => {
+                              setHoteldropoffReturn(text);
+                              setErrors((prev) => ({ ...prev, HoteldropoffReturn: false }));
+                            }}
+                            style={[styles.input, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                          />
                         </View>
                       )}
                     </View>

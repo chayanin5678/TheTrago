@@ -349,7 +349,8 @@ const CustomerInfo = ({ navigation }) => {
           <View style={styles.divider} />
           {timetableDepart.map((item, index) => (
             <View key={index}>
-              <Text>Depart</Text>
+             <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+
               <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
               <View style={styles.rowpromo}>
                 <Text style={{ color: '#666666' }}>Company </Text>
@@ -414,7 +415,7 @@ const CustomerInfo = ({ navigation }) => {
             <>
               {timetableReturn.map((item, index) => (
                 <View key={index}>
-                  <Text>Return</Text>
+                  <Text style={{ fontWeight: 'bold' }}>Return</Text>
                   <Text style={{ marginTop: 5, color: '#FD501E' }}>
                     {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                   </Text>

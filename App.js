@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet } from 'react-native';
+import * as Font from 'expo-font';
 
 // Import หน้าต่างๆ
 import * as SplashScreen from 'expo-splash-screen';
-import StartingPointScreen from './StartingPointScreen';  
+import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
 import HomeScreen from './HomeScreen';
@@ -73,18 +74,31 @@ const MainNavigator = () => (
 );
 
 export default function App() {
-
+  const [fontLoaded, setFontLoaded] = useState(false);
   useEffect(() => {
     // Prevent the Splash Screen from auto-hiding
     SplashScreen.preventAutoHideAsync();
-  
+
     // Set a timeout to hide the splash screen after a specific time (e.g., 3 seconds)
     setTimeout(() => {
       SplashScreen.hideAsync();
     }, 3000); // 3000 ms = 3 seconds
   }, []);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
+        'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
+      });
+      setFontLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
+
   return (
-    <NavigationContainer linking={LinkingConfiguration}>  
+    <NavigationContainer linking={LinkingConfiguration}>
       <CustomerProvider>
         <MainNavigator />
       </CustomerProvider>
