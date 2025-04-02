@@ -237,22 +237,13 @@ const PaymentScreen = ({ navigation, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
-          amount: totalPayment,
+          amount: 20,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
 
         }),
       });
-      console.log(`${ipAddress}/redirect`);
-
-      fetchBookingCode();
-      console.log("📌 Updating Customer Data with Booking Code:", booking_code);
-      updateCustomerData({
-        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        paymentfee: paymentfee,
-        total: totalPayment,
-      });
-      navigation.navigate("ResultScreen", { success: true, booking_code: booking_code });
+     
 
       if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
@@ -268,13 +259,7 @@ const PaymentScreen = ({ navigation, route }) => {
       }
 
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
-      fetchBookingCode();
-      console.log("📌 Updating Customer Data with Booking Code:", booking_code);
-      updateCustomerData({
-        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        paymentfee: paymentfee,
-        total: totalPayment,
-      });
+     
       setpaymentcode(paymentResult.charge.id);
       console.log('✅ Payment code:', paymentResult.charge.id);
       console.log('✅ booking code:', booking_code);
@@ -336,6 +321,14 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("🔗 Deep Link Received:", url);
       if (url.includes("payment/success")) {
         Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+        fetchBookingCode();
+        console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+        updateCustomerData({
+          bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+          paymentfee: paymentfee,
+          total: totalPayment,
+          bookingcode: booking_code,
+        });
         createBooking(paymentcode);
         navigation.navigate("ResultScreen", { success: true });
       } else if (url.includes("payment/failure")) {
@@ -753,7 +746,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 updateCustomerData({
                   total: totalPayment
                 });
-                navigation.navigate("PromptPayQR");
+                navigation.navigate("PromptPayQRScreen");
               } else {
                 Alert.alert('Payment Option', 'Please select a payment option.');
               }

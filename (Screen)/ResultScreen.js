@@ -13,11 +13,13 @@ import * as Print from 'expo-print';
 
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
-  const { success, booking_code } = route.params ;
+  const { success, booking_code } = route.params;
   const [orderStatus, setOrderStatus] = useState("Pending");
   const [pdfUri, setPdfUri] = useState(null);
+  const [timetableDepart, settimetableDepart] = useState([]);
 
   const htmlContent = `
+  
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +87,9 @@ const ResultScreen = ({ navigation, route }) => {
       padding: 4px 0;
       vertical-align: top;
     }
+    .centerOperator {
+      text-align: center;
+    }
     .highlight {
       color: green;
       font-weight: bold;
@@ -110,21 +115,138 @@ const ResultScreen = ({ navigation, route }) => {
     .important {
       font-size: 12px;
       margin-top: 20px;
+      margin-left: 20px;
       line-height: 1.6;
+      
     }
     .logo {
       height: 30px;
       margin-bottom: 5px;
     }
+    .timeline-box {
+      width: 100%;
+      max-width: 500px;
+      margin: 30px auto;
+      background-color: #f9f7f7;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .timeline-row {
+      display: flex;
+      width: 100%;
+      padding: 15px;
+      align-items: center;
+      background-color: #f4f1f1;
+      position: relative;
+    }
+
+    .left {
+      width: 40%;
+      text-align: left;
+      padding-left: 15px;
+    }
+
+    .center {
+      width: 20%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .right {
+      width: 40%;
+      padding-right: 15px;
+      text-align: right;
+    }
+
+    .circle {
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      border: 2px solid black;
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+  .middle-row {
+  position: relative;
+  height: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: #333;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.middle-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.label-left,
+.label-right {
+  font-size: 14px;
+  color: #333;
+  width: 80px;
+  text-align: center;
+}
+
+.circle-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.circle-icon {
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border: 2px solid #333;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ferry-icon {
+  width 50px;
+  height: 50px;
+  margin-top: 5px;
+  object-fit: contain;
+}
+
+
+
+
+
   </style>
 </head>
 <body>
   <div class="container">
+      ${timetableDepart.map((item) => `
     <div class="header">
       <img src="https://www.thetrago.com/assets/images/logo.png" alt="The Trago">
       <div class="ref-number">
         Ref. number<br>
-        <strong>TG680912093</strong>
+        <strong>${customerData.bookingcode}</strong>
       </div>
     </div>
 
@@ -133,18 +255,19 @@ const ResultScreen = ({ navigation, route }) => {
     <div class="location-row">
       <div>
         <strong>Departure</strong><br>
-        Phuket<br>
-        (Phuket Bus Terminal 2)
+       ${item.startingpoint_name}<br>
+        (${item.startpier_name})
       </div>
       <div>
         <span class="icon">⏱</span><br>
-        8 h 30 m<br>
-        🚤
+        ${formatTimeToHoursAndMinutes(item.md_timetable_time)}<br>
+       <img src="https://www.thetrago.com/Api/uploads/timetabledetail/shiplogo.png" class="ferry-icon" />
+        
       </div>
       <div>
         <strong>Arrival</strong><br>
-        Koh Samui<br>
-        (Hotel in Koh Samui (Located in Chaweng Bohput))
+         ${item.endpoint_name}<br>
+        (${item.endpier_name})
       </div>
     </div>
 
@@ -152,46 +275,88 @@ const ResultScreen = ({ navigation, route }) => {
       <div>
         <h3>Departure</h3>
         <table class="info-table">
-          <tr><td><strong>Date:</strong></td><td>04 April 2025</td></tr>
-          <tr><td><strong>Time:</strong></td><td>08:00 - 16:30 | 8 h 30 m</td></tr>
-          <tr><td><strong>From:</strong></td><td>Phuket (Phuket Bus Terminal 2)</td></tr>
-          <tr><td><strong>To:</strong></td><td>Koh Samui (Hotel in Koh Samui...)</td></tr>
-          <tr><td><strong>Seat:</strong></td><td>Economy</td></tr>
+          <tr><td><strong>Date:</strong></td><td>${formatDate(customerData.departdate)}</td></tr>
+          <tr><td><strong>Time:</strong></td><td>${formatTime(item.md_timetable_departuretime)} - ${formatTime(item.md_timetable_arrivaltime)} |   ${formatTimeToHoursAndMinutes(item.md_timetable_time)}</td></tr>
+          <tr><td><strong>From:</strong></td><td> ${item.startingpoint_name} ${item.startpier_name})</td></tr>
+          <tr><td><strong>To:</strong></td><td>${item.endpoint_name} (${item.endpier_name})</td></tr>
+          <tr><td><strong>Seat:</strong></td><td>${item.md_seat_nameeng}</td></tr>
         </table>
       </div>
       <div>
         <h3>Passenger</h3>
         <table class="info-table">
-          <tr><td><strong>Name:</strong></td><td>Mr. Christopher Brown</td></tr>
-          <tr><td><strong>Tel.:</strong></td><td>(+66)0842293612</td></tr>
-          <tr><td><strong>Adult:</strong></td><td>2 persons</td></tr>
-          <tr><td><strong>Child:</strong></td><td>1 persons</td></tr>
+          <tr><td><strong>Name:</strong></td><td>${customerData.selectedTitle} ${customerData.Firstname}  ${customerData.Lastname}</td></tr>
+          <tr><td><strong>Tel.:</strong></td><td>(${customerData.countrycode})  ${formatPhoneNumber(customerData.tel)}</td></tr>
+          <tr><td><strong>Adult:</strong></td><td>${customerData.adult} persons</td></tr>
+          ${customerData.child !== 0 ? `<tr><td><strong>Child:</strong></td><td>${customerData.child} persons</td></tr>` : ''}
+          ${customerData.infant !== 0 ? `<tr><td><strong>Infant:</strong></td><td>${customerData.infant} persons</td></tr>` : ''}
           <tr><td><strong>Payment Status:</strong></td><td><span class="highlight">Paid</span></td></tr>
         </table>
       </div>
     </div>
-
+    <div class="section">
     <div class="operator">
       <h3>Operated By</h3>
-      <img src="https://www.phantiptravel.com/wp-content/uploads/2019/09/logo-phantip.png" alt="Phantip" class="logo">
-      <p><strong>Tel.:</strong> +66611722751<br>
-      <strong>Email:</strong> info@phantiptravel.com</p>
-    </div>
-
-    <div class="timeline">
-      <div>
-        <strong>08:00</strong><br>04 April 2025<br><small>Phuket Bus Terminal 2</small>
-      </div>
-      <div>
-        🚤<br>
-        Ferry<br>
-        8 h 30 m
-      </div>
-      <div>
-        <strong>16:30</strong><br>04 April 2025<br><small>Koh Samui Hotel</small>
+       <div class="centerOperator">
+      <img src="https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}" 
+     alt="Company Logo" 
+     width="100" 
+     height="auto" 
+     style="max-height: 100px; object-fit: contain;" />
+      <p><strong>Tel.:</strong> ${item.md_company_tel}<br>
+      <strong>Email:</strong> ${item.md_company_email}</p>
       </div>
     </div>
 
+   <div class="timeline-box">
+
+    <div class="timeline-row">
+      <div class="left">
+        <div class="text-bold">${formatTime(item.md_timetable_departuretime)}</div>
+        <div class="text-sm">${formatDate(customerData.departdate)}</div>
+      </div>
+      <div class="center">
+        <div class="circle"></div>
+      </div>
+      <div class="right">
+        <div class="text-bold">${item.startingpoint_name}</div>
+        <div class="text-sm">${item.startpier_name}</div>
+      </div>
+    </div>
+
+ <div class="middle-row">
+  <div class="line"></div>
+  <div class="middle-content">
+    <div class="label-left">${item.md_boattype_nameeng}</div>
+    <div class="circle-wrapper">
+      <div class="circle-icon"><img src="https://www.thetrago.com/Api/uploads/timetabledetail/shiplogo.png" class="ferry-icon" /></div>
+    </div>
+    <div class="label-right"> ${formatTimeToHoursAndMinutes(item.md_timetable_time)}</div>
+  </div>
+
+
+</div>
+
+
+
+    <div class="timeline-row">
+      <div class="left">
+        <div class="text-bold">${formatTime(item.md_timetable_arrivaltime)}</div>
+        <div class="text-sm">${formatDate(customerData.departdate)}</div>
+      </div>
+      <div class="center">
+        <div class="circle"></div>
+      </div>
+      <div class="right">
+        <div class="text-bold"> ${item.endpoint_name}</div>
+        <div class="text-sm">${item.endpier_name}</div>
+      </div>
+    </div>
+        </div>
+
+  </div>
+    </div>
+    <div class="section">
     <div class="important">
       <strong>Important information</strong><br>
       • The ticket is valid only for the specified trip, date, time, and passenger name.<br>
@@ -200,12 +365,59 @@ const ResultScreen = ({ navigation, route }) => {
       • Reservation may be canceled if the passenger is not on board by the specified departure time.<br>
       • If the number of passengers or age exceeds the boat company’s conditions, the customer will be charged the difference at the counter.
     </div>
+    </div>
+     `).join('')}
   </div>
 </body>
 </html>
 
   `;
 
+  function formatTime(time) {
+    // แยกเวลาเป็นชั่วโมง นาที และวินาที
+    const [hours, minutes, seconds] = time.split(':');
+
+    // แปลงชั่วโมงจาก 24 ชั่วโมงเป็น 12 ชั่วโมง
+    const hour = (parseInt(hours) % 12) || 12;
+
+    // ตรวจสอบ AM หรือ PM
+    const period = parseInt(hours) >= 12 ? 'PM' : 'AM';
+
+    // คืนค่าผลลัพธ์ในรูปแบบ 12 ชั่วโมง
+    return `${hour}:${minutes} ${period}`;
+  }
+
+  function formatTimeToHoursAndMinutes(time) {
+    let [hours, minutes] = time.split(':');
+
+    // กำจัด 0 ด้านหน้า
+    hours = parseInt(hours, 10);
+    minutes = parseInt(minutes, 10);
+
+    return `${hours} h ${minutes} min`;
+  }
+
+
+  useEffect(() => {
+    fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          settimetableDepart(data.data);
+        } else {
+          console.error('Data is not an array', data);
+          settimetableDepart([]);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
 
 
   const sendTicket = async () => {
@@ -219,11 +431,12 @@ const ResultScreen = ({ navigation, route }) => {
       console.error('Error sending email: ', error);
     }
   };
-  
+
   useEffect(() => {
-    sendTicket();  // เรียกฟังก์ชัน sendTicket เมื่อคอมโพเนนต์โหลด
+    
+    sendTicket();  
   }, []);
-  
+
   const printTicket = async () => {
     try {
       await Print.printAsync({
@@ -263,127 +476,137 @@ const ResultScreen = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-       <ImageBackground
-                source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-                style={styles.background}>
-      <LogoHeader />
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <View style={styles.col}>
-            <Image
-               source={{ uri: `https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}` }}// Correct way to reference a local image
-              style={styles.logo}
-              resizeMode="contain"
-            />
+      <ImageBackground
+        source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+        style={styles.background}>
+        <LogoHeader />
+        {success && (
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.col}>
+              <Image
+                source={{ uri: `https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}` }}// Correct way to reference a local image
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.col}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, flexWrap: "wrap", width: "90%" }}>{customerData.companyname}</Text>
+              <View style={styles.row}>
+                <Ionicons name="location-outline" size={16} color="#FD501E" />
+                <Text> {customerData.startingpoint_name}</Text>
+                <AntDesign name="arrowright" size={10} color="black" />
+                <Text> {customerData.endpoint_name}</Text>
+              </View>
+              <View style={styles.row}>
+                <Ionicons name="calendar-outline" size={16} color="#FD501E" />
+                <Text> {formatDate(customerData.departdate)}</Text>
+              </View>
+              <View style={styles.row}>
+                <Ionicons name="person-outline" size={16} color="#FD501E" />
+                <Text> {customerData.adult} Adult, {customerData.child} Child, {customerData.infant} Infant</Text>
+              </View>
+              <View style={styles.row}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#FD501E" />
+                <Text> Free Cancellation</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.col}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, flexWrap: "wrap", width: "90%" }}>{customerData.companyname}</Text>
-            <View style={styles.row}>
-              <Ionicons name="location-outline" size={16} color="#FD501E" />
-              <Text> {customerData.startingpoint_name}</Text>
-              <AntDesign name="arrowright" size={10} color="black" />
-              <Text> {customerData.endpoint_name}</Text>
-            </View>
-            <View style={styles.row}>
-              <Ionicons name="calendar-outline" size={16} color="#FD501E" />
-              <Text> {formatDate(customerData.departdate)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Ionicons name="person-outline" size={16} color="#FD501E" />
-              <Text> {customerData.adult} Adult, {customerData.child} Child, {customerData.infant} Infant</Text>
-            </View>
-            <View style={styles.row}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#FD501E" />
-              <Text> Free Cancellation</Text>
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text style={styles.titel}>Summary</Text>
-          <Text> Booking date: {formatDate(customerData.bookingdate)}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text >Adult </Text>
-          <Text> {customerData.adult} Persons</Text>
-        </View>
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text >Passenger name </Text>
-          <Text>{customerData.Firstname} {customerData.Lastname}</Text>
-        </View>
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text >Phone number </Text>
-          <Text>{customerData.countrycode} {formatPhoneNumber(customerData.tel)}</Text>
-        </View>
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text >Email address </Text>
-          <Text>{customerData.email}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text style={styles.titel}>Price Details</Text>
-        </View>
-
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text >Adult x {customerData.adult} </Text>
-          <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-        </View>
-        {customerData.child !== 0 && (
+          <View style={styles.divider} />
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Child x {customerData.child}</Text>
-            <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+            <Text style={styles.titel}>Summary</Text>
+            <Text> Booking date: {formatDate(customerData.bookingdate)}</Text>
           </View>
-        )}
-         {customerData.infant !== 0 && (
+          <View style={styles.divider} />
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Infant x {customerData.infant}</Text>
-            <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+            <Text >Adult </Text>
+            <Text> {customerData.adult} Persons</Text>
           </View>
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text >Passenger name </Text>
+            <Text>{customerData.Firstname} {customerData.Lastname}</Text>
+          </View>
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text >Phone number </Text>
+            <Text>{customerData.countrycode} {formatPhoneNumber(customerData.tel)}</Text>
+          </View>
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text >Email address </Text>
+            <Text>{customerData.email}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text style={styles.titel}>Price Details</Text>
+          </View>
+
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text >Adult x {customerData.adult} </Text>
+            <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+          </View>
+          {customerData.child !== 0 && (
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <Text>Child x {customerData.child}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+            </View>
+          )}
+          {customerData.infant !== 0 && (
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <Text>Infant x {customerData.infant}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+            </View>
+          )}
+            {customerData.pickupPriceDepart !== 0 && (
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <Text>Pickup {customerData.infant}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+            </View>
+          )}
+            {customerData.dropoffPriceDepart !== 0 && (
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <Text>Drop off {customerData.infant}</Text>
+              <Text>฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+            </View>
+          )}
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>Discount</Text>
+            <Text style={styles.redText}>- ฿  {formatNumberWithComma(customerData.discountDepart)}</Text>
+          </View>
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>Ticket fare</Text>
+            <Text>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>Subtotal </Text>
+            <Text>฿ {formatNumberWithComma((parseFloat(customerData.subtotalDepart) + parseFloat(customerData.subtotalReturn)))}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>Payment Fee </Text>
+            <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(customerData.paymentfee)}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <Text>total </Text>
+            <Text> ฿ {formatNumberWithComma(customerData.total)}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.bookingCodeText}>
+            <View style={{ flexDirection: 'column' }}>
+              <Text>Booking Code:</Text>
+              <Text>{customerData.bookingcode || "N/A"}</Text>
+            </View>
+            <TouchableOpacity style={styles.BackButton} onPress={printTicket}>
+              <Text style={styles.BackButtonText}>Print Ticket</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         )}
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text>Discount</Text>
-          <Text style={styles.redText}>- ฿  {formatNumberWithComma(customerData.discountDepart)}</Text>
-        </View>
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text>Ticket fare</Text>
-          <Text>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text>Subtotal </Text>
-          <Text>฿ {formatNumberWithComma((parseFloat(customerData.subtotalDepart)+parseFloat(customerData.subtotalReturn)))}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text>Payment Fee </Text>
-          <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(customerData.paymentfee)}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={[styles.row, { justifyContent: 'space-between' }]}>
-          <Text>total </Text>
-          <Text> ฿ {formatNumberWithComma(customerData.total)}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.bookingCodeText}>
-        <View style={{ flexDirection: 'column' }}>
-          <Text>Booking Code:</Text>
-          <Text>{customerData.bookingcode || "N/A"}</Text>
-          </View>
-          <TouchableOpacity style={styles.BackButton} onPress={printTicket}>
-          <Text style={styles.BackButtonText}>Print Ticket</Text>
-        </TouchableOpacity>
-        </View>
-
-
-      
-       
-      </View>
-      {orderStatus === "Failed" && (
+        {!success && (
           <Text style={styles.errorText}>Please try again later or contact support.</Text>
         )}
-        </ImageBackground>
+      </ImageBackground>
     </ScrollView>
   );
 };
@@ -475,8 +698,8 @@ const styles = StyleSheet.create({
   greenText: {
     color: 'green',
   },
-  background :{
-    width:'100%',
+  background: {
+    width: '100%',
   }
 
 });

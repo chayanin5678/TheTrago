@@ -53,8 +53,9 @@ const CustomerInfo = ({ navigation }) => {
         newErrors.email = true;
       }
     }
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
     updateCustomerData({
+      selectedTitle: selectedTitle,
       Firstname: Firstname,
       Lastname: Lastname,
       tel: mobileNumber,

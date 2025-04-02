@@ -63,6 +63,7 @@ export const CustomerProvider = ({ children }) => {
     timeTableDepartId:'', //รหัสตารางเวลาเดินทาง
     departDateTimeTable:'', //วันเวลาเดินทาง
     pierStartDepartId:'', //รหัสท่าเริ่มต้น
+    pierStartDepartName:'', //ชื่อท่าเริ่มต้น
     pierEndDepartId:'', //รหัสท่าปลายทาง
     pierStartReturntId:'', //รหัสท่าเริ่มต้นกลับ
     pierEndReturntId:'',

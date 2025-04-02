@@ -18,7 +18,7 @@ import PaymentScreen from './(Screen)/PaymentScreen';
 import ResultScreen from './(Screen)/ResultScreen';
 import { CustomerProvider } from './(Screen)/CustomerContext';
 import LinkingConfiguration from './(Screen)/linking';
-import PromptPayQR from './(Screen)/PromptPayQR';
+import PromptPayQRScreen from './(Screen)/PromptPayQR';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -43,7 +43,7 @@ const AppNavigator = () => (
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="PromptPayQR" component={PromptPayQR} options={{ headerShown: false }} />
+    <Stack.Screen name="PromptPayQRScreen" component={PromptPayQRScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
