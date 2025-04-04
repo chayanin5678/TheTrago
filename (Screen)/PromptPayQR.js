@@ -1,67 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, Alert } from 'react-native';
-import axios from 'axios';
-
-export default function PromptPayQRScreen({ navigation }) {
-  const [qrUrl, setQrUrl] = useState(null);
-  const [chargeId, setChargeId] = useState(null);
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator, StyleSheet, Image } from "react-native";
+import axios from "axios";
+import ipAddress from "../ipconfig";
+import { useCustomer } from './CustomerContext';
+export default function PromptPayScreen({route}) {
+  const { Paymenttotal } = route.params;
+  const [qrUri, setQrUri] = useState(null);
   const [loading, setLoading] = useState(true);
-
+    const { customerData, updateCustomerData } = useCustomer();
   useEffect(() => {
-    // 1. สร้าง QR จาก Omise
-    axios.post('https://thetrago.com/AppApi/create-promptpay-qr', {
-      amount: 50,
-      return_uri: 'https://thetrago.com/AppApi/redirect', // ใส่ไว้เผื่อใช้
-    }).then(res => {
-      setQrUrl(res.data.qrCodeUrl);
-      setChargeId(res.data.charge_id);
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
-      Alert.alert("Error", "Failed to create QR");
-      setLoading(false);
-    });
+    const loadQR = async () => {
+      try {
+        const response = await axios.post(`${ipAddress}/create-promptpay`, {
+          amount: parseFloat(Paymenttotal),
+          currency: "thb",
+          return_uri: `${ipAddress}/redirect`,
+        });
+        setQrUri(response.data.qr_code);
+        console.log("✅ QR URI:", response.data.qr_code);
+      } catch (error) {
+        console.error("❌ โหลด QR ล้มเหลว:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQR();
   }, []);
 
-  useEffect(() => {
-    if (!chargeId) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await axios.get(`https://api.omise.co/charges/${chargeId}`, {
-          auth: {
-            username: 'skey_60x138uosi617jur3wb', // 👈 ใส่ Secret Key ของ Omise
-            password: '',
-          },
-        });
-
-        if (res.data.status === 'successful') {
-          clearInterval(interval);
-          Alert.alert("✅ Payment Successful", "Thank you for your payment!");
-          navigation.navigate("ResultScreen", { success: true });
-        }
-      } catch (error) {
-        console.error("Error checking status:", error);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [chargeId]);
-
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      {loading ? (
-        <ActivityIndicator size="large" />
-      ) : (
-        <>
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>Scan QR with PromptPay</Text>
-          <Image
-            source={{ uri: qrUrl }}
-            style={{ width: 250, height: 250 }}
-            resizeMode="contain"
-          />
-        </>
+    <View style={styles.container}>
+      {loading && <ActivityIndicator size="large" color="#000" />}
+      {!loading && qrUri && (
+        <Image
+          source={{ uri: qrUri }}
+          style={styles.qr}
+          resizeMode="contain"
+        />
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  qr: {
+    width: '100%',
+    height: '100%',
+    marginTop: 20,
+  },
+});

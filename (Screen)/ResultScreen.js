@@ -604,7 +604,13 @@ const ResultScreen = ({ navigation, route }) => {
         </View>
         )}
         {!success && (
-          <Text style={styles.errorText}>Please try again later or contact support.</Text>
+           <View style={styles.card}>
+            <View style={{alignItems: 'center'}}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Your card is not valid. Please check again.</Text>
+          <Text style={{ fontSize: 16}}>Please contact the officer.</Text>
+          <Text style={{ fontSize: 16, marginTop: 20}}>Email : info@thetrago.com</Text>
+          </View>
+          </View>
         )}
       </ImageBackground>
     </ScrollView>

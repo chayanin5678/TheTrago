@@ -237,29 +237,28 @@ const PaymentScreen = ({ navigation, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
-          amount: 20,
+          amount: 30,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
-
         }),
       });
-     
+
 
       if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
       if (!paymentResult.success) throw new Error("❌ Payment declined");
 
       // ✅ 3. เปิด Omise Authorize URL
-      if (paymentResult.charge.authorize_uri) {
-        console.log("🔗 Redirecting to:", paymentResult.charge.authorize_uri);
-        await Linking.openURL(paymentResult.charge.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+      if (paymentResult.authorize_uri) {
+        console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
+        await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
 
       } else {
         throw new Error("❌ No authorize URI found.");
       }
 
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
-     
+
       setpaymentcode(paymentResult.charge.id);
       console.log('✅ Payment code:', paymentResult.charge.id);
       console.log('✅ booking code:', booking_code);
@@ -378,7 +377,13 @@ const PaymentScreen = ({ navigation, route }) => {
       });
   }, []);
 
-  const icon = brandIcons[brand] || brandIcons.Unknown;
+  const detectCardBrand = (number) => {
+    if (/^4[0-9]{0,}$/.test(number)) return "Visa";
+    if (/^5[1-5]/.test(number)) return "MasterCard";
+    if (/^3[47]/.test(number)) return "American Express";
+    if (/^35(2[89]|[3-8][0-9])/.test(number)) return "JCB";
+    return "Unknown";
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -442,33 +447,16 @@ const PaymentScreen = ({ navigation, route }) => {
                     <View style={styles.inputWrapper}>
                       <TextInput
                         value={cardNumber}
-                        onChangeText={async (text) => {
-                          // ลบช่องว่างทั้งหมดก่อน
-                          const clean = text.replace(/\D/g, "").slice(0, 16);
-
-                          // ใส่ช่องว่างทุก 4 ตัว
+                        onChangeText={(text) => {
+                          const clean = text.replace(/\D/g, "").slice(0, 16); // ลบตัวอักษรที่ไม่ใช่ตัวเลข
                           const formatted = clean.replace(/(.{4})/g, "$1 ").trim();
-
                           setCardNumber(formatted);
                           setErrors((prev) => ({ ...prev, cardNumber: false }));
 
-                          // ส่งไปเช็ค brand เมื่อพิมพ์ครบ 6 ตัว (แบบไม่เว้นวรรค)
+                          // 🔍 เดา brand เองโดยไม่ใช้ API
                           if (clean.length >= 6) {
-                            try {
-                              const res = await axios.post(`${ipAddress}/create-token`, {
-                                card: {
-                                  name: "Test",
-                                  number: clean,
-                                  expiration_month: 12,
-                                  expiration_year: 2026,
-                                  security_code: "123",
-                                },
-                              });
-                              const brandFromToken = res.data.brand || "Unknown";
-                              setBrand(brandFromToken);
-                            } catch (err) {
-                              setBrand("Unknown");
-                            }
+                            const detectedBrand = detectCardBrand(clean);
+                            setBrand(detectedBrand);
                           } else {
                             setBrand(null);
                           }
@@ -518,7 +506,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           keyboardType="number-pad"
                           placeholder="***"
                           secureTextEntry
-                          maxLength={3} 
+                          maxLength={3}
                           style={[styles.input, errors.cvv && styles.errorInput]}
                         />
                       </View>
@@ -743,10 +731,9 @@ const PaymentScreen = ({ navigation, route }) => {
               } else if (selectedOption == "7") {
                 handlePayment();
               } else if (selectedOption == "2") {
-                updateCustomerData({
-                  total: totalPayment
-                });
-                navigation.navigate("PromptPayQRScreen");
+              
+                navigation.navigate("PromptPayScreen", { Paymenttotal: totalPayment });
+
               } else {
                 Alert.alert('Payment Option', 'Please select a payment option.');
               }
