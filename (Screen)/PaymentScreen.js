@@ -50,6 +50,10 @@ const PaymentScreen = ({ navigation, route }) => {
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [brand, setBrand] = useState(null);
+  const referenceOrder = Math.floor(Math.random() * (999 - 111 + 1)) + 111 + Date.now() + Math.floor(Math.random() * (999 - 111 + 1)) + 111;
+  const ref1 = "Ref_1S" + (Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000) + Date.now() + (Math.floor(Math.random() * (999 - 111 + 1)) + 111);
+  const ref2 = "Ref_2S" + (Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000) + Date.now() + (Math.floor(Math.random() * (999 - 111 + 1)) + 111);
+  
 
 
   console.log("Year:", year);
@@ -210,7 +214,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
     setIsLoading(true);
     console.log("🔄 Loading started...");
-
+    fetchBookingCode(); // Fetch booking code before payment
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
@@ -224,6 +228,11 @@ const PaymentScreen = ({ navigation, route }) => {
             expiration_year: year,
             security_code: cvv,
           },
+          amount: totalPayment,
+          booking_code: booking_code,
+          referenceOrder: referenceOrder,
+          ref1: ref1,
+          ref2: ref2,
         }),
       });
 
@@ -240,6 +249,9 @@ const PaymentScreen = ({ navigation, route }) => {
           amount: 30,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
+          booking_code: booking_code,
+          referenceOrder: referenceOrder, 
+
         }),
       });
 
@@ -316,9 +328,17 @@ const PaymentScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const handleDeepLink = (event) => {
-      let url = event.url || "";
-      console.log("🔗 Deep Link Received:", url);
-      if (url.includes("payment/success")) {
+      const { url } = event;
+      console.log("🔗 Deep Link URL:", url);
+
+      const urlParams = new URLSearchParams(url.split("?")[1]);
+      const chargeId = urlParams.get("charge_id");
+      const status = urlParams.get("status");
+
+      console.log("Charge ID:", chargeId);
+      console.log("Status:", status);
+
+      if (status === "successful") {
         Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
         fetchBookingCode();
         console.log("📌 Updating Customer Data with Booking Code:", booking_code);
@@ -329,27 +349,22 @@ const PaymentScreen = ({ navigation, route }) => {
           bookingcode: booking_code,
         });
         createBooking(paymentcode);
-        navigation.navigate("ResultScreen", { success: true });
-      } else if (url.includes("payment/failure")) {
+        navigation.navigate("ResultScreen", { success: true, chargeId });
+      } else if (status === "failure") {
         Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
-        navigation.navigate("ResultScreen", { success: false });
+        navigation.navigate("ResultScreen", { success: false, chargeId });
       }
     };
 
-    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+    const linkingListener = Linking.addEventListener("url", handleDeepLink);
 
-    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
+    // ตรวจจับลิงก์เมื่อแอปเปิดจาก background
     Linking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
 
-    return () => {
-      subscription.remove();
-    };
+    return () => linkingListener.remove(); // Cleanup listener on unmount
   }, [navigation]);
-
-
 
   const handleSelection = (option) => {
     setSelectedOption(option);
