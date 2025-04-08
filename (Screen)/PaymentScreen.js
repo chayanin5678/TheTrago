@@ -50,10 +50,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [brand, setBrand] = useState(null);
-  const referenceOrder = Math.floor(Math.random() * (999 - 111 + 1)) + 111 + Date.now() + Math.floor(Math.random() * (999 - 111 + 1)) + 111;
-  const ref1 = "Ref_1S" + (Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000) + Date.now() + (Math.floor(Math.random() * (999 - 111 + 1)) + 111);
-  const ref2 = "Ref_2S" + (Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000) + Date.now() + (Math.floor(Math.random() * (999 - 111 + 1)) + 111);
-  
 
 
   console.log("Year:", year);
@@ -97,7 +93,7 @@ const PaymentScreen = ({ navigation, route }) => {
         console.error('Error fetching data:', error);
         setPaymentfee(0); // Default to 0 if there is an error fetching the data
       });
-  }, [selectedOption]);
+  }, [selectedOption ,paymentcode,bookingcode]);
 
 
 
@@ -214,7 +210,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
     setIsLoading(true);
     console.log("🔄 Loading started...");
-    fetchBookingCode(); // Fetch booking code before payment
+
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
@@ -228,11 +224,6 @@ const PaymentScreen = ({ navigation, route }) => {
             expiration_year: year,
             security_code: cvv,
           },
-          amount: totalPayment,
-          booking_code: booking_code,
-          referenceOrder: referenceOrder,
-          ref1: ref1,
-          ref2: ref2,
         }),
       });
 
@@ -249,9 +240,6 @@ const PaymentScreen = ({ navigation, route }) => {
           amount: 30,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
-          booking_code: booking_code,
-          referenceOrder: referenceOrder, 
-
         }),
       });
 
@@ -259,7 +247,9 @@ const PaymentScreen = ({ navigation, route }) => {
       if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
       if (!paymentResult.success) throw new Error("❌ Payment declined");
-
+      setpaymentcode(paymentResult.charge_id);
+      console.log('✅ Payment code:', paymentcode);
+      console.log('✅ booking code:', booking_code);
       // ✅ 3. เปิด Omise Authorize URL
       if (paymentResult.authorize_uri) {
         console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
@@ -271,9 +261,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
 
-      setpaymentcode(paymentResult.charge.id);
-      console.log('✅ Payment code:', paymentResult.charge.id);
-      console.log('✅ booking code:', booking_code);
+     
 
       //  navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
@@ -295,21 +283,22 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("📌 Creating Booking with Payment Code:", paymentCode);
       await axios.post(`${ipAddress}/booking`, {
         md_booking_code: booking_code,
-        md_booking_companyid: customerData.companyid,
+        md_booking_companyid: customerData.companyDepartId,
         md_booking_paymentid: paymentCode, // ✅ ใช้ค่าที่ส่งเข้ามา
         md_booking_boattypeid: customerData.boatypeid,
         md_booking_country: customerData.country,
         md_booking_countrycode: customerData.countrycode,
         md_booking_round: customerData.roud,
-        md_booking_timetableid: customerData.timetableid,
+        md_booking_timetableid: customerData.timeTableDepartId,
         md_booking_tel: customerData.tel,
         md_booking_email: customerData.email,
-        md_booking_price: subtotal,
+        md_booking_price: customerData.subtotalDepart,
         md_booking_total: totalPayment,
         md_booking_currency: customerData.currency,
         md_booking_net: Discount,
         md_booking_adult: customerData.adult,
         md_booking_child: customerData.child,
+        md_booking_infant: customerData.infant,
         md_booking_day: customerData.day,
         md_booking_month: customerData.month,
         md_booking_year: customerData.year,
@@ -327,19 +316,11 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    const handleDeepLink = (event) => {
-      const { url } = event;
-      console.log("🔗 Deep Link URL:", url);
-
-      const urlParams = new URLSearchParams(url.split("?")[1]);
-      const chargeId = urlParams.get("charge_id");
-      const status = urlParams.get("status");
-
-      console.log("Charge ID:", chargeId);
-      console.log("Status:", status);
-
-      if (status === "successful") {
-        Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+    const handleDeepLink = async (event) => {
+      let url = event.url || "";
+      console.log("🔗 Deep Link Received:", url);
+  
+      if (url.includes("payment/success")) {
         fetchBookingCode();
         console.log("📌 Updating Customer Data with Booking Code:", booking_code);
         updateCustomerData({
@@ -348,23 +329,46 @@ const PaymentScreen = ({ navigation, route }) => {
           total: totalPayment,
           bookingcode: booking_code,
         });
-        createBooking(paymentcode);
-        navigation.navigate("ResultScreen", { success: true, chargeId });
-      } else if (status === "failure") {
+        try {
+          // ส่งคำขอตรวจสอบการชำระเงิน
+          const res = await axios.post(`${ipAddress}/check-charge`, {
+            charge_id: paymentcode,
+          });
+  
+          if (res.data.success && res.data.status === "failed") { //successful failed
+            Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+           
+            createBooking(paymentcode);
+            navigation.navigate("ResultScreen", { success: true });
+          } else {
+            Alert.alert("❌ Payment Failed", "Payment was not successful.");
+            navigation.navigate("ResultScreen", { success: false });
+          }
+        } catch (error) {
+          console.error("Error checking charge:", error);
+          Alert.alert("❌ Error", "There was an error processing your payment.");
+          navigation.navigate("ResultScreen", { success: false });
+        }
+      } else if (url.includes("payment/failure")) {
         Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
-        navigation.navigate("ResultScreen", { success: false, chargeId });
+        navigation.navigate("ResultScreen", { success: false });
       }
     };
-
-    const linkingListener = Linking.addEventListener("url", handleDeepLink);
-
-    // ตรวจจับลิงก์เมื่อแอปเปิดจาก background
+  
+    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+  
+    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
     Linking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
+  
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation, paymentcode, bookingcode, totalPayment]); // เพิ่ม paymentcode และ booking_code ใน dependencies
+  
 
-    return () => linkingListener.remove(); // Cleanup listener on unmount
-  }, [navigation]);
 
   const handleSelection = (option) => {
     setSelectedOption(option);
