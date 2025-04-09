@@ -8,11 +8,12 @@ export default function PromptPayScreen({route}) {
   const [qrUri, setQrUri] = useState(null);
   const [loading, setLoading] = useState(true);
     const { customerData, updateCustomerData } = useCustomer();
+    console.log("Paymenttotal", Paymenttotal);
   useEffect(() => {
     const loadQR = async () => {
       try {
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
-          amount: parseFloat(Paymenttotal),
+          amount: parseFloat(Paymenttotal) ,
           currency: "thb",
           return_uri: `${ipAddress}/redirect`,
         });

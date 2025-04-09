@@ -38,11 +38,16 @@ const PaymentScreen = ({ navigation, route }) => {
   const [timetableReturn, settimetableReturn] = useState([]);
   const [totalPayment, settotalPayment] = useState('');
   const [bookingcode, setBookingcode] = useState([]);
+  const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
   const { customerData, updateCustomerData } = useCustomer();
   // Compute booking_code only if bookingcode is available
   const booking_code = bookingcode.length > 0
     ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
-    : "N/A"; // ใช้ "N/A" แทนค่าที่ไม่มี
+    : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
+    const booking_codeGroup = bookingcodeGroup.length > 0
+    ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
+    : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
+
 
   const [paymentcode, setpaymentcode] = useState('');
   const [paymentfee, setPaymentfee] = useState(0);
@@ -93,7 +98,7 @@ const PaymentScreen = ({ navigation, route }) => {
         console.error('Error fetching data:', error);
         setPaymentfee(0); // Default to 0 if there is an error fetching the data
       });
-  }, [selectedOption ,paymentcode,bookingcode]);
+  }, [selectedOption ,paymentcode, bookingcode]);
 
 
 
@@ -109,6 +114,24 @@ const PaymentScreen = ({ navigation, route }) => {
       } else {
         console.error('Data is not an array', data);
         setBookingcode([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const fetchBookingCodeGroup = async () => {
+    try {
+      const response = await fetch(`${ipAddress}/bookingcode`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.data)) {
+        setBookingcodeGroup(data.data);
+      } else {
+        console.error('Data is not an array', data);
+        setBookingcodeGroup([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -172,10 +195,18 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   };
 
+  useEffect(() => {
+    // เรียก fetchBookingCode ทุกครั้งที่มีการเปลี่ยนแปลงใน customerData หรือ bookingcode
+    fetchBookingCode();
 
+    if(customerData.roud === 2){
+      fetchBookingCodeGroup();
+    }
+  }, [paymentcode]);
 
 
   useEffect(() => {
+    
     if (customerData.roud === 2) {
       fetchTimetableReturn();
     }
@@ -183,7 +214,7 @@ const PaymentScreen = ({ navigation, route }) => {
     setTotalPaymentfee(customerData.total * (paymentfee / 100));
     settotalPayment(formatNumber(parseFloat(customerData.total) + totalpaymentfee));
 
-  }, [Discount, customerData.total, paymentfee, totalpaymentfee, customerData.timeTableReturnId]);
+  }, [Discount, customerData.total, paymentfee, totalpaymentfee, customerData.timeTableReturnId, bookingcode, bookingcodeGroup]);
 
 
   const calculateDiscountedPrice = (price) => {
@@ -196,6 +227,16 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
   const handlePayment = async () => {
+    // updateCustomerData({
+    //   bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+    //   paymentfee: paymentfee,
+    //   total: totalPayment,
+    //   bookingcode: booking_code,
+    //   bookingcodegroup: booking_codeGroup,
+    // });
+
+    // navigation.navigate("ResultScreen", { success: true });
+
     let newErrors = {};
     if (!cardName) newErrors.cardName = true;
     if (!cardNumber) newErrors.cardNumber = true;
@@ -211,6 +252,7 @@ const PaymentScreen = ({ navigation, route }) => {
     setIsLoading(true);
     console.log("🔄 Loading started...");
 
+   
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
@@ -237,7 +279,7 @@ const PaymentScreen = ({ navigation, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
-          amount: 30,
+          amount: totalPayment,
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
         }),
@@ -247,10 +289,7 @@ const PaymentScreen = ({ navigation, route }) => {
       if (!paymentResponse.ok) throw new Error("❌ Payment failed");
       const paymentResult = await paymentResponse.json();
       if (!paymentResult.success) throw new Error("❌ Payment declined");
-      setpaymentcode(paymentResult.charge_id);
-      console.log('✅ Payment code:', paymentcode);
-      console.log('✅ booking code:', booking_code);
-      // ✅ 3. เปิด Omise Authorize URL
+      
       if (paymentResult.authorize_uri) {
         console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
         await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
@@ -261,7 +300,16 @@ const PaymentScreen = ({ navigation, route }) => {
 
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
 
-     
+      setpaymentcode(paymentResult.charge_id);
+      console.log('✅ Payment code:', paymentcode);
+      console.log('✅ booking code:', booking_code);
+      // ✅ 3. เปิด Omise Authorize URL
+
+      fetchBookingCode();
+      if(customerData.roud === 2){
+        fetchBookingCodeGroup();
+      }
+      createBooking(paymentResult.charge_id); 
 
       //  navigation.navigate("ResultScreen", { success: true ,booking_code: booking_code});
       setIsLoading(false);
@@ -282,21 +330,27 @@ const PaymentScreen = ({ navigation, route }) => {
     try {
       console.log("📌 Creating Booking with Payment Code:", paymentCode);
       await axios.post(`${ipAddress}/booking`, {
-        md_booking_code: booking_code,
-        md_booking_companyid: customerData.companyDepartId,
-        md_booking_paymentid: paymentCode, // ✅ ใช้ค่าที่ส่งเข้ามา
-        md_booking_boattypeid: customerData.boatypeid,
-        md_booking_country: customerData.country,
-        md_booking_countrycode: customerData.countrycode,
-        md_booking_round: customerData.roud,
-        md_booking_timetableid: customerData.timeTableDepartId,
-        md_booking_tel: customerData.tel,
-        md_booking_email: customerData.email,
-        md_booking_price: customerData.subtotalDepart,
-        md_booking_total: totalPayment,
-        md_booking_currency: customerData.currency,
-        md_booking_net: Discount,
-        md_booking_adult: customerData.adult,
+        md_booking_memberid: 0,//1
+        md_booking_code: booking_code,//2
+        md_booking_groupcode: booking_codeGroup,//3
+        md_booking_companyid: customerData.companyDepartId,//4
+        md_booking_paymentid: paymentCode, // 5
+        md_booking_boattypeid: customerData.boatypeid, //6
+        md_booking_country: customerData.country,//7
+        md_booking_countrycode: customerData.countrycode,//8
+        md_booking_round: customerData.roud,//9
+        md_booking_timetableid: customerData.timeTableDepartId,//10
+        md_booking_tel: customerData.tel,//11
+        md_booking_whatsapp:0,//12
+        md_booking_email: customerData.email,//13
+        md_booking_price: customerData.total,//14
+        md_booking_total: totalPayment,//15
+        md_booking_refund: 0,//16
+        md_booking_refundprice: 0,//17
+        md_booking_credit:0,//18
+        md_booking_currency: customerData.currency,//19
+        md_booking_net: customerData.netDepart,//20
+        md_booking_adult: customerData.adult,//21
         md_booking_child: customerData.child,
         md_booking_infant: customerData.infant,
         md_booking_day: customerData.day,
@@ -306,6 +360,16 @@ const PaymentScreen = ({ navigation, route }) => {
         md_booking_date: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
         md_booking_departdate: customerData.departdate,
         md_booking_departtime: customerData.departtime,
+        md_booking_statuspayment: 0,
+        md_booking_status: 0,
+        md_booking_pay: selectedOption,
+        md_booking_payfee: paymentfee,
+        md_booking_lang: 'en',
+        md_booking_from: 0,
+        md_booking_device: 2,
+        md_booking_promoprice:0,
+        md_booking_credate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+        md_booking_updatedate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
       });
 
       console.log("✅ Booking created successfully");
@@ -321,13 +385,13 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("🔗 Deep Link Received:", url);
   
       if (url.includes("payment/success")) {
-        fetchBookingCode();
         console.log("📌 Updating Customer Data with Booking Code:", booking_code);
         updateCustomerData({
           bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
           paymentfee: paymentfee,
           total: totalPayment,
           bookingcode: booking_code,
+          bookingcodegroup: booking_codeGroup,
         });
         try {
           // ส่งคำขอตรวจสอบการชำระเงิน
@@ -335,13 +399,13 @@ const PaymentScreen = ({ navigation, route }) => {
             charge_id: paymentcode,
           });
   
-          if (res.data.success && res.data.status === "failed") { //successful failed
-            Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+          if (res.data.success && res.data.status === "successful") { //successful failed
+           // Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
            
             createBooking(paymentcode);
             navigation.navigate("ResultScreen", { success: true });
           } else {
-            Alert.alert("❌ Payment Failed", "Payment was not successful.");
+           // Alert.alert("❌ Payment Failed", "Payment was not successful.");
             navigation.navigate("ResultScreen", { success: false });
           }
         } catch (error) {

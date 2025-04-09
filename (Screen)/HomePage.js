@@ -1,17 +1,17 @@
 import React, { useRef, useState, useEffect  } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator, Modal } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Banner from './(component)/Banner';
-import LogoTheTrago from './(component)/Logo';
+import Banner from '../(component)/Banner.js';
+import LogoTheTrago from '../(component)/Logo.js';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { useCustomer } from './(Screen)/CustomerContext';
+import { useCustomer } from './CustomerContext.js';
 const destinations = [
-  { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
-  { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./assets/destination2.png') },
-  { id: '3', title: 'Lorem ipsum odor', location: 'Lorem, France', duration: '7 Days', price: '$400', image: require('./assets/destination3.png') },
+  { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./../assets/destination1.png') },
+  { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./../assets/destination2.png') },
+  { id: '3', title: 'Lorem ipsum odor', location: 'Lorem, France', duration: '7 Days', price: '$400', image: require('./../assets/destination3.png') },
 ];
 
-const HomeScreen = ({navigation }) => {
+const HomePage = ({navigation }) => {
   const [activeTab, setActiveTab] = useState('Ferry');  // ใช้ state เพื่อจัดการเมนูที่เลือก
   const [startingPoint, setStartingPoint] = useState({ id: '0' ,name: 'Starting Point'});
   const [endPoint, setEndPoint] = useState({ id: '0' ,name: 'Destination'});
@@ -30,8 +30,7 @@ const HomeScreen = ({navigation }) => {
   const [showReturnPicker, setShowReturnPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const { customerData, updateCustomerData } = useCustomer();
+  const {  updateCustomerData } = useCustomer();
    const [tripType, setTripType] = useState("One Way Trip"); 
 
 
@@ -73,10 +72,6 @@ const HomeScreen = ({navigation }) => {
        <ImageBackground 
     source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
     style={styles.background}>
-       <View style={styles.cardContainerHeader}>
-       <ImageBackground 
-    source={require('./assets/Bghome.png')}
-    style={styles.background}>
       <LogoTheTrago/>
       
 
@@ -84,18 +79,6 @@ const HomeScreen = ({navigation }) => {
    
   The <Text style={[styles.highlight]}>journey</Text> is endless, Book now
 </Text>
-        <View style={styles.searcContain}>
-          <TextInput
-            style={styles.searchBox}
-            placeholder="Search Here..."
-            placeholderTextColor="#999"
-            backgroundColor="white"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-</ImageBackground>
-</View>
 
       {/* <View style={styles.tabContainer}>
         {['Ferry', 'Flight', 'Car', 'Hotel'].map(tab => (
@@ -172,7 +155,7 @@ const HomeScreen = ({navigation }) => {
       style={styles.inputBox}
     >     
               <Image
-              source={require('./assets/directions_boat.png')}
+              source={require('./../assets/directions_boat.png')}
               style={styles.logoDate}
               resizeMode="contain"
               />
@@ -187,7 +170,7 @@ const HomeScreen = ({navigation }) => {
             {/* Swap icon */}
         <TouchableOpacity onPress={swapPoints}>
           <Image
-            source={require('./assets/mage_exchange-a.png')}
+            source={require('./../assets/mage_exchange-a.png')}
             style={styles.logoSwap}
             resizeMode="contain"
           />
@@ -201,7 +184,7 @@ const HomeScreen = ({navigation }) => {
               }}
               style={styles.inputBox} >     
             <Image
-              source={require('./assets/location_on.png')}
+              source={require('./../assets/location_on.png')}
               style={styles.logoDate}
               resizeMode="contain"
             />
@@ -222,7 +205,7 @@ const HomeScreen = ({navigation }) => {
                          ]}>
 
             <Image
-              source={require('./assets/solar_calendar-bold.png')}
+              source={require('./../assets/solar_calendar-bold.png')}
               style={styles.logoDate}
               resizeMode="contain"
             />
@@ -235,7 +218,7 @@ const HomeScreen = ({navigation }) => {
                 <>
 
             <Image
-              source={require('./assets/Line 2.png')}
+              source={require('./../assets/Line 2.png')}
               style={styles.logoLine}
               resizeMode="contain"
             />
@@ -243,7 +226,7 @@ const HomeScreen = ({navigation }) => {
           style={styles.rowdepart}>
           
             <Image
-              source={require('./assets/solar_calendar-yellow.png')}
+              source={require('./../assets/solar_calendar-yellow.png')}
               style={styles.logoDate}
               resizeMode="contain"
             />
@@ -351,7 +334,7 @@ const HomeScreen = ({navigation }) => {
       Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
     </Text>
     <TouchableOpacity style={styles.PxploreButton}>
-      <Text style={styles.searchButtonText}>EXPLORE MORE  <Image source={require('./assets/IconExplo.png')} style={styles.iconExplo} /></Text>
+      <Text style={styles.searchButtonText}>EXPLORE MORE  <Image source={require('./../assets/IconExplo.png')} style={styles.iconExplo} /></Text>
     </TouchableOpacity>
   </View>
 
@@ -362,8 +345,8 @@ const HomeScreen = ({navigation }) => {
           <Image source={item.image} style={styles.cardImage} />
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-            <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
+            <Text style={styles.cardLocation}><Image source={require('./../assets/Iconlocation.png')} /> {item.location}</Text>
+            <Text style={styles.cardDuration}><Image source={require('./../assets/Icontime.png')} /> {item.duration}</Text>
             <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
           </View>
         </View>
@@ -381,8 +364,8 @@ const HomeScreen = ({navigation }) => {
       <Image source={item.image} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-        <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
+        <Text style={styles.cardLocation}><Image source={require('./../assets/Iconlocation.png')} /> {item.location}</Text>
+        <Text style={styles.cardDuration}><Image source={require('./../assets/Icontime.png')} /> {item.duration}</Text>
         <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
       </View>
     </View>
@@ -406,7 +389,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    padding: 0,
+    padding: 20,
   },
  
   logoDate: {
@@ -429,13 +412,11 @@ const styles = StyleSheet.create({
    borderRadius:30,
   },
   title: {
-    paddingLeft: 20,
-    fontSize: 18,
-    textAlign: 'left', // ชิดซ้าย
-    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#002348',
     marginBottom: 20,
-    flexWrap: 'wrap',
-    maxWidth: '60%', // จำกัดความกว้างของข้อความ
    
   },
   titledeal: {
@@ -449,7 +430,7 @@ const styles = StyleSheet.create({
     marginLeft: 20, // เพิ่มพื้นที่ห่างจากขอบซ้าย
 },
   highlight: {
-    color: 'white',
+    color: '#FD501E',
   
   },
   tabContainer: {
@@ -650,20 +631,6 @@ const styles = StyleSheet.create({
     margin: 10,
     width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
   },
-
-  cardContainerHeader: {
-    backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 30, 
-    borderBottomRightRadius: 30, 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    paddingTop: 30,
-    marginBottom: 10,
-    width: '100%', // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
-  },
   
 
   cardImage: {
@@ -715,11 +682,8 @@ const styles = StyleSheet.create({
      height: 12,
      width:12,
   },
-  background: {
-    width: '100%',
-    borderBottomLeftRadius: 30, 
-    borderBottomRightRadius: 30, 
-    overflow: 'hidden', // เพื่อให้การตัดมุมทำงานได้ถูกต้อง
+  background:{
+    width:'100%'
   },
   loadingContainer: {
     position: "absolute",
@@ -822,24 +786,7 @@ const styles = StyleSheet.create({
   activeText: {
     color: "#FFF",
   },
-  searcContain: {
-    flexDirection: 'row',
-    marginRight: 35,
-  },
-  searchBox: {
-    width: '90%',
-    height: 40,
-    borderColor: '#CCC',
-    borderWidth: 1,
-    borderRadius: 30,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginRight: 20,
-
-    color: '#333',
-  },
-
 })
-export default HomeScreen;
+export default HomePage;
 
    

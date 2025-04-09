@@ -422,10 +422,7 @@ const ResultScreen = ({ navigation, route }) => {
 
   const sendTicket = async () => {
     try {
-      const response = await axios.post(`${ipAddress}/send-ticket`, {
-        email: customerData.email,  // อีเมลผู้รับ
-        htmlContent: htmlContent,        // HTML ที่เราจะส่งไป
-      });
+      const response = await axios.post(`https://thetrago.com/ferry/sendticket/${customerData.bookingcode}`);
       console.log('Email sent successfully: ', response.data);
     } catch (error) {
       console.error('Error sending email: ', error);

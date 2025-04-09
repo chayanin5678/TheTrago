@@ -7,6 +7,7 @@ const CustomerContext = createContext();
 export const CustomerProvider = ({ children }) => {
   const [customerData, setCustomerData] = useState({
     bookingcode: '', //รหัสการจอง
+    bookingcodegroup: '', //รหัสการจอง
     groupcode: '', //
     Firstname: '', //ชื่อ
     Lastname: '', //นามสกุล
@@ -27,7 +28,7 @@ export const CustomerProvider = ({ children }) => {
     price:'', //ราคา
     total:0, //ราคารวม
     currency:'THB', //สกุลเงิน
-    net:'', //ราคาสุทธิ
+    netDepart:'', //ราคาสุทธิ
     adult:0, //จำนวนผู้ใหญ่
     child:0, //จำนวนเด็ก
     infant:0, //จำนวนทารก
