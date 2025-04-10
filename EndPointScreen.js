@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import ipAddress from './ipconfig';
 
 const EndPointScreen = ({ navigation, route }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredEndPoints, setFilteredEndPoints] = useState([]);
-  const [allEndPoints, setAllEndPoints] = useState([]); 
+  const [allEndPoints, setAllEndPoints] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   // รับค่า startingPointId จาก route.params
   const startingPointId = route.params?.startingPointId;
 
@@ -30,6 +30,8 @@ const EndPointScreen = ({ navigation, route }) => {
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
+      }).finally(() => {
+        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
   }, [startingPointId]);
 
@@ -80,7 +82,7 @@ const EndPointScreen = ({ navigation, route }) => {
           selectedItem?.id === item.md_timetable_endid && styles.selectedItemText,
         ]}
       >
-        {item.md_location_nameeng + ', ' + item.sys_countries_nameeng} 
+        {item.md_location_nameeng + ', ' + item.sys_countries_nameeng}
       </Text>
     </TouchableOpacity>
   );
@@ -96,12 +98,19 @@ const EndPointScreen = ({ navigation, route }) => {
           onChangeText={setSearchText}
         />
       </View>
-      <FlatList
-        data={filteredEndPoints}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.md_timetable_endid.toString()}
-        style={styles.list}
-      />
+      {loading && (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#FD501E" />
+        </View>
+      )}
+      {!loading && allEndPoints && filteredEndPoints && (
+        <FlatList
+          data={filteredEndPoints}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.md_timetable_endid.toString()}
+          style={styles.list}
+        />
+      )}
     </View>
   );
 };
@@ -165,6 +174,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loaderContainer: {
+    flex: 1, // ทำให้ View ครอบคลุมพื้นที่ทั้งหมด
+    justifyContent: 'center', // จัดตำแหน่งแนวตั้งให้อยู่ตรงกลาง
+    alignItems: 'center', // จัดตำแหน่งแนวนอนให้อยู่ตรงกลาง
   },
 });
 

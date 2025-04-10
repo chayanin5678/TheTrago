@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, Animated, ActivityIndicator } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
@@ -39,11 +39,12 @@ const SearchFerry = ({ navigation, route }) => {
   const contentHeights = useRef({}).current;
   const [isonewaystatus, setIsonewaystatus] = useState(false);
   const [isroudstatus, setIsroudstatus] = useState(false);
-  
+
   const [departureDate, setDepartureDate] = useState(detaDepart);
   const [returnDate, setReturnDate] = useState(detaReturn);
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
+  const [loading, setLoading] = useState(true);
   const day = formattedDateDepart.substring(8, 10);
   console.log(day);
   const month = formattedDateDepart.substring(5, 7);
@@ -219,7 +220,7 @@ const SearchFerry = ({ navigation, route }) => {
     setTripTypeSearch(tripType);
     setIsonewaystatus(false);
     setIsroudstatus(false);
-  }, [startingPoint, endPoint, departureDate, returnDate, tripType,adults,children]);
+  }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children]);
 
 
 
@@ -244,6 +245,8 @@ const SearchFerry = ({ navigation, route }) => {
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
+      }).finally(() => {
+        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
   };
 
@@ -265,6 +268,8 @@ const SearchFerry = ({ navigation, route }) => {
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
+      }).finally(() => {
+        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
   };
 
@@ -585,7 +590,13 @@ const SearchFerry = ({ navigation, route }) => {
         </TouchableOpacity> */}
 
         {/* แสดงรายการแต่ละหน้า */}
-
+        {loading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#FD501E" />
+          </View>
+        )}
+          {!loading && pagedDataDepart  && pagedDataReturn && ( 
+            <>
         {tripTypeSearch === 'One Way Trip' && (
           <>
             {pagedDataDepart.map((item, index) => (
@@ -600,9 +611,9 @@ const SearchFerry = ({ navigation, route }) => {
                     style={styles.background}>
                     <View style={styles.headerRow}>
                       <View style={styles.inputBoxCol}>
-                      <Image
+                        <Image
                           source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%')}}
+                          style={{ width: wp('10.6%'), height: hp('5%') }}
                           resizeMode="cover"
                         />
 
@@ -667,19 +678,19 @@ const SearchFerry = ({ navigation, route }) => {
                             departdate: formattedDateDepart,
                             timeTableDepartId: item.md_timetable_id,
                             startingPointId: startingPoint.id,
-                            startingpoint_name:startingPoint.name,
+                            startingpoint_name: startingPoint.name,
                             endPointId: endPoint.id,
                             endpoint_name: endPoint.name,
                             companyDepartId: item.md_timetable_companyid,
                             pierStartDepartId: item.md_timetable_pierstart,
                             pierEndDepartId: item.md_timetable_pierend,
                             netDepart: item.md_timetable_netadult,
-                            adult:adults,
-                            child:children,
-                            infant:infant,
-                            timetableReturn:item.md_timetable_id,
-                            piccompanyDepart:item.md_company_picname,
-                            pictimetableDepart:item.md_timetabledetail_picname1,
+                            adult: adults,
+                            child: children,
+                            infant: infant,
+                            timetableReturn: item.md_timetable_id,
+                            piccompanyDepart: item.md_company_picname,
+                            pictimetableDepart: item.md_timetabledetail_picname1,
 
                           });
 
@@ -712,6 +723,7 @@ const SearchFerry = ({ navigation, route }) => {
               </View>
             ))}
           </>)}
+        
 
         {tripTypeSearch === 'Return Trip' && (
           <>
@@ -751,7 +763,7 @@ const SearchFerry = ({ navigation, route }) => {
             </View>
             {tripTypeSearchResult === 'Depart Trip' && (<>
               {pagedDataDepart.map((item, index) => (
-                  <View key={index} style={styles.cardContainer} >
+                <View key={index} style={styles.cardContainer} >
                   <TouchableOpacity
                     onPress={() => {
                       toggleDetails(item.md_timetable_id);
@@ -762,11 +774,11 @@ const SearchFerry = ({ navigation, route }) => {
                       style={styles.background}>
                       <View style={styles.headerRow}>
                         <View style={styles.inputBoxCol}>
-                        <Image
-                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%')}}
-                          resizeMode="cover"
-                        />
+                          <Image
+                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                            style={{ width: wp('10.6%'), height: hp('5%') }}
+                            resizeMode="cover"
+                          />
                           <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                         </View>
                         <View style={styles.tagContainer}>
@@ -774,7 +786,7 @@ const SearchFerry = ({ navigation, route }) => {
                           <Text style={styles.tag}>{tripTypeSearchResult}</Text>
                         </View>
                       </View>
-  
+
                       <View style={styles.detailsRow}>
                         <View style={styles.locationContainer}>
                           <Text style={styles.location}>{item.start_location_name}</Text>
@@ -782,7 +794,7 @@ const SearchFerry = ({ navigation, route }) => {
                           <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
                           <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
                         </View>
-  
+
                         <View style={styles.middleContainer}>
                           <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
                           <View style={styles.iconLineContainer}>
@@ -794,7 +806,7 @@ const SearchFerry = ({ navigation, route }) => {
                           </View>
                           <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                         </View>
-  
+
                         <View style={styles.locationContainer}>
                           <Text style={styles.location}>{item.end_location_name}</Text>
                           <Text style={styles.subtext}>{item.name_pierend}</Text>
@@ -802,7 +814,7 @@ const SearchFerry = ({ navigation, route }) => {
                           <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
                         </View>
                       </View>
-  
+
                       <View style={styles.TicketRow}>
                         <View style={styles.circleContainerLeft}>
                           <View style={styles.circleLeft1}></View>
@@ -814,50 +826,50 @@ const SearchFerry = ({ navigation, route }) => {
                           <View style={styles.circleRight2}></View>
                         </View>
                       </View>
-  
+
                       <View style={styles.footerRow}>
                         <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
                         <TouchableOpacity
-                      style={styles.bookNowButton}
-                      onPress={() => {
-                        // Update customer data
-                        setIsonewaystatus(true);
-                        updateCustomerData({
-                          roud: 2,
-                          day: day,
-                          month: month,
-                          year: year,
-                          departdate: formattedDateDepart,
-                          returnDate: formattedDateReturn,
-                          timeTableDepartId: item.md_timetable_id,
-                          startingPointId: startingPoint.id,
-                          startingpoint_name: startingPoint.name,
-                          endPointId: endPoint.id,
-                          endpoint_name: endPoint.name,
-                          companyDepartId: item.md_timetable_companyid,
-                          pierStartDepartId: item.md_timetable_pierstart,
-                          pierEndDepartId: item.md_timetable_pierend,
-                          netDepart: item.md_timetable_netadult,
-                          adult:adults,
-                          child:children,
-                          infant:infant,
-                          piccompanyDepart:item.md_company_picname,
-                          pictimetableDepart:item.md_timetabledetail_picname1,
+                          style={styles.bookNowButton}
+                          onPress={() => {
+                            // Update customer data
+                            setIsonewaystatus(true);
+                            updateCustomerData({
+                              roud: 2,
+                              day: day,
+                              month: month,
+                              year: year,
+                              departdate: formattedDateDepart,
+                              returnDate: formattedDateReturn,
+                              timeTableDepartId: item.md_timetable_id,
+                              startingPointId: startingPoint.id,
+                              startingpoint_name: startingPoint.name,
+                              endPointId: endPoint.id,
+                              endpoint_name: endPoint.name,
+                              companyDepartId: item.md_timetable_companyid,
+                              pierStartDepartId: item.md_timetable_pierstart,
+                              pierEndDepartId: item.md_timetable_pierend,
+                              netDepart: item.md_timetable_netadult,
+                              adult: adults,
+                              child: children,
+                              infant: infant,
+                              piccompanyDepart: item.md_company_picname,
+                              pictimetableDepart: item.md_timetabledetail_picname1,
 
-                        });
+                            });
 
 
-                        // Check if round trip status is true before navigating
-                        if (isroudstatus) {
-                          navigation.navigate('TripDetail');
-                        } else {
-                          settripTypeSearchResult("Return Trip");
-                        }
-                      }}
-                    >
-                      <Text style={styles.bookNowText}>Book Now</Text>
+                            // Check if round trip status is true before navigating
+                            if (isroudstatus) {
+                              navigation.navigate('TripDetail');
+                            } else {
+                              settripTypeSearchResult("Return Trip");
+                            }
+                          }}
+                        >
+                          <Text style={styles.bookNowText}>Book Now</Text>
 
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                       </View>
                       {item.md_timetable_remarkeng && (
                         <View style={styles.remarkContainer}>
@@ -867,143 +879,145 @@ const SearchFerry = ({ navigation, route }) => {
                           </Text>
                         </View>
                       )}
-  
+
                       <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
                         <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
                         <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                      />
+                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                        />
                       </Animated.View>
-  
-  
-  
+
+
+
                     </ImageBackground>
                   </TouchableOpacity>
                 </View>
-             
+
               ))}
             </>)}
             {tripTypeSearchResult === 'Return Trip' && (<>
               {pagedDataReturn.map((item, index) => (
-                 <View key={index} style={styles.cardContainer} >
-                 <TouchableOpacity
-                   onPress={() => {
-                     toggleDetails(item.md_timetable_id);
-                   }}
-                 >
-                   <ImageBackground
-                     source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                     style={styles.background}>
-                     <View style={styles.headerRow}>
-                       <View style={styles.inputBoxCol}>
-                       <Image
-                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%')}}
-                          resizeMode="cover"
+                <View key={index} style={styles.cardContainer} >
+                  <TouchableOpacity
+                    onPress={() => {
+                      toggleDetails(item.md_timetable_id);
+                    }}
+                  >
+                    <ImageBackground
+                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                      style={styles.background}>
+                      <View style={styles.headerRow}>
+                        <View style={styles.inputBoxCol}>
+                          <Image
+                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                            style={{ width: wp('10.6%'), height: hp('5%') }}
+                            resizeMode="cover"
+                          />
+                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
+                        </View>
+                        <View style={styles.tagContainer}>
+                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
+                          <Text style={styles.tag}>{tripTypeSearchResult}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.detailsRow}>
+                        <View style={styles.locationContainer}>
+                          <Text style={styles.location}>{item.start_location_name}</Text>
+                          <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                          <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                          <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
+                        </View>
+
+                        <View style={styles.middleContainer}>
+                          <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                          <View style={styles.iconLineContainer}>
+                            <View style={styles.dashedLine} />
+                            <View style={styles.shipIcon}>
+                              <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                            </View>
+                            <View style={styles.dashedLine} />
+                          </View>
+                          <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                        </View>
+
+                        <View style={styles.locationContainer}>
+                          <Text style={styles.location}>{item.end_location_name}</Text>
+                          <Text style={styles.subtext}>{item.name_pierend}</Text>
+                          <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                          <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.TicketRow}>
+                        <View style={styles.circleContainerLeft}>
+                          <View style={styles.circleLeft1}></View>
+                          <View style={styles.circleLeft2}></View>
+                        </View>
+                        <View style={styles.dashedLineTicket} />
+                        <View style={styles.circleContainerRight}>
+                          <View style={styles.circleRight1}></View>
+                          <View style={styles.circleRight2}></View>
+                        </View>
+                      </View>
+
+                      <View style={styles.footerRow}>
+                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                        <TouchableOpacity
+                          style={styles.bookNowButton}
+                          onPress={() => {
+                            setIsroudstatus(true);
+                            updateCustomerData({
+                              returndate: formattedDateReturn,
+                              timeTableReturnId: item.md_timetable_id,
+                              companyReturnId: item.md_timetable_companyid,
+                              pierStartReturntId: item.md_timetable_pierstart,
+                              pierEndReturntId: item.md_timetable_pierend,
+                              piccompanyReturn: item.md_company_picname,
+                              pictimetableReturn: item.md_timetabledetail_picname1,
+                            });
+
+                            // Check if round trip status is true before navigating
+                            if (isonewaystatus) {
+                              navigation.navigate('TripDetail');
+                            } else {
+                              settripTypeSearchResult("Depart Trip");
+                            }
+                          }}
+                        >
+                          <Text style={styles.bookNowText}>Book Now</Text>
+
+                        </TouchableOpacity>
+                      </View>
+                      {item.md_timetable_remarkeng && (
+                        <View style={styles.remarkContainer}>
+                          <Text style={styles.remarkText}>
+                            <Text style={styles.remarkLabel}>Remark: </Text>
+                            {item.md_timetable_remarkeng}
+                          </Text>
+                        </View>
+                      )}
+
+                      <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
+                        <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
+                        <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
                         />
-                         <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                       </View>
-                       <View style={styles.tagContainer}>
-                         <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                         <Text style={styles.tag}>{tripTypeSearchResult}</Text>
-                       </View>
-                     </View>
- 
-                     <View style={styles.detailsRow}>
-                       <View style={styles.locationContainer}>
-                         <Text style={styles.location}>{item.start_location_name}</Text>
-                         <Text style={styles.subtext}>{item.name_pierstart}</Text>
-                         <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                         <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
-                       </View>
- 
-                       <View style={styles.middleContainer}>
-                         <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
-                         <View style={styles.iconLineContainer}>
-                           <View style={styles.dashedLine} />
-                           <View style={styles.shipIcon}>
-                             <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
-                           </View>
-                           <View style={styles.dashedLine} />
-                         </View>
-                         <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                       </View>
- 
-                       <View style={styles.locationContainer}>
-                         <Text style={styles.location}>{item.end_location_name}</Text>
-                         <Text style={styles.subtext}>{item.name_pierend}</Text>
-                         <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                         <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
-                       </View>
-                     </View>
- 
-                     <View style={styles.TicketRow}>
-                       <View style={styles.circleContainerLeft}>
-                         <View style={styles.circleLeft1}></View>
-                         <View style={styles.circleLeft2}></View>
-                       </View>
-                       <View style={styles.dashedLineTicket} />
-                       <View style={styles.circleContainerRight}>
-                         <View style={styles.circleRight1}></View>
-                         <View style={styles.circleRight2}></View>
-                       </View>
-                     </View>
- 
-                     <View style={styles.footerRow}>
-                       <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
-                       <TouchableOpacity
-                      style={styles.bookNowButton}
-                      onPress={() => {
-                        setIsroudstatus(true);
-                        updateCustomerData({
-                          returndate: formattedDateReturn,
-                          timeTableReturnId: item.md_timetable_id,
-                          companyReturnId: item.md_timetable_companyid,
-                          pierStartReturntId: item.md_timetable_pierstart,
-                          pierEndReturntId: item.md_timetable_pierend,
-                          piccompanyReturn:item.md_company_picname,
-                          pictimetableReturn:item.md_timetabledetail_picname1,
-                        });
+                      </Animated.View>
 
-                        // Check if round trip status is true before navigating
-                        if (isonewaystatus) {
-                          navigation.navigate('TripDetail');
-                        } else {
-                            settripTypeSearchResult("Depart Trip");
-                        }
-                      }}
-                    >
-                     <Text style={styles.bookNowText}>Book Now</Text>
 
-                   </TouchableOpacity>
-                     </View>
-                     {item.md_timetable_remarkeng && (
-                       <View style={styles.remarkContainer}>
-                         <Text style={styles.remarkText}>
-                           <Text style={styles.remarkLabel}>Remark: </Text>
-                           {item.md_timetable_remarkeng}
-                         </Text>
-                       </View>
-                     )}
- 
-                     <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
-                       <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                       <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                      />
-                     </Animated.View>
- 
- 
- 
-                   </ImageBackground>
-                 </TouchableOpacity>
-               </View>
 
-            
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+
+
               ))}
 
             </>)}
           </>)}
+          </>
+          )}
 
         {/* ปุ่มสำหรับการเปลี่ยนหน้า */}
         {tripTypeSearchResult === 'Depart Trip' && (<>

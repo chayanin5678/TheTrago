@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import ipAddress from './ipconfig';
 
 const StartingPointScreen = ({ navigation, route }) => {
   const [startingPoint, setStartingPoint] = useState('Phuket');
   const [searchText, setSearchText] = useState('');
   const [filteredStartingPoints, setFilteredStartingPoints] = useState([]);
-  const [allStartingPoints, setAllStartingPoints] = useState([]); 
+  const [allStartingPoints, setAllStartingPoints] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);  // ตั้งค่า loading เป็น true ก่อนการทำงาน
+
     fetch(`${ipAddress}/start`)
       .then((response) => {
         if (!response.ok) {
@@ -19,7 +22,7 @@ const StartingPointScreen = ({ navigation, route }) => {
       })
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setAllStartingPoints(data.data); 
+          setAllStartingPoints(data.data);
           setFilteredStartingPoints(data.data);
         } else {
           console.error('Data is not an array', data);
@@ -28,8 +31,12 @@ const StartingPointScreen = ({ navigation, route }) => {
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
+      })
+      .finally(() => {
+        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
-  }, []); 
+  }, []);
+
 
   useEffect(() => {
     if (searchText) {
@@ -41,14 +48,14 @@ const StartingPointScreen = ({ navigation, route }) => {
       setFilteredStartingPoints(allStartingPoints);
     }
   }, [searchText, allStartingPoints]);
-  
+
 
   const handleSelectStartingPoint = (selectedPoint) => {
     setStartingPoint(selectedPoint);
     setSelectedItem({
       name: selectedPoint.md_location_nameeng,
       id: selectedPoint.md_location_id,
-    }); 
+    });
 
     // บันทึกค่าและย้อนกลับหน้าก่อน
     handleSave({
@@ -67,16 +74,16 @@ const StartingPointScreen = ({ navigation, route }) => {
       console.warn('No previous screen to go back to');
     }
   };
-  
-  
+
+
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.item,
         selectedItem?.id === item.md_location_id && styles.selectedItem,
       ]}
-      onPress={() => handleSelectStartingPoint(item)} 
+      onPress={() => handleSelectStartingPoint(item)}
     >
       <Text
         style={[
@@ -90,12 +97,13 @@ const StartingPointScreen = ({ navigation, route }) => {
   );
 
   const getItemLayout = (data, index) => ({
-    length: 60, 
-    offset: 60 * index, 
+    length: 60,
+    offset: 60 * index,
     index,
   });
 
   return (
+
     <View style={styles.container}>
       <Text style={styles.title}>Select Starting Point</Text>
       <View style={styles.searchContainer}>
@@ -103,16 +111,23 @@ const StartingPointScreen = ({ navigation, route }) => {
           style={styles.searchInput}
           placeholder="Search starting point..."
           value={searchText}
-          onChangeText={setSearchText}  
+          onChangeText={setSearchText}
         />
       </View>
-      <FlatList
-        data={filteredStartingPoints}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.md_location_id.toString()}
-        getItemLayout={getItemLayout}
-        style={styles.list}
-      />
+      {loading && (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#FD501E" />
+        </View>
+      )}
+      {!loading && allStartingPoints && filteredStartingPoints && (
+        <FlatList
+          data={filteredStartingPoints}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.md_location_id.toString()}
+          getItemLayout={getItemLayout}
+          style={styles.list}
+        />
+      )}
     </View>
   );
 };
@@ -120,7 +135,6 @@ const StartingPointScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
@@ -176,6 +190,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loaderContainer: {
+    flex: 1, // ทำให้ View ครอบคลุมพื้นที่ทั้งหมด
+    justifyContent: 'center', // จัดตำแหน่งแนวตั้งให้อยู่ตรงกลาง
+    alignItems: 'center', // จัดตำแหน่งแนวนอนให้อยู่ตรงกลาง
   },
 });
 
