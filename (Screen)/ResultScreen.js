@@ -430,8 +430,10 @@ const ResultScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    
-    sendTicket();  
+    if (success) {
+      sendTicket();
+    }
+
   }, []);
 
   const printTicket = async () => {

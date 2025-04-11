@@ -1,46 +1,77 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert } from "react-native";
 import axios from "axios";
 import ipAddress from "../ipconfig";
 import { useCustomer } from './CustomerContext';
-import * as FileSystem from 'expo-file-system'; // ใช้ expo-file-system แทน react-native-fs
+import * as FileSystem from 'expo-file-system';
+import moment from "moment-timezone";
 
 export default function PromptPayScreen({ route, navigation }) {
-  const { Paymenttotal } = route.params;
+  const { Paymenttotal ,selectedOption} = route.params;
   const [chargeid, setChargeid] = useState(null);
   const [qrUri, setQrUri] = useState(null);
   const [loading, setLoading] = useState(true);
   const { customerData, updateCustomerData } = useCustomer();
   const [qrpayment, setqrpayment] = useState(Paymenttotal * 100);
-  console.log("Paymenttotal", qrpayment);
+  const [intervalId, setIntervalId] = useState(null); // เก็บค่า intervalId
+  const [bookingcode, setBookingcode] = useState([]);
+  const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
+  const booking_code = bookingcode.length > 0
+  ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
+  : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
+const booking_codeGroup = bookingcodeGroup.length > 0
+  ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
+  : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
 
-
+  
 
   useEffect(() => {
-    const loadQR = async () => {
+   
+
+  }, [bookingcode]);
+
+  useEffect(() => {
+    const loadAll = async () => {
       try {
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
           amount: 3000,
           currency: "thb",
-          //  return_uri: `${ipAddress}/redirect`,
         });
+  
         setChargeid(response.data.charge_id);
         setQrUri(response.data.qr_code);
-        console.log("✅ QR URI:", response.data.qr_code);
+  
+        // ✅ โหลด booking code
+        const res1 = await fetch(`${ipAddress}/bookingcode`);
+        const data1 = await res1.json();
+        const bookingCodeNumber = parseInt(data1?.data?.[0]?.booking_code || "0") + 1;
+        const newBookingCode = "TG" + bookingCodeNumber;
+  
+        let newGroupBookingCode = null;
+        if (customerData.roud === 2) {
+          const res2 = await fetch(`${ipAddress}/bookingcodegroup`);
+          const data2 = await res2.json();
+          const bookingGroupCodeNumber = parseInt(data2?.data?.[0]?.booking_codegroup || "0") + 1;
+           newGroupBookingCode = "TG" + bookingGroupCodeNumber;
+        }
+  
+        // ✅ สร้าง booking โดยใช้ booking code ที่ได้จริง
+        await createBooking(response.data.charge_id, newBookingCode, newGroupBookingCode);
+        await createPassenger(newBookingCode);
+  
       } catch (error) {
-        console.error("❌ โหลด QR ล้มเหลว:", error);
+        console.error("❌ Error in loadAll:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    loadQR();
-
-  }, [qrpayment]); // เพิ่ม chargeid ใน dependencies
+  
+    loadAll();
+  }, [qrpayment]);
+    // เพิ่ม qrpayment เพื่อให้ `loadQR` ทำงานเมื่อ qrpayment เปลี่ยนแปลง
 
   useEffect(() => {
     const checkPayment = async () => {
-      if (chargeid) {
       try {
         console.log("Charge ID:", chargeid);
         // ทำการตรวจสอบสถานะการชำระเงิน
@@ -48,22 +79,30 @@ export default function PromptPayScreen({ route, navigation }) {
           charge_id: chargeid,
         });
 
-        if (res.data.success && res.data.status === "successful") {  // ตรวจสอบสถานะ successful
+        console.log("Payment Status Response:", res.data);
+
+        if (res.data.success && res.data.status === "successful") {
           navigation.navigate("ResultScreen", { success: true });
-        }else{
-          checkPayment();
+          clearInterval(intervalId); // หยุดการทำงานของ setInterval
         }
       } catch (error) {
         console.error("Error during payment check:", error);
       }
     };
 
-    checkPayment();
-  }
-  
-  }, [chargeid, qrUri]);  // ทำงานเมื่อ `chargeid` หรือ `qrUri` เปลี่ยนแปลง
+    if (chargeid) {  // ตรวจสอบว่ามี chargeid หรือไม่ก่อนเริ่มต้น
+      // เรียกเช็คสถานะการชำระเงินทุกๆ 2 วินาที (2000ms)
+      const id = setInterval(() => {
+        checkPayment();
+      }, 2000);
 
-  // ฟังก์ชันสำหรับบันทึก QR ลงเครื่อง
+      setIntervalId(id); // เก็บ intervalId ไว้ใน state
+
+      // ทำความสะอาดเมื่อ component ถูก unmount หรือสถานะการชำระเงินสำเร็จ
+      return () => clearInterval(id);  // ทำความสะอาดเมื่อ component unmount หรือ status เป็น "successful"
+    }
+  }, [chargeid]);  // ทำงานเมื่อ `chargeid` เปลี่ยนแปลง
+
   const saveQRToFile = async () => {
     try {
       if (!qrUri) {
@@ -88,17 +127,88 @@ export default function PromptPayScreen({ route, navigation }) {
   };
 
   
+  const createBooking = async (paymentCode, bookingCode, groupBookingCode) => {
+    try {
+      console.log("📌 Creating Booking with:", bookingCode, groupBookingCode);
+      await axios.post(`${ipAddress}/booking`, {
+        md_booking_code: bookingCode,
+        md_booking_groupcode: groupBookingCode,
+        md_booking_paymentid: paymentCode,
+        md_booking_companyid: customerData.companyDepartId,
+        md_booking_boattypeid: customerData.boatypeid,
+        md_booking_country: customerData.country,
+        md_booking_countrycode: customerData.countrycode,
+        md_booking_round: customerData.roud,
+        md_booking_timetableid: customerData.timeTableDepartId,
+        md_booking_tel: customerData.tel,
+        md_booking_whatsapp: 0,
+        md_booking_email: customerData.email,
+        md_booking_price: customerData.subtotalDepart,
+        md_booking_total: Paymenttotal,
+        md_booking_refund: 0,
+        md_booking_refundprice: 0,
+        md_booking_credit: 0,
+        md_booking_currency: customerData.currency,
+        md_booking_net: customerData.netDepart,
+        md_booking_adult: customerData.adult,
+        md_booking_child: customerData.child,
+        md_booking_infant: customerData.infant,
+        md_booking_day: customerData.day,
+        md_booking_month: customerData.month,
+        md_booking_year: customerData.year,
+        md_booking_time: customerData.time,
+        md_booking_date: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+        md_booking_departdate: customerData.departdate,
+        md_booking_departtime: customerData.departtime,
+        md_booking_statuspayment: 0,
+        md_booking_status: 0,
+        md_booking_pay: customerData.paymenttype,
+        md_booking_payfee: customerData.paymentfee,
+        md_booking_lang: 'en',
+        md_booking_from: 0,
+        md_booking_device: 2,
+        md_booking_promoprice: 0,
+        md_booking_credate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+        md_booking_updatedate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+      });
+  
+      console.log("✅ Booking created successfully");
+    } catch (error) {
+      console.error("❌ Error submitting booking:", error);
+    }
+  };
 
-  function formatNumberWithComma(value) {
-    if (!value) return "0.00";
-    const formattedValue = Number(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+  const createPassenger = async (bookingCode) => {
+    try {
+      console.log("📌 Creating Booking with:", bookingCode);
+      await axios.post(`${ipAddress}/passenger`, {
+        md_passenger_bookingcode : bookingCode, 
+        md_passenger_prefix : customerData.selectedTitle,
+        md_passenger_fname : customerData.Firstname, 
+        md_passenger_lname : customerData.Lastname,
+        md_passenger_idtype : 0, 
+        md_passenger_nationality : customerData.country,
+    
+      });
+  
+      console.log("✅ Booking created successfully");
+    } catch (error) {
+      console.error("❌ Error submitting booking:", error);
+    }
+  };
+  
+  const handlePress = () => {
+    // หยุด setInterval เมื่อปุ่มถูกกด
+    if (intervalId) {
+      clearInterval(intervalId);  // หยุด setInterval เมื่อกดปุ่ม
+      console.log('Interval stopped');
+    }
 
-    console.log("Formatted Value:", formattedValue);
-    return formattedValue;
-  }
+    // นำทางไปยังหน้าจอ ResultScreen พร้อมข้อมูล success: false
+    navigation.navigate('ResultScreen', { success: false });
+  };
+
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -111,23 +221,23 @@ export default function PromptPayScreen({ route, navigation }) {
             style={styles.qr}
             resizeMode="contain"
           />
-          <Text style={styles.text}>฿ {formatNumberWithComma(Paymenttotal)}</Text>
+          <Text style={styles.text}>฿ {Paymenttotal}</Text>
         </>
       )}
 
       <View style={styles.rowButton}>
         <TouchableOpacity
           style={styles.BackButton}
-          onPress={() => navigation.navigate("ResultScreen", { success: true })}  // เรียกใช้ฟังก์ชัน saveQRToFile เมื่อกดปุ่ม
+          onPress={saveQRToFile}  // ใช้ฟังก์ชันห่อหุ้มเพื่อให้ทำงานเมื่อผู้ใช้กด
         >
-          <Text style={styles.BackButtonText}>Go Back</Text>
+          <Text style={styles.BackButtonText}>Save QR</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.ActionButton}
-          onPress={saveQRToFile}  // ใช้ฟังก์ชันห่อหุ้มเพื่อให้ทำงานเมื่อผู้ใช้กด
+          onPress={handlePress}  // ใช้ฟังก์ชันห่อหุ้มเพื่อให้ทำงานเมื่อผู้ใช้กด
         >
-          <Text style={styles.searchButtonText}>Save QR</Text>
+          <Text style={styles.searchButtonText}>Paid</Text>
         </TouchableOpacity>
 
       </View>

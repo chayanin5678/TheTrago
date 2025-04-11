@@ -43,6 +43,7 @@ export const CustomerProvider = ({ children }) => {
     subtotalDepart:0, //ราคารวม
     subtotalReturn:0, //ราคารวม
     ticketfare:0, //ค่าโดยสาร
+    paymenttype:'', //ประเภทการชำระเงิน 
     paymentfee:0, //ค่าธรรมเนียมการชำระ
     day:'', //วัน
     month:'', //เดือน

@@ -122,7 +122,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const fetchBookingCodeGroup = async () => {
     try {
-      const response = await fetch(`${ipAddress}/bookingcode`);
+      const response = await fetch(`${ipAddress}/bookingcodegroup`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -322,7 +322,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const handlePaymentPromptpay = async () => {
 
    
-
     setIsLoading(true);
     console.log("🔄 Loading started...");
 
@@ -332,7 +331,10 @@ const PaymentScreen = ({ navigation, route }) => {
       }
       console.log("📌 Updating Customer Data with Booking Code:", booking_code);
      
-    
+      updateCustomerData({
+        paymentfee: paymentfee,
+        paymenttype: selectedOption,
+      });
       setIsLoading(false);
       console.log("✅ Loading stopped...");
       navigation.navigate("PromptPayScreen", { Paymenttotal: totalPayment });
