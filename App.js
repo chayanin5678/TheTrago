@@ -5,9 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet } from 'react-native';
 import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 
 // Import หน้าต่างๆ
-import * as SplashScreen from 'expo-splash-screen';
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
@@ -19,6 +19,7 @@ import ResultScreen from './(Screen)/ResultScreen';
 import { CustomerProvider } from './(Screen)/CustomerContext';
 import LinkingConfiguration from './(Screen)/linking';
 import PromptPayScreen from './(Screen)/PromptPayQR';
+import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -100,6 +101,7 @@ export default function App() {
   return (
     <NavigationContainer linking={LinkingConfiguration}>
       <CustomerProvider>
+       <SplashScreenComponent />
         <MainNavigator />
       </CustomerProvider>
     </NavigationContainer>

@@ -309,6 +309,7 @@ const PaymentScreen = ({ navigation, route }) => {
         bookingcodegroup: booking_codeGroup,
       });
       createBooking(paymentResult.charge_id);
+      createPassenger(booking_code);
       setIsLoading(false);
       console.log("✅ Loading stopped...");
 
@@ -394,6 +395,25 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("❌ Error submitting booking:", error);
       throw new Error("❌ Failed to create booking");
+    }
+  };
+
+  const createPassenger = async (bookingCode) => {
+    try {
+      console.log("📌 Creating Booking with:", bookingCode);
+      await axios.post(`${ipAddress}/passenger`, {
+        md_passenger_bookingcode : bookingCode, 
+        md_passenger_prefix : customerData.selectedTitle,
+        md_passenger_fname : customerData.Firstname, 
+        md_passenger_lname : customerData.Lastname,
+        md_passenger_idtype : 0, 
+        md_passenger_nationality : customerData.country,
+    
+      });
+  
+      console.log("✅ Booking created successfully");
+    } catch (error) {
+      console.error("❌ Error submitting booking:", error);
     }
   };
 

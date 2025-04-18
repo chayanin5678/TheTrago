@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, use } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; 
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, Animated, ActivityIndicator } from 'react-native';
@@ -7,6 +8,7 @@ import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
 import moment from 'moment';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { CalendarList } from 'react-native-calendars';
 
 const itemsPerPage = 5;
 
@@ -15,8 +17,7 @@ const SearchFerry = ({ navigation, route }) => {
   const { customerData, updateCustomerData } = useCustomer();
   const [detaDepart, setDetaDepart] = useState(new Date(customerData.departdate)); // แปลงวันที่จาก input
   const [detaReturn, setDetaReturn] = useState(new Date(customerData.returndate)); // แปลงวันที่จาก input
-  const formattedDateDepart = detaDepart.toISOString().split('T')[0];
-  const formattedDateReturn = detaReturn.toISOString().split('T')[0];
+
   const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,12 +46,70 @@ const SearchFerry = ({ navigation, route }) => {
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
   const [loading, setLoading] = useState(true);
-  const day = formattedDateDepart.substring(8, 10);
-  console.log(day);
-  const month = formattedDateDepart.substring(5, 7);
-  console.log(month);
-  const year = formattedDateDepart.substring(0, 4);
-  console.log(year);
+ 
+  const [showModal, setShowModal] = useState(false);
+  const [calendarStartDate, setCalendarStartDate] = useState(customerData.departdate); // string
+  const [calendarEndDate, setCalendarEndDate] = useState(customerData.returndate); // string
+
+  const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
+  const day = calendarStartDate?.substring(8, 10) || "";
+  console.log("day", day);
+  const month = calendarStartDate?.substring(5, 7) || "";
+  console.log("month", month);
+  const year = calendarStartDate?.substring(0, 4) || "";
+  console.log("year", year);
+  // ฟังก์ชันสำหรับเลือกวัน
+  const onCalendarDayPress = (day) => {
+    if (!calendarStartDate || calendarEndDate) {
+      setCalendarStartDate(day.dateString);
+      setCalendarEndDate(null);
+      setCalendarMarkedDates({
+        [day.dateString]: {
+          startingDay: true,
+          color: '#FD501E',
+          textColor: 'white',
+        },
+      });
+    } else {
+      const range = getMarkedDatesRange(calendarStartDate, day.dateString);
+      setCalendarEndDate(day.dateString);
+      setCalendarMarkedDates(range);
+    }
+  };
+
+  const getMarkedDatesRange = (start, end) => {
+    let dates = {};
+    let current = new Date(start);
+    const last = new Date(end);
+
+    while (current <= last) {
+      const dateStr = current.toISOString().split('T')[0];
+      dates[dateStr] = {
+        color: '#FD501E',
+        textColor: 'white',
+      };
+      if (dateStr === start) dates[dateStr].startingDay = true;
+      if (dateStr === end) dates[dateStr].endingDay = true;
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
+  // ยืนยันการเลือกวัน
+  const handleCalendarConfirm = () => {
+    if (tripType === 'One Way Trip' && calendarStartDate) {
+      console.log('Selected Departure Date:', calendarStartDate);
+      setDepartureDate(new Date(calendarStartDate));
+      setShowModal(false);
+    } else if (tripType === 'Return Trip' && calendarStartDate && calendarEndDate) {
+      setDepartureDate(new Date(calendarStartDate));
+      setReturnDate(new Date(calendarEndDate));
+      setShowModal(false);
+    } else {
+      alert('กรุณาเลือกวันที่ให้ครบ');
+    }
+  };
+
 
 
 
@@ -218,40 +277,48 @@ const SearchFerry = ({ navigation, route }) => {
     setDetaDepart(departureDate);
     setDetaReturn(returnDate);
     setTripTypeSearch(tripType);
-    setIsonewaystatus(false);
-    setIsroudstatus(false);
   }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children]);
-
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      setIsonewaystatus(false);  // Reset the one-way status
+      setIsroudstatus(false);    // Reset the round trip status
+    }, [])
+  );
 
 
   const handleSearchStart = () => {
 
 
-    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${formattedDateDepart}`)
-      .then((response) => {
-        if (!response.ok) {
+    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}`)
+  .then((response) => {
+    if (!response.ok) {
+      // Logging response status for more details
+      console.error(`HTTP error! status: ${response.status}`);
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then((data) => {
+    if (data && Array.isArray(data.data)) {
+      setTimetableDepart(data.data);
+    } else {
+      console.error('Data is not in expected format', data);
+      setTimetableDepart([]);
+    }
+  })
+  .catch((error) => {
+    console.error('Error fetching data:', error.message);
+    // Handle error display or retry logic here
+  })
+  .finally(() => {
+    setLoading(false); // Ensure loading is turned off after request is complete
+  });
 
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setTimetableDepart(data.data);
-        } else {
-          console.error('Data is not an array', data);
-          setTimetableDepart([]);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      }).finally(() => {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
-      });
   };
 
   const handleSearchEnd = () => {
-    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${formattedDateReturn}`)
+    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -494,7 +561,7 @@ const SearchFerry = ({ navigation, route }) => {
             <View style={styles.inputBox}>
               <TouchableOpacity
                 onPress={() => {
-                  setShowDepartPicker(true);  // Show the date picker
+                  setShowModal(true);  // Show the date picker
 
                 }}
                 style={[
@@ -511,7 +578,7 @@ const SearchFerry = ({ navigation, route }) => {
                 />
                 <View style={styles.inputBoxCol}>
                   <Text style={styles.inputLabel}>Departure date</Text>
-                  <Text style={styles.inputText}>{departureDate ? formatDateInput(departureDate.toString()) : "Select Date"}</Text>
+                  <Text style={styles.inputText}>{calendarStartDate ? formatDateInput(calendarStartDate.toString()) : "Select Date"}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -522,7 +589,7 @@ const SearchFerry = ({ navigation, route }) => {
                     style={styles.logoLine}
                     resizeMode="contain"
                   />
-                  <TouchableOpacity onPress={() => setShowReturnPicker(true)} disabled={!departureDate}
+                  <TouchableOpacity onPress={() => setShowModal(true)} disabled={!departureDate}
                     style={styles.rowdepart}>
 
                     <Image
@@ -532,47 +599,51 @@ const SearchFerry = ({ navigation, route }) => {
                     />
                     <View style={styles.inputBoxCol}>
                       <Text style={styles.inputLabel}>Return date</Text>
-                      <Text style={styles.inputText}>{returnDate ? formatDateInput(returnDate.toString()) : "No Date Available"}</Text>
+                      <Text style={styles.inputText}>{calendarEndDate ? formatDateInput(calendarEndDate.toString()) : "No Date Available"}</Text>
                     </View>
                   </TouchableOpacity>
                 </>
               )}
             </View>
 
-            {showDepartPicker && (
-              <DateTimePicker
-                value={departureDate || new Date()} // ถ้ายังไม่มีการเลือกวันที่ให้ใช้วันที่ปัจจุบัน
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDepartPicker(false);
-                  if (selectedDate) {
-                    setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
-                    if (returnDate <= selectedDate) {
-                      const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
-                      newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
-                      setReturnDate(newReturnDate);
-                    }
-                  }
-                }}
-                minimumDate={new Date()}  // เลือกวันที่เดินทางได้ตั้งแต่วันนี้
-                maximumDate={null}
-              />
-            )}
+            <Modal visible={showModal} animationType="slide">
+              <View style={{ flex: 0.65, backgroundColor: '#fff' }}>
+              
+                <View style={{ marginTop: '10%', paddingHorizontal: 20, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' }}>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Select Date</Text>
+                  <View style={{ flexDirection: 'row', gap: 20 }}>
+                    <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
+                      <Text style={{ fontSize: 12, color: '#555' }}>Departure date</Text>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDateInput(calendarStartDate) || '-'}</Text>
+                    </View>
+                    {tripType === 'Return Trip' && (
+                      <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
+                        <Text style={{ fontSize: 12, color: '#555' }}>Return date</Text>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDateInput(calendarEndDate) || '-'}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
 
-            {showReturnPicker && (
-              <DateTimePicker
-                value={returnDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowReturnPicker(false);
-                  if (selectedDate) setReturnDate(selectedDate);
-                }}
-                minimumDate={new Date(new Date(departureDate).setDate(departureDate.getDate() + 1))}  // วันที่กลับต้องไม่สามารถน้อยกว่าวันเดินทาง
-                maximumDate={null}
-              />
-            )}
+                <CalendarList
+                  onDayPress={onCalendarDayPress}
+                  markedDates={calendarMarkedDates}
+                  markingType={'period'}
+                  pastScrollRange={0}
+                  futureScrollRange={6}
+                  scrollEnabled={true}
+                  showScrollIndicator={true}
+                  minDate={new Date().toISOString().split('T')[0]}
+                />
+
+                <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#eee' }}>
+                  <TouchableOpacity onPress={handleCalendarConfirm} style={{ backgroundColor: '#FD501E', paddingVertical: 14, borderRadius: 10, alignItems: 'center' }}>
+                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>OK</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+
 
           </View>
         </View>
@@ -595,429 +666,429 @@ const SearchFerry = ({ navigation, route }) => {
             <ActivityIndicator size="large" color="#FD501E" />
           </View>
         )}
-          {!loading && pagedDataDepart  && pagedDataReturn && ( 
-            <>
-        {tripTypeSearch === 'One Way Trip' && (
+        {!loading && pagedDataDepart && pagedDataReturn && (
           <>
-            {pagedDataDepart.map((item, index) => (
-              <View key={index} style={styles.cardContainer} >
-                <TouchableOpacity
-                  onPress={() => {
-                    toggleDetails(item.md_timetable_id);
-                  }}
-                >
-                  <ImageBackground
-                    source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                    style={styles.background}>
-                    <View style={styles.headerRow}>
-                      <View style={styles.inputBoxCol}>
-                        <Image
-                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%') }}
-                          resizeMode="cover"
-                        />
+            {tripTypeSearch === 'One Way Trip' && (
+              <>
+                {pagedDataDepart.map((item, index) => (
+                  <View key={index} style={styles.cardContainer} >
+                    <TouchableOpacity
+                      onPress={() => {
+                        toggleDetails(item.md_timetable_id);
+                      }}
+                    >
+                      <ImageBackground
+                        source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                        style={styles.background}>
+                        <View style={styles.headerRow}>
+                          <View style={styles.inputBoxCol}>
+                            <Image
+                              source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                              style={{ width: wp('10.6%'), height: hp('5%') }}
+                              resizeMode="cover"
+                            />
 
-                        <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                      </View>
-                      <View style={styles.tagContainer}>
-                        <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                        <Text style={styles.tag}>{tripTypeSearch}</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.detailsRow}>
-                      <View style={styles.locationContainer}>
-                        <Text style={styles.location}>{item.start_location_name}</Text>
-                        <Text style={styles.subtext}>{item.name_pierstart}</Text>
-                        <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                        <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
-                      </View>
-
-                      <View style={styles.middleContainer}>
-                        <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
-                        <View style={styles.iconLineContainer}>
-                          <View style={styles.dashedLine} />
-                          <View style={styles.shipIcon}>
-                            <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                            <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                           </View>
-                          <View style={styles.dashedLine} />
+                          <View style={styles.tagContainer}>
+                            <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
+                            <Text style={styles.tag}>{tripTypeSearch}</Text>
+                          </View>
                         </View>
-                        <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                      </View>
 
-                      <View style={styles.locationContainer}>
-                        <Text style={styles.location}>{item.end_location_name}</Text>
-                        <Text style={styles.subtext}>{item.name_pierend}</Text>
-                        <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                        <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
-                      </View>
-                    </View>
+                        <View style={styles.detailsRow}>
+                          <View style={styles.locationContainer}>
+                            <Text style={styles.location}>{item.start_location_name}</Text>
+                            <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                          </View>
 
-                    <View style={styles.TicketRow}>
-                      <View style={styles.circleContainerLeft}>
-                        <View style={styles.circleLeft1}></View>
-                        <View style={styles.circleLeft2}></View>
-                      </View>
-                      <View style={styles.dashedLineTicket} />
-                      <View style={styles.circleContainerRight}>
-                        <View style={styles.circleRight1}></View>
-                        <View style={styles.circleRight2}></View>
-                      </View>
-                    </View>
+                          <View style={styles.middleContainer}>
+                            <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                            <View style={styles.iconLineContainer}>
+                              <View style={styles.dashedLine} />
+                              <View style={styles.shipIcon}>
+                                <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                              </View>
+                              <View style={styles.dashedLine} />
+                            </View>
+                            <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                          </View>
 
-                    <View style={styles.footerRow}>
-                      <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
-                      <TouchableOpacity style={styles.bookNowButton}
+                          <View style={styles.locationContainer}>
+                            <Text style={styles.location}>{item.end_location_name}</Text>
+                            <Text style={styles.subtext}>{item.name_pierend}</Text>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.TicketRow}>
+                          <View style={styles.circleContainerLeft}>
+                            <View style={styles.circleLeft1}></View>
+                            <View style={styles.circleLeft2}></View>
+                          </View>
+                          <View style={styles.dashedLineTicket} />
+                          <View style={styles.circleContainerRight}>
+                            <View style={styles.circleRight1}></View>
+                            <View style={styles.circleRight2}></View>
+                          </View>
+                        </View>
+
+                        <View style={styles.footerRow}>
+                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                          <TouchableOpacity style={styles.bookNowButton}
+                            onPress={() => {
+
+                              updateCustomerData({
+                                roud: 1,
+                                day: day,
+                                month: month,
+                                year: year,
+                                departdate: calendarStartDate,
+                                timeTableDepartId: item.md_timetable_id,
+                                startingPointId: startingPoint.id,
+                                startingpoint_name: startingPoint.name,
+                                endPointId: endPoint.id,
+                                endpoint_name: endPoint.name,
+                                companyDepartId: item.md_timetable_companyid,
+                                pierStartDepartId: item.md_timetable_pierstart,
+                                pierEndDepartId: item.md_timetable_pierend,
+                                netDepart: item.md_timetable_netadult,
+                                adult: adults,
+                                child: children,
+                                infant: infant,
+                                timetableReturn: item.md_timetable_id,
+                                piccompanyDepart: item.md_company_picname,
+                                pictimetableDepart: item.md_timetabledetail_picname1,
+
+                              });
+
+                              navigation.navigate('TripDetail');
+                            }} >
+                            <Text style={styles.bookNowText}>Book Now</Text>
+
+                          </TouchableOpacity>
+                        </View>
+                        {item.md_timetable_remarkeng && console.log("รูป timetable:", item.md_timetabledetail_picname1) && (
+                          <View style={styles.remarkContainer}>
+                            <Text style={styles.remarkText}>
+                              <Text style={styles.remarkLabel}>Remark: </Text>
+                              {item.md_timetable_remarkeng}
+                            </Text>
+                          </View>
+                        )}
+
+                        <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
+                          <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
+                          <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                          />
+                        </Animated.View>
+
+
+
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>)}
+
+
+            {tripTypeSearch === 'Return Trip' && (
+              <>
+                <View style={styles.tripTypeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.tripTypeOneWayButton,
+                      tripTypeSearchResult === "Depart Trip" && styles.activeButton,
+                    ]}
+                    onPress={() => settripTypeSearchResult("Depart Trip")}
+                  >
+                    <Text
+                      style={[
+                        styles.tripTypeText,
+                        tripTypeSearchResult === "Depart Trip" && styles.activeText,
+                      ]}
+                    >
+                      Depart Trip
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.tripTypeRoundButton,
+                      tripTypeSearchResult === "Return Trip" && styles.activeButton,
+                    ]}
+                    onPress={() => settripTypeSearchResult("Return Trip")}
+                  >
+                    <Text
+                      style={[
+                        styles.tripTypeText,
+                        tripTypeSearchResult === "Return Trip" && styles.activeText,
+                      ]}
+                    >
+                      Return Trip
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {tripTypeSearchResult === 'Depart Trip' && (<>
+                  {pagedDataDepart.map((item, index) => (
+                    <View key={index} style={styles.cardContainer} >
+                      <TouchableOpacity
                         onPress={() => {
+                          toggleDetails(item.md_timetable_id);
+                        }}
+                      >
+                        <ImageBackground
+                          source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                          style={styles.background}>
+                          <View style={styles.headerRow}>
+                            <View style={styles.inputBoxCol}>
+                              <Image
+                                source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                                style={{ width: wp('10.6%'), height: hp('5%') }}
+                                resizeMode="cover"
+                              />
+                              <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
+                            </View>
+                            <View style={styles.tagContainer}>
+                              <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
+                              <Text style={styles.tag}>{tripTypeSearchResult}</Text>
+                            </View>
+                          </View>
 
-                          updateCustomerData({
-                            roud: 1,
-                            day: day,
-                            month: month,
-                            year: year,
-                            departdate: formattedDateDepart,
-                            timeTableDepartId: item.md_timetable_id,
-                            startingPointId: startingPoint.id,
-                            startingpoint_name: startingPoint.name,
-                            endPointId: endPoint.id,
-                            endpoint_name: endPoint.name,
-                            companyDepartId: item.md_timetable_companyid,
-                            pierStartDepartId: item.md_timetable_pierstart,
-                            pierEndDepartId: item.md_timetable_pierend,
-                            netDepart: item.md_timetable_netadult,
-                            adult: adults,
-                            child: children,
-                            infant: infant,
-                            timetableReturn: item.md_timetable_id,
-                            piccompanyDepart: item.md_company_picname,
-                            pictimetableDepart: item.md_timetabledetail_picname1,
+                          <View style={styles.detailsRow}>
+                            <View style={styles.locationContainer}>
+                              <Text style={styles.location}>{item.start_location_name}</Text>
+                              <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                              <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                            </View>
 
-                          });
+                            <View style={styles.middleContainer}>
+                              <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                              <View style={styles.iconLineContainer}>
+                                <View style={styles.dashedLine} />
+                                <View style={styles.shipIcon}>
+                                  <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                                </View>
+                                <View style={styles.dashedLine} />
+                              </View>
+                              <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                            </View>
 
-                          navigation.navigate('TripDetail');
-                        }} >
-                        <Text style={styles.bookNowText}>Book Now</Text>
+                            <View style={styles.locationContainer}>
+                              <Text style={styles.location}>{item.end_location_name}</Text>
+                              <Text style={styles.subtext}>{item.name_pierend}</Text>
+                              <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                            </View>
+                          </View>
 
+                          <View style={styles.TicketRow}>
+                            <View style={styles.circleContainerLeft}>
+                              <View style={styles.circleLeft1}></View>
+                              <View style={styles.circleLeft2}></View>
+                            </View>
+                            <View style={styles.dashedLineTicket} />
+                            <View style={styles.circleContainerRight}>
+                              <View style={styles.circleRight1}></View>
+                              <View style={styles.circleRight2}></View>
+                            </View>
+                          </View>
+
+                          <View style={styles.footerRow}>
+                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                            <TouchableOpacity
+                              style={styles.bookNowButton}
+                              onPress={() => {
+                                // Update customer data
+                                setIsonewaystatus(true);
+                                updateCustomerData({
+                                  roud: 2,
+                                  day: day,
+                                  month: month,
+                                  year: year,
+                                  departdate: calendarStartDate,
+                                  returnDate: calendarEndDate,
+                                  timeTableDepartId: item.md_timetable_id,
+                                  startingPointId: startingPoint.id,
+                                  startingpoint_name: startingPoint.name,
+                                  endPointId: endPoint.id,
+                                  endpoint_name: endPoint.name,
+                                  companyDepartId: item.md_timetable_companyid,
+                                  pierStartDepartId: item.md_timetable_pierstart,
+                                  pierEndDepartId: item.md_timetable_pierend,
+                                  netDepart: item.md_timetable_netadult,
+                                  adult: adults,
+                                  child: children,
+                                  infant: infant,
+                                  piccompanyDepart: item.md_company_picname,
+                                  pictimetableDepart: item.md_timetabledetail_picname1,
+
+                                });
+
+
+                                // Check if round trip status is true before navigating
+                                if (isroudstatus) {
+                                  navigation.navigate('TripDetail');
+                                } else {
+                                  settripTypeSearchResult("Return Trip");
+                                }
+                              }}
+                            >
+                              <Text style={styles.bookNowText}>Book Now</Text>
+
+                            </TouchableOpacity>
+                          </View>
+                          {item.md_timetable_remarkeng && (
+                            <View style={styles.remarkContainer}>
+                              <Text style={styles.remarkText}>
+                                <Text style={styles.remarkLabel}>Remark: </Text>
+                                {item.md_timetable_remarkeng}
+                              </Text>
+                            </View>
+                          )}
+
+                          <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
+                            <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
+                            <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                              style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                            />
+                          </Animated.View>
+
+
+
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
-                    {item.md_timetable_remarkeng && console.log("รูป timetable:", item.md_timetabledetail_picname1) && (
-                      <View style={styles.remarkContainer}>
-                        <Text style={styles.remarkText}>
-                          <Text style={styles.remarkLabel}>Remark: </Text>
-                          {item.md_timetable_remarkeng}
-                        </Text>
-                      </View>
-                    )}
 
-                    <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
-                      <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                      <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                      />
-                    </Animated.View>
-
-
-
-                  </ImageBackground>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </>)}
-        
-
-        {tripTypeSearch === 'Return Trip' && (
-          <>
-            <View style={styles.tripTypeContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.tripTypeOneWayButton,
-                  tripTypeSearchResult === "Depart Trip" && styles.activeButton,
-                ]}
-                onPress={() => settripTypeSearchResult("Depart Trip")}
-              >
-                <Text
-                  style={[
-                    styles.tripTypeText,
-                    tripTypeSearchResult === "Depart Trip" && styles.activeText,
-                  ]}
-                >
-                  Depart Trip
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.tripTypeRoundButton,
-                  tripTypeSearchResult === "Return Trip" && styles.activeButton,
-                ]}
-                onPress={() => settripTypeSearchResult("Return Trip")}
-              >
-                <Text
-                  style={[
-                    styles.tripTypeText,
-                    tripTypeSearchResult === "Return Trip" && styles.activeText,
-                  ]}
-                >
-                  Return Trip
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {tripTypeSearchResult === 'Depart Trip' && (<>
-              {pagedDataDepart.map((item, index) => (
-                <View key={index} style={styles.cardContainer} >
-                  <TouchableOpacity
-                    onPress={() => {
-                      toggleDetails(item.md_timetable_id);
-                    }}
-                  >
-                    <ImageBackground
-                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                      style={styles.background}>
-                      <View style={styles.headerRow}>
-                        <View style={styles.inputBoxCol}>
-                          <Image
-                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%') }}
-                            resizeMode="cover"
-                          />
-                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                        </View>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                          <Text style={styles.tag}>{tripTypeSearchResult}</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.detailsRow}>
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.start_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierstart}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
-                        </View>
-
-                        <View style={styles.middleContainer}>
-                          <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
-                          <View style={styles.iconLineContainer}>
-                            <View style={styles.dashedLine} />
-                            <View style={styles.shipIcon}>
-                              <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                  ))}
+                </>)}
+                {tripTypeSearchResult === 'Return Trip' && (<>
+                  {pagedDataReturn.map((item, index) => (
+                    <View key={index} style={styles.cardContainer} >
+                      <TouchableOpacity
+                        onPress={() => {
+                          toggleDetails(item.md_timetable_id);
+                        }}
+                      >
+                        <ImageBackground
+                          source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                          style={styles.background}>
+                          <View style={styles.headerRow}>
+                            <View style={styles.inputBoxCol}>
+                              <Image
+                                source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                                style={{ width: wp('10.6%'), height: hp('5%') }}
+                                resizeMode="cover"
+                              />
+                              <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
                             </View>
-                            <View style={styles.dashedLine} />
-                          </View>
-                          <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        </View>
-
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.end_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierend}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(formattedDateDepart)}</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.TicketRow}>
-                        <View style={styles.circleContainerLeft}>
-                          <View style={styles.circleLeft1}></View>
-                          <View style={styles.circleLeft2}></View>
-                        </View>
-                        <View style={styles.dashedLineTicket} />
-                        <View style={styles.circleContainerRight}>
-                          <View style={styles.circleRight1}></View>
-                          <View style={styles.circleRight2}></View>
-                        </View>
-                      </View>
-
-                      <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
-                        <TouchableOpacity
-                          style={styles.bookNowButton}
-                          onPress={() => {
-                            // Update customer data
-                            setIsonewaystatus(true);
-                            updateCustomerData({
-                              roud: 2,
-                              day: day,
-                              month: month,
-                              year: year,
-                              departdate: formattedDateDepart,
-                              returnDate: formattedDateReturn,
-                              timeTableDepartId: item.md_timetable_id,
-                              startingPointId: startingPoint.id,
-                              startingpoint_name: startingPoint.name,
-                              endPointId: endPoint.id,
-                              endpoint_name: endPoint.name,
-                              companyDepartId: item.md_timetable_companyid,
-                              pierStartDepartId: item.md_timetable_pierstart,
-                              pierEndDepartId: item.md_timetable_pierend,
-                              netDepart: item.md_timetable_netadult,
-                              adult: adults,
-                              child: children,
-                              infant: infant,
-                              piccompanyDepart: item.md_company_picname,
-                              pictimetableDepart: item.md_timetabledetail_picname1,
-
-                            });
-
-
-                            // Check if round trip status is true before navigating
-                            if (isroudstatus) {
-                              navigation.navigate('TripDetail');
-                            } else {
-                              settripTypeSearchResult("Return Trip");
-                            }
-                          }}
-                        >
-                          <Text style={styles.bookNowText}>Book Now</Text>
-
-                        </TouchableOpacity>
-                      </View>
-                      {item.md_timetable_remarkeng && (
-                        <View style={styles.remarkContainer}>
-                          <Text style={styles.remarkText}>
-                            <Text style={styles.remarkLabel}>Remark: </Text>
-                            {item.md_timetable_remarkeng}
-                          </Text>
-                        </View>
-                      )}
-
-                      <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
-                        <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                        <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
-                      </Animated.View>
-
-
-
-                    </ImageBackground>
-                  </TouchableOpacity>
-                </View>
-
-              ))}
-            </>)}
-            {tripTypeSearchResult === 'Return Trip' && (<>
-              {pagedDataReturn.map((item, index) => (
-                <View key={index} style={styles.cardContainer} >
-                  <TouchableOpacity
-                    onPress={() => {
-                      toggleDetails(item.md_timetable_id);
-                    }}
-                  >
-                    <ImageBackground
-                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                      style={styles.background}>
-                      <View style={styles.headerRow}>
-                        <View style={styles.inputBoxCol}>
-                          <Image
-                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%') }}
-                            resizeMode="cover"
-                          />
-                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                        </View>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                          <Text style={styles.tag}>{tripTypeSearchResult}</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.detailsRow}>
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.start_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierstart}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
-                        </View>
-
-                        <View style={styles.middleContainer}>
-                          <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
-                          <View style={styles.iconLineContainer}>
-                            <View style={styles.dashedLine} />
-                            <View style={styles.shipIcon}>
-                              <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                            <View style={styles.tagContainer}>
+                              <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
+                              <Text style={styles.tag}>{tripTypeSearchResult}</Text>
                             </View>
-                            <View style={styles.dashedLine} />
                           </View>
-                          <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        </View>
 
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.end_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierend}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(formattedDateReturn)}</Text>
-                        </View>
-                      </View>
+                          <View style={styles.detailsRow}>
+                            <View style={styles.locationContainer}>
+                              <Text style={styles.location}>{item.start_location_name}</Text>
+                              <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                              <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                              <Text style={styles.subtext}>{formatDate(calendarEndDate)}</Text>
+                            </View>
 
-                      <View style={styles.TicketRow}>
-                        <View style={styles.circleContainerLeft}>
-                          <View style={styles.circleLeft1}></View>
-                          <View style={styles.circleLeft2}></View>
-                        </View>
-                        <View style={styles.dashedLineTicket} />
-                        <View style={styles.circleContainerRight}>
-                          <View style={styles.circleRight1}></View>
-                          <View style={styles.circleRight2}></View>
-                        </View>
-                      </View>
+                            <View style={styles.middleContainer}>
+                              <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                              <View style={styles.iconLineContainer}>
+                                <View style={styles.dashedLine} />
+                                <View style={styles.shipIcon}>
+                                  <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                                </View>
+                                <View style={styles.dashedLine} />
+                              </View>
+                              <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                            </View>
 
-                      <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
-                        <TouchableOpacity
-                          style={styles.bookNowButton}
-                          onPress={() => {
-                            setIsroudstatus(true);
-                            updateCustomerData({
-                              returndate: formattedDateReturn,
-                              timeTableReturnId: item.md_timetable_id,
-                              companyReturnId: item.md_timetable_companyid,
-                              pierStartReturntId: item.md_timetable_pierstart,
-                              pierEndReturntId: item.md_timetable_pierend,
-                              piccompanyReturn: item.md_company_picname,
-                              pictimetableReturn: item.md_timetabledetail_picname1,
-                            });
+                            <View style={styles.locationContainer}>
+                              <Text style={styles.location}>{item.end_location_name}</Text>
+                              <Text style={styles.subtext}>{item.name_pierend}</Text>
+                              <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                              <Text style={styles.subtext}>{formatDate(calendarEndDate)}</Text>
+                            </View>
+                          </View>
 
-                            // Check if round trip status is true before navigating
-                            if (isonewaystatus) {
-                              navigation.navigate('TripDetail');
-                            } else {
-                              settripTypeSearchResult("Depart Trip");
-                            }
-                          }}
-                        >
-                          <Text style={styles.bookNowText}>Book Now</Text>
+                          <View style={styles.TicketRow}>
+                            <View style={styles.circleContainerLeft}>
+                              <View style={styles.circleLeft1}></View>
+                              <View style={styles.circleLeft2}></View>
+                            </View>
+                            <View style={styles.dashedLineTicket} />
+                            <View style={styles.circleContainerRight}>
+                              <View style={styles.circleRight1}></View>
+                              <View style={styles.circleRight2}></View>
+                            </View>
+                          </View>
 
-                        </TouchableOpacity>
-                      </View>
-                      {item.md_timetable_remarkeng && (
-                        <View style={styles.remarkContainer}>
-                          <Text style={styles.remarkText}>
-                            <Text style={styles.remarkLabel}>Remark: </Text>
-                            {item.md_timetable_remarkeng}
-                          </Text>
-                        </View>
-                      )}
+                          <View style={styles.footerRow}>
+                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                            <TouchableOpacity
+                              style={styles.bookNowButton}
+                              onPress={() => {
+                                setIsroudstatus(true);
+                                updateCustomerData({
+                                  returndate: calendarEndDate,
+                                  timeTableReturnId: item.md_timetable_id,
+                                  companyReturnId: item.md_timetable_companyid,
+                                  pierStartReturntId: item.md_timetable_pierstart,
+                                  pierEndReturntId: item.md_timetable_pierend,
+                                  piccompanyReturn: item.md_company_picname,
+                                  pictimetableReturn: item.md_timetabledetail_picname1,
+                                });
 
-                      <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
-                        <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
-                        <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
-                      </Animated.View>
+                                // Check if round trip status is true before navigating
+                                if (isonewaystatus) {
+                                  navigation.navigate('TripDetail');
+                                } else {
+                                  settripTypeSearchResult("Depart Trip");
+                                }
+                              }}
+                            >
+                              <Text style={styles.bookNowText}>Book Now</Text>
+
+                            </TouchableOpacity>
+                          </View>
+                          {item.md_timetable_remarkeng && (
+                            <View style={styles.remarkContainer}>
+                              <Text style={styles.remarkText}>
+                                <Text style={styles.remarkLabel}>Remark: </Text>
+                                {item.md_timetable_remarkeng}
+                              </Text>
+                            </View>
+                          )}
+
+                          <Animated.View style={{ height: selectedPickup === item.md_timetable_id ? animatedHeight : 0, overflow: 'hidden' }}>
+                            <Text style={{ color: '#666666' }}> {removeHtmlTags(item.md_timetabledetail_detaileng1 || "")} </Text>
+                            <Image source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                              style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                            />
+                          </Animated.View>
 
 
 
-                    </ImageBackground>
-                  </TouchableOpacity>
-                </View>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    </View>
 
 
-              ))}
+                  ))}
 
-            </>)}
-          </>)}
+                </>)}
+              </>)}
           </>
-          )}
+        )}
 
         {/* ปุ่มสำหรับการเปลี่ยนหน้า */}
         {tripTypeSearchResult === 'Depart Trip' && (<>

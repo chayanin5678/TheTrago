@@ -1,37 +1,97 @@
-import React, { useRef, useState, useEffect  } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground , Dimensions, ActivityIndicator, Modal } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import LogoTheTrago from './(component)/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './(Screen)/CustomerContext';
+import { CalendarList } from 'react-native-calendars';
+
+
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
   { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./assets/destination2.png') },
   { id: '3', title: 'Lorem ipsum odor', location: 'Lorem, France', duration: '7 Days', price: '$400', image: require('./assets/destination3.png') },
 ];
 
-const HomeScreen = ({navigation }) => {
+const HomeScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Ferry');  // ใช้ state เพื่อจัดการเมนูที่เลือก
-  const [startingPoint, setStartingPoint] = useState({ id: '0' ,name: 'Starting Point'});
-  const [endPoint, setEndPoint] = useState({ id: '0' ,name: 'Destination'});
+  const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
+  const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
   const [departureDate, setDepartureDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow;
   });
-  
+
   const [returnDate, setReturnDate] = useState(() => {
     const returnDay = new Date(departureDate);
     returnDay.setDate(returnDay.getDate() + 1);
     return returnDay;
   });
-  const [showDepartPicker, setShowDepartPicker] = useState(false);
-  const [showReturnPicker, setShowReturnPicker] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-    const { customerData, updateCustomerData } = useCustomer();
-   const [tripType, setTripType] = useState("One Way Trip"); 
+  const { customerData, updateCustomerData } = useCustomer();
+  const [tripType, setTripType] = useState("One Way Trip");
+  const [showModal, setShowModal] = useState(false);
+  const [calendarStartDate, setCalendarStartDate] = useState(new Date().toISOString().split('T')[0]); // string
+  const [calendarEndDate, setCalendarEndDate] = useState(new Date().toISOString().split('T')[0]); // string
+
+  const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
+
+  // ฟังก์ชันสำหรับเลือกวัน
+  const onCalendarDayPress = (day) => {
+    if (!calendarStartDate || calendarEndDate) {
+      setCalendarStartDate(day.dateString);
+      setCalendarEndDate(null);
+      setCalendarMarkedDates({
+        [day.dateString]: {
+          startingDay: true,
+          color: '#FD501E',
+          textColor: 'white',
+        },
+      });
+    } else {
+      const range = getMarkedDatesRange(calendarStartDate, day.dateString);
+      setCalendarEndDate(day.dateString);
+      setCalendarMarkedDates(range);
+    }
+  };
+
+  const getMarkedDatesRange = (start, end) => {
+    let dates = {};
+    let current = new Date(start);
+    const last = new Date(end);
+
+    while (current <= last) {
+      const dateStr = current.toISOString().split('T')[0];
+      dates[dateStr] = {
+        color: '#FD501E',
+        textColor: 'white',
+      };
+      if (dateStr === start) dates[dateStr].startingDay = true;
+      if (dateStr === end) dates[dateStr].endingDay = true;
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
+  // ยืนยันการเลือกวัน
+  const handleCalendarConfirm = () => {
+    if (tripType === 'One Way Trip' && calendarStartDate) {
+      console.log('Selected Departure Date:', calendarStartDate);
+      setDepartureDate(new Date(calendarStartDate));
+      setShowModal(false);
+    } else if (tripType === 'Return Trip' && calendarStartDate && calendarEndDate) {
+      setDepartureDate(new Date(calendarStartDate));
+      setReturnDate(new Date(calendarEndDate));
+      setShowModal(false);
+    } else {
+      alert('กรุณาเลือกวันที่ให้ครบ');
+    }
+  };
+
 
 
   const formatDate = (date) => {
@@ -45,7 +105,7 @@ const HomeScreen = ({navigation }) => {
 
 
 
-  
+
 
   const swapPoints = () => {
     setStartingPoint((prev) => endPoint);
@@ -60,27 +120,27 @@ const HomeScreen = ({navigation }) => {
   };
 
   return (
-       <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       {isLoading && (
-             <View style={styles.loadingContainer}>
-               <ActivityIndicator size="large" color="#FD501E" />
-               <Text style={styles.loadingText}>Processing Payment...</Text>
-             </View>
-           )}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FD501E" />
+          <Text style={styles.loadingText}>Processing Payment...</Text>
+        </View>
+      )}
 
-    <ScrollView  contentContainerStyle={styles.container}>
-       <ImageBackground 
-    source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-    style={styles.background}>
-      <LogoTheTrago/>
-      
+      <ScrollView contentContainerStyle={styles.container}>
+        <ImageBackground
+          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+          style={styles.background}>
+          <LogoTheTrago />
 
-      <Text style={styles.title}>
-   
-  The <Text style={[styles.highlight]}>journey</Text> is endless, Book now
-</Text>
 
-      {/* <View style={styles.tabContainer}>
+          <Text style={styles.title}>
+
+            The <Text style={[styles.highlight]}>journey</Text> is endless, Book now
+          </Text>
+
+          {/* <View style={styles.tabContainer}>
         {['Ferry', 'Flight', 'Car', 'Hotel'].map(tab => (
           <View
             key={tab}
@@ -99,281 +159,294 @@ const HomeScreen = ({navigation }) => {
           </View>
         ))}
       </View> */}
-      
-      <View style={styles.bookingSection}>
-      <View style={styles.tripTypeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.tripTypeOneWayButton,
-                      tripType === "One Way Trip" && styles.activeButton,
-                    ]}
-                    onPress={() => {
-                      setTripType("One Way Trip");
-      
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.tripTypeText,
-                        tripType === "One Way Trip" && styles.activeText,
-      
-                      ]}
-                    >
-                      One Way Trip
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.tripTypeRoundButton,
-                      tripType === "Return Trip" && styles.activeButton,
-                    ]}
-                    onPress={() => {
-                      setTripType("Return Trip");
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.tripTypeText,
-                        tripType === "Return Trip" && styles.activeText,
-      
-                      ]}
-                    >
-                      Round Trip
-                    </Text>
-                  </TouchableOpacity>
-                </View>
 
-        <View style={styles.inputRow}>
-        <TouchableOpacity
-      onPress={() => {
-        setIsLoading(true);
-        navigation.navigate('StartingPointScreen', {
-          setStartingPoint: (data) => setStartingPoint(data), // ส่งฟังก์ชันไปยังหน้าจอใหม่
-        });
-        setIsLoading(false);
-      }}
-      style={styles.inputBox}
-    >     
-              <Image
-              source={require('./assets/directions_boat.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-              />
-          <View >  
-            <View style={styles.inputBoxCol}>
-              <Text style={styles.inputLabel}>From</Text>
-              <Text style = {styles.inputText}> {truncateText(startingPoint.name)}</Text>
+          <View style={styles.bookingSection}>
+            <View style={styles.tripTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.tripTypeOneWayButton,
+                  tripType === "One Way Trip" && styles.activeButton,
+                ]}
+                onPress={() => {
+                  setTripType("One Way Trip");
+
+                }}
+              >
+                <Text
+                  style={[
+                    styles.tripTypeText,
+                    tripType === "One Way Trip" && styles.activeText,
+
+                  ]}
+                >
+                  One Way Trip
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.tripTypeRoundButton,
+                  tripType === "Return Trip" && styles.activeButton,
+                ]}
+                onPress={() => {
+                  setTripType("Return Trip");
+                }}
+              >
+                <Text
+                  style={[
+                    styles.tripTypeText,
+                    tripType === "Return Trip" && styles.activeText,
+
+                  ]}
+                >
+                  Round Trip
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  setIsLoading(true);
+                  navigation.navigate('StartingPointScreen', {
+                    setStartingPoint: (data) => setStartingPoint(data), // ส่งฟังก์ชันไปยังหน้าจอใหม่
+                  });
+                  setIsLoading(false);
+                }}
+                style={styles.inputBox}
+              >
+                <Image
+                  source={require('./assets/directions_boat.png')}
+                  style={styles.logoDate}
+                  resizeMode="contain"
+                />
+                <View >
+                  <View style={styles.inputBoxCol}>
+                    <Text style={styles.inputLabel}>From</Text>
+                    <Text style={styles.inputText}> {truncateText(startingPoint.name)}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* Swap icon */}
+              <TouchableOpacity onPress={swapPoints}>
+                <Image
+                  source={require('./assets/mage_exchange-a.png')}
+                  style={styles.logoSwap}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setIsLoading(true);
+                  navigation.navigate('EndPointScreen', { setEndPoint, startingPointId: startingPoint.id, });
+                  setIsLoading(false);
+                }}
+                style={styles.inputBox} >
+                <Image
+                  source={require('./assets/location_on.png')}
+                  style={styles.logoDate}
+                  resizeMode="contain"
+                />
+                <View style={styles.inputBoxCol}>
+                  <Text style={styles.inputLabel}>To</Text>
+                  <Text style={styles.inputText}> {truncateText(endPoint.name)}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+
+
+            <View style={styles.inputRow}>
+
+              <View style={styles.inputBox}>
+                <TouchableOpacity onPress={() => setShowModal(true)}
+                  style={[
+                    styles.rowdepart,
+                    { width: tripType === "One Way Trip" ? wp('73.5%') : 'auto' } // Apply 100% width conditionally
+                  ]}>
+
+                  <Image
+                    source={require('./assets/solar_calendar-bold.png')}
+                    style={styles.logoDate}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.inputBoxCol}>
+                    <Text style={styles.inputLabel}>Departure date</Text>
+                    <Text style={styles.inputText}>
+                      {calendarStartDate ? formatDate(calendarStartDate) : "Select Date"}
+                    </Text>
+
+                  </View>
+                </TouchableOpacity>
+                {tripType === "Return Trip" && (
+                  <>
+
+                    <Image
+                      source={require('./assets/Line 2.png')}
+                      style={styles.logoLine}
+                      resizeMode="contain"
+                    />
+                    <TouchableOpacity onPress={() => setShowModal(true)} disabled={!departureDate}
+                      style={styles.rowdepart}>
+
+                      <Image
+                        source={require('./assets/solar_calendar-yellow.png')}
+                        style={styles.logoDate}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.inputBoxCol}>
+                        <Text style={styles.inputLabel}>Return date</Text>
+                        <Text style={styles.inputText}>{calendarEndDate ? formatDate(calendarEndDate.toString()) : "Select Date"}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+
+              <Modal visible={showModal} animationType="slide">
+                <View style={{ flex: 0.65, backgroundColor: '#fff' }}>
+                
+
+                  <View style={{ marginTop: '10%', paddingHorizontal: 20, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' }}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Select Date</Text>
+                    <View style={{ flexDirection: 'row', gap: 20 }}>
+                      <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
+                        <Text style={{ fontSize: 12, color: '#555' }}>Departure date</Text>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDate(calendarStartDate) || '-'}</Text>
+                      </View>
+                      {tripType === 'Return Trip' && (
+                        <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
+                          <Text style={{ fontSize: 12, color: '#555' }}>Return date</Text>
+                          <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDate(calendarEndDate) || '-'}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  <CalendarList
+                    onDayPress={onCalendarDayPress}
+                    markedDates={calendarMarkedDates}
+                    markingType={'period'}
+                    pastScrollRange={0}
+                    futureScrollRange={6}
+                    scrollEnabled={true}
+                    showScrollIndicator={true}
+                    minDate={new Date().toISOString().split('T')[0]}
+                  />
+
+                  <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#eee' }}>
+                    <TouchableOpacity onPress={handleCalendarConfirm} style={{ backgroundColor: '#FD501E', paddingVertical: 14, borderRadius: 10, alignItems: 'center' }}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>ยืนยัน</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+
+
+
+
             </View>
           </View>
-          </TouchableOpacity>
 
-            {/* Swap icon */}
-        <TouchableOpacity onPress={swapPoints}>
-          <Image
-            source={require('./assets/mage_exchange-a.png')}
-            style={styles.logoSwap}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+
 
           <TouchableOpacity
-              onPress={() =>{
+            style={styles.searchButton}
+            onPress={() => {
+
+
+              if (startingPoint.id !== '0' && endPoint.id !== '0' && calendarStartDate) {
                 setIsLoading(true);
-                navigation.navigate('EndPointScreen', { setEndPoint ,startingPointId: startingPoint.id,});
+                updateCustomerData({
+                  startingPointId: startingPoint.id,
+                  startingpoint_name: startingPoint.name,
+                  endPointId: endPoint.id,
+                  endpoint_name: endPoint.name,
+                  departdate: calendarStartDate,
+                  returndate: calendarEndDate ,
+                  tripTypeinput: tripType,
+                });
+                navigation.navigate('SearchFerry');
                 setIsLoading(false);
-              }}
-              style={styles.inputBox} >     
-            <Image
-              source={require('./assets/location_on.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View style={styles.inputBoxCol}>
-              <Text style={styles.inputLabel}>To</Text>
-              <Text style = {styles.inputText}> {truncateText(endPoint.name)}</Text>
-            </View>
+              } else {
+                setIsModalVisible(true);
+              }
+            }}
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.inputRow}>
-       
-          <View style={styles.inputBox}>
-          <TouchableOpacity onPress={() => setShowDepartPicker(true)}
-          style={[
-                           styles.rowdepart,
-                           { width: tripType === "One Way Trip" ? wp('73.5%') : 'auto' } // Apply 100% width conditionally
-                         ]}>
-
-            <Image
-              source={require('./assets/solar_calendar-bold.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View style={styles.inputBoxCol}>
-              <Text style={styles.inputLabel}>Departure date</Text>
-              <Text style={styles.inputText}>{departureDate ? formatDate(departureDate.toString()): "Select Date"}</Text>
+          <Modal
+            visible={isModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setIsModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalText}>Please select starting points and destination.</Text>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => setIsModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            </TouchableOpacity>
-            {tripType === "Return Trip" && (
-                <>
-
-            <Image
-              source={require('./assets/Line 2.png')}
-              style={styles.logoLine}
-              resizeMode="contain"
-            />
-             <TouchableOpacity onPress={() => setShowReturnPicker(true)} disabled={!departureDate} 
-          style={styles.rowdepart}>
-          
-            <Image
-              source={require('./assets/solar_calendar-yellow.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View style={styles.inputBoxCol}>
-              <Text style={styles.inputLabel}>Return date</Text>
-              <Text style={styles.inputText}>{returnDate ? formatDate(returnDate.toString()) : "No Date Available"}</Text>
+          </Modal>
+          <Text style={styles.titledeal}>
+            <Text style={styles.highlight}>Hot</Text> Deal
+          </Text>
+          <Banner />
+          <View style={styles.rowtrip}>
+            <View style={styles.coltrip}>
+              <Text style={styles.texcol}>Popular</Text>
+              <Text style={styles.texcol}><Text style={styles.highlight}>Destination</Text></Text>
+              <Text style={styles.Detail}>
+                Lorem ipsum odor amet, consectetuer adipiscing elit. Curabitur lectus sodales suspendisse hendrerit eu taciti quis.
+                Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
+              </Text>
+              <TouchableOpacity style={styles.PxploreButton}>
+                <Text style={styles.searchButtonText}>EXPLORE MORE  <Image source={require('./assets/IconExplo.png')} style={styles.iconExplo} /></Text>
+              </TouchableOpacity>
             </View>
-            </TouchableOpacity>
-            </>
-            )}
+
+            <View style={styles.coltrip}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {destinations.slice(0, 1).map((item) => (
+                  <View style={styles.cardContainer} key={item.id}>
+                    <Image source={item.image} style={styles.cardImage} />
+                    <View style={styles.cardContent}>
+                      <Text style={styles.cardTitle}>{item.title}</Text>
+                      <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
+                      <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
+                      <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-          {showDepartPicker && (
-  <DateTimePicker
-    value={departureDate || new Date()} // ถ้ายังไม่มีการเลือกวันที่ให้ใช้วันที่ปัจจุบัน
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowDepartPicker(false);
-      if (selectedDate) {
-        setDepartureDate(selectedDate);  // อัพเดทค่า departDate เมื่อผู้ใช้เลือกวันที่
-        if (returnDate <= selectedDate) {
-        const newReturnDate = new Date(selectedDate);  // Create a new Date object based on the departDate
-        newReturnDate.setDate(newReturnDate.getDate() + 1);  // Increment by 1 day for return date
-        setReturnDate(newReturnDate); 
-        }
-      }
-    }}
-    minimumDate={new Date()}  // เลือกวันที่เดินทางได้ตั้งแต่วันนี้
-    maximumDate={null}
-  />
-)}
 
-{showReturnPicker && (
-  <DateTimePicker
-    value={returnDate}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowReturnPicker(false);
-      if (selectedDate) setReturnDate(selectedDate);
-    }}
-    minimumDate={new Date(new Date(departureDate).setDate(departureDate.getDate() + 1))}  // วันที่กลับต้องไม่สามารถน้อยกว่าวันเดินทาง
-    maximumDate={null}
-  />
-)}
+          <ScrollView
+            contentContainerStyle={styles.cardList}
+            style={{ width: '100%' }}
+          >
+            {destinations.map((item) => (
+              <View style={styles.cardContainer} key={item.id}>
+                <Image source={item.image} style={styles.cardImage} />
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
+                  <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
+                  <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
 
-        </View>
-      </View>
-
- 
-
-<TouchableOpacity 
-  style={styles.searchButton}
-  onPress={() => {
-
-    
-    if (startingPoint.id !== '0' && endPoint.id !== '0') {
-      setIsLoading(true);
-      updateCustomerData({
-        startingPointId:startingPoint.id,
-        startingpoint_name: startingPoint.name,
-        endPointId:endPoint.id,
-        endpoint_name: endPoint.name,
-        departdate:departureDate ? departureDate.toISOString().split("T")[0] : null,
-        returndate:returnDate ? returnDate.toISOString().split("T")[0] : null,
-        tripTypeinput: tripType,
-      });
-      navigation.navigate('SearchFerry');
-      setIsLoading(false);
-    } else {
-      setIsModalVisible(true);
-    }
-  }}
->
-  <Text style={styles.searchButtonText}>Search</Text>
-</TouchableOpacity>
-<Modal
-  visible={isModalVisible}
-  transparent={true}
-  animationType="fade"
-  onRequestClose={() => setIsModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <Text style={styles.modalText}>Please select starting points and destination.</Text>
-      <TouchableOpacity 
-        style={styles.modalButton} 
-        onPress={() => setIsModalVisible(false)}
-      >
-        <Text style={styles.modalButtonText}>OK</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-      <Text style={styles.titledeal}>
-        <Text style={styles.highlight}>Hot</Text> Deal
-      </Text>
-      <Banner/>
-<View style={styles.rowtrip}>
-  <View style={styles.coltrip}>
-    <Text style={styles.texcol}>Popular</Text>
-    <Text style={styles.texcol}><Text style={styles.highlight}>Destination</Text></Text>
-    <Text style={styles.Detail}>
-      Lorem ipsum odor amet, consectetuer adipiscing elit. Curabitur lectus sodales suspendisse hendrerit eu taciti quis. 
-      Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
-    </Text>
-    <TouchableOpacity style={styles.PxploreButton}>
-      <Text style={styles.searchButtonText}>EXPLORE MORE  <Image source={require('./assets/IconExplo.png')} style={styles.iconExplo} /></Text>
-    </TouchableOpacity>
-  </View>
-
-  <View style={styles.coltrip}>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {destinations.slice(0, 1).map((item) => (
-        <View style={styles.cardContainer} key={item.id}>
-          <Image source={item.image} style={styles.cardImage} />
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-            <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
-            <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
-          </View>
-        </View>
-      ))}
-    </ScrollView>
-  </View>
-</View>
-
-<ScrollView
-  contentContainerStyle={styles.cardList}
-  style={{ width: '100%' }}
->
-  {destinations.map((item) => (
-    <View style={styles.cardContainer} key={item.id}>
-      <Image source={item.image} style={styles.cardImage} />
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-        <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
-        <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
-      </View>
-    </View>
-  ))}
-</ScrollView>
-
-</ImageBackground>
-    </ScrollView >
+        </ImageBackground>
+      </ScrollView >
     </View>
   );
 };
@@ -391,7 +464,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 20,
   },
- 
+
   logoDate: {
     width: wp('5%'),
     height: wp('5%'),
@@ -405,11 +478,11 @@ const styles = StyleSheet.create({
   logoSwap: {
     width: 15,
     height: 17,
-    marginHorizontal: 15, 
+    marginHorizontal: 15,
     marginLeft: 5,
-    marginRight: 0, 
-   backgroundColor:'#FFF',
-   borderRadius:30,
+    marginRight: 0,
+    backgroundColor: '#FFF',
+    borderRadius: 30,
   },
   title: {
     fontSize: 20,
@@ -417,7 +490,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#002348',
     marginBottom: 20,
-   
+
   },
   titledeal: {
     fontSize: 20,
@@ -428,18 +501,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignSelf: 'flex-start', // ยืนยันให้ข้อความอยู่ชิดซ้าย
     marginLeft: 20, // เพิ่มพื้นที่ห่างจากขอบซ้าย
-},
+  },
   highlight: {
     color: '#FD501E',
-  
+
   },
   tabContainer: {
     flexDirection: 'row',
     marginLeft: 20,
     marginRight: 20,
-    marginBottom: 0,  
-    paddingBottom: 0, 
-    overflow: 'visible', 
+    marginBottom: 0,
+    paddingBottom: 0,
+    overflow: 'visible',
   },
   bookingSection: {
     backgroundColor: '#F6F6F6',
@@ -464,7 +537,7 @@ const styles = StyleSheet.create({
   tabOuter: {
     flex: 1,
     alignItems: 'center',
-    
+
   },
   tabActiveOuter: {
     backgroundColor: '#F6F6F6',
@@ -474,8 +547,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
     borderRadius: 25,
-    borderBottomLeftRadius:0,
-    borderBottomRightRadius:0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
   },
   tabInactiveOuter: {
     backgroundColor: 'transparent',
@@ -497,7 +570,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(253, 80, 30, 0.4)',
     borderRadius: 25,
     width: '90%',
-    margin:5,
+    margin: 5,
     opacity: 40,
   },
   tabTextActive: {
@@ -522,10 +595,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
   },
-  rowdepart:{
+  rowdepart: {
     flexDirection: 'row',
   },
-  inputBoxlocation:{
+  inputBoxlocation: {
     flexDirection: 'row',
     backgroundColor: '#FFF',
     padding: 10,
@@ -537,7 +610,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginHorizontal: 5,
     flex: 1,
-    justifyContent: 'center', 
+    justifyContent: 'center',
     marginRight: 0,
   },
   inputRow: {
@@ -602,21 +675,21 @@ const styles = StyleSheet.create({
   dotInactive: {
     backgroundColor: '#CCC',
   },
-  texcol:{
+  texcol: {
     flexDirection: 'column',
     fontSize: 30,
     fontWeight: 'bold',
-    
+
   },
   rowtrip: {
     textAlign: 'left',
-    marginLeft:5,
+    marginLeft: 5,
     alignSelf: 'flex-start',
-    width:180,
-    flexDirection:'row',
+    width: 180,
+    flexDirection: 'row',
     marginBottom: 20,
   },
-  Detail:{
+  Detail: {
     color: '#666666',
     marginTop: 5,
   },
@@ -631,7 +704,7 @@ const styles = StyleSheet.create({
     margin: 10,
     width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
   },
-  
+
 
   cardImage: {
     width: '100%',
@@ -672,18 +745,18 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flexDirection: 'row',
   },
-  
+
   screen: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconExplo:{
-     height: 12,
-     width:12,
+  iconExplo: {
+    height: 12,
+    width: 12,
   },
-  background:{
-    width:'100%'
+  background: {
+    width: '100%'
   },
   loadingContainer: {
     position: "absolute",
@@ -714,6 +787,8 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'left',
     marginBottom: 15,
+    maxWidth: '100%',
+    width: '100%',
   },
   modalButton: {
     backgroundColor: '#FD501E',
@@ -789,4 +864,3 @@ const styles = StyleSheet.create({
 })
 export default HomeScreen;
 
-   
