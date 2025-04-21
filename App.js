@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet,TouchableOpacity } from 'react-native';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -20,6 +20,7 @@ import { CustomerProvider } from './(Screen)/CustomerContext';
 import LinkingConfiguration from './(Screen)/linking';
 import PromptPayScreen from './(Screen)/PromptPayQR';
 import SplashScreenComponent from './(Screen)/SplashScreenComponent';
+import LoginScreen from './(Screen)/LoginScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,29 +49,91 @@ const AppNavigator = () => (
   </Stack.Navigator>
 );
 
+const CustomPostButton = ({ children, onPress }) => (
+  <TouchableOpacity
+    style={styles.customButtonContainer}
+    onPress={onPress}
+  >
+      <View style={styles.customButton}>
+      <View style={{ transform: [{ translateY: 6 }] }}>
+        {children}
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
 // MainNavigator (ใช้ Bottom Tab Navigator)
 const MainNavigator = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
-        if (route.name === 'Home') {
+<Tab.Navigator
+  screenOptions={({ route }) => ({
+    headerShown: false,
+    tabBarShowLabel: true,
+    tabBarStyle: {
+      height: 70,
+     
+    },
+    tabBarLabelStyle: {
+      fontSize: 12,
+    },
+    tabBarIcon: ({ focused, size }) => {
+      let iconName;
+
+      switch (route.name) {
+        case 'Home':
           iconName = focused ? 'home' : 'home-outline';
-        } else if (route.name === 'Settings') {
-          iconName = focused ? 'settings' : 'settings-outline';
-        }
-        return <Icon name={iconName} size={size} color={color} />;
-      },
-      tabBarActiveTintColor: '#FD501E',
-      tabBarInactiveTintColor: 'gray',
-    })}
-  >
+          break;
+        case 'Messages':
+          iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+          break;
+        case 'Post':
+          iconName = 'add';
+          break;
+        case 'Trips':
+          iconName = focused ? 'reader' : 'reader-outline';
+          break;
+        case 'Login':
+          iconName = focused ? 'person-circle' : 'person-circle-outline';
+          break;
+        default:
+          iconName = 'ellipse';
+      }
+
+      // กำหนดสีตาม tab
+      const color = route.name === 'Post'
+        ? (focused ? 'white' : 'white') // Post ใช้สีพิเศษ
+        : (focused ? '#FD501E' : 'gray');   // อื่น ๆ สีเทาเข้ม/อ่อน
+
+      return (
+        <Icon
+          name={iconName}
+          size={route.name === 'Post' ? 30 : size}
+          color={color}
+        />
+      );
+    },
+    tabBarActiveTintColor: '#FD501E',
+
+  })}
+>
+
+
+
+
+    <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
+    <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} />
+
+    {/* ปุ่มตรงกลาง (Floating) */}
     <Tab.Screen
-      name="Home"
-      options={{ headerShown: false }}
-      component={AppNavigator}  // ใช้ Stack Navigator ที่รวมทุกหน้าหลัก
+      name="Post"
+      component={SettingsScreen}
+      options={{
+        title: '',
+        tabBarButton: (props) => <CustomPostButton {...props} />,
+      }}
     />
-    <Tab.Screen name="Settings" component={SettingsScreen} />
+
+    <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
+    <Tab.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
   </Tab.Navigator>
 );
 
@@ -113,5 +176,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  customButtonContainer: {
+    top: -10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customButton: {
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    backgroundColor: '#FD501E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
   },
 });

@@ -6,6 +6,10 @@ import LogoTheTrago from './(component)/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './(Screen)/CustomerContext';
 import { CalendarList } from 'react-native-calendars';
+import styles from './(CSS)/HomeScreenStyles';
+
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 
 const destinations = [
@@ -120,6 +124,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
+   
     <View style={{ flex: 1 }}>
       {isLoading && (
         <View style={styles.loadingContainer}>
@@ -127,11 +132,12 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.loadingText}>Processing Payment...</Text>
         </View>
       )}
-
+    
       <ScrollView contentContainerStyle={styles.container}>
-        <ImageBackground
-          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-          style={styles.background}>
+      <LinearGradient
+    colors={['#FD501E', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']}
+    style={styles.gradientBackground}
+  >
           <LogoTheTrago />
 
 
@@ -263,7 +269,7 @@ const HomeScreen = ({ navigation }) => {
                 <TouchableOpacity onPress={() => setShowModal(true)}
                   style={[
                     styles.rowdepart,
-                    { width: tripType === "One Way Trip" ? wp('73.5%') : 'auto' } // Apply 100% width conditionally
+                    { width: tripType === "One Way Trip" ? wp('68.4%') : 'auto' } // Apply 100% width conditionally
                   ]}>
 
                   <Image
@@ -399,22 +405,26 @@ const HomeScreen = ({ navigation }) => {
           </Text>
           <Banner />
           <View style={styles.rowtrip}>
-            <View style={styles.coltrip}>
+          <View style={styles.coltrip}>
+               
               <Text style={styles.texcol}>Popular</Text>
               <Text style={styles.texcol}><Text style={styles.highlight}>Destination</Text></Text>
               <Text style={styles.Detail}>
                 Lorem ipsum odor amet, consectetuer adipiscing elit. Curabitur lectus sodales suspendisse hendrerit eu taciti quis.
                 Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
               </Text>
+              
               <TouchableOpacity style={styles.PxploreButton}>
-                <Text style={styles.searchButtonText}>EXPLORE MORE  <Image source={require('./assets/IconExplo.png')} style={styles.iconExplo} /></Text>
+                <Text style={styles.searchButtonText}>EXPLORE MORE</Text>
               </TouchableOpacity>
-            </View>
-
-            <View style={styles.coltrip}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {destinations.slice(0, 1).map((item) => (
-                  <View style={styles.cardContainer} key={item.id}>
+           
+            
+              </View>
+          
+            
+       
+              {destinations.slice(0, 1).map((item) => (
+                  <View style={styles.cardContainerDes} key={item.id}>
                     <Image source={item.image} style={styles.cardImage} />
                     <View style={styles.cardContent}>
                       <Text style={styles.cardTitle}>{item.title}</Text>
@@ -424,16 +434,18 @@ const HomeScreen = ({ navigation }) => {
                     </View>
                   </View>
                 ))}
-              </ScrollView>
+              
+           
             </View>
-          </View>
+
+        
 
           <ScrollView
             contentContainerStyle={styles.cardList}
             style={{ width: '100%' }}
           >
             {destinations.map((item) => (
-              <View style={styles.cardContainer} key={item.id}>
+              <View style={styles.cardContainerDes} key={item.id}>
                 <Image source={item.image} style={styles.cardImage} />
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
@@ -445,422 +457,14 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </ScrollView>
 
-        </ImageBackground>
+          </LinearGradient>
+
       </ScrollView >
+   
     </View>
+    
   );
 };
 
-
-
-
-
-
-const styles = StyleSheet.create({
-  container: {
-    fontFamily: 'Domestos',
-    flexGrow: 1,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-  },
-
-  logoDate: {
-    width: wp('5%'),
-    height: wp('5%'),
-    marginRight: 10,
-  },
-  logoLine: {
-    width: 29,
-    height: 27,
-    marginHorizontal: 10, // เพิ่มระยะห่างระหว่างภาพและกล่องอินพุต
-  },
-  logoSwap: {
-    width: 15,
-    height: 17,
-    marginHorizontal: 15,
-    marginLeft: 5,
-    marginRight: 0,
-    backgroundColor: '#FFF',
-    borderRadius: 30,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#002348',
-    marginBottom: 20,
-
-  },
-  titledeal: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'left', // ชิดซ้าย
-    color: '#002348',
-    marginBottom: 20,
-    marginTop: 20,
-    alignSelf: 'flex-start', // ยืนยันให้ข้อความอยู่ชิดซ้าย
-    marginLeft: 20, // เพิ่มพื้นที่ห่างจากขอบซ้าย
-  },
-  highlight: {
-    color: '#FD501E',
-
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginLeft: 20,
-    marginRight: 20,
-    marginBottom: 0,
-    paddingBottom: 0,
-    overflow: 'visible',
-  },
-  bookingSection: {
-    backgroundColor: '#F6F6F6',
-    borderRadius: 30,
-    padding: wp('3.5%'),
-    width: '100%',
-    marginBottom: 0,
-    paddingBottom: 0,
-    shadowColor: '#F6F6F6',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#FEE8E1',
-    borderRadius: 25,
-  },
-  tabOuter: {
-    flex: 1,
-    alignItems: 'center',
-
-  },
-  tabActiveOuter: {
-    backgroundColor: '#F6F6F6',
-    shadowColor: '#F6F6F6',
-    shadowOffset: { width: 0, height: -15 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    borderRadius: 25,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  tabInactiveOuter: {
-    backgroundColor: 'transparent',
-  },
-  tabActive: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#FD501E',
-    borderRadius: 25,
-    width: '90%',
-    margin: 5,
-    height: 10,
-  },
-  tabInactive: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: 'rgba(253, 80, 30, 0.4)',
-    borderRadius: 25,
-    width: '90%',
-    margin: 5,
-    opacity: 40,
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  tabTextInactive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  inputBox: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 5,
-    flex: 1,
-    justifyContent: 'center', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
-  },
-  rowdepart: {
-    flexDirection: 'row',
-  },
-  inputBoxlocation: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 5,
-    flex: 1,
-    justifyContent: 'center',
-    marginRight: 0,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',  // จัดตำแหน่งให้ห่างกันอย่างเหมาะสม
-    marginBottom: 15,
-  },
-  inputBoxCol: {
-    flexDirection: 'column',
-  },
-  inputLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  inputText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  searchButton: {
-    backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-    width: '100%',
-  },
-  PxploreButton: {
-    backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginTop: 10,
-    width: '100%',
-  },
-  searchButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dotContainer: {
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 10,
-    alignItems: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  dotActive: {
-    backgroundColor: '#FD501E',
-  },
-  dotInactive: {
-    backgroundColor: '#CCC',
-  },
-  texcol: {
-    flexDirection: 'column',
-    fontSize: 30,
-    fontWeight: 'bold',
-
-  },
-  rowtrip: {
-    textAlign: 'left',
-    marginLeft: 5,
-    alignSelf: 'flex-start',
-    width: 180,
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  Detail: {
-    color: '#666666',
-    marginTop: 5,
-  },
-  cardContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    margin: 10,
-    width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
-  },
-
-
-  cardImage: {
-    width: '100%',
-    height: 150,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-  },
-  cardContent: {
-    padding: 10,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#002348',
-    marginBottom: 5,
-  },
-  cardLocation: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  cardDuration: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 10,
-  },
-  cardPrice: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  cardPriceColor: {
-    fontSize: 14,
-    color: '#FD501E',
-  },
-  cardList: {
-
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-  },
-
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconExplo: {
-    height: 12,
-    width: 12,
-  },
-  background: {
-    width: '100%'
-  },
-  loadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // พื้นหลังโปร่งใส
-    zIndex: 9999, // ✅ ให้ ActivityIndicator อยู่ด้านบนสุด
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // พื้นหลังโปร่งแสง
-  },
-  modalContainer: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    alignItems: 'flex-end',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'left',
-    marginBottom: 15,
-    maxWidth: '100%',
-    width: '100%',
-  },
-  modalButton: {
-    backgroundColor: '#FD501E',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  tripTypeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  tripTypeOneWayButton: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 15,
-    borderBottomRightRadius: 0,
-    borderTopRightRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 5,
-    flex: 1,
-    justifyContent: 'center',
-    marginRight: 0,
-    width: '100%',
-    height: 50,
-    alignItems: 'center',
-
-  },
-  tripTypeRoundButton: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 15,
-    borderBottomLeftRadius: 0,
-    borderTopLeftRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 5,
-    flex: 1,
-    justifyContent: 'center',
-    marginLeft: 0,
-    marginRight: 5,
-    width: '100%',
-    height: 50,
-    alignItems: 'center',
-
-  },
-  activeButton: {
-    backgroundColor: "#FD501E",
-
-  },
-  tripTypeText: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: 'bold'
-  },
-  activeText: {
-    color: "#FFF",
-  },
-})
 export default HomeScreen;
 
