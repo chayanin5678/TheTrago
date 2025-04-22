@@ -41,10 +41,10 @@ const PaymentScreen = ({ navigation, route }) => {
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
   const { customerData, updateCustomerData } = useCustomer();
   // Compute booking_code only if bookingcode is available
-  const booking_code = bookingcode.length > 0
+  let booking_code = bookingcode.length > 0
     ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
     : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
-  const booking_codeGroup = bookingcodeGroup.length > 0
+  let booking_codeGroup = bookingcodeGroup.length > 0
     ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
     : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
 
@@ -303,7 +303,7 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("📌 Updating Customer Data with Booking Code:", booking_code);
       updateCustomerData({
         bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        paymentfee: paymentfee,
+        paymentfee: totalPayment,
         total: totalPayment,
         bookingcode: booking_code,
         bookingcodegroup: booking_codeGroup,
@@ -333,7 +333,7 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("📌 Updating Customer Data with Booking Code:", booking_code);
      
       updateCustomerData({
-        paymentfee: paymentfee,
+        paymentfee: totalpaymentfee,
         paymenttype: selectedOption,
       });
       setIsLoading(false);
@@ -417,6 +417,21 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   };
 
+  const updatestatus = async (bookingCode) => {
+    try {
+      console.log("📌 Creating Booking with:", bookingCode);
+      await axios.post(`${ipAddress}/statuspayment`, {
+        md_booking_code : bookingCode, 
+    
+      });
+  
+      console.log("✅ Booking update status successfully");
+    } catch (error) {
+      console.error("❌ Error submitting booking:", error);
+    }
+  };
+  
+
   useEffect(() => {
     const handleDeepLink = async (event) => {
       let url = event.url || "";
@@ -431,8 +446,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
           if (res.data.success && res.data.status === "successful") { //successful failed
             // Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
-
-            createBooking(paymentcode);
+            updatestatus(booking_code);
             navigation.navigate("ResultScreen", { success: true });
           } else {
             // Alert.alert("❌ Payment Failed", "Payment was not successful.");

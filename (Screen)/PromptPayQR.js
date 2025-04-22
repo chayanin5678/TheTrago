@@ -16,10 +16,10 @@ export default function PromptPayScreen({ route, navigation }) {
   const [intervalId, setIntervalId] = useState(null); // เก็บค่า intervalId
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
-  const booking_code = bookingcode.length > 0
-  ? "TG" + (parseInt(bookingcode[0].booking_code) + 1)
-  : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
-const booking_codeGroup = bookingcodeGroup.length > 0
+  let booking_code = bookingcode.length > 0 
+  ? "TG" + (parseInt(bookingcode[0].booking_code) + 1) 
+  : " "; // ใช้ "N/A" ถ้าไม่มี booking code
+let booking_codeGroup = bookingcodeGroup.length > 0
   ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
   : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
 
@@ -34,7 +34,7 @@ const booking_codeGroup = bookingcodeGroup.length > 0
     const loadAll = async () => {
       try {
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
-          amount: 3000,
+          amount: qrpayment,
           currency: "thb",
         });
   
@@ -46,6 +46,7 @@ const booking_codeGroup = bookingcodeGroup.length > 0
         const data1 = await res1.json();
         const bookingCodeNumber = parseInt(data1?.data?.[0]?.booking_code || "0") + 1;
         const newBookingCode = "TG" + bookingCodeNumber;
+        booking_code = newBookingCode;
   
         let newGroupBookingCode = null;
         if (customerData.roud === 2) {
@@ -58,6 +59,7 @@ const booking_codeGroup = bookingcodeGroup.length > 0
         // ✅ สร้าง booking โดยใช้ booking code ที่ได้จริง
         await createBooking(response.data.charge_id, newBookingCode, newGroupBookingCode);
         await createPassenger(newBookingCode);
+       
   
       } catch (error) {
         console.error("❌ Error in loadAll:", error);
@@ -82,6 +84,7 @@ const booking_codeGroup = bookingcodeGroup.length > 0
         console.log("Payment Status Response:", res.data);
 
         if (res.data.success && res.data.status === "successful") {
+          updatestatus(booking_code); // อัปเดตสถานะการชำระเงิน
           navigation.navigate("ResultScreen", { success: true });
           clearInterval(intervalId); // หยุดการทำงานของ setInterval
         }
@@ -196,6 +199,22 @@ const booking_codeGroup = bookingcodeGroup.length > 0
       console.error("❌ Error submitting booking:", error);
     }
   };
+
+  
+  const updatestatus = async (bookingCode) => {
+    try {
+      console.log("📌 Creating Booking with:", bookingCode);
+      await axios.post(`${ipAddress}/statuspayment`, {
+        md_booking_code : bookingCode, 
+    
+      });
+  
+      console.log("✅ Booking update status successfully");
+    } catch (error) {
+      console.error("❌ Error submitting booking:", error);
+    }
+  };
+  
   
   const handlePress = () => {
     // หยุด setInterval เมื่อปุ่มถูกกด
@@ -205,7 +224,7 @@ const booking_codeGroup = bookingcodeGroup.length > 0
     }
 
     // นำทางไปยังหน้าจอ ResultScreen พร้อมข้อมูล success: false
-    navigation.navigate('ResultScreen', { success: false });
+    navigation.navigate('ResultScreen', { success: true });
   };
 
   

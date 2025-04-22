@@ -135,7 +135,7 @@ const HomeScreen = ({ navigation }) => {
     
       <ScrollView contentContainerStyle={styles.container}>
       <LinearGradient
-    colors={['#FD501E', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']}
+    colors={['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',  '#FD501E', '#FD501E', '#FD501E', '#FD501E']}
     style={styles.gradientBackground}
   >
           <LogoTheTrago />

@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.subtitle}>
-        Don't have an account? <Text style={styles.link}>Create account</Text>
-      </Text>
+      <View style={{ flexDirection: 'row' }}>
+        <Text style={styles.subtitle}>
+          Don't have an account?
+        </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+          <Text style={styles.link}> Create account</Text>
+        </TouchableOpacity>
+
+      </View>
 
       <TextInput
         style={styles.input}
@@ -37,10 +45,11 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.row}>
-        <View style={styles.checkboxContainer}>
-          <Icon name="checkbox-outline" size={20} color="#FD501E" />
-          <Text style={styles.rememberText}> Remember me</Text>
-        </View>
+        <TouchableOpacity onPress={() => setRemember(!remember)} style={styles.checkboxContainer}>
+          <MaterialIcons name={remember ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+          <Text style={styles.label}> Remember me</Text>
+        </TouchableOpacity>
+
         <Text style={styles.forgotText}>Forgot your password</Text>
       </View>
 

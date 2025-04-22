@@ -28,16 +28,23 @@
       "package": "com.chayanin5678.TheTrago"
     },
     "linking": {
-      "prefixes": ["thetrago://"],
+      "prefixes": [
+        "thetrago://"
+      ],
       "config": {
         "screens": {
-          "HomeScreen": "home",
           "ResultScreen": "payment/success"
         }
       }
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }

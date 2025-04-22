@@ -21,6 +21,7 @@ import LinkingConfiguration from './(Screen)/linking';
 import PromptPayScreen from './(Screen)/PromptPayQR';
 import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 import LoginScreen from './(Screen)/LoginScreen';
+import RegisterScreen from './(Screen)/RegisterScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -46,6 +47,13 @@ const AppNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+const Loginnavigator = () => (
+  <Stack.Navigator initialRouteName="LoginScreen">
+    <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -133,7 +141,7 @@ const MainNavigator = () => (
     />
 
     <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
-    <Tab.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
+    <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
   </Tab.Navigator>
 );
 
