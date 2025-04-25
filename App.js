@@ -22,6 +22,7 @@ import PromptPayScreen from './(Screen)/PromptPayQR';
 import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 import LoginScreen from './(Screen)/LoginScreen';
 import RegisterScreen from './(Screen)/RegisterScreen';
+import AccountScreen from './(Screen)/AccountScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,15 +48,20 @@ const AppNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
+    
   </Stack.Navigator>
 );
 
+// ลบ NavigationContainer ใน Loginnavigator
 const Loginnavigator = () => (
-  <Stack.Navigator initialRouteName="LoginScreen">
-    <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+  <Stack.Navigator initialRouteName="AccountScreen">
+      <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
     <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
+   
   </Stack.Navigator>
 );
+
 
 const CustomPostButton = ({ children, onPress }) => (
   <TouchableOpacity

@@ -142,7 +142,7 @@ const RegisterScreen = ({ navigation }) => {
       console.log("New ID:", newId); // แสดงผล ID ใหม่
 
       createMember(newId); // เรียกใช้ฟังก์ชันสร้างสมาชิกใหม่
-      navigation.navigate('LoginScreen'); // นำทางไปยังหน้าล็อกอินหลังจากสร้างสมาชิกเสร็จ
+      navigation.navigate('AccountScreen'); // นำทางไปยังหน้าล็อกอินหลังจากสร้างสมาชิกเสร็จ
       // ตอนนี้คุณสามารถใช้ `newBookingCode` และ `newId` เพื่อส่งข้อมูลไปยัง API หรือจัดการต่อได้
     } catch (error) {
       console.error('Error fetching member ID:', error);

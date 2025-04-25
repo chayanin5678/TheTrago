@@ -75,6 +75,9 @@ export const CustomerProvider = ({ children }) => {
     pictimetableDepart:'',
     piccompanyReturn:'',
     pictimetableReturn:'',
+    email:'',
+    password:'',
+    remember:false,
   });
 
   const updateCustomerData = (newData) => {
