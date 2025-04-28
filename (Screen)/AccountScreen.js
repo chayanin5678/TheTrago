@@ -1,14 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback } from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import ipAddress from "../ipconfig";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import * as ImagePicker from 'expo-image-picker';
+import Feather from '@expo/vector-icons/Feather';
 
 const AccountScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // ใช้ token state
   const [user, setUser] = useState([]);
+  const [profileImage, setProfileImage] = useState(null);
+  const scaleAnim = useState(new Animated.Value(1))[0];
+  
+
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.9, // ย่อเล็กลง 10%
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1, // กลับมาเหมือนเดิม
+      friction: 3, // ความหนืด เวลาคืนตัวนุ่ม ๆ
+      tension: 35, // ความเร็ว
+      useNativeDriver: true,
+    }).start(() => {
+      pickImage(); // เรียก pickImage ตอนปล่อยนิ้ว
+    });
+  };
 
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('userToken');
@@ -25,14 +50,18 @@ const AccountScreen = ({ navigation }) => {
         // หากไม่มี token, นำทางไปที่หน้า LoginScreen
         navigation.replace('LoginScreen');
       } else {
-        // หากมี token, นำทางไปที่หน้า AccountScreen
-        fetchData();
+
         setIsLoading(false); // หยุดการโหลดหลังจากตรวจสอบเสร็จ
+        // console.log(user); // แสดง token ใน console
+
       }
     };
     checkLoginStatus(); // เรียกใช้เมื่อหน้าโหลด
 
-  }, [navigation]); // ใช้ navigation เป็น dependency เพื่อให้ useEffect ทำงานเมื่อคอมโพเนนต์โหลด
+
+  }, []); // ใช้ navigation เป็น dependency เพื่อให้ useEffect ทำงานเมื่อคอมโพเนนต์โหลด
+
+  useEffect(() => {
 
     const fetchData = async () => {
       try {
@@ -59,9 +88,14 @@ const AccountScreen = ({ navigation }) => {
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+        setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       }
     };
+    if (token) {
+      fetchData();
+    }
+
+  }, [token]);
 
 
 
@@ -74,28 +108,69 @@ const AccountScreen = ({ navigation }) => {
     );
   }
 
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    let pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!pickerResult.canceled) {
+      setProfileImage(pickerResult.assets[0].uri);
+      // เรียก upload function ได้ตรงนี้ถ้าอยากอัปโหลดไป Server ทันที
+      // uploadImage(pickerResult.assets[0].uri);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+
       <View style={styles.profileContainer}>
         {/* รูปภาพโปรไฟล์ */}
-        <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
-        <Text style={styles.userName}>{`${user.firstName} ${user.lastName}`}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
+        {user.map((item, index) => (
+          <View key={index}>
+            <TouchableWithoutFeedback
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
+                <Image
+                  source={profileImage ? { uri: profileImage } : require('../assets/icontrago.png')}
+                  style={styles.profileImage}
+                />
+                <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
+              </Animated.View>
+            </TouchableWithoutFeedback>
+
+
+            <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
+            <Text style={styles.userEmail}>{item.md_member_email}</Text>
+          </View>
+
+        ))}
       </View>
 
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Dashboard')}>
-          <MaterialIcons name="space-dashboard" size={24} color="black" />
+          <MaterialIcons name="space-dashboard" size={24} color="#FD501E" />
           <Text style={styles.menuText}>Dashboard</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyBookings')}>
-          <FontAwesome6 name="ticket" size={24} color="black" />
+          <FontAwesome6 name="ticket" size={24} color="#FD501E" />
           <Text style={styles.menuText}>My Booking</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person" size={24} color="black" />
+          <Ionicons name="person" size={24} color="#FD501E" />
           <Text style={styles.menuText}>Profile</Text>
         </TouchableOpacity>
 
@@ -121,7 +196,7 @@ const AccountScreen = ({ navigation }) => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -136,10 +211,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   profileImage: {
+    marginTop: 20,
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
+    borderWidth: 2,
+    alignSelf: 'center',
+    borderColor: '#FD501E',
   },
   userName: {
     fontSize: 22,
@@ -148,6 +227,7 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 16,
     color: '#777',
+    textAlign: 'center',
   },
   menuContainer: {
     flex: 1,
@@ -186,6 +266,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // พื้นหลังโปร่งใส
   },
+  edit: {
+    bottom: 35,
+    fontSize: wp('5%'),
+    left: 120,
+    backgroundColor: 'white',
+    borderRadius: 50,
+    padding: 5,
+    width: 30,
+    marginBottom: -20,
+
+  }
 });
 
 export default AccountScreen;

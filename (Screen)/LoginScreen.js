@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert,ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert,ActivityIndicator, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import ipAddress from "../ipconfig";
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
+
 
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
@@ -70,7 +71,8 @@ export default function LoginScreen({ navigation }) {
           <ActivityIndicator size="large" color="#FD501E" />
         </View>
       )}
-      <View style={styles.container}>
+       <ScrollView contentContainerStyle={styles.container}>
+     
         <Text style={styles.title}>Sign In</Text>
         <View style={{ flexDirection: 'row' }}>
           <Text style={styles.subtitle}>
@@ -142,7 +144,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.policyText}>
           By continuing, you agree to The Tragos' <Text style={styles.link}>Terms of Use</Text> and <Text style={styles.link}>Privacy Policy</Text>.
         </Text>
-      </View>
+      </ScrollView>
     </View>
   );
 }

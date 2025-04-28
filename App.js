@@ -148,6 +148,7 @@ const MainNavigator = () => (
 
     <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
     <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
+    
   </Tab.Navigator>
 );
 
