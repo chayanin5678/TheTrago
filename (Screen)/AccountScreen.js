@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Button ,Alert} from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -14,6 +14,7 @@ const AccountScreen = ({ navigation }) => {
   const [user, setUser] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
   const scaleAnim = useState(new Animated.Value(1))[0];
+  const [isUploading, setIsUploading] = useState(false);
   
 
 
@@ -126,9 +127,44 @@ const AccountScreen = ({ navigation }) => {
     if (!pickerResult.canceled) {
       setProfileImage(pickerResult.assets[0].uri);
       // เรียก upload function ได้ตรงนี้ถ้าอยากอัปโหลดไป Server ทันที
-      // uploadImage(pickerResult.assets[0].uri);
+       uploadImage(pickerResult.assets[0].uri);
     }
   };
+
+  const uploadImage = async (imageUri) => {
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append('profile_image', {
+      uri: imageUri,
+      name: 'profile.jpg', // ชื่อส่งไป ไม่มีผลเพราะ Server แปลงเป็น webp
+      type: 'image/jpeg',
+    });
+
+    try {
+      const response = await fetch(`${ipAddress}/upload-member`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.status === 'success') {
+        Alert.alert("Success", "Profile image uploaded!");
+      } else {
+        Alert.alert("Error", result.message || "Upload failed.");
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert("Error", "Upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -137,19 +173,41 @@ const AccountScreen = ({ navigation }) => {
         {/* รูปภาพโปรไฟล์ */}
         {user.map((item, index) => (
           <View key={index}>
-            <TouchableWithoutFeedback
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
-            >
-              <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
-                <Image
-                  source={profileImage ? { uri: profileImage } : require('../assets/icontrago.png')}
-                  style={styles.profileImage}
-                />
-                <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
-              </Animated.View>
-            </TouchableWithoutFeedback>
-
+          
+           
+            {isUploading && <ActivityIndicator size="large" color="#FD501E" />}
+      {profileImage && !isUploading && (
+         <TouchableWithoutFeedback
+         onPressIn={handlePressIn}
+         onPressOut={handlePressOut}
+       >
+         <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
+           <Image
+           source={{ uri: profileImage }}
+             style={styles.profileImage}
+           />
+           <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
+         </Animated.View>
+       </TouchableWithoutFeedback>
+      
+      )}
+      {!profileImage &&!isUploading && (
+        <TouchableWithoutFeedback onPressIn={handlePressIn} onPressOut={handlePressOut}>
+        <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
+          <Image
+            source={
+              profileImage // ถ้าเลือกรูปใหม่
+                ? { uri: profileImage }
+                : item.md_member_photo // ถ้ามีรูปในฐาน
+                  ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
+                  : require('../assets/icontrago.png') // ถ้าไม่มีอะไรเลย
+            }
+            style={styles.profileImage}
+          />
+          <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
+        </Animated.View>
+      </TouchableWithoutFeedback>
+      )}
 
             <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
             <Text style={styles.userEmail}>{item.md_member_email}</Text>
@@ -178,14 +236,6 @@ const AccountScreen = ({ navigation }) => {
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Affiliate')}>
           <Text style={styles.menuText}>Affiliate</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Earnings')}>
-          <Text style={styles.menuText}>Earnings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('BookingAffiliate')}>
-          <Text style={styles.menuText}>Booking Affiliate</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('DeleteProfile')}>

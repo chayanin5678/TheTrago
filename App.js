@@ -23,6 +23,7 @@ import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 import LoginScreen from './(Screen)/LoginScreen';
 import RegisterScreen from './(Screen)/RegisterScreen';
 import AccountScreen from './(Screen)/AccountScreen';
+import Dashboard from './(Screen)/Dashboard';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -58,6 +59,7 @@ const Loginnavigator = () => (
       <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
     <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
    
   </Stack.Navigator>
 );
