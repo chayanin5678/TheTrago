@@ -78,6 +78,8 @@ export const CustomerProvider = ({ children }) => {
     email:'',
     password:'',
     remember:false,
+    
+
   });
 
   const updateCustomerData = (newData) => {

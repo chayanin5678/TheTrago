@@ -7,6 +7,7 @@ import ipAddress from "../ipconfig";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
+import { useCustomer } from './CustomerContext.js';
 
 const AccountScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
@@ -15,6 +16,7 @@ const AccountScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [isUploading, setIsUploading] = useState(false);
+  const { customerData, updateCustomerData } = useCustomer();
   
 
 
@@ -38,7 +40,13 @@ const AccountScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('userToken');
+    updateCustomerData({
+      Firstname: '',
+      Lastname: '',
+      email: '',
+    });
     navigation.replace('LoginScreen');
+    
   };
 
   // ตรวจสอบสถานะการล็อกอินและโหลดข้อมูลเมื่อเริ่มต้น
@@ -82,6 +90,12 @@ const AccountScreen = ({ navigation }) => {
 
         if (data && Array.isArray(data.data)) {
           setUser(data.data);
+          updateCustomerData({
+            Firstname : data.data[0].md_member_fname,
+            Lastname: data.data[0].md_member_lname,
+            email: data.data[0].md_member_email,
+          });
+          console.log('name:'+customerData.Firstname);
         } else {
           console.error('Data is not an array', data);
           setUser([]);
@@ -227,7 +241,7 @@ const AccountScreen = ({ navigation }) => {
           <Text style={styles.menuText}>My Booking</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Profile')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ProfileScreen')}>
           <Ionicons name="person" size={24} color="#FD501E" />
           <Text style={styles.menuText}>Profile</Text>
         </TouchableOpacity>

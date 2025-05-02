@@ -11,9 +11,10 @@ import { useCustomer } from './CustomerContext';
 const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
 
 const CustomerInfo = ({ navigation }) => {
+  const { customerData, updateCustomerData } = useCustomer();
   const [code, setcode] = useState('');
-  const [Firstname, setFirstname] = useState('');
-  const [Lastname, setLastname] = useState('');
+  const [Firstname, setFirstname] = useState(customerData.Firstname);
+  const [Lastname, setLastname] = useState(customerData.Lastname);
   const [selectedTitle, setSelectedTitle] = useState('Please Select');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedTele, setSelectedTele] = useState('Please Select');
@@ -21,10 +22,10 @@ const CustomerInfo = ({ navigation }) => {
   const [telePhone, setTelePhone] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileNumber, setmobileNumber] = useState('');
-  const [email, setemail] = useState('');
+  const [email, setemail] = useState(customerData.email);
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
-  const { customerData, updateCustomerData } = useCustomer();
+
   const [country, setCountry] = useState('');
   const [countrycode, setCountrycode] = useState('');
   const [errors, setErrors] = useState({});
@@ -32,6 +33,10 @@ const CustomerInfo = ({ navigation }) => {
     if (!timeString) return ""; // Handle empty input
     return timeString.slice(0, 5); // Extracts "HH:mm"
   }
+
+  console.log('customerData:', customerData.Firstname);
+  console.log('customerData:', customerData.Lastname);
+  console.log('customerData:', customerData.email);
 
 
 
@@ -340,7 +345,8 @@ const CustomerInfo = ({ navigation }) => {
               setemail(text);
               setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
             }}
-            style={[styles.input, errors.email && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+            style={[styles.input, errors.email && styles.errorInput,customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+            editable={!customerData.email} 
           />
         </View>
 
@@ -731,6 +737,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,     // กำหนดความหนาของขอบ
     borderColor: '#ced4da', // กำหนดสีของขอบ
     borderRadius: 5,    // ปรับมุมขอบให้โค้ง
+  },
+  disabledInput: {
+    backgroundColor: '#f0f0f0', // สีเทาเมื่อ email มีข้อมูล
   },
 
 });

@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet,TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-
+import { navigationRef } from './navigationRef';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -24,6 +25,7 @@ import LoginScreen from './(Screen)/LoginScreen';
 import RegisterScreen from './(Screen)/RegisterScreen';
 import AccountScreen from './(Screen)/AccountScreen';
 import Dashboard from './(Screen)/Dashboard';
+import ProfileScreen from './(Screen)/ProfileScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -53,14 +55,16 @@ const AppNavigator = () => (
   </Stack.Navigator>
 );
 
+
 // ลบ NavigationContainer ใน Loginnavigator
 const Loginnavigator = () => (
   <Stack.Navigator initialRouteName="AccountScreen">
-      <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
     <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
-   
+    <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
+
   </Stack.Navigator>
 );
 
@@ -70,89 +74,88 @@ const CustomPostButton = ({ children, onPress }) => (
     style={styles.customButtonContainer}
     onPress={onPress}
   >
-      <View style={styles.customButton}>
+    <View style={styles.customButton}>
       <View style={{ transform: [{ translateY: 6 }] }}>
         {children}
       </View>
     </View>
   </TouchableOpacity>
 );
-
-// MainNavigator (ใช้ Bottom Tab Navigator)
-const MainNavigator = () => (
-<Tab.Navigator
-  screenOptions={({ route }) => ({
-    headerShown: false,
-    tabBarShowLabel: true,
-    tabBarStyle: {
-      height: 70,
-     
-    },
-    tabBarLabelStyle: {
-      fontSize: 12,
-    },
-    tabBarIcon: ({ focused, size }) => {
-      let iconName;
-
-      switch (route.name) {
-        case 'Home':
-          iconName = focused ? 'home' : 'home-outline';
-          break;
-        case 'Messages':
-          iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-          break;
-        case 'Post':
-          iconName = 'add';
-          break;
-        case 'Trips':
-          iconName = focused ? 'reader' : 'reader-outline';
-          break;
-        case 'Login':
-          iconName = focused ? 'person-circle' : 'person-circle-outline';
-          break;
-        default:
-          iconName = 'ellipse';
+const MainNavigator = () => {
+  return (
+    <Tab.Navigator
+    screenListeners={({ route }) => ({
+      tabPress: (e) => {
+        if (route.name === 'Home') {
+          e.preventDefault(); // ป้องกัน default behavior
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Home', { screen: 'HomeScreen' });
+          }
+        }
       }
+    })}
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 70,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+        },
+        tabBarIcon: ({ focused, size }) => {
+          let iconName;
 
-      // กำหนดสีตาม tab
-      const color = route.name === 'Post'
-        ? (focused ? 'white' : 'white') // Post ใช้สีพิเศษ
-        : (focused ? '#FD501E' : 'gray');   // อื่น ๆ สีเทาเข้ม/อ่อน
+          switch (route.name) {
+            case 'Home':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'Messages':
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+              break;
+            case 'Post':
+              iconName = 'add';
+              break;
+            case 'Trips':
+              iconName = focused ? 'reader' : 'reader-outline';
+              break;
+            case 'Login':
+              iconName = focused ? 'person-circle' : 'person-circle-outline';
+              break;
+            default:
+              iconName = 'ellipse';
+          }
 
-      return (
-        <Icon
-          name={iconName}
-          size={route.name === 'Post' ? 30 : size}
-          color={color}
-        />
-      );
-    },
-    tabBarActiveTintColor: '#FD501E',
+          const color = route.name === 'Post'
+            ? (focused ? 'white' : 'white')
+            : (focused ? '#FD501E' : 'gray');
 
-  })}
->
-
-
-
-
-    <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
-    <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} />
-
-    {/* ปุ่มตรงกลาง (Floating) */}
-    <Tab.Screen
-      name="Post"
-      component={SettingsScreen}
-      options={{
-        title: '',
-        tabBarButton: (props) => <CustomPostButton {...props} />,
-      }}
-    />
-
-    <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
-    <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
-    
-  </Tab.Navigator>
-);
+          return (
+            <Icon
+              name={iconName}
+              size={route.name === 'Post' ? 30 : size}
+              color={color}
+            />
+          );
+        },
+        tabBarActiveTintColor: '#FD501E',
+      })}
+    >
+   <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
+      <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} />
+      <Tab.Screen
+        name="Post"
+        component={SettingsScreen}
+        options={{
+          title: '',
+          tabBarButton: (props) => <CustomPostButton {...props} />,
+        }}
+      />
+      <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
+      <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
+    </Tab.Navigator>
+  );
+};
 
 export default function App() {
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -179,9 +182,9 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer linking={LinkingConfiguration}>
+    <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
       <CustomerProvider>
-       <SplashScreenComponent />
+        <SplashScreenComponent />
         <MainNavigator />
       </CustomerProvider>
     </NavigationContainer>

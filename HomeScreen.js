@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, use } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
@@ -7,8 +7,9 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { useCustomer } from './(Screen)/CustomerContext';
 import { CalendarList } from 'react-native-calendars';
 import styles from './(CSS)/HomeScreenStyles';
-
+import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
+import ipAddress from './ipconfig';
 
 
 
@@ -43,6 +44,7 @@ const HomeScreen = ({ navigation }) => {
   const [calendarEndDate, setCalendarEndDate] = useState(new Date().toISOString().split('T')[0]); // string
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
+  const [token, setToken] = useState(null);
 
   // ฟังก์ชันสำหรับเลือกวัน
   const onCalendarDayPress = (day) => {
@@ -81,7 +83,7 @@ const HomeScreen = ({ navigation }) => {
     return dates;
   };
 
-  // ยืนยันการเลือกวัน
+
   const handleCalendarConfirm = () => {
     if (tripType === 'One Way Trip' && calendarStartDate) {
       console.log('Selected Departure Date:', calendarStartDate);
