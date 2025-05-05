@@ -8,7 +8,7 @@ import ipAddress from '../ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
 
-const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
+const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.'];
 
 const CustomerInfo = ({ navigation }) => {
   const { customerData, updateCustomerData } = useCustomer();
@@ -130,17 +130,22 @@ const CustomerInfo = ({ navigation }) => {
   };
 
   const handleSelectTele = (item) => {
-    const selectedValue = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`;
-    setCountry(item.sys_countries_code);
-    setCountrycode(item.sys_countries_telephone);
+    const selectedValue =
+      item.sys_countries_nameeng === 'Please Select'
+        ? 'Please Select'
+        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
+  
     setSelectedTele(selectedValue);
-    setErrors((prev) => ({ ...prev, selectedTele: false })); // Clear the error state
+    setCountry(item.sys_countries_code);
+    setCountrycode(item.sys_countries_telephone); // ใช้ตอนส่งออก
+    setErrors((prev) => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
   };
+  
 
 
   const filteredTelePhones = telePhone.filter((item) => {
-    const searchText = `${item.sys_countries_nameeng} (+${item.sys_countries_telephone})`.toLowerCase();
+    const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
     return searchText.includes(searchQuery.toLowerCase());
   });
 
@@ -215,7 +220,16 @@ const CustomerInfo = ({ navigation }) => {
       .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setTelePhone(data.data);
+          // เพิ่ม "Please Select" ที่ด้านบนของรายการ
+          const countryList = [
+            {
+              sys_countries_telephone: '',
+              sys_countries_nameeng: 'Please Select',
+              sys_countries_code: ''
+            },
+            ...data.data
+          ];
+          setTelePhone(countryList);
         } else {
           console.error('Data is not an array', data);
           setTelePhone([]);
@@ -223,6 +237,7 @@ const CustomerInfo = ({ navigation }) => {
       })
       .catch((error) => console.error('Error fetching data:', error));
   }, []);
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -313,8 +328,12 @@ const CustomerInfo = ({ navigation }) => {
                   data={filteredTelePhones}
                   renderItem={({ item }) => (
                     <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                      <Text style={styles.optionText}>{item.sys_countries_nameeng} (+{item.sys_countries_telephone})</Text>
-                    </TouchableOpacity>
+                    <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select' ]}>
+                      {item.sys_countries_nameeng === 'Please Select'
+                        ? 'Please Select'
+                        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                    </Text>
+                  </TouchableOpacity>
                   )}
                   keyExtractor={(item, index) => index.toString()}
                   initialNumToRender={5}
