@@ -12,6 +12,7 @@ export const CustomerProvider = ({ children }) => {
     Firstname: '', //ชื่อ
     Lastname: '', //นามสกุล
     selectedTitle: 'Please Select', //คำนำหน้า
+    selectcoountrycode: 'Please Select',
     tel: '', //เบอร์โทร
     email: '', //อีเมล
     companyDepartId: '', //รหัสบริษัท

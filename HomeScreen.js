@@ -13,6 +13,7 @@ import ipAddress from './ipconfig';
 
 
 
+
 const destinations = [
   { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
   { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./assets/destination2.png') },
@@ -125,8 +126,89 @@ const HomeScreen = ({ navigation }) => {
     return text;
   };
 
+
+  useEffect(() => {
+
+    const fetchData = async () => {
+      const storedToken = await SecureStore.getItemAsync('userToken');
+      try {
+        const response = await fetch(`${ipAddress}/profile`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${storedToken}`, // ส่ง Token ใน Authorization header
+            'Content-Type': 'application/json', // ระบุประเภทของข้อมูลที่ส่ง (ถ้าจำเป็น)
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        if (data && Array.isArray(data.data)) {
+         // setUser(data.data);
+          updateCustomerData({
+            Firstname : data.data[0].md_member_fname,
+            Lastname: data.data[0].md_member_lname,
+            email: data.data[0].md_member_email,
+            tel: data.data[0].md_member_phone
+          });
+
+          if(data.data[0].md_member_phone){
+            updateCustomerData({
+            tel: data.data[0].md_member_phone,
+          });
+        }
+          if(data.data[0].md_member_code){
+            getCountryByCode(data.data[0].md_member_code);
+           
+        }
+        //  console.log('name:'+customerData.Firstname);
+        } else {
+          console.error('Data is not an array', data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+      fetchData();
+ 
+
+  }, []);
+
+  const getCountryByCode = async (code) => {
+    try {
+      const response = await fetch(`${ipAddress}/membercountry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ countrycode: code }),
+      });
+  
+      const json = await response.json();
+  
+      if (response.ok) {
+        console.log('Country data:', json.data);
+        updateCustomerData({
+          selectcoountrycode: `(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`
+        });
+        return json.data;
+      } else {
+        console.warn('Not found or error:', json.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching country:', error);
+      return null;
+    }
+  };
+
+
   return (
-   
+  
     <View style={{ flex: 1 }}>
       {isLoading && (
         <View style={styles.loadingContainer}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView,StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LoGo from './../(component)/Logo';
 import Step from './../(component)/Step';
@@ -7,6 +7,7 @@ import Textinput from '../(component)/Textinput';
 import ipAddress from '../ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.'];
 
@@ -17,11 +18,11 @@ const CustomerInfo = ({ navigation }) => {
   const [Lastname, setLastname] = useState(customerData.Lastname);
   const [selectedTitle, setSelectedTitle] = useState('Please Select');
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedTele, setSelectedTele] = useState('Please Select');
+  const [selectedTele, setSelectedTele] = useState(customerData.selectcoountrycode);
   const [isTeleModalVisible, setIsTeleModalVisible] = useState(false);
   const [telePhone, setTelePhone] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mobileNumber, setmobileNumber] = useState('');
+  const [mobileNumber, setmobileNumber] = useState(customerData.tel);
   const [email, setemail] = useState(customerData.email);
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
@@ -240,6 +241,13 @@ const CustomerInfo = ({ navigation }) => {
   
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
     <ScrollView contentContainerStyle={styles.container}>
       <ImageBackground
         source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
@@ -344,7 +352,7 @@ const CustomerInfo = ({ navigation }) => {
               </View>
             </View>
           </Modal>
-          <Text style={styles.textHead}>Phone number</Text>
+        
           <TextInput
             placeholder="Mobile Number"
             value={mobileNumber}
@@ -554,6 +562,8 @@ const CustomerInfo = ({ navigation }) => {
         </View>
       </ImageBackground>
     </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
   );
 }
 
@@ -602,7 +612,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ced4da',
     borderRadius: 8,
-    width: '93%',
+   // width: wp('78%'),
     justifyContent: 'space-between',
     margin: 10,
 
@@ -707,7 +717,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingVertical: 10,
     marginLeft: 10,
-    marginRight: 10
+    marginRight: 10,
   },
   errorInput: {
     borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด

@@ -1,27 +1,59 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform,KeyboardAvoidingView, SafeAreaView, StatusBar } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useCustomer } from './CustomerContext.js';
 
 const ProfileScreen = ({ navigation }) => {
-
+  const { customerData, updateCustomerData } = useCustomer();
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
   const [tel, setTel] = useState('');
   const [email, setEmail] = useState('');
-  const [birthdate, setBirthdateate] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQueryCountry, setSearchQueryCountry] = useState('');
+  const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
   const [isTeleModalVisible, setIsTeleModalVisible] = useState(false);
-  const [country, setCountry] = useState('');
   const [telePhone, setTelePhone] = useState([]);
   const [countrycode, setCountrycode] = useState('');
   const [errors, setErrors] = useState({});
 
   const [selectedTele, setSelectedTele] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [countryId, setCountryId] = useState('');
+  const [birthdate, setBirthdate] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [countryName, setCountryName] = useState('');
+  
 
+
+
+  const formatDate = (dateString) => {
+    if (!dateString || isNaN(new Date(dateString))) {
+      return 'Select your birthday'; // หรือ 'N/A', หรือไม่ต้องแสดงเลย
+    }
+  
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  };
+  
+ 
+
+  const handleConfirm = (event, selectedDate) => {
+    setShowPicker(false);
+    if (selectedDate) {
+      const formatted = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      setBirthdate(formatted);
+    }
+  };
 
 
   useEffect(() => {
@@ -48,10 +80,21 @@ const ProfileScreen = ({ navigation }) => {
           setLastname(data.data[0].md_member_lname);
           setTel(data.data[0].md_member_phone);
           setEmail(data.data[0].md_member_email);
-          if (data.data[0].md_member_code) {
-            setSelectedTele(`(+${data.data[0].md_member_code}) ${data.data[0].sys_countries_nameeng}`);
-          }
+          if (data.data[0].md_member_code) {      
+            getCountryByCode(data.data[0].md_member_code); 
+          }else {
           setSelectedTele('Please Select');
+          }
+          if (data.data[0].md_member_nationality) {
+            getCountryByid(data.data[0].md_member_nationality);
+          }else {
+            setSelectedCountry('Please Select');
+            }
+          if (data.data[0].md_member_birthday) {
+            setBirthdate(data.data[0].md_member_birthday);
+          }else {
+            setBirthdate('Select your birthday');
+          }
 
         } else {
           console.error('Data is not an array', data);
@@ -69,7 +112,62 @@ const ProfileScreen = ({ navigation }) => {
 
   }, []);
 
+  const getCountryByCode = async (code) => {
+    try {
+      const response = await fetch(`${ipAddress}/membercountry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ countrycode: code }),
+      });
+  
+      const json = await response.json();
+  
+      if (response.ok) {
+        console.log('Country data:', json.data);
+        setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
+        return json.data;
+      } else {
+        console.warn('Not found or error:', json.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching country:', error);
+      return null;
+    }
+  };
+
+  const getCountryByid = async (id) => {
+    try {
+      const response = await fetch(`${ipAddress}/membercountryname`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ countryid: id }),
+      });
+  
+      const json = await response.json();
+  
+      if (response.ok) {
+        console.log('Country data:', json.data);
+        setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
+        return json.data;
+      } else {
+        console.warn('Not found or error:', json.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching country:', error);
+      return null;
+    }
+  };
+  
+  
+
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
+  const toggleCountryModal = () => setIsCountryModalVisible(!isCountryModalVisible);
 
   const handleSelectTele = (item) => {
     const selectedValue =
@@ -78,10 +176,23 @@ const ProfileScreen = ({ navigation }) => {
         : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
 
     setSelectedTele(selectedValue);
-    setCountry(item.sys_countries_code);
+    setCountryName(item.sys_countries_nameeng);
     setCountrycode(item.sys_countries_telephone); // ใช้ตอนส่งออก
     setErrors((prev) => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
+  };
+
+  const handleSelectCountry = (item) => {
+    const selectedValue =
+      item.sys_countries_nameeng === 'Please Select'
+        ? 'Please Select'
+        : `${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
+
+    setSelectedCountry(selectedValue);
+    setCountryId(item.sys_countries_id);
+  //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
+    setErrors((prev) => ({ ...prev, selectedCountry: false }));
+    toggleCountryModal();
   };
 
 
@@ -89,6 +200,12 @@ const ProfileScreen = ({ navigation }) => {
   const filteredTelePhones = telePhone.filter((item) => {
     const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
     return searchText.includes(searchQuery.toLowerCase());
+  });
+
+  
+  const filteredCountry = telePhone.filter((item) => {
+    const searchText = `${item.sys_countries_nameeng}`.toLowerCase();
+    return searchText.includes(searchQueryCountry.toLowerCase());
   });
 
   useEffect(() => {
@@ -114,9 +231,65 @@ const ProfileScreen = ({ navigation }) => {
       .catch((error) => console.error('Error fetching data:', error));
   }, []);
 
+  const handleSave = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+  
+      if (!token) {
+        alert("User token not found");
+        return;
+      }
+  
+      const response = await fetch(`${ipAddress}/update-profile`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fname: Firstname,
+          lname: Lastname,
+          phone: tel,
+          code: countrycode,
+          birthday: birthdate,
+          nationality: countryId,
+        }),
+      });
+  
+      const json = await response.json();
+  
+      if (json.status === 'success') {
+        alert("✅ Profile updated successfully");
+  
+        // รวมอัปเดตไว้ใน object เดียว
+        updateCustomerData({
+          Firstname: Firstname,
+          Lastname: Lastname,
+          tel: tel,
+          selectcoountrycode: `(+${countrycode}) ${countryName}` || 'Please Select',
+        });
+  
+      } else {
+        alert("❌ Update failed: " + json.message);
+      }
+  
+    } catch (error) {
+      console.error("handleSave error:", error);
+      alert("⚠️ Error occurred while updating profile");
+    }
+  };
+  
+
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
       {/* Profile Progress */}
       <View style={styles.progressCard}>
         <Text style={styles.title}>Complete Your Profile</Text>
@@ -176,11 +349,78 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
         </Modal>
-        <TextInput style={styles.input} placeholder="Phone" value={tel} />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          value={tel}
+          onChangeText={setTel}
+          keyboardType="numeric"
+        />
+
         <TextInput style={[styles.input, styles.disabled]} placeholder="Email" value={email} editable={false} />
-        <TextInput style={styles.input} placeholder="Country" value={country} />
-        <TextInput style={styles.input} placeholder="Date of Birth*" value={birthdate} />
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity
+          style={[styles.button, errors.selectedTele && styles.errorInput]}
+          onPress={toggleCountryModal}>
+          <Text style={{ color: 'black' }}>{selectedCountry}</Text>
+          <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+        </TouchableOpacity>
+
+        {/* Modal for selecting telephone */}
+        <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <TextInput
+                placeholder="Search country"
+                value={searchQueryCountry}
+                onChangeText={setSearchQueryCountry}
+                style={styles.textInput}
+              />
+              <FlatList
+                data={filteredCountry}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectCountry(item)}>
+                    <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                      {item.sys_countries_nameeng === 'Please Select'
+                        ? 'Please Select'
+                        : `${item.sys_countries_nameeng}`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                initialNumToRender={5}
+                maxToRenderPerBatch={5}
+                windowSize={5}
+                pagingEnabled
+              />
+            </View>
+          </View>
+        </Modal>
+        <TouchableOpacity
+        style={{
+          borderWidth: 1,
+          borderColor: '#ccc',
+          padding: 12,
+          borderRadius: 8,
+          
+        }}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text>
+          {birthdate ? formatDate(birthdate) : 'Select your birthday'}
+        </Text>
+      </TouchableOpacity>
+
+      {showPicker && (
+        <DateTimePicker
+          value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleConfirm}
+          maximumDate={new Date()} // ห้ามเลือกวันอนาคต
+          style={{ width: '100%', alignItems:'center' }} // กำหนดขนาดของ DateTimePicker
+        />
+      )}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
       </View>
@@ -204,7 +444,9 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Change Password</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
