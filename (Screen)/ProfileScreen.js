@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform,KeyboardAvoidingView, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCustomer } from './CustomerContext.js';
+
 
 const ProfileScreen = ({ navigation }) => {
   const { customerData, updateCustomerData } = useCustomer();
@@ -28,7 +29,7 @@ const ProfileScreen = ({ navigation }) => {
   const [birthdate, setBirthdate] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [countryName, setCountryName] = useState('');
-  
+
 
 
 
@@ -36,7 +37,7 @@ const ProfileScreen = ({ navigation }) => {
     if (!dateString || isNaN(new Date(dateString))) {
       return 'Select your birthday'; // หรือ 'N/A', หรือไม่ต้องแสดงเลย
     }
-  
+
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-GB', {
       day: '2-digit',
@@ -44,8 +45,8 @@ const ProfileScreen = ({ navigation }) => {
       year: 'numeric',
     }).format(date);
   };
-  
- 
+
+
 
   const handleConfirm = (event, selectedDate) => {
     setShowPicker(false);
@@ -80,21 +81,31 @@ const ProfileScreen = ({ navigation }) => {
           setLastname(data.data[0].md_member_lname);
           setTel(data.data[0].md_member_phone);
           setEmail(data.data[0].md_member_email);
-          if (data.data[0].md_member_code) {      
-            getCountryByCode(data.data[0].md_member_code); 
-          }else {
-          setSelectedTele('Please Select');
+          if (data.data[0].md_member_code) {
+            getCountryByCode(data.data[0].md_member_code);
+          } else {
+            setSelectedTele('Please Select');
           }
           if (data.data[0].md_member_nationality) {
             getCountryByid(data.data[0].md_member_nationality);
-          }else {
+          } else {
             setSelectedCountry('Please Select');
-            }
+          }
           if (data.data[0].md_member_birthday) {
             setBirthdate(data.data[0].md_member_birthday);
-          }else {
+          } else {
             setBirthdate('Select your birthday');
           }
+
+          updateCustomerData ({
+            Firstname : data.data[0].md_member_fname,
+            Lastname : data.data[0].md_member_lname,
+            tel : data.data[0].md_member_phone,
+            email : data.data[0].md_member_email,
+            birthdate : data.data[0].md_member_birthday,
+            country : data.data[0].md_member_nationality ,
+            selectcoountrycode : data.data[0].md_member_code
+          });
 
         } else {
           console.error('Data is not an array', data);
@@ -121,9 +132,9 @@ const ProfileScreen = ({ navigation }) => {
         },
         body: JSON.stringify({ countrycode: code }),
       });
-  
+
       const json = await response.json();
-  
+
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
@@ -147,9 +158,9 @@ const ProfileScreen = ({ navigation }) => {
         },
         body: JSON.stringify({ countryid: id }),
       });
-  
+
       const json = await response.json();
-  
+
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
@@ -163,8 +174,8 @@ const ProfileScreen = ({ navigation }) => {
       return null;
     }
   };
-  
-  
+
+
 
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
   const toggleCountryModal = () => setIsCountryModalVisible(!isCountryModalVisible);
@@ -177,7 +188,8 @@ const ProfileScreen = ({ navigation }) => {
 
     setSelectedTele(selectedValue);
     setCountryName(item.sys_countries_nameeng);
-    setCountrycode(item.sys_countries_telephone); // ใช้ตอนส่งออก
+    let country_code = item.sys_countries_telephone;
+    setCountrycode(country_code); // ใช้ตอนส่งออก
     setErrors((prev) => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
   };
@@ -189,8 +201,9 @@ const ProfileScreen = ({ navigation }) => {
         : `${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
 
     setSelectedCountry(selectedValue);
-    setCountryId(item.sys_countries_id);
-  //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
+    let country_id = item.sys_countries_id;
+    setCountryId(country_id);
+    //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
     setErrors((prev) => ({ ...prev, selectedCountry: false }));
     toggleCountryModal();
   };
@@ -202,7 +215,7 @@ const ProfileScreen = ({ navigation }) => {
     return searchText.includes(searchQuery.toLowerCase());
   });
 
-  
+
   const filteredCountry = telePhone.filter((item) => {
     const searchText = `${item.sys_countries_nameeng}`.toLowerCase();
     return searchText.includes(searchQueryCountry.toLowerCase());
@@ -234,12 +247,12 @@ const ProfileScreen = ({ navigation }) => {
   const handleSave = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-  
+
       if (!token) {
         alert("User token not found");
         return;
       }
-  
+
       const response = await fetch(`${ipAddress}/update-profile`, {
         method: 'POST',
         headers: {
@@ -255,198 +268,241 @@ const ProfileScreen = ({ navigation }) => {
           nationality: countryId,
         }),
       });
-  
+
       const json = await response.json();
-  
+
       if (json.status === 'success') {
         alert("✅ Profile updated successfully");
-  
+
         // รวมอัปเดตไว้ใน object เดียว
         updateCustomerData({
           Firstname: Firstname,
           Lastname: Lastname,
           tel: tel,
           selectcoountrycode: `(+${countrycode}) ${countryName}` || 'Please Select',
+          birthdate: birthdate,
+          country: countryName || 'Please Select',
         });
-  
+
       } else {
         alert("❌ Update failed: " + json.message);
       }
-  
+
     } catch (error) {
       console.error("handleSave error:", error);
       alert("⚠️ Error occurred while updating profile");
     }
   };
-  
+
+
+
+  const isEmailVerified = !!customerData.email;
+
+  const isProfileVerified =
+    customerData.Firstname &&
+    customerData.Lastname &&
+    customerData.tel &&
+    customerData.email &&
+    customerData.birthdate &&
+    customerData.country &&
+    customerData.selectcoountrycode;
+
+  // สมมุติยังไม่เชื่อม ID และ Bank Status
+  const isIdVerified = false;
+  const isBankVerified = false;
+
+  const verifiedCount = [
+    isEmailVerified,
+    isProfileVerified,
+    isIdVerified,
+    isBankVerified
+  ].filter(Boolean).length;
+
+  const progressPercent = (verifiedCount / 4) * 100;
 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-    
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-      {/* Profile Progress */}
-      <View style={styles.progressCard}>
-        <Text style={styles.title}>Complete Your Profile</Text>
-        <View style={styles.progressBarBackground}>
-          <View style={styles.progressBarFill}></View>
-        </View>
-        <Text style={styles.infoText}>
-          Get the best out of booking by adding the remaining details!
-        </Text>
-        <View style={styles.verificationList}>
-          <Text style={styles.verified}><Icon name="check-circle" size={16} color="green" /> Verified Email</Text>
-          <Text style={styles.verified}><Icon name="check-circle" size={16} color="green" /> Verified Profile</Text>
-          <Text style={styles.unverified}><Icon name="times-circle" size={16} color="orangered" /> Verified ID Card/Passport</Text>
-          <Text style={styles.unverified}><Icon name="times-circle" size={16} color="orangered" /> Verified Bank Account</Text>
-        </View>
-      </View>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Personal Information Form */}
-      <View style={styles.formCard}>
-        <Text style={styles.sectionTitle}>Personal Information</Text>
-        <TextInput style={styles.input} placeholder="First Name" value={Firstname} />
-        <TextInput style={styles.input} placeholder="Last Name" value={Lastname} />
-        <TouchableOpacity
-          style={[styles.button, errors.selectedTele && styles.errorInput]}
-          onPress={toggleTeleModal}>
-          <Text style={{ color: 'black' }}>{selectedTele}</Text>
-          <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-        </TouchableOpacity>
-
-        {/* Modal for selecting telephone */}
-        <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TextInput
-                placeholder="Search country"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                style={styles.textInput}
-              />
-              <FlatList
-                data={filteredTelePhones}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                    <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                      {item.sys_countries_nameeng === 'Please Select'
-                        ? 'Please Select'
-                        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                keyExtractor={(item, index) => index.toString()}
-                initialNumToRender={5}
-                maxToRenderPerBatch={5}
-                windowSize={5}
-                pagingEnabled
-              />
-            </View>
-          </View>
-        </Modal>
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={tel}
-          onChangeText={setTel}
-          keyboardType="numeric"
-        />
-
-        <TextInput style={[styles.input, styles.disabled]} placeholder="Email" value={email} editable={false} />
-        <TouchableOpacity
-          style={[styles.button, errors.selectedTele && styles.errorInput]}
-          onPress={toggleCountryModal}>
-          <Text style={{ color: 'black' }}>{selectedCountry}</Text>
-          <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-        </TouchableOpacity>
-
-        {/* Modal for selecting telephone */}
-        <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TextInput
-                placeholder="Search country"
-                value={searchQueryCountry}
-                onChangeText={setSearchQueryCountry}
-                style={styles.textInput}
-              />
-              <FlatList
-                data={filteredCountry}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectCountry(item)}>
-                    <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                      {item.sys_countries_nameeng === 'Please Select'
-                        ? 'Please Select'
-                        : `${item.sys_countries_nameeng}`}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                keyExtractor={(item, index) => index.toString()}
-                initialNumToRender={5}
-                maxToRenderPerBatch={5}
-                windowSize={5}
-                pagingEnabled
-              />
-            </View>
-          </View>
-        </Modal>
-        <TouchableOpacity
-        style={{
-          borderWidth: 1,
-          borderColor: '#ccc',
-          padding: 12,
-          borderRadius: 8,
-          
-        }}
-        onPress={() => setShowPicker(true)}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <Text>
-          {birthdate ? formatDate(birthdate) : 'Select your birthday'}
-        </Text>
-      </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Profile Progress */}
+          <View style={styles.progressCard}>
+            <Text style={styles.title}>Complete Your Profile</Text>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+            </View>
 
-      {showPicker && (
-        <DateTimePicker
-          value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleConfirm}
-          maximumDate={new Date()} // ห้ามเลือกวันอนาคต
-          style={{ width: '100%', alignItems:'center' }} // กำหนดขนาดของ DateTimePicker
-        />
-      )}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+            <Text style={styles.infoText}>
+              Get the best out of booking by adding the remaining details!
+            </Text>
+            <View style={styles.verificationList}>
+              <Text style={isEmailVerified ? styles.verified : styles.unverified}>
+                <Icon name={isEmailVerified ? "check-circle" : "times-circle"} size={16} color={isEmailVerified ? "green" : "orangered"} /> Verified Email
+              </Text>
 
-      {/* Change Password */}
-      <View style={styles.formCard}>
-        <Text style={styles.sectionTitle}>Change Password</Text>
-        <View style={styles.passwordField}>
-          <TextInput style={styles.inputFlex} placeholder="Current Password" secureTextEntry />
-          <Entypo name="eye-with-line" size={20} color="#aaa" />
-        </View>
-        <View style={styles.passwordField}>
-          <TextInput style={styles.inputFlex} placeholder="New Password" secureTextEntry />
-          <Entypo name="eye-with-line" size={20} color="#aaa" />
-        </View>
-        <View style={styles.passwordField}>
-          <TextInput style={styles.inputFlex} placeholder="Confirm Password" secureTextEntry />
-          <Entypo name="eye-with-line" size={20} color="#aaa" />
-        </View>
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.buttonText}>Change Password</Text>
-        </TouchableOpacity>
-      </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  </SafeAreaView>
+              <Text style={isProfileVerified ? styles.verified : styles.unverified}>
+                <Icon name={isProfileVerified ? "check-circle" : "times-circle"} size={16} color={isProfileVerified ? "green" : "orangered"} /> Verified Profile
+              </Text>
+
+              <TouchableOpacity onPress={() => navigation.navigate('IDCardCameraScreen')}>
+                <Text style={isIdVerified ? styles.verified : styles.unverified}>
+                  <Icon name={isIdVerified ? "check-circle" : "times-circle"} size={16} color={isIdVerified ? "green" : "orangered"} />
+                  Verified ID Card/Passport
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={isBankVerified ? styles.verified : styles.unverified}>
+                <Icon name={isBankVerified ? "check-circle" : "times-circle"} size={16} color={isBankVerified ? "green" : "orangered"} /> Verified Bank Account
+              </Text>
+            </View>
+
+          </View>
+
+          {/* Personal Information Form */}
+          <View style={styles.formCard}>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+            <TextInput style={styles.input} placeholder="First Name" value={Firstname} />
+            <TextInput style={styles.input} placeholder="Last Name" value={Lastname} />
+            <TouchableOpacity
+              style={[styles.button, errors.selectedTele && styles.errorInput]}
+              onPress={toggleTeleModal}>
+              <Text style={{ color: 'black' }}>{selectedTele}</Text>
+              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+            </TouchableOpacity>
+
+            {/* Modal for selecting telephone */}
+            <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <TextInput
+                    placeholder="Search country"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    style={styles.textInput}
+                  />
+                  <FlatList
+                    data={filteredTelePhones}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
+                        <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                          {item.sys_countries_nameeng === 'Please Select'
+                            ? 'Please Select'
+                            : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    keyExtractor={(item, index) => index.toString()}
+                    initialNumToRender={5}
+                    maxToRenderPerBatch={5}
+                    windowSize={5}
+                    pagingEnabled
+                  />
+                </View>
+              </View>
+            </Modal>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone"
+              value={tel}
+              onChangeText={setTel}
+              keyboardType="numeric"
+            />
+
+            <TextInput style={[styles.input, styles.disabled]} placeholder="Email" value={email} editable={false} />
+            <TouchableOpacity
+              style={[styles.button, errors.selectedTele && styles.errorInput]}
+              onPress={toggleCountryModal}>
+              <Text style={{ color: 'black' }}>{selectedCountry}</Text>
+              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+            </TouchableOpacity>
+
+            {/* Modal for selecting telephone */}
+            <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <TextInput
+                    placeholder="Search country"
+                    value={searchQueryCountry}
+                    onChangeText={setSearchQueryCountry}
+                    style={styles.textInput}
+                  />
+                  <FlatList
+                    data={filteredCountry}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectCountry(item)}>
+                        <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                          {item.sys_countries_nameeng === 'Please Select'
+                            ? 'Please Select'
+                            : `${item.sys_countries_nameeng}`}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    keyExtractor={(item, index) => index.toString()}
+                    initialNumToRender={5}
+                    maxToRenderPerBatch={5}
+                    windowSize={5}
+                    pagingEnabled
+                  />
+                </View>
+              </View>
+            </Modal>
+            <TouchableOpacity
+              style={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                padding: 12,
+                borderRadius: 8,
+
+              }}
+              onPress={() => setShowPicker(true)}
+            >
+              <Text>
+                {birthdate ? formatDate(birthdate) : 'Select your birthday'}
+              </Text>
+            </TouchableOpacity>
+
+            {showPicker && (
+              <DateTimePicker
+                value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleConfirm}
+                maximumDate={new Date()} // ห้ามเลือกวันอนาคต
+                style={{ width: '100%', alignItems: 'center' }} // กำหนดขนาดของ DateTimePicker
+              />
+            )}
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Change Password */}
+          <View style={styles.formCard}>
+            <Text style={styles.sectionTitle}>Change Password</Text>
+            <View style={styles.passwordField}>
+              <TextInput style={styles.inputFlex} placeholder="Current Password" secureTextEntry />
+              <Entypo name="eye-with-line" size={20} color="#aaa" />
+            </View>
+            <View style={styles.passwordField}>
+              <TextInput style={styles.inputFlex} placeholder="New Password" secureTextEntry />
+              <Entypo name="eye-with-line" size={20} color="#aaa" />
+            </View>
+            <View style={styles.passwordField}>
+              <TextInput style={styles.inputFlex} placeholder="Confirm Password" secureTextEntry />
+              <Entypo name="eye-with-line" size={20} color="#aaa" />
+            </View>
+            <TouchableOpacity style={styles.saveButton}>
+              <Text style={styles.buttonText}>Change Password</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({

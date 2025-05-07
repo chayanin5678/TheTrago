@@ -26,6 +26,8 @@ import RegisterScreen from './(Screen)/RegisterScreen';
 import AccountScreen from './(Screen)/AccountScreen';
 import Dashboard from './(Screen)/Dashboard';
 import ProfileScreen from './(Screen)/ProfileScreen';
+import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
+import OCRResultScreen from './(Screen)/OCRResultScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -64,7 +66,8 @@ const Loginnavigator = () => (
     <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
     <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
-
+    <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 

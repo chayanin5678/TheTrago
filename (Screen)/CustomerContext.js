@@ -24,7 +24,7 @@ export const CustomerProvider = ({ children }) => {
     endpoint_name: '', //จุดหมายปลายทาง
     boatypeid: '', //ประเภทเรือ
     country: '', //ประเทศ
-    countrycode: '', //รหัสประเทศ
+    countrycode: 'Please Select', //รหัสประเทศ
     roud: '', //ประเภทการเดินทาง
     price:'', //ราคา
     total:0, //ราคารวม

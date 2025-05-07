@@ -25,26 +25,20 @@
     },
     "android": {
       "versionCode": 1,
-      "package": "com.chayanin5678.TheTrago"
+      "package": "com.chayanin5678.TheTrago",
+      "permissions": ["CAMERA"]
     },
-    "linking": {
-      "prefixes": [
-        "thetrago://"
-      ],
-      "config": {
-        "screens": {
-          "ResultScreen": "payment/success"
-        }
-      }
-    },
+
     "plugins": [
       "expo-secure-store"
     ],
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "We need camera access to scan your ID card"
       }
-    }
+      }
+     
   }
 }
