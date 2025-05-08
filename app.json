@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "TheTrago",
+    "slug": "TheTrago",
+    "scheme": "thetrago",
+    "extra": {
+      "deeplink": {
+        "host": "thetrago",
+        "path": "/",
+        "subdomain": "thetrago"
+      },
+      "eas": {
+        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
+      }
+    },
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icontrago.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "versionCode": 1,
+      "package": "com.chayanin5678.TheTrago",
+      "permissions": ["CAMERA"]
+    },
+
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "We need camera access to scan your ID card"
+      }
+      }
+     
+  }
+}
