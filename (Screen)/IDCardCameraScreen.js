@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Tesseract from 'tesseract.js'; // ติดตั้ง tesseract.js
+import * as ImageManipulator from 'expo-image-manipulator';
 
 const IDCardCameraScreen = ({ navigation }) => {
   const [photo, setPhoto] = useState(null); // เก็บรูปที่ถ่าย
@@ -14,19 +15,24 @@ const IDCardCameraScreen = ({ navigation }) => {
       alert("Permission to access camera is required!");
       return;
     }
-
+  
     // เปิดกล้องถ่ายรูป
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [16, 9],
       quality: 0.7,
     });
-
-    if (!result.cancelled) {
-      setPhoto(result.uri); // เก็บ URI ของภาพที่ถ่าย
-      recognizeText(result.uri); // เริ่มการแปลง OCR หลังจากถ่ายรูป
+  
+    // ตรวจสอบว่าได้รูปมาแล้วหรือไม่
+    console.log("📷 ผลลัพธ์จากการถ่ายรูป:", result);  // Log ผลลัพธ์ทั้งหมดจาก ImagePicker
+  
+    if (!result.canceled) {
+      setPhoto(result.assets[0].uri); // ใช้ result.assets[0].uri แทน result.uri
+      recognizeText(result.assets[0].uri); // เริ่มการแปลง OCR หลังจากถ่ายรูป
+      console.log("📷 รูปที่ถ่ายได้ URI:", result.assets[0].uri); // Log URI ของภาพที่ถ่าย
     }
   };
+  
 
   // ฟังก์ชันการใช้ Tesseract.js เพื่อแปลงข้อความจากภาพ
   const recognizeText = async (uri) => {
@@ -47,6 +53,10 @@ const IDCardCameraScreen = ({ navigation }) => {
     navigation.navigate('OCRResultScreen', { photo, ocrText });
   };
 
+  useEffect(() => {
+    if (photo) console.log("📷 รูปที่ถ่าย:", photo);
+  }, [photo]);
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Take a picture of your ID card</Text>
@@ -91,7 +101,6 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#fff', fontWeight: 'bold' },
   previewContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  previewImage: { width: '100%', height: '80%', resizeMode: 'contain' },
   ocrContainer: { marginTop: 20, padding: 10, backgroundColor: '#fff', borderRadius: 8 },
   ocrText: { fontSize: 18, fontWeight: 'bold' },
   ocrResult: { fontSize: 16, marginTop: 10 },
@@ -102,6 +111,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 20,
   },
+  previewImage: { 
+    width: '100%',  // กำหนดความกว้าง
+    aspectRatio: 16 / 9,  // กำหนดอัตราส่วน 16:9
+    resizeMode: 'contain',  // คงอัตราส่วนของภาพ
+    marginVertical: 10 
+  },
 });
+
 
 export default IDCardCameraScreen;

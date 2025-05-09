@@ -83,11 +83,13 @@ const ProfileScreen = ({ navigation }) => {
           setEmail(data.data[0].md_member_email);
           if (data.data[0].md_member_code) {
             getCountryByCode(data.data[0].md_member_code);
+            setCountrycode(data.data[0].md_member_code);
           } else {
             setSelectedTele('Please Select');
           }
           if (data.data[0].md_member_nationality) {
             getCountryByid(data.data[0].md_member_nationality);
+            setCountryId(data.data[0].md_member_nationality);
           } else {
             setSelectedCountry('Please Select');
           }
@@ -138,6 +140,7 @@ const ProfileScreen = ({ navigation }) => {
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
+        setCountrycode(json.data[0].sys_countries_telephone);
         return json.data;
       } else {
         console.warn('Not found or error:', json.message);
@@ -164,6 +167,7 @@ const ProfileScreen = ({ navigation }) => {
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
+        setCountryId(json.data[0].sys_countries_id);
         return json.data;
       } else {
         console.warn('Not found or error:', json.message);
