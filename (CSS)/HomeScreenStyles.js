@@ -79,6 +79,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
 
   },
+   profileImage: {
+    marginTop: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    marginBottom: 10,
+    borderWidth: 2,
+    alignSelf: 'center',
+    borderColor: '#49A7FF',
+  },
 
   cardContainerDes: {
     backgroundColor: '#FFFFFF',
@@ -92,6 +102,36 @@ const styles = StyleSheet.create({
   //  marginLeft: 15,
     width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
     height:wp('55%'), // ความสูงของการ์ด
+  },
+
+  searchContainer: {
+    flexDirection: 'row',           // ให้อยู่ในแถวเดียวกัน
+    alignItems: 'center',           // ตั้งตำแหน่งของไอคอนและข้อความ
+     backgroundColor: 'rgba(0, 0, 0, 0.3)',       // สีพื้นหลังของ search bar
+    borderRadius: wp('6%'),        // โค้งมุม
+    paddingLeft: wp('1%'),   // ระยะห่างซ้ายขวา
+   // paddingVertical: hp('2%'),     // ระยะห่างบนล่าง
+    margin: wp('5%'),
+    height: hp('6%'),      
+    width: wp('80%'),
+    alignSelf: 'center'        // ระยะห่างจากขอบ
+  },
+  searchIconContainer: {
+     backgroundColor:  'rgba(0, 0, 0, 0.3)',    // สีพื้นหลังของวงกลม
+    borderRadius: 50,              // ทำให้ไอคอนเป็นวงกลม
+    width: wp('10%'),              // ขนาดของวงกลม (สามารถปรับตามขนาดที่ต้องการ)
+    height: wp('10%'),             // ขนาดของวงกลม (ให้สูงเท่ากับกว้าง)
+    justifyContent: 'center',      // จัดตำแหน่งไอคอนกลาง
+    alignItems: 'center',          // จัดตำแหน่งไอคอนกลาง
+    marginRight: wp('3%'),  
+  },
+  searchIcon: {
+    marginRight: wp('3%'),  // ระยะห่างจากข้อความ
+  },
+  searchInput: {
+    flex: 1,                       // ให้ข้อความยืดเต็มช่อง
+    fontSize: wp('4%'),             // ขนาดตัวอักษรตามขนาดหน้าจอ
+    color: 'white',                 // สีข้อความ
   },
 
 
@@ -155,6 +195,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 10,
     alignItems: 'flex-end',
+  },
+    gridContainer: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+ 
+  card: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 10,
+   // padding: 20,
+  //  backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    width: wp('17%'),             // กำหนดขนาดให้เป็น % ของหน้าจอ
+    height: wp('17%'),            // กำหนดขนาดให้เป็น % ของหน้าจอ
+  },
+  cardText: {
+    marginTop: 5,
+    fontSize: wp('3%'),         // ขนาดตัวอักษรที่ยืดหยุ่น
+  //  fontWeight: 'bold',
+  //  color: '#333',
+  
   },
   modalText: {
     fontSize: 16,
@@ -491,6 +553,11 @@ const styles = StyleSheet.create({
   dropdownIcon: {
     color: '#FD501E', // Orange color for the icon
     marginLeft: 10,
+  },
+    icon: {
+    width: wp('10%'),  // กำหนดขนาดรูปภาพ
+    height: wp('10%'), // ให้มีขนาดเหมาะสมกับกริด
+    resizeMode: 'contain',  // ให้รักษาอัตราส่วนของรูป
   },
 
   buttonText: {
