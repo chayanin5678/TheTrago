@@ -14,24 +14,19 @@ import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจา
 
 
 const data = [
-  { id: '1', title: 'Ferry', icon: 'ios-boat' },
+  { id: '1', title: 'Ferry', icon: 'boat' },
   { id: '2', title: 'Flights', icon: 'airplane' },
   { id: '3', title: 'Trains', icon: 'train' },
   { id: '4', title: 'Cars', icon: 'car' },
-  { id: '5', title: 'Hotel', icon: 'ios-bed' },
-  { id: '6', title: 'Tours', icon: 'ios-map' },
-  { id: '7', title: 'Attraction', icon: 'md-star' },
+  { id: '5', title: 'Hotel', icon: 'bed' },
+  { id: '6', title: 'Tours', icon: 'map' },
+  { id: '7', title: 'Attraction', icon: 'star' },
   { id: '8', title: 'Ticket', icon: 'ticket' },
 ];
 
-const destinations = [
-  { id: '1', title: 'Lorem ipsum odor', location: 'Lorem, Indonesia', duration: '5 Days', price: '$225', image: require('./assets/destination1.png') },
-  { id: '2', title: 'Lorem ipsum odor', location: 'Lorem, Italy', duration: '10 Days', price: '$570', image: require('./assets/destination2.png') },
-  { id: '3', title: 'Lorem ipsum odor', location: 'Lorem, France', duration: '7 Days', price: '$400', image: require('./assets/destination3.png') },
-];
 
 const HomeScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('Ferry');  // ใช้ state เพื่อจัดการเมนูที่เลือก
+    const [activeCountry, setActiveCountry] = useState(null);
   const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
   const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
   const [departureDate, setDepartureDate] = useState(() => {
@@ -57,6 +52,7 @@ const HomeScreen = ({ navigation }) => {
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
   const [token, setToken] = useState(null);
   const [user, setUser] = useState([]);
+  const [countrie, setcountrie] = useState([]);
 
   // ฟังก์ชันสำหรับเลือกวัน
   const onCalendarDayPress = (day) => {
@@ -279,6 +275,29 @@ const HomeScreen = ({ navigation }) => {
       return null;
     }
   };
+   useEffect(() => {
+    fetch(`${ipAddress}/countriespop`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          setcountrie(data.data);
+          setActiveCountry(data.data[0].sys_countries_id);
+        } else {
+          console.error('Data is not an array', data);
+          setcountrie([]);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      }).finally(() => {
+        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+      });
+  }, []);
 
 
   return (
@@ -297,13 +316,16 @@ const HomeScreen = ({ navigation }) => {
           styles.cardContainerDes,
           {
             width: '115%',
-            height: '16%',
+            height: '22%',
             borderRadius: 40,
-            marginTop: -20,
+             marginTop: -30, 
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            overflow: 'hidden', // สำคัญมาก: ตัดภาพตามมุมโค้งของ View
+            overflow: 'hidden',
+           //  marginBottom : 20
+           
+            
           }
         ]}>
           <ImageBackground
@@ -312,7 +334,8 @@ const HomeScreen = ({ navigation }) => {
             imageStyle={{
               borderRadius: 40,
               borderTopLeftRadius: 0,
-              borderTopRightRadius: 0
+              borderTopRightRadius: 0,
+          
             }}
             resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
           >
@@ -363,7 +386,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={[styles.title, { color: "#FFFF", fontWeight: 'regular', textAlign: 'left', paddingLeft: 40, maxWidth: 250, fontSize: wp('5%'), marginBottom:5 }]}>
               The journey is endless Book now
             </Text>
-            <View style={styles.searchContainer}>
+            <View style={[styles.searchContainer,{marginBottom : 150}]}>
               <View style={styles.searchIconContainer}>
                 <Ionicons
                   name="search"
@@ -402,7 +425,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         ))}
       </View> */}
- <ScrollView contentContainerStyle={styles.gridContainer}>
+ <ScrollView contentContainerStyle={[styles.gridContainer, {marginBottom: 0 }]}>
       <View style={styles.row}>
         {data.map((item) => (
           <TouchableOpacity key={item.id} style={styles.card}>
@@ -413,7 +436,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
     </ScrollView>
 
-        <View style={styles.bookingSection}>
+        {/* <View style={styles.bookingSection}>
           <View style={styles.tripTypeContainer}>
             <TouchableOpacity
               style={[
@@ -480,7 +503,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
             </TouchableOpacity>
 
-            {/* Swap icon */}
+    
             <TouchableOpacity onPress={swapPoints}>
               <Image
                 source={require('./assets/mage_exchange-a.png')}
@@ -600,11 +623,11 @@ const HomeScreen = ({ navigation }) => {
 
 
           </View>
-        </View>
+        </View> */}
 
 
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.searchButton}
           onPress={() => {
 
@@ -646,12 +669,12 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-        </Modal>
+        </Modal> */}
         <Text style={styles.titledeal}>
-          <Text style={styles.highlight}>Hot</Text> Deal
+          <Text style={styles.highlight}>Hot<Text style={{color: '#FFA072'}}> Deal</Text></Text>
         </Text>
         <Banner />
-        <View style={styles.rowtrip}>
+        {/* <View style={styles.rowtrip}>
           <View style={styles.coltrip}>
 
             <Text style={styles.texcol}>Popular</Text>
@@ -683,27 +706,51 @@ const HomeScreen = ({ navigation }) => {
           ))}
 
 
-        </View>
+        </View> */}
 
 
-
+          <Text style={[styles.titledeal ,{marginTop : 10}]}>
+          <Text style={styles.highlight}>Popular<Text style={{color: '#FFA072'}}> Destination</Text></Text>
+        </Text>
         <ScrollView
           contentContainerStyle={styles.cardList}
           style={{ width: '100%' }}
         >
-          {destinations.map((item) => (
-            <View style={styles.cardContainerDes} key={item.id}>
-              <Image source={item.image} style={styles.cardImage} />
-              <View style={styles.cardContent}>
+          {countrie.map((item) => (
+            <View style={styles.cardContainerDes} key={item.sys_countries_id}>
+            <Image 
+  source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }} 
+  style={styles.cardImage} 
+/>
+
+              {/* <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
                 <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
                 <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
-              </View>
+              </View> */}
+                <Text style={styles.cardTitle}>{item.sys_countries_nameeng}</Text>
             </View>
           ))}
         </ScrollView>
-
+          <Text style={[styles.titledeal ,{marginTop : -20}]}>
+          <Text style={styles.highlight}>Popular<Text style={{color: '#FFA072'}}> Route</Text></Text>
+        </Text>
+         <View style={styles.tabContainer}>
+        <View style={styles.tabContainer}>
+        {countrie.map((item) => (
+          <TouchableOpacity
+            key={item.sys_countries_id}
+            style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
+            onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+          >
+            <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
+              {item.sys_countries_nameeng}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      </View>
 
 
       </ScrollView >

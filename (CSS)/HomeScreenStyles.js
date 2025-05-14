@@ -99,9 +99,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     margin: 5,
-  //  marginLeft: 15,
-    width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
-    height:wp('55%'), // ความสูงของการ์ด
+    marginBottom: 25,
+    width: (Dimensions.get('window').width - 80) / 3, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
+    height:wp('40%'), // ความสูงของการ์ด
   },
 
   searchContainer: {
@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
 
   cardImage: {
     width: '100%',
-    height: '50%',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    height: '100%',
+    borderRadius: 10
+   
   },
   cardContent: {
     padding: 5,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     fontSize: wp('3.5%'),
     fontWeight: 'bold',
     color: '#002348',
-    marginBottom: 5,
+    marginTop: 5 ,
   },
   cardLocation: {
     fontSize: wp('3%'),
@@ -196,27 +196,36 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'flex-end',
   },
-    gridContainer: {
-    paddingVertical: 10,
+   gridContainer: {
+    paddingVertical:10,
+   // paddingTop : 10,
     alignItems: 'center',
   },
- 
+  row: {
+    flexDirection: 'row',         // ไอเท็มจะอยู่ในแถวเดียวกัน
+    flexWrap: 'wrap',             // เมื่อแถวเต็มจะไปขึ้นแถวใหม่
+    justifyContent: 'space-evenly', // จัดให้ไอเท็มห่างกัน
+  },
   card: {
     justifyContent: 'center',
     alignItems: 'center',
     margin: 10,
-   // padding: 20,
-  //  backgroundColor: '#f2f2f2',
+  //  padding: 20,
+ //   backgroundColor: '#f2f2f2',
     borderRadius: 10,
-    width: wp('17%'),             // กำหนดขนาดให้เป็น % ของหน้าจอ
-    height: wp('17%'),            // กำหนดขนาดให้เป็น % ของหน้าจอ
+    width: wp('16%'),             // กำหนดขนาดให้เป็น % ของหน้าจอ (เพื่อให้มี 4 คอลัมน์ในแถว)
+    height: wp('16%'),            // กำหนดขนาดให้เป็น % ของหน้าจอ
+  },
+  icon: {
+    width: wp('2%'),  // ขนาดของไอคอน
+    height: wp('2%'), // ขนาดของไอคอน
+    resizeMode: 'contain',
   },
   cardText: {
     marginTop: 5,
     fontSize: wp('3%'),         // ขนาดตัวอักษรที่ยืดหยุ่น
-  //  fontWeight: 'bold',
-  //  color: '#333',
-  
+    fontWeight: 'bold',
+    color: '#333',
   },
   modalText: {
     fontSize: 16,
@@ -290,92 +299,35 @@ const styles = StyleSheet.create({
     textAlign: 'left', // ชิดซ้าย
     color: '#002348',
     marginBottom: 20,
-    marginTop: 0,
+    marginTop: -50,
     alignSelf: 'flex-start', // ยืนยันให้ข้อความอยู่ชิดซ้าย
     marginLeft: 10, // เพิ่มพื้นที่ห่างจากขอบซ้าย
   },
   highlight: {
     color: '#FD501E',
   },
-  tabContainer: {
-    flexDirection: 'row',
-    marginLeft: 20,
-    marginRight: 20,
-    marginBottom: 0,
-    paddingBottom: 0,
-    overflow: 'visible',
-  },
-  searchBox: {
-    width: '90%',
-    height: 40,
-    borderColor: '#CCC',
-    borderWidth: 1,
-    borderRadius: 30,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginRight: 20,
-
-    color: '#333',
-  },
-  contenRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    margin: 5,
-
+tabContainer: {
+    flexDirection: 'row', // ให้อยู่ในแถวเดียวกัน
+    flexWrap: 'wrap', // ให้แต่ละปุ่มอยู่ในแถวถัดไปเมื่อเต็มแถว
+    justifyContent: 'center', // จัดให้ปุ่มห่างกันเท่าๆ กัน
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#FEE8E1',
-    borderRadius: 25,
+    backgroundColor: '#F2F2F2', // พื้นหลังสีเทา
+    paddingVertical: wp('3%'),
+    paddingHorizontal: wp('5%'),
+    margin: wp('1%'),
+    borderRadius: 25, // ทำให้ขอบปุ่มโค้งมน
   },
-  tabOuter: {
-    flex: 1,
-    alignItems: 'center',
-
+  activeTab: {
+    backgroundColor: '#FD501E', // เมื่อเลือกจะเป็นสีส้ม
   },
-  tabActiveOuter: {
-    backgroundColor: '#F6F6F6',
-    shadowColor: '#F6F6F6',
-    shadowOffset: { width: 0, height: -15 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    borderRadius: 25,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  tabInactiveOuter: {
-    backgroundColor: 'transparent',
-  },
-  tabActive: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#FD501E',
-    borderRadius: 25,
-    width: '90%',
-    margin: 5,
-    height: 10,
-  },
-  tabInactive: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: 'rgba(253, 80, 30, 0.4)',
-    borderRadius: 25,
-    width: '90%',
-    margin: 5,
-    opacity: 40,
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
+  tabText: {
+    fontSize: wp('4%'),
+    color: '#FD501E',
     fontWeight: 'bold',
   },
-  tabTextInactive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  activeTabText: {
+    color: '#FFF', // เมื่อเลือกข้อความจะเป็นสีขาว
   },
   inputBoxSearch: {
     flexDirection: 'row',
