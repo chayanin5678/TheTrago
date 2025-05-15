@@ -20,7 +20,7 @@ import ResultScreen from './(Screen)/ResultScreen';
 import { CustomerProvider } from './(Screen)/CustomerContext';
 import LinkingConfiguration from './(Screen)/linking';
 import PromptPayScreen from './(Screen)/PromptPayQR';
-import SplashScreenComponent from './(Screen)/SplashScreenComponent';
+//import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 import LoginScreen from './(Screen)/LoginScreen';
 import RegisterScreen from './(Screen)/RegisterScreen';
 import AccountScreen from './(Screen)/AccountScreen';
@@ -187,7 +187,6 @@ export default function App() {
   return (
     <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
       <CustomerProvider>
-        <SplashScreenComponent />
         <MainNavigator />
       </CustomerProvider>
     </NavigationContainer>

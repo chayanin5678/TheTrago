@@ -14,19 +14,19 @@ import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจา
 
 
 const data = [
-  { id: '1', title: 'Ferry', icon: 'boat' },
-  { id: '2', title: 'Flights', icon: 'airplane' },
-  { id: '3', title: 'Trains', icon: 'train' },
-  { id: '4', title: 'Cars', icon: 'car' },
-  { id: '5', title: 'Hotel', icon: 'bed' },
-  { id: '6', title: 'Tours', icon: 'map' },
-  { id: '7', title: 'Attraction', icon: 'star' },
-  { id: '8', title: 'Ticket', icon: 'ticket' },
+  { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry' },
+  { id: '2', title: 'Flights', icon: 'airplane', navigate: '' },
+  { id: '3', title: 'Trains', icon: 'train', navigate: '' },
+  { id: '4', title: 'Cars', icon: 'car', navigate: '' },
+  { id: '5', title: 'Hotel', icon: 'bed', navigate: '' },
+  { id: '6', title: 'Tours', icon: 'map', navigate: '' },
+  { id: '7', title: 'Attraction', icon: 'star', navigate: '' },
+  { id: '8', title: 'Ticket', icon: 'ticket', navigate: '' },
 ];
 
 
 const HomeScreen = ({ navigation }) => {
-    const [activeCountry, setActiveCountry] = useState(null);
+  const [activeCountry, setActiveCountry] = useState(null);
   const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
   const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
   const [departureDate, setDepartureDate] = useState(() => {
@@ -275,7 +275,7 @@ const HomeScreen = ({ navigation }) => {
       return null;
     }
   };
-   useEffect(() => {
+  useEffect(() => {
     fetch(`${ipAddress}/countriespop`)
       .then((response) => {
         if (!response.ok) {
@@ -316,16 +316,16 @@ const HomeScreen = ({ navigation }) => {
           styles.cardContainerDes,
           {
             width: '115%',
-            height: '22%',
+            height: '20%',
             borderRadius: 40,
-             marginTop: -30, 
+            marginTop: -30,
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             overflow: 'hidden',
-           //  marginBottom : 20
-           
-            
+            //  marginBottom : 20
+
+
           }
         ]}>
           <ImageBackground
@@ -335,7 +335,7 @@ const HomeScreen = ({ navigation }) => {
               borderRadius: 40,
               borderTopLeftRadius: 0,
               borderTopRightRadius: 0,
-          
+
             }}
             resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
           >
@@ -383,10 +383,10 @@ const HomeScreen = ({ navigation }) => {
               ))}
 
             </View>
-            <Text style={[styles.title, { color: "#FFFF", fontWeight: 'regular', textAlign: 'left', paddingLeft: 40, maxWidth: 250, fontSize: wp('5%'), marginBottom:5 }]}>
+            <Text style={[styles.title, { color: "#FFFF", fontWeight: 'regular', textAlign: 'left', paddingLeft: 40, maxWidth: 250, fontSize: wp('5%'), marginBottom: 5 }]}>
               The journey is endless Book now
             </Text>
-            <View style={[styles.searchContainer,{marginBottom : 150}]}>
+            <View style={[styles.searchContainer, { marginBottom: 150 }]}>
               <View style={styles.searchIconContainer}>
                 <Ionicons
                   name="search"
@@ -425,16 +425,22 @@ const HomeScreen = ({ navigation }) => {
           </View>
         ))}
       </View> */}
- <ScrollView contentContainerStyle={[styles.gridContainer, {marginBottom: 0 }]}>
-      <View style={styles.row}>
-        {data.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.card}>
-            <Ionicons name={item.icon} size={wp('10%')} color="#4A90E2" />
-            <Text style={styles.cardText}>{item.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+        <ScrollView contentContainerStyle={[styles.gridContainer, { marginBottom: 0 }]}>
+          <View style={styles.row}>
+            {data.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.card} onPress={() => {
+                if (item.navigate) {
+                  navigation.navigate(item.navigate);
+                } else {
+                  alert("Coming soon...");
+                }
+              }}>
+                <Ionicons name={item.icon} size={wp('10%')} color="#4A90E2" />
+                <Text style={styles.cardText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
         {/* <View style={styles.bookingSection}>
           <View style={styles.tripTypeContainer}>
@@ -671,7 +677,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </Modal> */}
         <Text style={styles.titledeal}>
-          <Text style={styles.highlight}>Hot<Text style={{color: '#FFA072'}}> Deal</Text></Text>
+          <Text style={styles.highlight}>Hot<Text style={{ color: '#FFA072' }}> Deal</Text></Text>
         </Text>
         <Banner />
         {/* <View style={styles.rowtrip}>
@@ -709,8 +715,8 @@ const HomeScreen = ({ navigation }) => {
         </View> */}
 
 
-          <Text style={[styles.titledeal ,{marginTop : 10}]}>
-          <Text style={styles.highlight}>Popular<Text style={{color: '#FFA072'}}> Destination</Text></Text>
+        <Text style={[styles.titledeal, { marginTop: 10 }]}>
+          <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Destination</Text></Text>
         </Text>
         <ScrollView
           contentContainerStyle={styles.cardList}
@@ -718,10 +724,10 @@ const HomeScreen = ({ navigation }) => {
         >
           {countrie.map((item) => (
             <View style={styles.cardContainerDes} key={item.sys_countries_id}>
-            <Image 
-  source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }} 
-  style={styles.cardImage} 
-/>
+              <Image
+                source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                style={styles.cardImage}
+              />
 
               {/* <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
@@ -729,28 +735,28 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
                 <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
               </View> */}
-                <Text style={styles.cardTitle}>{item.sys_countries_nameeng}</Text>
+              <Text style={styles.cardTitle}>{item.sys_countries_nameeng}</Text>
             </View>
           ))}
         </ScrollView>
-          <Text style={[styles.titledeal ,{marginTop : -20}]}>
-          <Text style={styles.highlight}>Popular<Text style={{color: '#FFA072'}}> Route</Text></Text>
+        <Text style={[styles.titledeal, { marginTop: -20 }]}>
+          <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
         </Text>
-         <View style={styles.tabContainer}>
         <View style={styles.tabContainer}>
-        {countrie.map((item) => (
-          <TouchableOpacity
-            key={item.sys_countries_id}
-            style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
-            onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
-          >
-            <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
-              {item.sys_countries_nameeng}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      </View>
+          <View style={styles.tabContainer}>
+            {countrie.map((item) => (
+              <TouchableOpacity
+                key={item.sys_countries_id}
+                style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
+                onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+              >
+                <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
+                  {item.sys_countries_nameeng}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
 
       </ScrollView >

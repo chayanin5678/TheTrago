@@ -13,7 +13,7 @@ export default function Banner() {
   const { width: screenWidth } = useWindowDimensions(); // ✅ ใช้ useWindowDimensions() แทน Dimensions.get()
   const [currentBanner, setCurrentBanner] = useState(0);
   const scrollViewRef = useRef(null);
-  const [promotion, setPromotion] = useState(null);
+  const [promotion, setPromotion] = useState([]);
 
 
   useEffect(() => {
@@ -42,14 +42,19 @@ export default function Banner() {
 
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      let nextIndex = (currentBanner + 1) % promotion.length;
-      setCurrentBanner(nextIndex);
-      scrollViewRef.current?.scrollTo({ x: nextIndex * screenWidth, animated: true });
-    }, 5000);
+  if (!promotion.length) return;
 
-    return () => clearInterval(interval);
-  }, [currentBanner, screenWidth]);
+  const interval = setInterval(() => {
+    const nextIndex = (currentBanner + 1) % promotion.length;
+    setCurrentBanner(nextIndex);
+    scrollViewRef.current?.scrollTo({
+      x: nextIndex * screenWidth,
+      animated: true,
+    });
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [currentBanner, screenWidth, promotion.length]);
 
   return (
     <View style={styles.carouselContainer}>
