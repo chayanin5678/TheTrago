@@ -83,13 +83,19 @@ const ProfileScreen = ({ navigation }) => {
           setEmail(data.data[0].md_member_email);
           if (data.data[0].md_member_code) {
             getCountryByCode(data.data[0].md_member_code);
+<<<<<<< HEAD
             setCountrycode(data.data[0].md_member_code);
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
           } else {
             setSelectedTele('Please Select');
           }
           if (data.data[0].md_member_nationality) {
             getCountryByid(data.data[0].md_member_nationality);
+<<<<<<< HEAD
             setCountryId(data.data[0].md_member_nationality);
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
           } else {
             setSelectedCountry('Please Select');
           }
@@ -140,7 +146,10 @@ const ProfileScreen = ({ navigation }) => {
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
+<<<<<<< HEAD
         setCountrycode(json.data[0].sys_countries_telephone);
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
         return json.data;
       } else {
         console.warn('Not found or error:', json.message);
@@ -167,7 +176,10 @@ const ProfileScreen = ({ navigation }) => {
       if (response.ok) {
         console.log('Country data:', json.data);
         setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
+<<<<<<< HEAD
         setCountryId(json.data[0].sys_countries_id);
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
         return json.data;
       } else {
         console.warn('Not found or error:', json.message);

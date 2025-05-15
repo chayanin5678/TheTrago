@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
 
   },
+<<<<<<< HEAD
    profileImage: {
     marginTop: 20,
     width: 50,
@@ -89,6 +90,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderColor: '#49A7FF',
   },
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
 
   cardContainerDes: {
     backgroundColor: '#FFFFFF',
@@ -99,6 +102,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     margin: 5,
+<<<<<<< HEAD
     marginBottom: 25,
     width: (Dimensions.get('window').width - 80) / 3, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
     height:wp('40%'), // ความสูงของการ์ด
@@ -132,14 +136,25 @@ const styles = StyleSheet.create({
     flex: 1,                       // ให้ข้อความยืดเต็มช่อง
     fontSize: wp('4%'),             // ขนาดตัวอักษรตามขนาดหน้าจอ
     color: 'white',                 // สีข้อความ
+=======
+  //  marginLeft: 15,
+    width: (Dimensions.get('window').width - 80) / 2, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
+    height:wp('55%'), // ความสูงของการ์ด
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   },
 
 
   cardImage: {
     width: '100%',
+<<<<<<< HEAD
     height: '100%',
     borderRadius: 10
    
+=======
+    height: '50%',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   },
   cardContent: {
     padding: 5,
@@ -148,7 +163,11 @@ const styles = StyleSheet.create({
     fontSize: wp('3.5%'),
     fontWeight: 'bold',
     color: '#002348',
+<<<<<<< HEAD
     marginTop: 5 ,
+=======
+    marginBottom: 5,
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   },
   cardLocation: {
     fontSize: wp('3%'),
@@ -196,6 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'flex-end',
   },
+<<<<<<< HEAD
    gridContainer: {
     paddingVertical:10,
    // paddingTop : 10,
@@ -227,6 +247,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   modalText: {
     fontSize: 16,
     color: '#333',
@@ -299,13 +321,18 @@ const styles = StyleSheet.create({
     textAlign: 'left', // ชิดซ้าย
     color: '#002348',
     marginBottom: 20,
+<<<<<<< HEAD
     marginTop: -50,
+=======
+    marginTop: 0,
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
     alignSelf: 'flex-start', // ยืนยันให้ข้อความอยู่ชิดซ้าย
     marginLeft: 10, // เพิ่มพื้นที่ห่างจากขอบซ้าย
   },
   highlight: {
     color: '#FD501E',
   },
+<<<<<<< HEAD
 tabContainer: {
     flexDirection: 'row', // ให้อยู่ในแถวเดียวกัน
     flexWrap: 'wrap', // ให้แต่ละปุ่มอยู่ในแถวถัดไปเมื่อเต็มแถว
@@ -328,6 +355,87 @@ tabContainer: {
   },
   activeTabText: {
     color: '#FFF', // เมื่อเลือกข้อความจะเป็นสีขาว
+=======
+  tabContainer: {
+    flexDirection: 'row',
+    marginLeft: 20,
+    marginRight: 20,
+    marginBottom: 0,
+    paddingBottom: 0,
+    overflow: 'visible',
+  },
+  searchBox: {
+    width: '90%',
+    height: 40,
+    borderColor: '#CCC',
+    borderWidth: 1,
+    borderRadius: 30,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    marginRight: 20,
+
+    color: '#333',
+  },
+  contenRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    margin: 5,
+
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#FEE8E1',
+    borderRadius: 25,
+  },
+  tabOuter: {
+    flex: 1,
+    alignItems: 'center',
+
+  },
+  tabActiveOuter: {
+    backgroundColor: '#F6F6F6',
+    shadowColor: '#F6F6F6',
+    shadowOffset: { width: 0, height: -15 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    borderRadius: 25,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  tabInactiveOuter: {
+    backgroundColor: 'transparent',
+  },
+  tabActive: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#FD501E',
+    borderRadius: 25,
+    width: '90%',
+    margin: 5,
+    height: 10,
+  },
+  tabInactive: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(253, 80, 30, 0.4)',
+    borderRadius: 25,
+    width: '90%',
+    margin: 5,
+    opacity: 40,
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  tabTextInactive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   },
   inputBoxSearch: {
     flexDirection: 'row',
@@ -506,11 +614,14 @@ tabContainer: {
     color: '#FD501E', // Orange color for the icon
     marginLeft: 10,
   },
+<<<<<<< HEAD
     icon: {
     width: wp('10%'),  // กำหนดขนาดรูปภาพ
     height: wp('10%'), // ให้มีขนาดเหมาะสมกับกริด
     resizeMode: 'contain',  // ให้รักษาอัตราส่วนของรูป
   },
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
 
   buttonText: {
     fontSize: wp('3.5%'),

@@ -1,7 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, Dimensions, useWindowDimensions } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+<<<<<<< HEAD
 import ipAddress from './../ipconfig';
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
 
 const banners = [
   { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967469015-807603818.webp' },
@@ -13,6 +16,7 @@ export default function Banner() {
   const { width: screenWidth } = useWindowDimensions(); // ✅ ใช้ useWindowDimensions() แทน Dimensions.get()
   const [currentBanner, setCurrentBanner] = useState(0);
   const scrollViewRef = useRef(null);
+<<<<<<< HEAD
   const [promotion, setPromotion] = useState([]);
 
 
@@ -55,6 +59,18 @@ export default function Banner() {
 
   return () => clearInterval(interval);
 }, [currentBanner, screenWidth, promotion.length]);
+=======
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let nextIndex = (currentBanner + 1) % banners.length;
+      setCurrentBanner(nextIndex);
+      scrollViewRef.current?.scrollTo({ x: nextIndex * screenWidth, animated: true });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentBanner, screenWidth]);
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
 
   return (
     <View style={styles.carouselContainer}>
@@ -69,6 +85,7 @@ export default function Banner() {
         }}
         style={{ width: screenWidth }}
       >
+<<<<<<< HEAD
         {promotion.map((item, index) => (
           <Image
             key={index}
@@ -76,12 +93,20 @@ export default function Banner() {
             style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
           />
 
+=======
+        {banners.map((banner, index) => (
+          <Image key={index} source={banner} style={[styles.bannerImage, { width: screenWidth * 0.9 }]} />
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
         ))}
       </ScrollView>
 
       {/* Indicator */}
       <View style={styles.indicatorContainer}>
+<<<<<<< HEAD
         {promotion.map((_, index) => (
+=======
+        {banners.map((_, index) => (
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
           <View key={index} style={[styles.indicator, currentBanner === index && styles.activeIndicator]} />
         ))}
       </View>
@@ -102,7 +127,10 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     alignSelf: 'center',
     marginHorizontal: wp('5%'), // ให้มีขอบซ้ายขวาเล็กน้อย
+<<<<<<< HEAD
 
+=======
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
   },
   indicatorContainer: {
     flexDirection: 'row',
@@ -118,7 +146,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   activeIndicator: {
+<<<<<<< HEAD
     backgroundColor: '#49A7FF',
+=======
+    backgroundColor: '#FD501E',
+>>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
     width: 8,
     height: 8,
   },
