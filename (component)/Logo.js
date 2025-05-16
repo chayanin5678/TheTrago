@@ -15,11 +15,9 @@ export default function Logo() {
 
 const styles = StyleSheet.create({
     logoContainer: {
-<<<<<<< HEAD
+
         marginTop: 25,
-=======
-        marginTop: 0,
->>>>>>> 880b1d14123c4238ea4001e93867da943b84a705
+
         width: '100%',
         justifyContent: 'space-between',
         marginBottom: 20,
