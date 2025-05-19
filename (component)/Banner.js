@@ -54,7 +54,7 @@ export default function Banner() {
       x: nextIndex * screenWidth,
       animated: true,
     });
-  }, 5000);
+  }, 3000);
 
   return () => clearInterval(interval);
 }, [currentBanner, screenWidth, promotion.length]);

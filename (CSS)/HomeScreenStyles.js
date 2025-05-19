@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
 
   },
 
-   profileImage: {
+  profileImage: {
     marginTop: 20,
     width: 50,
     height: 50,
@@ -104,29 +104,29 @@ const styles = StyleSheet.create({
 
     marginBottom: 25,
     width: (Dimensions.get('window').width - 80) / 3, // ลด margin บนและล่างให้พอดีกับสองคอลัมน์
-    height:wp('40%'), // ความสูงของการ์ด
+    height: wp('40%'), // ความสูงของการ์ด
   },
 
   searchContainer: {
     flexDirection: 'row',           // ให้อยู่ในแถวเดียวกัน
     alignItems: 'center',           // ตั้งตำแหน่งของไอคอนและข้อความ
-     backgroundColor: 'rgba(0, 0, 0, 0.3)',       // สีพื้นหลังของ search bar
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',       // สีพื้นหลังของ search bar
     borderRadius: wp('6%'),        // โค้งมุม
     paddingLeft: wp('1%'),   // ระยะห่างซ้ายขวา
-   // paddingVertical: hp('2%'),     // ระยะห่างบนล่าง
+    // paddingVertical: hp('2%'),     // ระยะห่างบนล่าง
     margin: wp('5%'),
-    height: hp('6%'),      
+    height: hp('6%'),
     width: wp('80%'),
     alignSelf: 'center'        // ระยะห่างจากขอบ
   },
   searchIconContainer: {
-     backgroundColor:  'rgba(0, 0, 0, 0.3)',    // สีพื้นหลังของวงกลม
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',    // สีพื้นหลังของวงกลม
     borderRadius: 50,              // ทำให้ไอคอนเป็นวงกลม
     width: wp('10%'),              // ขนาดของวงกลม (สามารถปรับตามขนาดที่ต้องการ)
     height: wp('10%'),             // ขนาดของวงกลม (ให้สูงเท่ากับกว้าง)
     justifyContent: 'center',      // จัดตำแหน่งไอคอนกลาง
     alignItems: 'center',          // จัดตำแหน่งไอคอนกลาง
-    marginRight: wp('3%'),  
+    marginRight: wp('3%'),
   },
   searchIcon: {
     marginRight: wp('3%'),  // ระยะห่างจากข้อความ
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 
     height: '100%',
     borderRadius: 10
-   
+
 
   },
   cardContent: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#002348',
 
-    marginTop: 5 ,
+    marginTop: 5,
 
   },
   cardLocation: {
@@ -177,10 +177,12 @@ const styles = StyleSheet.create({
     color: '#FD501E',
   },
   cardList: {
-
+   
+    alignItems: 'flex-start', // ✅ ให้แน่ใจว่าไม่ stretch
+    width: '100%',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    flexDirection: 'row',
+    flexDirection: 'row',        // หรือเปลี่ยนเป็น 'auto' หาก container มี width กำหนด
   },
   iconExplo: {
     height: 12,
@@ -205,9 +207,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
 
-   gridContainer: {
-    paddingVertical:10,
-   // paddingTop : 10,
+  gridContainer: {
+    paddingVertical: 10,
+    // paddingTop : 10,
     alignItems: 'center',
   },
   row: {
@@ -219,13 +221,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 10,
-  //  padding: 20,
- //   backgroundColor: '#f2f2f2',
+    //  padding: 20,
+    //   backgroundColor: '#f2f2f2',
     borderRadius: 50,
     width: wp('14%'),             // กำหนดขนาดให้เป็น % ของหน้าจอ (เพื่อให้มี 4 คอลัมน์ในแถว)
-    height: wp('14%'),      
+    height: wp('14%'),
     backgroundColor: 'rgba(253, 80, 30, 0.1)',
-          // กำหนดขนาดให้เป็น % ของหน้าจอ
+    // กำหนดขนาดให้เป็น % ของหน้าจอ
   },
   icon: {
     width: wp('2%'),  // ขนาดของไอคอน
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     color: '#FD501E',
   },
 
-tabContainer: {
+  tabContainer: {
     flexDirection: 'row', // ให้อยู่ในแถวเดียวกัน
     flexWrap: 'wrap', // ให้แต่ละปุ่มอยู่ในแถวถัดไปเมื่อเต็มแถว
     justifyContent: 'center', // จัดให้ปุ่มห่างกันเท่าๆ กัน
@@ -441,14 +443,14 @@ tabContainer: {
     marginTop: 10,
     textAlign: 'left',
     alignSelf: 'center',
-  //  alignItems:'center',
+    //  alignItems:'center',
     width: wp('90%'),
     flexDirection: 'row',
     marginBottom: 20,
     backgroundColor: 'white',
     borderRadius: 30,
     padding: 10,
-    
+
   },
   Detail: {
     fontSize: wp('3.5%'),
@@ -521,7 +523,7 @@ tabContainer: {
     marginLeft: 10,
   },
 
-    icon: {
+  icon: {
     width: wp('10%'),  // กำหนดขนาดรูปภาพ
     height: wp('10%'), // ให้มีขนาดเหมาะสมกับกริด
     resizeMode: 'contain',  // ให้รักษาอัตราส่วนของรูป
@@ -723,7 +725,7 @@ tabContainer: {
     marginRight: 10,
   },
   circleContainerLeft: {
-    position: 'relative', 
+    position: 'relative',
     width: 40,
     height: 40,
     justifyContent: 'flex-start',// จัดตำแหน่งไอคอนให้อยู่ตรงกลาง
@@ -751,7 +753,7 @@ tabContainer: {
     borderRadius: 30, // ให้เป็นวงกลม
   },
   circleContainerRight: {
-    position: 'relative', 
+    position: 'relative',
     width: 40,
     height: 40,
     marginLeft: -3,
@@ -851,9 +853,9 @@ tabContainer: {
     width: '120%',
     padding: 40,
     marginBottom: -20,
-  },coltrip: {
-  flexDirection: 'column',
-  width: '50%',
+  }, coltrip: {
+    flexDirection: 'column',
+    width: '50%',
   }
 });
 

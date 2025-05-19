@@ -12,20 +12,46 @@ import styles from './(CSS)/HomeScreenStyles';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from './ipconfig';
-
+import { Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 
 
 const data = [
-  { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry' },
-  { id: '2', title: 'Flights', icon: 'airplane', navigate: '' },
-  { id: '3', title: 'Trains', icon: 'train', navigate: '' },
-  { id: '4', title: 'Cars', icon: 'car', navigate: '' },
-  { id: '5', title: 'Hotel', icon: 'bed', navigate: '' },
-  { id: '6', title: 'Tours', icon: 'map', navigate: '' },
-  { id: '7', title: 'Attraction', icon: 'star', navigate: '' },
-  { id: '8', title: 'Ticket', icon: 'ticket', navigate: '' },
+  { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry', item: 'new' },
+  { id: '2', title: 'Flights', icon: 'airplane', navigate: '', item: '' },
+  { id: '3', title: 'Trains', icon: 'train', navigate: '', item: '' },
+  { id: '4', title: 'Cars', icon: 'car', navigate: '', item: '' },
+  { id: '5', title: 'Hotel', icon: 'bed', navigate: '', item: '' },
+  { id: '6', title: 'Tours', icon: 'map', navigate: '', item: '' },
+  { id: '7', title: 'Attraction', icon: 'star', navigate: '', item: '' },
+  { id: '8', title: 'Ticket', icon: 'ticket', navigate: '', item: '' },
 ];
+
+const placeholders = [
+  [
+    { text: 'The ', color: '#fff' },
+    { text: 'journey ', color: 'rgb(255, 166, 0)' },
+    { text: 'is endless, Book now', color: '#fff' },
+  ],
+  [
+    { text: 'Planning for a ', color: '#fff' },
+    { text: 'trip? ', color: 'rgb(255, 166, 0)' },
+  ],
+  [
+    { text: 'We will organize your ', color: '#fff' },
+    { text: 'best trip', color: 'rgb(255, 166, 0)' },
+  ],
+  [
+    { text: 'With the ', color: '#fff' },
+    { text: 'best destination', color: 'rgb(255, 166, 0)' },
+  ],
+  [
+    { text: 'And within the ', color: '#fff' },
+    { text: 'best budgets!', color: 'rgb(255, 166, 0)' },
+  ],
+];
+
+
 
 
 const HomeScreen = ({ navigation }) => {
@@ -60,6 +86,100 @@ const HomeScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState([]);
   const [countrie, setcountrie] = useState([]);
+  const iconAnim = useRef(new Animated.Value(0)).current; // สำหรับ opacity และ scale
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const slideX = useRef(new Animated.Value(-100)).current;
+  const [index, setIndex] = useState(0);
+  const translateY = useRef(new Animated.Value(0)).current;
+  const [searchText, setSearchText] = useState('');
+  const bounceAnim2 = useRef(new Animated.Value(0)).current;
+
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Animate ขึ้นไปก่อน
+      Animated.timing(translateY, {
+        toValue: -70,
+        duration: 550,
+        useNativeDriver: true,
+      }).start(() => {
+        // เมื่อเลื่อนขึ้นสุดแล้ว เปลี่ยนข้อความ
+        setIndex((prev) => (prev + 1) % placeholders.length);
+
+        // ดึงกลับล่างทันทีแบบไม่เห็น
+        translateY.setValue(60);
+
+        // แล้ว animate กลับมาที่ 0
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 550,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
+useEffect(() => {
+  Animated.loop(
+    Animated.sequence([
+      Animated.timing(bounceAnim2, {
+        toValue: -4, // ⬆ ขึ้น
+        duration: 700,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bounceAnim2, {
+        toValue: 4,  // ⬇ ลง
+        duration: 700,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ])
+  ).start();
+}, []);
+
+  useEffect(() => {
+    Animated.timing(slideX, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+
+  useEffect(() => {
+    Animated.timing(iconAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(bounceAnim, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.inOut(Easing.sin), // ✅ ลื่นและ smooth
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const translateX = bounceAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [-10, 15, -10], // ⬅➡⬅
+  });
+const bounceY = bounceAnim.interpolate({
+  inputRange: [0, 0.5, 1],
+  outputRange: [-5, 5, -5],
+});
+
 
 
   // ฟังก์ชันสำหรับเลือกวัน
@@ -401,27 +521,116 @@ const HomeScreen = ({ navigation }) => {
               ))}
 
             </View>
-            <Text style={[styles.title, { shadowRadius: 20, shadowOpacity: 1, shadowColor: '#FFFFF', color: "#FFFF", alignSelf: 'center', textAlign: 'center', maxWidth: 300, fontSize: wp('6%'), marginBottom: 5, fontWeight: 'bold' }]}>
+            {/* <Text style={[styles.title, { shadowRadius: 20, shadowOpacity: 1, shadowColor: '#FFFFF', color: "#FFFF", alignSelf: 'center', textAlign: 'center', maxWidth: 300, fontSize: wp('6%'), marginBottom: 5, fontWeight: 'bold' }]}>
               The journey is endless Book now
-            </Text>
-            <View style={[styles.searchContainer, { marginBottom: 150 }]}>
-              <View style={styles.searchIconContainer}>
-                <Ionicons
-                  name="search"
-                  size={24}
-                  color="white"
-                  style={[styles.searchIcon, { transform: [{ translateX: 6 }] }]}
-                />
+            </Text> */}
 
+            <View style={[styles.searchContainer, { marginBottom: 20, overflow: 'hidden' }]}>
+              <View style={styles.searchIconContainer}>
+                <Ionicons name="search" size={24} color="white" />
               </View>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Find your next destination"
-                placeholderTextColor="#fff"
-              />
+
+              <View style={{ position: 'relative', height: 40, justifyContent: 'center', width: '100%' }}>
+                {/* Placeholder แบบ Animated */}
+                {searchText === '' && (
+                  <Animated.Text style={{
+                    position: 'absolute',
+                    width: '100%',
+                    top: 8,
+                    left: 0,
+                    fontSize: wp('4%'),
+                    color: '#FFF',
+                    transform: [{ translateY }],
+                  }}>
+                    {placeholders[index].map((part, i) => (
+                      <Text key={i} style={{ color: part.color, fontWeight: part.bold ? 'bold' : 'bold' }}>
+                        {part.text}
+                      </Text>
+                    ))}
+                  </Animated.Text>
+
+                )}
+
+                {/* ช่องกรอกจริง */}
+                <TextInput
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  style={{
+                    height: 40,
+                    fontSize: wp('4%'),
+                    // paddingHorizontal: 12,
+                    paddingVertical: 0,
+                    color: '#fff',
+                  }}
+                  placeholder=" " // placeholder จริงต้องว่างเพื่อไม่ชนกัน
+                  placeholderTextColor="transparent"
+                />
+              </View>
+
+
+
+
             </View>
+
+
+
           </ImageBackground>
         </View>
+        <Animated.View
+          style={[
+            styles.gridContainer,
+            {
+              marginTop: -60,
+              backgroundColor: '#FFF',
+              marginBottom: 60,
+              borderRadius: 50,
+              opacity: iconAnim,
+              transform: [
+                {
+                  scale: iconAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.85, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.row}>
+            {data.map((item) => (
+              <View key={item.id} style={{ justifyContent: 'center', alignItems: 'center', margin: 10, width: wp('14%'), height: wp('14%'), marginBottom: 25 }}>
+
+
+
+                <TouchableOpacity
+                  style={styles.card}
+                  onPress={() => {
+                    if (item.navigate) {
+                      navigation.navigate(item.navigate);
+                    } else {
+                      alert("Coming soon...");
+                    }
+                  }}
+                >
+              
+                  {item.item && (
+                      <Animated.View
+                      style={{ position: 'absolute', left: 45, top: 5, backgroundColor: 'red', borderRadius: 20, paddingHorizontal: 5,   transform: [{ translateY: bounceY }], }}
+                  
+                  >
+                    <Text style={{color: '#FFF'}}>{item.item}</Text>
+                    </Animated.View>
+                  )}
+                  <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
+                </TouchableOpacity>
+
+                <Text style={styles.cardText}>{item.title}</Text>
+
+              </View>
+            ))}
+          </View>
+        </Animated.View>
+
 
 
         {/* <View style={styles.tabContainer}>
@@ -445,35 +654,7 @@ const HomeScreen = ({ navigation }) => {
         ))}
       </View> */}
 
-        <ScrollView contentContainerStyle={[styles.gridContainer, { marginBottom: 0 }]}>
-          <View style={styles.row}>
-            {data.map((item) => (
-              <View key={item.id} style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                margin: 10,
-                width: wp('14%'),             // กำหนดขนาดให้เป็น % ของหน้าจอ (เพื่อให้มี 4 คอลัมน์ในแถว)
-                height: wp('14%'),
-                marginBottom: 25,
-              }} >
-                <TouchableOpacity
-                  style={styles.card}
-                  onPress={() => {
-                    if (item.navigate) {
-                      navigation.navigate(item.navigate);
-                    } else {
-                      alert("Coming soon...");
-                    }
-                  }}
-                >
-                  <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
-                </TouchableOpacity>
-                <Text style={styles.cardText}>{item.title}</Text>
-              </View>
-            ))}
 
-          </View>
-        </ScrollView>
 
         {/* <View style={styles.bookingSection}>
           <View style={styles.tripTypeContainer}>
@@ -711,25 +892,27 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </View>
         </Modal> */}
-        <LinearGradient
-          colors={['#FD501E', '#FFFF' ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 12,
-            marginTop:-50,
-            marginBottom: 10,
-            alignSelf: 'flex-start',
-            width:'100%'
-          }}
-        >
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>
-            Hot <Text style={{ color: '#FFE1D8' }}>Deal</Text>
-          </Text>
-        </LinearGradient>
+        <Animated.View style={{ transform: [{ translateX }], width: '100%' }}>
 
+          <LinearGradient
+            colors={['#FD501E', '#FFFF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 25,
+              marginTop: -50,
+              marginBottom: 10,
+              alignSelf: 'flex-start',
+              width: '100%'
+            }}
+          >
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>
+              Hot <Text style={{ color: '#FFE1D8' }}>Deal</Text>
+            </Text>
+          </LinearGradient>
+        </Animated.View>
 
         <Banner />
         {/* <View style={styles.rowtrip}>
@@ -772,10 +955,10 @@ const HomeScreen = ({ navigation }) => {
         </Text>
         <ScrollView
           contentContainerStyle={styles.cardList}
-          style={{ width: '100%' }}
+          style={{ width: '100%'}}
         >
           {countrie.map((item) => (
-            <View style={styles.cardContainerDes} key={item.sys_countries_id}>
+            <View style={[styles.cardContainerDes]} key={item.sys_countries_id}>
               <Image
                 source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
                 style={styles.cardImage}
@@ -791,7 +974,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
           ))}
         </ScrollView>
-        <Text style={[styles.titledeal, { marginTop: -20 }]}>
+        <Text style={[styles.titledeal, { marginTop: 20 }]}>
           <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
         </Text>
         <View style={styles.tabContainer}>
