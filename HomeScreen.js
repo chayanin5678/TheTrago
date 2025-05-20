@@ -123,24 +123,24 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
 
-useEffect(() => {
-  Animated.loop(
-    Animated.sequence([
-      Animated.timing(bounceAnim2, {
-        toValue: -4, // ⬆ ขึ้น
-        duration: 700,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(bounceAnim2, {
-        toValue: 4,  // ⬇ ลง
-        duration: 700,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ])
-  ).start();
-}, []);
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim2, {
+          toValue: -4, // ⬆ ขึ้น
+          duration: 700,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim2, {
+          toValue: 4,  // ⬇ ลง
+          duration: 700,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   useEffect(() => {
     Animated.timing(slideX, {
@@ -175,10 +175,10 @@ useEffect(() => {
     inputRange: [0, 0.5, 1],
     outputRange: [-10, 15, -10], // ⬅➡⬅
   });
-const bounceY = bounceAnim.interpolate({
-  inputRange: [0, 0.5, 1],
-  outputRange: [-5, 5, -5],
-});
+  const bounceY = bounceAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [-5, 5, -5],
+  });
 
 
 
@@ -454,14 +454,16 @@ const bounceY = bounceAnim.interpolate({
           styles.cardContainerDes,
           {
             width: '115%',
-            height: '20%',
+            height: hp('25%'),
             borderRadius: 40,
             marginTop: -30,
             paddingTop: 0,
+            paddingBottom: -80,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             overflow: 'hidden',
-            //  marginBottom : 20
+           
+            marginBottom: -20
 
 
           }
@@ -525,7 +527,7 @@ const bounceY = bounceAnim.interpolate({
               The journey is endless Book now
             </Text> */}
 
-            <View style={[styles.searchContainer, { marginBottom: 20, overflow: 'hidden' }]}>
+            <View style={[styles.searchContainer, { marginBottom: hp('5%'), overflow: 'hidden' }]}>
               <View style={styles.searchIconContainer}>
                 <Ionicons name="search" size={24} color="white" />
               </View>
@@ -580,7 +582,7 @@ const bounceY = bounceAnim.interpolate({
           style={[
             styles.gridContainer,
             {
-              marginTop: -60,
+              marginTop: -15,
               backgroundColor: '#FFF',
               marginBottom: 60,
               borderRadius: 50,
@@ -612,13 +614,13 @@ const bounceY = bounceAnim.interpolate({
                     }
                   }}
                 >
-              
+
                   {item.item && (
-                      <Animated.View
-                      style={{ position: 'absolute', left: 45, top: 5, backgroundColor: 'red', borderRadius: 20, paddingHorizontal: 5,   transform: [{ translateY: bounceY }], }}
-                  
-                  >
-                    <Text style={{color: '#FFF'}}>{item.item}</Text>
+                    <Animated.View
+                      style={{ position: 'absolute', left: 45, top: 5, backgroundColor: 'red', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
+
+                    >
+                      <Text style={{ color: '#FFF' }}>{item.item}</Text>
                     </Animated.View>
                   )}
                   <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
@@ -953,31 +955,64 @@ const bounceY = bounceAnim.interpolate({
         <Text style={[styles.titledeal, { marginTop: 10 }]}>
           <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Destination</Text></Text>
         </Text>
-        <ScrollView
-          contentContainerStyle={styles.cardList}
-          style={{ width: '100%'}}
+
+
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            paddingHorizontal: 10,
+          }}
         >
           {countrie.map((item) => (
-            <View style={[styles.cardContainerDes]} key={item.sys_countries_id}>
-              <Image
-                source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
-                style={styles.cardImage}
-              />
-
-              {/* <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-                <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
-                <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
-              </View> */}
-              <Text style={styles.cardTitle}>{item.sys_countries_nameeng}</Text>
+            <View
+              key={item.sys_countries_id}
+              style={{
+                width: '32%',
+                marginBottom: 15,
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                overflow: 'hidden',
+                elevation: 2,
+                
+              }}
+            >
+              <View style={{ width: '100%', height: hp('18%') }}>
+                <Image
+                  source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                  }}
+                  resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                />
+              </View>
+              <Text
+                style={{
+                  padding: 6,
+                  fontSize: 13,
+                  fontWeight: 'bold',
+                  textAlign: 'start',
+                  color: '#333',
+                }}
+                numberOfLines={2}
+              >
+                {item.sys_countries_nameeng}
+              </Text>
             </View>
           ))}
-        </ScrollView>
-        <Text style={[styles.titledeal, { marginTop: 20 }]}>
+        </View>
+
+
+        <View style={{
+         paddingBottom: 50,
+        }}>
+        <Text style={[styles.titledeal, { marginTop: 1 }]}>
           <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
         </Text>
-        <View style={styles.tabContainer}>
+        <View style={[styles.tabContainer ]}>
           <View style={styles.tabContainer}>
             {countrie.map((item) => (
               <TouchableOpacity
@@ -992,7 +1027,7 @@ const bounceY = bounceAnim.interpolate({
             ))}
           </View>
         </View>
-
+     </View>
 
       </ScrollView >
 

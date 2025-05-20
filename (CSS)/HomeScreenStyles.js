@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: wp('3.5%'),
     fontWeight: 'bold',
     color: '#002348',
-
+    
     marginTop: 5,
 
   },
@@ -177,9 +177,9 @@ const styles = StyleSheet.create({
     color: '#FD501E',
   },
   cardList: {
-   
+     paddingBottom: 20,
     alignItems: 'flex-start', // ✅ ให้แน่ใจว่าไม่ stretch
-    width: '100%',
+   // width: '100%',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     flexDirection: 'row',        // หรือเปลี่ยนเป็น 'auto' หาก container มี width กำหนด
