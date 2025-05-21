@@ -93,6 +93,7 @@ const HomeScreen = ({ navigation }) => {
   const translateY = useRef(new Animated.Value(0)).current;
   const [searchText, setSearchText] = useState('');
   const bounceAnim2 = useRef(new Animated.Value(0)).current;
+  const [poppularroute, setPoppularRoute] = useState([]);
 
 
 
@@ -412,6 +413,38 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
+
+    const fecthpoppularRoute = async (countrieid) => {
+      try {
+        const response = await fetch(`${ipAddress}/poppularroute`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sys_countries_id: countrieid }),
+        });
+
+        const json = await response.json();
+
+
+        if (response.ok) {
+          console.log('Country data:', json.data);
+          setPoppularRoute(json.data);
+          console.log('poppularRoute:', json.data);
+          return json.data;
+        } else {
+          console.warn('Not found or error:', json.message);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error fetching country:', error);
+        return null;
+      }
+    };
+    fecthpoppularRoute(activeCountry);
+  }, [activeCountry]);
+
+  useEffect(() => {
     fetch(`${ipAddress}/countriespop`)
       .then((response) => {
         if (!response.ok) {
@@ -462,7 +495,7 @@ const HomeScreen = ({ navigation }) => {
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             overflow: 'hidden',
-           
+
             marginBottom: -20
 
 
@@ -961,7 +994,7 @@ const HomeScreen = ({ navigation }) => {
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
             paddingHorizontal: 10,
           }}
         >
@@ -969,13 +1002,14 @@ const HomeScreen = ({ navigation }) => {
             <View
               key={item.sys_countries_id}
               style={{
-                width: '32%',
+                width: '33%',
                 marginBottom: 15,
                 backgroundColor: '#fff',
                 borderRadius: 12,
                 overflow: 'hidden',
                 elevation: 2,
-                
+                paddingHorizontal: 4,
+
               }}
             >
               <View style={{ width: '100%', height: hp('18%') }}>
@@ -1007,27 +1041,122 @@ const HomeScreen = ({ navigation }) => {
 
 
         <View style={{
-         paddingBottom: 50,
+          paddingBottom: 50,
         }}>
-        <Text style={[styles.titledeal, { marginTop: 1 }]}>
-          <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
-        </Text>
-        <View style={[styles.tabContainer ]}>
-          <View style={styles.tabContainer}>
-            {countrie.map((item) => (
-              <TouchableOpacity
-                key={item.sys_countries_id}
-                style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
-                onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+          <Text style={[styles.titledeal, { marginTop: 1 }]}>
+            <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
+          </Text>
+          <View style={[styles.tabContainer]}>
+            <View style={styles.tabContainer}>
+              {countrie.map((item) => (
+                <TouchableOpacity
+                  key={item.sys_countries_id}
+                  style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
+                  onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+                >
+                  <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
+                    {item.sys_countries_nameeng}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start',
+              paddingHorizontal: 10,
+
+              marginTop: 20,
+              alignContent: 'center',
+            }}
+          >
+            {poppularroute.map((item, index) => (
+              <View
+                key={item.md_location_id ?? index}
+                style={{
+                  width: '33%',
+                  marginBottom: 15,
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  elevation: 2,
+                  paddingHorizontal: 4,
+
+
+                }}
               >
-                <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
-                  {item.sys_countries_nameeng}
-                </Text>
-              </TouchableOpacity>
+                <View style={{ width: '100%', height: hp('18%') }}>
+                  <Image
+                    source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                    }}
+                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                  />
+                   {index  < 2 && (
+                    <Animated.View
+                      style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
+
+                    >
+                      <Text style={{ color: '#FE6D39', fontWeight: 'bold'  , fontSize: wp('3%')}}>Hot Route</Text>
+                    </Animated.View>
+                  )}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#333',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                    {item.start_location_name}
+                  </Text>
+
+                  <Ionicons
+                    name="arrow-forward"
+                    size={wp('3%')}
+                    color="black"
+                    style={{ marginHorizontal: 4 }}
+                  />
+
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#333',
+                      //   flexShrink: 1,
+                    }}
+                  //    numberOfLines={2}
+                  >
+                    {item.end_location_name}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#c5c5c7',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                    {item.md_pier_nameeng}
+                  </Text>
+                </View>
+              </View>
+
             ))}
           </View>
         </View>
-     </View>
 
       </ScrollView >
 
