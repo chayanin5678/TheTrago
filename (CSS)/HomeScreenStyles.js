@@ -137,7 +137,20 @@ const styles = StyleSheet.create({
     color: 'white',                 // สีข้อความ
 
   },
-
+    carouselContainerTop: {
+    marginTop: -5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '120%',
+  },
+  bannerImage: {
+    height: hp('25%'), // ปรับให้สูงขึ้นเล็กน้อย
+    borderRadius: 20,
+    resizeMode: 'cover',
+    alignSelf: 'center',
+    marginHorizontal: wp('5%'), // ให้มีขอบซ้ายขวาเล็กน้อย
+    
+  },
 
   cardImage: {
     width: '100%',
@@ -434,7 +447,7 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     marginTop: -20,
-    alignItems: 'center',
+    alignIaems: 'center',
     justifyContent: 'center',
     width: '100%',
   },

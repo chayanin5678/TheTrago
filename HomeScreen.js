@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, FlatList, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
@@ -94,8 +94,50 @@ const HomeScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const bounceAnim2 = useRef(new Animated.Value(0)).current;
   const [poppularroute, setPoppularRoute] = useState([]);
+  const [visibleRoutes, setVisibleRoutes] = useState(6);
+  const scrollViewRef = useRef(null);
+  const { width: screenWidth } = useWindowDimensions();
+  const [currentBanner, setCurrentBanner] = useState(0);
+  const [toptrending, setToptrending] = useState([]);
 
 
+  useEffect(() => {
+    fetch(`${ipAddress}/toptrending`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          setToptrending(data.data);
+          //   setActiveCountry(data.data[0].sys_countries_id);
+        } else {
+          console.error('Data is not an array', data);
+          setToptrending([]);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+   useEffect(() => {
+    if (!toptrending.length) return;
+  
+    const interval = setInterval(() => {
+      const nextIndex = (currentBanner + 1) % toptrending.length;
+      setCurrentBanner(nextIndex);
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * screenWidth,
+        animated: true,
+      });
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, [currentBanner, screenWidth, toptrending.length]);
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -122,6 +164,12 @@ const HomeScreen = ({ navigation }) => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const loadMoreRoutes = () => {
+    if (visibleRoutes < poppularroute.length) {
+      setVisibleRoutes(prev => prev + 6);
+    }
+  };
 
 
   useEffect(() => {
@@ -1052,7 +1100,11 @@ const HomeScreen = ({ navigation }) => {
                 <TouchableOpacity
                   key={item.sys_countries_id}
                   style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
-                  onPress={() => setActiveCountry(item.sys_countries_id)} // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+                  onPress={() => {
+                    setActiveCountry(item.sys_countries_id);
+                    setVisibleRoutes(6);
+                  }}
+                // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
                 >
                   <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
                     {item.sys_countries_nameeng}
@@ -1073,9 +1125,9 @@ const HomeScreen = ({ navigation }) => {
               alignContent: 'center',
             }}
           >
-            {poppularroute.map((item, index) => (
+            {poppularroute.slice(0, visibleRoutes).map((item, index) => (
               <View
-                key={item.md_location_id ?? index}
+                key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
                 style={{
                   width: '33%',
                   marginBottom: 15,
@@ -1084,8 +1136,6 @@ const HomeScreen = ({ navigation }) => {
                   overflow: 'hidden',
                   elevation: 2,
                   paddingHorizontal: 4,
-
-
                 }}
               >
                 <View style={{ width: '100%', height: hp('18%') }}>
@@ -1098,12 +1148,12 @@ const HomeScreen = ({ navigation }) => {
                     }}
                     resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
                   />
-                   {index  < 2 && (
+                  {index < 2 && (
                     <Animated.View
                       style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
 
                     >
-                      <Text style={{ color: '#FE6D39', fontWeight: 'bold'  , fontSize: wp('3%')}}>Hot Route</Text>
+                      <Text style={{ color: '#FE6D39', fontWeight: 'bold', fontSize: wp('3%') }}>Hot Route</Text>
                     </Animated.View>
                   )}
                 </View>
@@ -1156,6 +1206,56 @@ const HomeScreen = ({ navigation }) => {
 
             ))}
           </View>
+          {visibleRoutes < poppularroute.length && (
+            <TouchableOpacity
+              onPress={loadMoreRoutes}
+              style={{
+                marginTop: 10,
+                marginBottom: 0,
+                alignSelf: 'center',
+                backgroundColor: '#FD501E',
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Load More</Text>
+            </TouchableOpacity>
+          )}
+
+        </View>
+        <View style={{
+          paddingBottom: 50,
+          alignSelf: 'flex-start'
+        }}>
+          <Text style={[styles.titledeal, { marginTop: -20 }]}>
+            <Text style={styles.highlight}>Top Trending<Text style={{ color: '#FFA072' }}> places</Text></Text>
+          </Text>
+          <View style={styles.carouselContainerTop}>
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+                setCurrentBanner(index);
+              }}
+              style={{ width: screenWidth }}
+            >
+
+              {toptrending.map((item, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                  style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
+                />
+
+              ))}
+            </ScrollView>
+
+          </View>
+
         </View>
 
       </ScrollView >
