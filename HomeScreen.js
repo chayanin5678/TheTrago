@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackg
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
+import Toptrending from './(component)/toptrending';
 import LogoTheTrago from './(component)/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './(Screen)/CustomerContext';
@@ -56,7 +57,7 @@ const placeholders = [
 
 const HomeScreen = ({ navigation }) => {
   const [activeCountry, setActiveCountry] = useState(null);
-
+  const [activeattraction, setActiveattraction] = useState(null);
   const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
   const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
   const [departureDate, setDepartureDate] = useState(() => {
@@ -99,6 +100,7 @@ const HomeScreen = ({ navigation }) => {
   const { width: screenWidth } = useWindowDimensions();
   const [currentBanner, setCurrentBanner] = useState(0);
   const [toptrending, setToptrending] = useState([]);
+  const [attraction, setActtraction] = useState([]);
 
 
   useEffect(() => {
@@ -123,9 +125,31 @@ const HomeScreen = ({ navigation }) => {
       });
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
+    fetch(`${ipAddress}/attraction`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          setActtraction(data.data);
+          setActiveattraction(data.data[0].md_province_id);
+        } else {
+          console.error('Data is not an array', data);
+          setActtraction([]);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  useEffect(() => {
     if (!toptrending.length) return;
-  
+
     const interval = setInterval(() => {
       const nextIndex = (currentBanner + 1) % toptrending.length;
       setCurrentBanner(nextIndex);
@@ -134,10 +158,10 @@ const HomeScreen = ({ navigation }) => {
         animated: true,
       });
     }, 3000);
-  
+
     return () => clearInterval(interval);
   }, [currentBanner, screenWidth, toptrending.length]);
-  
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1091,9 +1115,27 @@ const HomeScreen = ({ navigation }) => {
         <View style={{
           paddingBottom: 50,
         }}>
-          <Text style={[styles.titledeal, { marginTop: 1 }]}>
-            <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Route</Text></Text>
-          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={[styles.titledeal, { marginTop: 1, flex: 1, textAlign: 'left' }]}>
+              <Text style={styles.highlight}>
+                Popular
+                <Text style={{ color: '#FFA072' }}> Route</Text>
+              </Text>
+            </Text>
+
+            {visibleRoutes < poppularroute.length && (
+              <TouchableOpacity onPress={loadMoreRoutes}>
+                <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom:15, paddingRight: 20 }}>Load More</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <View style={[styles.tabContainer]}>
             <View style={styles.tabContainer}>
               {countrie.map((item) => (
@@ -1206,55 +1248,72 @@ const HomeScreen = ({ navigation }) => {
 
             ))}
           </View>
-          {visibleRoutes < poppularroute.length && (
-            <TouchableOpacity
-              onPress={loadMoreRoutes}
-              style={{
-                marginTop: 10,
-                marginBottom: 0,
-                alignSelf: 'center',
-                backgroundColor: '#FD501E',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Load More</Text>
-            </TouchableOpacity>
-          )}
+
+
+        </View>
+        <View style={{
+          paddingBottom: 10,
+          alignSelf: 'flex-start'
+        }}>
+          <Text style={[styles.titledeal, { marginTop: -50 }]}>
+            <Text style={styles.highlight}>Top Trending<Text style={{ color: '#FFA072' }}> places</Text></Text>
+          </Text>
+
+
+        </View>
+        <View style={styles.carouselContainerTop}>
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+              setCurrentBanner(index);
+            }}
+            style={{ width: screenWidth }}
+          >
+
+            {toptrending.map((item, index) => (
+              <View key={index} style={styles.itemContainer}>
+                <Image
+                  source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                  style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
+                  resizeMode="cover"
+                />
+                <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
+                <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
+              </View>
+            ))}
+          </ScrollView>
 
         </View>
         <View style={{
           paddingBottom: 50,
-          alignSelf: 'flex-start'
         }}>
-          <Text style={[styles.titledeal, { marginTop: -20 }]}>
-            <Text style={styles.highlight}>Top Trending<Text style={{ color: '#FFA072' }}> places</Text></Text>
+          <Text style={[styles.titledeal, { marginTop: 1 }]}>
+            <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Attraction</Text></Text>
           </Text>
-          <View style={styles.carouselContainerTop}>
-            <ScrollView
-              ref={scrollViewRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(event) => {
-                const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-                setCurrentBanner(index);
-              }}
-              style={{ width: screenWidth }}
-            >
+          <View style={[styles.tabContainer]}>
+            <View style={styles.tabContainer}>
+              {attraction.map((item) => (
+                <TouchableOpacity
+                  key={item.md_province_id}
+                  style={[styles.tab, activeattraction === item.md_province_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
+                  onPress={() => {
+                    setActiveattraction(item.md_province_id);
 
-              {toptrending.map((item, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                  style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
-                />
-
+                  }}
+                // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+                >
+                  <Text style={[styles.tabText, activeattraction === item.md_province_id && styles.activeTabText]}>
+                    {item.md_province_nameeng}
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </ScrollView>
-
+            </View>
           </View>
+
 
         </View>
 

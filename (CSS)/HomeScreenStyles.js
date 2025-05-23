@@ -17,6 +17,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
 
   },
+    itemContainer: {
+    marginBottom: 15,
+    alignItems: 'flex-start',
+  },
+
+  locationName: {
+    marginLeft: 25,
+    marginTop: 8,
+    fontSize: wp('4%'),
+    fontWeight: '600',
+  },
   bookingSection: {
     backgroundColor: '#F6F6F6',
     borderRadius: 30,
@@ -144,7 +155,7 @@ const styles = StyleSheet.create({
     width: '120%',
   },
   bannerImage: {
-    height: hp('25%'), // ปรับให้สูงขึ้นเล็กน้อย
+    height: hp('30%'), // ปรับให้สูงขึ้นเล็กน้อย
     borderRadius: 20,
     resizeMode: 'cover',
     alignSelf: 'center',
