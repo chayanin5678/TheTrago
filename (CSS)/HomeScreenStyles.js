@@ -349,12 +349,12 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row', // ให้อยู่ในแถวเดียวกัน
     flexWrap: 'wrap', // ให้แต่ละปุ่มอยู่ในแถวถัดไปเมื่อเต็มแถว
-    justifyContent: 'center', // จัดให้ปุ่มห่างกันเท่าๆ กัน
+    justifyContent: 'flex-start', // จัดให้ปุ่มห่างกันเท่าๆ กัน
   },
   tab: {
     backgroundColor: '#F2F2F2', // พื้นหลังสีเทา
-    paddingVertical: wp('3%'),
-    paddingHorizontal: wp('5%'),
+    paddingVertical: wp('1.5%'),
+    paddingHorizontal: wp('1.5%'),
     margin: wp('1%'),
     borderRadius: 25, // ทำให้ขอบปุ่มโค้งมน
   },
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FD501E', // เมื่อเลือกจะเป็นสีส้ม
   },
   tabText: {
-    fontSize: wp('4%'),
+    fontSize: wp('3.5%'),
     color: '#FD501E',
     fontWeight: 'bold',
   },

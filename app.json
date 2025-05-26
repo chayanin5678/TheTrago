@@ -19,16 +19,17 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icontrago.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "android": {
       "versionCode": 1,
       "package": "com.chayanin5678.TheTrago",
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA"
+      ]
     },
-
     "plugins": [
       "expo-secure-store"
     ],
@@ -38,7 +39,6 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to scan your ID card"
       }
-      }
-     
+    }
   }
 }

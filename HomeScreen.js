@@ -96,11 +96,19 @@ const HomeScreen = ({ navigation }) => {
   const bounceAnim2 = useRef(new Animated.Value(0)).current;
   const [poppularroute, setPoppularRoute] = useState([]);
   const [visibleRoutes, setVisibleRoutes] = useState(6);
+  const [visibleAttraction, setvisibleAttraction] = useState(6);
   const scrollViewRef = useRef(null);
   const { width: screenWidth } = useWindowDimensions();
   const [currentBanner, setCurrentBanner] = useState(0);
   const [toptrending, setToptrending] = useState([]);
   const [attraction, setActtraction] = useState([]);
+  const [poppularAttraction, setPoppularAttraction] = useState([]);
+
+
+
+  const formatDecimal = (number) => {
+  return Number(number).toFixed(1);
+};
 
 
   useEffect(() => {
@@ -114,7 +122,7 @@ const HomeScreen = ({ navigation }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setToptrending(data.data);
-          //   setActiveCountry(data.data[0].sys_countries_id);
+
         } else {
           console.error('Data is not an array', data);
           setToptrending([]);
@@ -124,6 +132,17 @@ const HomeScreen = ({ navigation }) => {
         console.error('Error fetching data:', error);
       });
   }, []);
+
+   function formatNumberWithComma(value) {
+    if (!value) return "0.00";
+    const formattedValue = Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+
+
+    return formattedValue;
+  }
 
   useEffect(() => {
     fetch(`${ipAddress}/attraction`)
@@ -327,7 +346,7 @@ const HomeScreen = ({ navigation }) => {
     setEndPoint((prev) => startingPoint);
   };
 
-  const truncateText = (text, maxLength = 10) => {
+  const truncateText = (text, maxLength = 20) => {
     if (text.length > maxLength) {
       return text.slice(0, maxLength) + '...';
     }
@@ -484,8 +503,39 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
+   useEffect(() => {
 
+    const fecthpoppularattraction = async (provid) => {
+      try {
+        const response = await fetch(`${ipAddress}/poppularattraction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ md_tour_provid: provid }),
+        });
+
+        const json = await response.json();
+
+
+        if (response.ok) {
+          setPoppularAttraction(json.data);
+          console.log('poppularAttraction:', json.data);
+          return json.data;
+        } else {
+          console.warn('Not found or error:', json.message);
+          setPoppularAttraction([]);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error fetching country:', error);
+        return null;
+      }
+    };
+    fecthpoppularattraction(activeattraction);
+  }, [activeattraction]);
+
+  useEffect(() => {
     const fecthpoppularRoute = async (countrieid) => {
       try {
         const response = await fetch(`${ipAddress}/poppularroute`, {
@@ -506,6 +556,7 @@ const HomeScreen = ({ navigation }) => {
           return json.data;
         } else {
           console.warn('Not found or error:', json.message);
+          setPoppularRoute([]);
           return null;
         }
       } catch (error) {
@@ -1083,7 +1134,13 @@ const HomeScreen = ({ navigation }) => {
                 paddingHorizontal: 4,
 
               }}
-            >
+            ><TouchableOpacity onPress={() => {updateCustomerData({
+                countrycode: item.sys_countries_id,
+                country: item.sys_countries_nameeng,
+              });
+              console.log('Selected Country ID:', customerData.popdestination);
+              navigation.navigate('populardestination'); }
+            }>
               <View style={{ width: '100%', height: hp('18%') }}>
                 <Image
                   source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
@@ -1107,6 +1164,7 @@ const HomeScreen = ({ navigation }) => {
               >
                 {item.sys_countries_nameeng}
               </Text>
+              </TouchableOpacity>
             </View>
           ))}
         </View>
@@ -1131,7 +1189,7 @@ const HomeScreen = ({ navigation }) => {
 
             {visibleRoutes < poppularroute.length && (
               <TouchableOpacity onPress={loadMoreRoutes}>
-                <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom:15, paddingRight: 20 }}>Load More</Text>
+                <Text style={{ color: 'black', fontWeight: 'bold', paddingBottom: 15, paddingRight: 20 }}>Load More</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -1289,7 +1347,7 @@ const HomeScreen = ({ navigation }) => {
 
         </View>
         <View style={{
-          paddingBottom: 50,
+          paddingBottom: 20,
         }}>
           <Text style={[styles.titledeal, { marginTop: 1 }]}>
             <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Attraction</Text></Text>
@@ -1313,9 +1371,94 @@ const HomeScreen = ({ navigation }) => {
               ))}
             </View>
           </View>
-
-
         </View>
+         <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start',
+              paddingHorizontal: 10,
+
+              marginTop: 0,
+              alignContent: 'center',
+            }}
+          >
+            {poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
+              <View
+                key={item.md_tour_id ? `route-${item.md_tour_id}` : `route-index-${index}`}
+                style={{
+                  width: '33%',
+                  marginBottom: 15,
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  elevation: 2,
+                  paddingHorizontal: 4,
+                }}
+              >
+                <View style={{ width: '100%', height: hp('18%') }}>
+                  <Image
+                    source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                    }}
+                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                  />
+        
+                    <View
+                      style={{ position: 'absolute', left: 60, top: 10, borderRadius: 20, paddingHorizontal: 5, flexDirection: 'row', alignSelf: 'center'  }}
+
+                    >
+                      <Ionicons name="star" size={wp(' 4%')}color="rgb(255, 211, 14)" /><Text style={{paddingLeft: 2, color: '#FFF', fontWeight: 'bold', fontSize: wp('3%') }}>{formatDecimal(item.md_tour_star)}</Text>
+                    </View>
+               
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#333',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                    {truncateText(item.md_tour_name_eng)}
+                  </Text>
+
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#c5c5c7',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                    {item.md_tour_count} booked
+                  </Text>
+
+                     <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#c5c5c7',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                   start from  <Text style={{color : "#FD501E"}}>฿{formatNumberWithComma(item.md_tour_priceadult)}</Text> 
+                  </Text>
+                </View>
+              </View>
+
+            ))}
+          </View>
+
 
       </ScrollView >
 

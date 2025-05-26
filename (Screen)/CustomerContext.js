@@ -79,7 +79,7 @@ export const CustomerProvider = ({ children }) => {
     email:'',
     password:'',
     remember:false,
-    
+    popdestination: ''
 
   });
 

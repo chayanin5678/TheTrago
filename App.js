@@ -28,6 +28,8 @@ import Dashboard from './(Screen)/Dashboard';
 import ProfileScreen from './(Screen)/ProfileScreen';
 import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
 import OCRResultScreen from './(Screen)/OCRResultScreen';
+import SplashScreenComponent from './(component)/SplashScreenComponent';
+import populardestination from './(Screen)/populardestination';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -53,7 +55,7 @@ const AppNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
-    
+    <Stack.Screen name="populardestination" component={populardestination} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -87,16 +89,16 @@ const CustomPostButton = ({ children, onPress }) => (
 const MainNavigator = () => {
   return (
     <Tab.Navigator
-    screenListeners={({ route }) => ({
-      tabPress: (e) => {
-        if (route.name === 'Home') {
-          e.preventDefault(); // ป้องกัน default behavior
-          if (navigationRef.isReady()) {
-            navigationRef.navigate('Home', { screen: 'HomeScreen' });
+      screenListeners={({ route }) => ({
+        tabPress: (e) => {
+          if (route.name === 'Home') {
+            e.preventDefault(); // ป้องกัน default behavior
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('Home', { screen: 'HomeScreen' });
+            }
           }
         }
-      }
-    })}
+      })}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
@@ -144,8 +146,8 @@ const MainNavigator = () => {
         tabBarActiveTintColor: '#FD501E',
       })}
     >
-   <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
-      <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} />
+      <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
+      {/* <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} /> */}
       <Tab.Screen
         name="Post"
         component={SettingsScreen}
@@ -154,14 +156,35 @@ const MainNavigator = () => {
           tabBarButton: (props) => <CustomPostButton {...props} />,
         }}
       />
-      <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} />
+      {/* <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} /> */}
       <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
     </Tab.Navigator>
   );
 };
 
 export default function App() {
+
   const [fontLoaded, setFontLoaded] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
+    setTimeout(() => SplashScreen.hideAsync(), 1000);
+  }, []);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
+        'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
+      });
+      setFontLoaded(true);
+    };
+    loadFonts();
+  }, []);
+
+  // ✅ Hook ทั้งหมดอยู่ด้านบนก่อน return
+  const isReady = fontLoaded && !showSplash;
   useEffect(() => {
     // Prevent the Splash Screen from auto-hiding
     SplashScreen.preventAutoHideAsync();
@@ -185,12 +208,17 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
-      <CustomerProvider>
-    
-        <MainNavigator />
-      </CustomerProvider>
-    </NavigationContainer>
+     <>
+      {!isReady ? (
+        <SplashScreenComponent onAnimationEnd={() => setShowSplash(false)} />
+      ) : (
+        <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
+          <CustomerProvider>
+            <MainNavigator />
+          </CustomerProvider>
+        </NavigationContainer>
+      )}
+    </>
   );
 }
 
