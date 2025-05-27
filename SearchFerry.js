@@ -30,8 +30,8 @@ const SearchFerry = ({ navigation, route }) => {
     return returnDay;
   });
 
-  const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
-  const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
+  const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name });
+  const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
   const [searchQuery, setSearchQuery] = useState('');
   const [tripType, setTripType] = useState("One Way Trip");
   const [tripTypeSearch, setTripTypeSearch] = useState("One Way Trip");
@@ -894,7 +894,7 @@ const SearchFerry = ({ navigation, route }) => {
 
       {/* แสดงรายการแต่ละหน้า */}
       {loading && (
-        <View style={styles.loaderContainer}>
+        <View style={[styles.loaderContainer,{alignSelf:'center', justifyContent:'center', alignItems:'center'}]}>
           <ActivityIndicator size="large" color="#FD501E" />
         </View>
       )}

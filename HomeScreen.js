@@ -107,8 +107,8 @@ const HomeScreen = ({ navigation }) => {
 
 
   const formatDecimal = (number) => {
-  return Number(number).toFixed(1);
-};
+    return Number(number).toFixed(1);
+  };
 
 
   useEffect(() => {
@@ -133,7 +133,7 @@ const HomeScreen = ({ navigation }) => {
       });
   }, []);
 
-   function formatNumberWithComma(value) {
+  function formatNumberWithComma(value) {
     if (!value) return "0.00";
     const formattedValue = Number(value).toLocaleString("en-US", {
       minimumFractionDigits: 0,
@@ -503,7 +503,7 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-   useEffect(() => {
+  useEffect(() => {
 
     const fecthpoppularattraction = async (provid) => {
       try {
@@ -763,6 +763,14 @@ const HomeScreen = ({ navigation }) => {
                 <TouchableOpacity
                   style={styles.card}
                   onPress={() => {
+                    if (item.id === '1') {
+                      updateCustomerData({
+                        startingPointId: '0', 
+                        startingpoint_name: 'Starting Point', 
+                        endPointId: '0', 
+                        endpoint_name: 'Destination',
+                      });
+                    }
                     if (item.navigate) {
                       navigation.navigate(item.navigate);
                     } else {
@@ -1134,36 +1142,38 @@ const HomeScreen = ({ navigation }) => {
                 paddingHorizontal: 4,
 
               }}
-            ><TouchableOpacity onPress={() => {updateCustomerData({
+            ><TouchableOpacity onPress={() => {
+              updateCustomerData({
                 countrycode: item.sys_countries_id,
                 country: item.sys_countries_nameeng,
               });
               console.log('Selected Country ID:', customerData.popdestination);
-              navigation.navigate('populardestination'); }
+              navigation.navigate('populardestination');
+            }
             }>
-              <View style={{ width: '100%', height: hp('18%') }}>
-                <Image
-                  source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                <View style={{ width: '100%', height: hp('18%') }}>
+                  <Image
+                    source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                    }}
+                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                  />
+                </View>
+                <Text
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                    padding: 6,
+                    fontSize: 13,
+                    fontWeight: 'bold',
+                    textAlign: 'start',
+                    color: '#333',
                   }}
-                  resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                />
-              </View>
-              <Text
-                style={{
-                  padding: 6,
-                  fontSize: 13,
-                  fontWeight: 'bold',
-                  textAlign: 'start',
-                  color: '#333',
-                }}
-                numberOfLines={2}
-              >
-                {item.sys_countries_nameeng}
-              </Text>
+                  numberOfLines={2}
+                >
+                  {item.sys_countries_nameeng}
+                </Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -1226,6 +1236,7 @@ const HomeScreen = ({ navigation }) => {
             }}
           >
             {poppularroute.slice(0, visibleRoutes).map((item, index) => (
+             
               <View
                 key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
                 style={{
@@ -1238,6 +1249,16 @@ const HomeScreen = ({ navigation }) => {
                   paddingHorizontal: 4,
                 }}
               >
+                 <TouchableOpacity onPress={() => {
+                updateCustomerData({
+                  startingPointId: item.md_timetable_startid,
+                  startingpoint_name: item.start_location_name,
+                  endPointId: item.md_timetable_endid,
+                  endpoint_name: item.end_location_name,
+                });
+                navigation.navigate('SearchFerry');
+              }
+              }>
                 <View style={{ width: '100%', height: hp('18%') }}>
                   <Image
                     source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
@@ -1302,8 +1323,9 @@ const HomeScreen = ({ navigation }) => {
                     {item.md_pier_nameeng}
                   </Text>
                 </View>
+                </TouchableOpacity>
               </View>
-
+             
             ))}
           </View>
 
@@ -1333,6 +1355,18 @@ const HomeScreen = ({ navigation }) => {
           >
 
             {toptrending.map((item, index) => (
+              <TouchableOpacity
+               
+                onPress={() => {
+                  updateCustomerData({
+                    startingPointId: item.md_location_id,
+                    startingpoint_name: item.md_location_nameeng,
+                    countrycode: item.md_location_countriesid,
+                    country: item.sys_countries_nameeng,
+                  });
+                  navigation.navigate('LocationDetail');
+                }}
+              >
               <View key={index} style={styles.itemContainer}>
                 <Image
                   source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
@@ -1342,6 +1376,7 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
                 <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
               </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
@@ -1372,92 +1407,92 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </View>
         </View>
-         <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-start',
-              paddingHorizontal: 10,
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-start',
+            paddingHorizontal: 10,
 
-              marginTop: 0,
-              alignContent: 'center',
-            }}
-          >
-            {poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
-              <View
-                key={item.md_tour_id ? `route-${item.md_tour_id}` : `route-index-${index}`}
-                style={{
-                  width: '33%',
-                  marginBottom: 15,
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  elevation: 2,
-                  paddingHorizontal: 4,
-                }}
-              >
-                <View style={{ width: '100%', height: hp('18%') }}>
-                  <Image
-                    source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
-                    }}
-                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                  />
-        
-                    <View
-                      style={{ position: 'absolute', left: 60, top: 10, borderRadius: 20, paddingHorizontal: 5, flexDirection: 'row', alignSelf: 'center'  }}
+            marginTop: 0,
+            alignContent: 'center',
+          }}
+        >
+          {poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
+            <View
+              key={item.md_tour_id ? `route-${item.md_tour_id}` : `route-index-${index}`}
+              style={{
+                width: '33%',
+                marginBottom: 15,
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                overflow: 'hidden',
+                elevation: 2,
+                paddingHorizontal: 4,
+              }}
+            >
+              <View style={{ width: '100%', height: hp('18%') }}>
+                <Image
+                  source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                  }}
+                  resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                />
 
-                    >
-                      <Ionicons name="star" size={wp(' 4%')}color="rgb(255, 211, 14)" /><Text style={{paddingLeft: 2, color: '#FFF', fontWeight: 'bold', fontSize: wp('3%') }}>{formatDecimal(item.md_tour_star)}</Text>
-                    </View>
-               
+                <View
+                  style={{ position: 'absolute', left: 60, top: 10, borderRadius: 20, paddingHorizontal: 5, flexDirection: 'row', alignSelf: 'center' }}
+
+                >
+                  <Ionicons name="star" size={wp(' 4%')} color="rgb(255, 211, 14)" /><Text style={{ paddingLeft: 2, color: '#FFF', fontWeight: 'bold', fontSize: wp('3%') }}>{formatDecimal(item.md_tour_star)}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
-                  <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#333',
-                      //  flexShrink: 1,
-                    }}
-                  // numberOfLines={2}
-                  >
-                    {truncateText(item.md_tour_name_eng)}
-                  </Text>
 
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
-                  <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#c5c5c7',
-                      //  flexShrink: 1,
-                    }}
-                  // numberOfLines={2}
-                  >
-                    {item.md_tour_count} booked
-                  </Text>
-
-                     <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#c5c5c7',
-                      //  flexShrink: 1,
-                    }}
-                  // numberOfLines={2}
-                  >
-                   start from  <Text style={{color : "#FD501E"}}>฿{formatNumberWithComma(item.md_tour_priceadult)}</Text> 
-                  </Text>
-                </View>
               </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                <Text
+                  style={{
+                    fontSize: wp('3%'),
+                    fontWeight: 'bold',
+                    color: '#333',
+                    //  flexShrink: 1,
+                  }}
+                // numberOfLines={2}
+                >
+                  {truncateText(item.md_tour_name_eng)}
+                </Text>
 
-            ))}
-          </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
+                <Text
+                  style={{
+                    fontSize: wp('3%'),
+                    fontWeight: 'bold',
+                    color: '#c5c5c7',
+                    //  flexShrink: 1,
+                  }}
+                // numberOfLines={2}
+                >
+                  {item.md_tour_count} booked
+                </Text>
+
+                <Text
+                  style={{
+                    fontSize: wp('3%'),
+                    fontWeight: 'bold',
+                    color: '#c5c5c7',
+                    //  flexShrink: 1,
+                  }}
+                // numberOfLines={2}
+                >
+                  start from  <Text style={{ color: "#FD501E" }}>฿{formatNumberWithComma(item.md_tour_priceadult)}</Text>
+                </Text>
+              </View>
+            </View>
+
+          ))}
+        </View>
 
 
       </ScrollView >

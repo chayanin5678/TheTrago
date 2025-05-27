@@ -30,6 +30,7 @@ import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
 import OCRResultScreen from './(Screen)/OCRResultScreen';
 import SplashScreenComponent from './(component)/SplashScreenComponent';
 import populardestination from './(Screen)/populardestination';
+import LocationDetail from './(Screen)/LocationDetail';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -56,6 +57,7 @@ const AppNavigator = () => (
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="populardestination" component={populardestination} options={{ headerShown: false }} />
+    <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
