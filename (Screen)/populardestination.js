@@ -10,7 +10,7 @@ import { useCustomer } from './../(Screen)/CustomerContext';
 import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 import styles from './../(CSS)/HomeScreenStyles';
 
-const populardestination = ({ navigation, route }) => {
+const PopularDestination  = ({ navigation, route }) => {
   const { customerData, updateCustomerData } = useCustomer();
   const { width: screenWidth } = useWindowDimensions();
   const [popdestination, setPopdestination] = useState([]);
@@ -98,4 +98,4 @@ const populardestination = ({ navigation, route }) => {
 }
 
 
-export default populardestination;
+export default PopularDestination ;

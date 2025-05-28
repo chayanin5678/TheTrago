@@ -64,7 +64,10 @@ const LocationDetail = ({ navigation, route }) => {
             <View style={[styles.carouselContainerTop, { alignSelf: 'center' }]}>
 
                 {popdestination.map((item, index) => (
-                    <TouchableOpacity onPress={() => {
+                    
+                    <TouchableOpacity
+                     key={`pop-${item.md_timetable_endid || index}`}
+                    onPress={() => {
                         updateCustomerData({ endPointId: item.md_timetable_endid, endpoint_name: item.endeng }); 
                         navigation.navigate('SearchFerry'); }}>
                     <View

@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef  } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Pressable } from 'react-native';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { navigationRef } from './navigationRef';
+import { BlurView } from 'expo-blur';
+
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -29,7 +32,8 @@ import ProfileScreen from './(Screen)/ProfileScreen';
 import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
 import OCRResultScreen from './(Screen)/OCRResultScreen';
 import SplashScreenComponent from './(component)/SplashScreenComponent';
-import populardestination from './(Screen)/populardestination';
+import PopularDestination from './(Screen)/populardestination';
+
 import LocationDetail from './(Screen)/LocationDetail';
 
 const Stack = createStackNavigator();
@@ -56,7 +60,7 @@ const AppNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="populardestination" component={populardestination} options={{ headerShown: false }} />
+    <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
@@ -76,25 +80,50 @@ const Loginnavigator = () => (
 );
 
 
-const CustomPostButton = ({ children, onPress }) => (
-  <TouchableOpacity
-    style={styles.customButtonContainer}
-    onPress={onPress}
-  >
-    <View style={styles.customButton}>
-      <View style={{ transform: [{ translateY: 6 }] }}>
-        {children}
-      </View>
-    </View>
-  </TouchableOpacity>
-);
-const MainNavigator = () => {
+const CustomPostButton = ({ children, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1.2,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start(() => {
+      onPress?.(); // check ว่ามี onPress ก่อนเรียก
+    });
+  };
+
+  return (
+    <Animated.View style={[styles.customButtonContainer, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+      >
+        <View style={styles.customButton}>
+          <View style={{ transform: [{ translateY: 6 }] }}>
+            {children}
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const MainNavigator = ({ hasToken }) => {
   return (
     <Tab.Navigator
       screenListeners={({ route }) => ({
         tabPress: (e) => {
           if (route.name === 'Home') {
-            e.preventDefault(); // ป้องกัน default behavior
+            e.preventDefault();
             if (navigationRef.isReady()) {
               navigationRef.navigate('Home', { screen: 'HomeScreen' });
             }
@@ -105,12 +134,33 @@ const MainNavigator = () => {
         headerShown: false,
         tabBarShowLabel: true,
         tabBarStyle: {
+          position: 'absolute',
           height: 70,
+           backgroundColor: '#fff', // ให้พื้นหลังโปร่งใสเพื่อโชว์ Blur
+          borderTopWidth: 0,
+          elevation: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
         },
         tabBarIcon: ({ focused, size }) => {
+          const scaleAnim = useRef(new Animated.Value(1)).current;
+
+          const onPressIn = () => {
+            Animated.spring(scaleAnim, {
+              toValue: 1.3,
+              useNativeDriver: true,
+            }).start();
+          };
+
+          const onPressOut = () => {
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              friction: 4,
+              useNativeDriver: true,
+            }).start();
+          };
+
           let iconName;
 
           switch (route.name) {
@@ -127,6 +177,7 @@ const MainNavigator = () => {
               iconName = focused ? 'reader' : 'reader-outline';
               break;
             case 'Login':
+            case 'Account':
               iconName = focused ? 'person-circle' : 'person-circle-outline';
               break;
             default:
@@ -134,22 +185,33 @@ const MainNavigator = () => {
           }
 
           const color = route.name === 'Post'
-            ? (focused ? 'white' : 'white')
+            ? 'white'
             : (focused ? '#FD501E' : 'gray');
 
           return (
-            <Icon
-              name={iconName}
-              size={route.name === 'Post' ? 30 : size}
-              color={color}
-            />
+            <Pressable onPressIn={onPressIn} onPressOut={onPressOut}>
+              <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                <Icon
+                  name={iconName}
+                  size={route.name === 'Post' ? 30 : size}
+                  color={color}
+                />
+              </Animated.View>
+            </Pressable>
           );
         },
+
         tabBarActiveTintColor: '#FD501E',
+        // tabBarBackground: () => (
+        //   <BlurView
+        //     tint="light" // หรือ "dark" ถ้าต้องการธีมเข้ม
+        //     intensity={50}
+        //     style={StyleSheet.absoluteFill}
+        //   />
+        // ),
       })}
     >
       <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
-      {/* <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} /> */}
       <Tab.Screen
         name="Post"
         component={SettingsScreen}
@@ -158,16 +220,41 @@ const MainNavigator = () => {
           tabBarButton: (props) => <CustomPostButton {...props} />,
         }}
       />
-      {/* <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} /> */}
-      <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
+      {hasToken ? (
+        <Tab.Screen
+          name="Account"
+          component={AccountScreen}
+          options={{
+            tabBarLabel: 'Account',
+          }}
+        />
+      ) : (
+        <Tab.Screen
+          name="Login"
+          component={Loginnavigator}
+          options={{
+            tabBarLabel: 'Login',
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 };
+
 
 export default function App() {
 
   const [fontLoaded, setFontLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('token'); // หรือชื่อ key ที่คุณใช้จริง
+      setHasToken(!!token);
+    };
+    checkToken();
+  }, []);
 
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
@@ -210,13 +297,14 @@ export default function App() {
   }, []);
 
   return (
-     <>
+    <>
       {!isReady ? (
         <SplashScreenComponent onAnimationEnd={() => setShowSplash(false)} />
       ) : (
         <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
           <CustomerProvider>
-            <MainNavigator />
+            <MainNavigator hasToken={hasToken} key={hasToken ? 'loggedin' : 'guest'} />
+
           </CustomerProvider>
         </NavigationContainer>
       )}

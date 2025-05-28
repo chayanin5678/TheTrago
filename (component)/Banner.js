@@ -1,64 +1,68 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image, Dimensions, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-
 import ipAddress from './../ipconfig';
 
-
-const banners = [
-  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967469015-807603818.webp' },
-  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967457330-985688254.webp' },
-  { uri: 'https://www.thetrago.com/Api/uploads/promotion/index/1737967440410-123061413.webp' }
-];
-
 export default function Banner() {
-  const { width: screenWidth } = useWindowDimensions(); // ✅ ใช้ useWindowDimensions() แทน Dimensions.get()
-  const [currentBanner, setCurrentBanner] = useState(0);
+  const { width: screenWidth } = useWindowDimensions();
   const scrollViewRef = useRef(null);
-
   const [promotion, setPromotion] = useState([]);
+  const [dotIndex, setDotIndex] = useState(0);
+  const scrollX = useRef(0);
+  const cloneFactor = 3;
 
+  const ITEM_WIDTH = screenWidth;
+  const AUTO_SCROLL_INTERVAL = 3000;
 
   useEffect(() => {
     fetch(`${ipAddress}/promotion`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setPromotion(data.data);
-          //   setActiveCountry(data.data[0].sys_countries_id);
-        } else {
-          console.error('Data is not an array', data);
-          setPromotion([]);
+        if (Array.isArray(data.data)) {
+          const cloned = Array(cloneFactor).fill(data.data).flat();
+          setPromotion(cloned);
+
+          setTimeout(() => {
+            const startX = data.data.length * ITEM_WIDTH;
+            scrollViewRef.current?.scrollTo({ x: startX, animated: false });
+            scrollX.current = startX;
+          }, 100);
         }
       })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      }).finally(() => {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
-      });
+      .catch(console.error);
   }, []);
 
-
   useEffect(() => {
-  if (!promotion.length) return;
+    if (!promotion.length) return;
 
-  const interval = setInterval(() => {
-    const nextIndex = (currentBanner + 1) % promotion.length;
-    setCurrentBanner(nextIndex);
-    scrollViewRef.current?.scrollTo({
-      x: nextIndex * screenWidth,
-      animated: true,
-    });
-  }, 3000);
+    const originalLength = promotion.length / cloneFactor;
+    const middleStart = originalLength * ITEM_WIDTH;
 
-  return () => clearInterval(interval);
-}, [currentBanner, screenWidth, promotion.length]);
+    const interval = setInterval(() => {
+      scrollX.current += ITEM_WIDTH;
+      scrollViewRef.current?.scrollTo({ x: scrollX.current, animated: true });
 
+      if (scrollX.current >= (promotion.length - originalLength) * ITEM_WIDTH) {
+        setTimeout(() => {
+          scrollX.current = middleStart;
+          scrollViewRef.current?.scrollTo({ x: middleStart, animated: false });
+        }, 500);
+      }
+    }, AUTO_SCROLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [promotion]);
+
+  const handleScroll = (event) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    scrollX.current = offsetX;
+  };
+
+  const handleMomentumScrollEnd = () => {
+    const originalLength = promotion.length / cloneFactor;
+    const currentDot = Math.floor((scrollX.current / ITEM_WIDTH) % originalLength);
+    setDotIndex(currentDot);
+  };
 
   return (
     <View style={styles.carouselContainer}>
@@ -67,29 +71,30 @@ export default function Banner() {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-          setCurrentBanner(index);
-        }}
+        scrollEnabled={true}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd} // ✅ เปลี่ยนจุดเฉพาะตอน scroll จบ
         style={{ width: screenWidth }}
       >
-
         {promotion.map((item, index) => (
           <Image
             key={index}
             source={{ uri: `https://www.thetrago.com/Api/uploads/promotion/index/${item.md_promotion_picname}` }}
             style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
           />
-
         ))}
       </ScrollView>
 
-      {/* Indicator */}
       <View style={styles.indicatorContainer}>
-
-        {promotion.map((_, index) => (
-
-          <View key={index} style={[styles.indicator, currentBanner === index && styles.activeIndicator]} />
+        {[...Array(promotion.length / cloneFactor)].map((_, i) => (
+          <View
+            key={`dot-${i}`}
+            style={[
+              styles.indicator,
+              i === dotIndex && styles.activeIndicator,
+            ]}
+          />
         ))}
       </View>
     </View>
@@ -98,36 +103,32 @@ export default function Banner() {
 
 const styles = StyleSheet.create({
   carouselContainer: {
-    marginTop: -5,
+    marginTop: 0,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
   },
   bannerImage: {
-    height: hp('16%'), // ปรับให้สูงขึ้นเล็กน้อย
+    height: hp('16%'),
     borderRadius: 20,
     resizeMode: 'cover',
     alignSelf: 'center',
-    marginHorizontal: wp('5%'), // ให้มีขอบซ้ายขวาเล็กน้อย
-
+    marginHorizontal: wp('5%'),
   },
   indicatorContainer: {
     flexDirection: 'row',
-    position: 'relative',
     marginTop: 10,
     alignSelf: 'center',
   },
   indicator: {
     width: 7,
     height: 7,
-    borderRadius: 5,
+    borderRadius: 4,
     backgroundColor: '#ccc',
-    marginHorizontal: 5,
+    marginHorizontal: 4,
   },
   activeIndicator: {
-
     backgroundColor: '#FD501E',
-
     width: 8,
     height: 8,
   },

@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from './ipconfig';
 import { Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
+import { BlurView } from 'expo-blur';
 
 
 const data = [
@@ -614,18 +615,18 @@ const HomeScreen = ({ navigation }) => {
             borderRadius: 40,
             marginTop: -30,
             paddingTop: 0,
-            paddingBottom: -80,
+           
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             overflow: 'hidden',
 
-            marginBottom: -20
+            marginBottom: hp('-3%'),
 
 
           }
         ]}>
           <ImageBackground
-            source={require('./assets/home-top.webp')}
+            source={require('./assets/Bghome.png')}
             style={{ width: '100%', height: '100%' }}
             imageStyle={{
               borderRadius: 40,
@@ -683,7 +684,7 @@ const HomeScreen = ({ navigation }) => {
               The journey is endless Book now
             </Text> */}
 
-            <View style={[styles.searchContainer, { marginBottom: hp('5%'), overflow: 'hidden' }]}>
+            <View style={[styles.searchContainer, { marginTop: hp('0-1%'), overflow: 'hidden' }]}>
               <View style={styles.searchIconContainer}>
                 <Ionicons name="search" size={24} color="white" />
               </View>
@@ -701,7 +702,7 @@ const HomeScreen = ({ navigation }) => {
                     transform: [{ translateY }],
                   }}>
                     {placeholders[index].map((part, i) => (
-                      <Text key={i} style={{ color: part.color, fontWeight: part.bold ? 'bold' : 'bold' }}>
+                     <Text key={`${i}-${part.text}`} style={{ color: part.color, fontWeight: part.bold ? 'bold' : 'bold' }}>
                         {part.text}
                       </Text>
                     ))}
@@ -734,11 +735,11 @@ const HomeScreen = ({ navigation }) => {
 
           </ImageBackground>
         </View>
-        <Animated.View
+   <Animated.View
           style={[
             styles.gridContainer,
             {
-              marginTop: -15,
+              marginTop: hp('-1%'),
               backgroundColor: '#FFF',
               marginBottom: 60,
               borderRadius: 50,
@@ -754,48 +755,68 @@ const HomeScreen = ({ navigation }) => {
             },
           ]}
         >
-          <View style={styles.row}>
-            {data.map((item) => (
-              <View key={item.id} style={{ justifyContent: 'center', alignItems: 'center', margin: 10, width: wp('14%'), height: wp('14%'), marginBottom: 25 }}>
+  {/* ⭐️ เพิ่ม BlurView ตรงนี้ */}
+  {/* <BlurView
+    tint="light"
+    intensity={100}
+    style={[StyleSheet.absoluteFill]}
+  /> */}
 
+  <View style={styles.row}>
+    {data.map((item) => (
+      <View
+        key={item.id}
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          margin: 10,
+          width: wp('14%'),
+          height: wp('14%'),
+          marginBottom: 25,
+        }}
+      >
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => {
+            if (item.id === '1') {
+              updateCustomerData({
+                startingPointId: '0',
+                startingpoint_name: 'Starting Point',
+                endPointId: '0',
+                endpoint_name: 'Destination',
+              });
+            }
+            if (item.navigate) {
+              navigation.navigate(item.navigate);
+            } else {
+              alert('Coming soon...');
+            }
+          }}
+        >
+          {item.item && (
+            <Animated.View
+              style={{
+                position: 'absolute',
+                left: 45,
+                top: 5,
+                backgroundColor: 'red',
+                borderRadius: 20,
+                paddingHorizontal: 5,
+                transform: [{ translateY: bounceY }],
+              }}
+            >
+              <Text style={{ color: '#FFF' }}>{item.item}</Text>
+            </Animated.View>
+          )}
+          <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
+        </TouchableOpacity>
 
+        <Text style={styles.cardText}>{item.title}</Text>
+      </View>
+    ))}
+  </View>
+</Animated.View>
 
-                <TouchableOpacity
-                  style={styles.card}
-                  onPress={() => {
-                    if (item.id === '1') {
-                      updateCustomerData({
-                        startingPointId: '0', 
-                        startingpoint_name: 'Starting Point', 
-                        endPointId: '0', 
-                        endpoint_name: 'Destination',
-                      });
-                    }
-                    if (item.navigate) {
-                      navigation.navigate(item.navigate);
-                    } else {
-                      alert("Coming soon...");
-                    }
-                  }}
-                >
-
-                  {item.item && (
-                    <Animated.View
-                      style={{ position: 'absolute', left: 45, top: 5, backgroundColor: 'red', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
-
-                    >
-                      <Text style={{ color: '#FFF' }}>{item.item}</Text>
-                    </Animated.View>
-                  )}
-                  <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
-                </TouchableOpacity>
-
-                <Text style={styles.cardText}>{item.title}</Text>
-
-              </View>
-            ))}
-          </View>
-        </Animated.View>
 
 
 
@@ -1138,7 +1159,7 @@ const HomeScreen = ({ navigation }) => {
                 backgroundColor: '#fff',
                 borderRadius: 12,
                 overflow: 'hidden',
-                elevation: 2,
+                elevation: 0,
                 paddingHorizontal: 4,
 
               }}
@@ -1148,7 +1169,7 @@ const HomeScreen = ({ navigation }) => {
                 country: item.sys_countries_nameeng,
               });
               console.log('Selected Country ID:', customerData.popdestination);
-              navigation.navigate('populardestination');
+              navigation.navigate('PopularDestination');
             }
             }>
                 <View style={{ width: '100%', height: hp('18%') }}>
@@ -1245,7 +1266,7 @@ const HomeScreen = ({ navigation }) => {
                   backgroundColor: '#fff',
                   borderRadius: 12,
                   overflow: 'hidden',
-                  elevation: 2,
+                  elevation: 0,
                   paddingHorizontal: 4,
                 }}
               >
@@ -1356,7 +1377,7 @@ const HomeScreen = ({ navigation }) => {
 
             {toptrending.map((item, index) => (
               <TouchableOpacity
-               
+                key={item.md_location_id || `top-${index}`}
                 onPress={() => {
                   updateCustomerData({
                     startingPointId: item.md_location_id,
@@ -1427,7 +1448,7 @@ const HomeScreen = ({ navigation }) => {
                 backgroundColor: '#fff',
                 borderRadius: 12,
                 overflow: 'hidden',
-                elevation: 2,
+                elevation: 0,
                 paddingHorizontal: 4,
               }}
             >
