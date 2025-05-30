@@ -34,7 +34,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
     const loadAll = async () => {
       try {
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
-          amount: qrpayment,
+          amount:qrpayment,
           currency: "thb",
         });
   

@@ -625,21 +625,22 @@ const HomeScreen = ({ navigation }) => {
 
           }
         ]}>
-          <ImageBackground
-            source={require('./assets/Bghome.png')}
-            style={{ width: '100%', height: '100%' }}
-            imageStyle={{
-              borderRadius: 40,
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
+           <ImageBackground
+                  source={require('./assets/home-top.webp')}
+                  style={{ width: '100%', height: '100%', }}
+                  imageStyle={{
+                    borderRadius: 40,
+                    borderTopLeftRadius: 0,
+                    borderTopRightRadius: 0,
+        
+                  }}
+                  resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
+                >
+        
 
-            }}
-            resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
-          >
-
-            <View style={[styles.rowButton, { width: '80%', marginLeft: 15 }]}>
+            <View style={[styles.rowButton, { width: '100%', marginLeft: 0, justifyContent: 'flex-start'}]}>
               <LogoTheTrago />
-              {user.map((item, index) => (
+              {/* {user.map((item, index) => (
                 <View key={index}>
 
 
@@ -677,7 +678,7 @@ const HomeScreen = ({ navigation }) => {
                   )}
 
                 </View>
-              ))}
+              ))} */}
 
             </View>
             {/* <Text style={[styles.title, { shadowRadius: 20, shadowOpacity: 1, shadowColor: '#FFFFF', color: "#FFFF", alignSelf: 'center', textAlign: 'center', maxWidth: 300, fontSize: wp('6%'), marginBottom: 5, fontWeight: 'bold' }]}>

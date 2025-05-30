@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import ipAddress from './ipconfig';
 
 const StartingPointScreen = ({ navigation, route }) => {
@@ -55,12 +55,14 @@ const StartingPointScreen = ({ navigation, route }) => {
     setSelectedItem({
       name: selectedPoint.md_location_nameeng,
       id: selectedPoint.md_location_id,
+      countryId: selectedPoint.md_location_countriesid,  // เก็บ id ประเทศ
     });
-
+     console.log('Selected Starting Point:', selectedPoint);
     // บันทึกค่าและย้อนกลับหน้าก่อน
     handleSave({
       id: selectedPoint.md_location_id,
       name: selectedPoint.md_location_nameeng,
+      countryId: selectedPoint.md_location_countriesid,  // ส่ง id ประเทศไปด้วย
     });
   };
 
@@ -74,7 +76,6 @@ const StartingPointScreen = ({ navigation, route }) => {
       console.warn('No previous screen to go back to');
     }
   };
-
 
 
   const renderItem = ({ item }) => (

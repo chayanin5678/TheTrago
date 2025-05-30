@@ -492,12 +492,14 @@ const TripDetail = ({ navigation, route }) => {
     return moment(dateString).format("ddd, DD MMM YYYY");
   };
 
+ 
+    const calculateDiscountedPrice = (price) => {
+  if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+  const discountRate = parseFloat(customerData.discount / 100); // 5% = 5/100
+  const discountedPrice = price * (1 - discountRate); // ลด 5%
+  return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+};
 
-  const calculateDiscountedPrice = (price) => {
-    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-    const discountedPrice = price * 0.9; // ลด 10%
-    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-  };
 
   function formatNumberWithComma(value) {
     if (!value) return "0.00";
@@ -602,12 +604,12 @@ const TripDetail = ({ navigation, route }) => {
 
   useEffect(() => {
     if (timetableDepart.length > 0) {
-      setSaleadultDepart(timetableDepart[0].md_timetable_saleadult);
-      setSalechildDepart(timetableDepart[0].md_timetable_salechild);
-      setSaleinfantDepart(timetableDepart[0].md_timetable_saleinfant);
-      setAdultPriceDepart(timetableDepart[0].md_timetable_saleadult * customerData.adult);
-      setChildPriceDepart(timetableDepart[0].md_timetable_salechild * customerData.child);
-      setinfantPriceDepart(timetableDepart[0].md_timetable_saleinfant * customerData.infant);
+      setSaleadultDepart(timetableDepart[0].md_timetable_saleadult * customerData.exchaneRate);
+      setSalechildDepart(timetableDepart[0].md_timetable_salechild * customerData.exchaneRate);
+      setSaleinfantDepart(timetableDepart[0].md_timetable_saleinfant * customerData.exchaneRate);
+      setAdultPriceDepart((timetableDepart[0].md_timetable_saleadult * customerData.exchaneRate) * customerData.adult);
+      setChildPriceDepart((timetableDepart[0].md_timetable_salechild * customerData.exchaneRate) * customerData.child);
+      setinfantPriceDepart((timetableDepart[0].md_timetable_saleinfant* customerData.exchaneRate) * customerData.infant);
       setTotalAdultDepart(formatNumberWithComma(adultPriceDepart));
       setTotalChildDepart(formatNumberWithComma(childPriceDepart));
       setTotalInfantDepart(formatNumberWithComma(infantPriceDepart));
@@ -1862,6 +1864,7 @@ const TripDetail = ({ navigation, route }) => {
 
                   </View>
                 )}
+                {discountDepart !== 0 && (
                 <View style={styles.rowpromo}>
                   <Text>
                     Discount
@@ -1870,6 +1873,7 @@ const TripDetail = ({ navigation, route }) => {
                     - ฿ {discountDepart} </Text>
 
                 </View>
+                )}
                 <View style={styles.rowpromo}>
                   <Text>
                     Subtotal
@@ -1998,6 +2002,7 @@ const TripDetail = ({ navigation, route }) => {
 
                       </View>
                     )}
+                    {discountReturn !== 0 && (
                     <View style={styles.rowpromo}>
                       <Text>
                         Discount
@@ -2006,6 +2011,7 @@ const TripDetail = ({ navigation, route }) => {
                         - ฿ {discountReturn} </Text>
 
                     </View>
+                    )}
                     <View style={styles.rowpromo}>
                       <Text>
                         Subtotal

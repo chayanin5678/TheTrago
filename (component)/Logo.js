@@ -5,9 +5,9 @@ export default function Logo() {
   return (
           <View style={styles.logoContainer}>
           <Image
-      source={{ uri: 'https://www.thetrago.com/assets/images/logo.png' }}
+       source={require('../assets/logoicon.png')}
       style={styles.logo}
-      resizeMode="contain"
+      resizeMode="cover"
     />     
           </View>
   )
@@ -16,18 +16,18 @@ export default function Logo() {
 const styles = StyleSheet.create({
     logoContainer: {
 
-        marginTop: 25,
+        marginTop: 0,
 
         width: '100%',
-        justifyContent: 'space-between',
-        marginBottom: 20,
+        justifyContent: 'center',
+        marginBottom: 0,
         flexDirection: 'row',
         marginLeft:0,
 
       },
       logo: {
-        width: '40%',
-        height: 50,
+        width: '70%',
+        height: 90,
       },
 
 })

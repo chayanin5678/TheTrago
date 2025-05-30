@@ -30,7 +30,7 @@ const SearchFerry = ({ navigation, route }) => {
     return returnDay;
   });
 
-  const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name });
+  const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name, countryId: customerData.countrycode });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
   const [searchQuery, setSearchQuery] = useState('');
   const [tripType, setTripType] = useState("One Way Trip");
@@ -72,6 +72,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [allSelectedReturn, setAllSelectedReturn] = useState(true);
   const [contentHeights, setContentHeights] = useState({}); // เก็บความสูงของแต่ละ item
   const animatedHeights = useRef({}).current;
+  const [discount, setDiscount] = useState(0);
 
 
 
@@ -82,6 +83,7 @@ const SearchFerry = ({ navigation, route }) => {
   console.log("month", month);
   const year = calendarStartDate?.substring(0, 4) || "";
   console.log("year", year);
+  console.log("country", startingPoint.countryId);
   // ฟังก์ชันสำหรับเลือกวัน
   const onCalendarDayPress = (day) => {
     if (!calendarStartDate || calendarEndDate) {
@@ -178,11 +180,8 @@ const SearchFerry = ({ navigation, route }) => {
     });
   };
 
-  const calculateDiscountedPrice = (price) => {
-    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-    const discountedPrice = price * 0.9; // ลด 10%
-    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-  };
+
+
 
   function formatNumberWithComma(value) {
     if (!value) return "0.00";
@@ -194,19 +193,21 @@ const SearchFerry = ({ navigation, route }) => {
 
     return formattedValue;
   }
-  const removeHtmlTags = (html) => {
-    if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
+const removeHtmlTags = (html) => {
+  if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
 
-    return html
-      .replace(/<ul>/g, "") // ลบ <ul>
-      .replace(/<\/ul>/g, "") // ลบ </ul>
-      .replace(/<\/li>/g, "") // ลบ </li>
-      .replace(/<li>/g, "\n• ") // แทนที่ <li> ด้วยขึ้นบรรทัดใหม่ + จุด
-      .replace(/<br\s*\/?>/g, "\n\n") // แทนที่ <br> ด้วยขึ้นบรรทัดใหม่ 2 ครั้ง
-      .replace(/<\/p>/g, "\n\n") // แทนที่ </p> ด้วยย่อหน้าใหม่
-      .replace(/<p>/g, "") // ลบ <p>
-      .replace(/&nbsp;/g, " "); // แทนที่ &nbsp; ด้วยช่องว่าง
-  };
+  return html
+    .replace(/<ul>/g, "")                     // ลบ <ul>
+    .replace(/<\/ul>/g, "")                   // ลบ </ul>
+    .replace(/<\/li>/g, "")                   // ลบ </li>
+    .replace(/<li>/g, "\n• ")                 // แทนที่ <li> ด้วย bullet
+    .replace(/<br\s*\/?>/g, "\n\n")           // แทนที่ <br> ด้วยเว้นบรรทัด
+    .replace(/<\/p>/g, "\n\n")                // แทนที่ </p> ด้วยเว้นวรรค
+    .replace(/<p>/g, "")                      // ลบ <p>
+    .replace(/&nbsp;/g, " ")                  // แทน &nbsp; ด้วยช่องว่าง
+    .replace(/<strong>/g, "")                 // ลบ <strong>
+    .replace(/<\/strong>/g, "");              // ลบ </strong>
+};
 
 
 
@@ -328,7 +329,7 @@ const SearchFerry = ({ navigation, route }) => {
   const handleSearchStart = () => {
 
 
-    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}`)
+    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}/THB`)
       .then((response) => {
         if (!response.ok) {
           // Logging response status for more details
@@ -366,7 +367,7 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
   const handleSearchEnd = () => {
-    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}`)
+    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}/THB`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -397,6 +398,45 @@ const SearchFerry = ({ navigation, route }) => {
       });
   };
 
+    useEffect(() => {
+
+    const fecthdiscount= async (countrieid) => {
+      try {
+        const response = await fetch(`${ipAddress}/discount`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ md_discount_countries : countrieid }),
+        });
+
+        const json = await response.json();
+
+
+        if (response.ok) {
+          setDiscount(json.data[0].md_discount_discount);
+          console.log('discount:', json.data[0].md_discount_discount);
+          return json.data;
+        } else {
+          console.warn('Not found or error:', json.message);
+          setDiscount(0);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error fetching country:', error);
+        return null;
+      }
+    };
+    fecthdiscount(startingPoint.countryId);
+  }, [startingPoint.countryId]);
+
+
+  const calculateDiscountedPrice = (price) => {
+  if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+  const discountRate = parseFloat(discount / 100); // 5% = 5/100
+  const discountedPrice = price * (1 - discountRate); // ลด 5%
+  return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+};
 
 
   // ฟังก์ชันในการเปลี่ยนหน้า
@@ -507,7 +547,7 @@ const SearchFerry = ({ navigation, route }) => {
       ]}>
         <ImageBackground
           source={require('./assets/home-top.webp')}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', }}
           imageStyle={{
             borderRadius: 40,
             borderTopLeftRadius: 0,
@@ -969,7 +1009,10 @@ const SearchFerry = ({ navigation, route }) => {
                       </View>
 
                       <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
+                        {discount > 0 && (
+                        <Text style={styles.discount}> {discount}% Off</Text>
+                        )}</Text>
                         <TouchableOpacity style={styles.bookNowButton}
                           onPress={() => {
 
@@ -994,6 +1037,8 @@ const SearchFerry = ({ navigation, route }) => {
                               timetableReturn: item.md_timetable_id,
                               piccompanyDepart: item.md_company_picname,
                               pictimetableDepart: item.md_timetabledetail_picname1,
+                              discount: discount,
+                              exchaneRate: item.md_exchange_money
 
                             });
 
@@ -1154,7 +1199,11 @@ const SearchFerry = ({ navigation, route }) => {
                         </View>
 
                         <View style={styles.footerRow}>
-                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
+                          {discount > 0 && (
+                          <Text style={styles.discount}> {discount}% Off</Text>
+                          )}
+                          </Text>
                           <TouchableOpacity
                             style={styles.bookNowButton}
                             onPress={() => {
@@ -1181,7 +1230,8 @@ const SearchFerry = ({ navigation, route }) => {
                                 infant: infant,
                                 piccompanyDepart: item.md_company_picname,
                                 pictimetableDepart: item.md_timetabledetail_picname1,
-
+                                discount: discount,
+                                exchaneRate: item.md_exchange_money
                               });
 
 
@@ -1313,7 +1363,10 @@ const SearchFerry = ({ navigation, route }) => {
                       </View>
 
                       <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult))} </Text>/ person <Text style={styles.discount}>10% Off</Text></Text>
+                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
+                        {discount > 0 && (
+                        <Text style={styles.discount}> {discount}% Off</Text>
+                        )}</Text>
                         <TouchableOpacity
                           style={styles.bookNowButton}
                           onPress={() => {
@@ -1326,6 +1379,8 @@ const SearchFerry = ({ navigation, route }) => {
                               pierEndReturntId: item.md_timetable_pierend,
                               piccompanyReturn: item.md_company_picname,
                               pictimetableReturn: item.md_timetabledetail_picname1,
+                              discount: discount,
+                              exchaneRate: item.md_exchange_money
                             });
 
                             // Check if round trip status is true before navigating

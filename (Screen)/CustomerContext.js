@@ -79,7 +79,9 @@ export const CustomerProvider = ({ children }) => {
     email:'',
     password:'',
     remember:false,
-    popdestination: ''
+    popdestination: '',
+    discount:0,
+    exchaneRate:0,
 
   });
 
