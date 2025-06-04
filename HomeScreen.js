@@ -104,8 +104,25 @@ const HomeScreen = ({ navigation }) => {
   const [toptrending, setToptrending] = useState([]);
   const [attraction, setActtraction] = useState([]);
   const [poppularAttraction, setPoppularAttraction] = useState([]);
+  const shimmerAnim = useRef(new Animated.Value(-300)).current;
+  const [loadedIndexes, setLoadedIndexes] = useState([]);
+  const [isLoadingTitle, setIsLoadingTitle] = useState(true);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoadingTitle(false), 1500); // จำลองโหลด
+    return () => clearTimeout(timer);
+  }, []);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 300,
+        duration: 1600,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
 
   const formatDecimal = (number) => {
     return Number(number).toFixed(1);
@@ -313,39 +330,39 @@ const HomeScreen = ({ navigation }) => {
   };
 
 
-  const handleCalendarConfirm = () => {
-    if (tripType === 'One Way Trip' && calendarStartDate) {
-      console.log('Selected Departure Date:', calendarStartDate);
-      setDepartureDate(new Date(calendarStartDate));
-      setShowModal(false);
-    } else if (tripType === 'Return Trip' && calendarStartDate && calendarEndDate) {
-      setDepartureDate(new Date(calendarStartDate));
-      setReturnDate(new Date(calendarEndDate));
-      setShowModal(false);
-    } else {
-      alert('กรุณาเลือกวันที่ให้ครบ');
-    }
-  };
+  // const handleCalendarConfirm = () => {
+  //   if (tripType === 'One Way Trip' && calendarStartDate) {
+  //     console.log('Selected Departure Date:', calendarStartDate);
+  //     setDepartureDate(new Date(calendarStartDate));
+  //     setShowModal(false);
+  //   } else if (tripType === 'Return Trip' && calendarStartDate && calendarEndDate) {
+  //     setDepartureDate(new Date(calendarStartDate));
+  //     setReturnDate(new Date(calendarEndDate));
+  //     setShowModal(false);
+  //   } else {
+  //     alert('กรุณาเลือกวันที่ให้ครบ');
+  //   }
+  // };
 
 
 
-  const formatDate = (date) => {
-    if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // const formatDate = (date) => {
+  //   if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
+  //   return new Date(date).toLocaleDateString("en-GB", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //   });
+  // };
 
 
 
 
 
-  const swapPoints = () => {
-    setStartingPoint((prev) => endPoint);
-    setEndPoint((prev) => startingPoint);
-  };
+  // const swapPoints = () => {
+  //   setStartingPoint((prev) => endPoint);
+  //   setEndPoint((prev) => startingPoint);
+  // };
 
   const truncateText = (text, maxLength = 20) => {
     if (text.length > maxLength) {
@@ -615,7 +632,7 @@ const HomeScreen = ({ navigation }) => {
             borderRadius: 40,
             marginTop: -30,
             paddingTop: 0,
-           
+
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             overflow: 'hidden',
@@ -625,20 +642,20 @@ const HomeScreen = ({ navigation }) => {
 
           }
         ]}>
-           <ImageBackground
-                  source={require('./assets/home-top.webp')}
-                  style={{ width: '100%', height: '100%', }}
-                  imageStyle={{
-                    borderRadius: 40,
-                    borderTopLeftRadius: 0,
-                    borderTopRightRadius: 0,
-        
-                  }}
-                  resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
-                >
-        
+          <ImageBackground
+            source={require('./assets/home-top.webp')}
+            style={{ width: '100%', height: '100%', }}
+            imageStyle={{
+              borderRadius: 40,
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
 
-            <View style={[styles.rowButton, { width: '100%', marginLeft: 0, justifyContent: 'flex-start'}]}>
+            }}
+            resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
+          >
+
+
+            <View style={[styles.rowButton, { width: '100%', marginLeft: 0, justifyContent: 'flex-start' }]}>
               <LogoTheTrago />
               {/* {user.map((item, index) => (
                 <View key={index}>
@@ -681,62 +698,93 @@ const HomeScreen = ({ navigation }) => {
               ))} */}
 
             </View>
-            {/* <Text style={[styles.title, { shadowRadius: 20, shadowOpacity: 1, shadowColor: '#FFFFF', color: "#FFFF", alignSelf: 'center', textAlign: 'center', maxWidth: 300, fontSize: wp('6%'), marginBottom: 5, fontWeight: 'bold' }]}>
-              The journey is endless Book now
-            </Text> */}
 
-            <View style={[styles.searchContainer, { marginTop: hp('0-1%'), overflow: 'hidden' }]}>
-              <View style={styles.searchIconContainer}>
-                <Ionicons name="search" size={24} color="white" />
-              </View>
 
-              <View style={{ position: 'relative', height: 40, justifyContent: 'center', width: '100%' }}>
-                {/* Placeholder แบบ Animated */}
-                {searchText === '' && (
-                  <Animated.Text style={{
-                    position: 'absolute',
-                    width: '100%',
-                    top: 8,
-                    left: 0,
-                    fontSize: wp('4%'),
-                    color: '#FFF',
-                    transform: [{ translateY }],
-                  }}>
-                    {placeholders[index].map((part, i) => (
-                     <Text key={`${i}-${part.text}`} style={{ color: part.color, fontWeight: part.bold ? 'bold' : 'bold' }}>
-                        {part.text}
-                      </Text>
-                    ))}
-                  </Animated.Text>
-
-                )}
-
-                {/* ช่องกรอกจริง */}
-                <TextInput
-                  value={searchText}
-                  onChangeText={setSearchText}
+            {isLoadingTitle ? (
+              // ✅ Skeleton แทนทั้งกล่อง Search
+              <View
+                style={{
+                  height: 50,
+                  borderRadius: 30,
+                  backgroundColor: '#eee',
+                  overflow: 'hidden',
+                  marginTop: hp('0-1%'),
+                  marginHorizontal: 16,
+                  width: '70%',
+                  alignSelf: 'center',
+                }}
+              >
+                <Animated.View
                   style={{
-                    height: 40,
-                    fontSize: wp('4%'),
-                    // paddingHorizontal: 12,
-                    paddingVertical: 0,
-                    color: '#fff',
+                    width: 200,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
                   }}
-                  placeholder=" " // placeholder จริงต้องว่างเพื่อไม่ชนกัน
-                  placeholderTextColor="transparent"
-                />
+                >
+                  <LinearGradient
+                    colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
               </View>
+            ) : (
+              // ✅ ของจริงเมื่อโหลดเสร็จ
+              <View style={[styles.searchContainer, { marginTop: hp('0-1%'), overflow: 'hidden' }]}>
+                <View style={styles.searchIconContainer}>
+                  <Ionicons name="search" size={24} color="white" />
+                </View>
 
+                <View style={{ position: 'relative', height: 40, justifyContent: 'center', width: '100%' }}>
+                  {searchText === '' && (
+                    <Animated.Text
+                      style={{
+                        position: 'absolute',
+                        width: '100%',
+                        top: 8,
+                        left: 0,
+                        fontSize: wp('4%'),
+                        color: '#FFF',
+                        transform: [{ translateY }],
+                      }}
+                    >
+                      {placeholders[index].map((part, i) => (
+                        <Text
+                          key={`${i}-${part.text}`}
+                          style={{
+                            color: part.color,
+                            fontWeight: part.bold ? 'bold' : 'bold',
+                          }}
+                        >
+                          {part.text}
+                        </Text>
+                      ))}
+                    </Animated.Text>
+                  )}
 
+                  <TextInput
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    style={{
+                      height: 40,
+                      fontSize: wp('4%'),
+                      paddingVertical: 0,
+                      color: '#fff',
+                    }}
+                    placeholder=" "
+                    placeholderTextColor="transparent"
+                  />
+                </View>
+              </View>
+            )}
 
-
-            </View>
 
 
 
           </ImageBackground>
         </View>
-   <Animated.View
+        <Animated.View
           style={[
             styles.gridContainer,
             {
@@ -756,67 +804,117 @@ const HomeScreen = ({ navigation }) => {
             },
           ]}
         >
-  {/* ⭐️ เพิ่ม BlurView ตรงนี้ */}
-  {/* <BlurView
-    tint="light"
-    intensity={100}
-    style={[StyleSheet.absoluteFill]}
-  /> */}
 
-  <View style={styles.row}>
-    {data.map((item) => (
-      <View
-        key={item.id}
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          margin: 10,
-          width: wp('14%'),
-          height: wp('14%'),
-          marginBottom: 25,
-        }}
-      >
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => {
-            if (item.id === '1') {
-              updateCustomerData({
-                startingPointId: '0',
-                startingpoint_name: 'Starting Point',
-                endPointId: '0',
-                endpoint_name: 'Destination',
-              });
-            }
-            if (item.navigate) {
-              navigation.navigate(item.navigate);
-            } else {
-              alert('Coming soon...');
-            }
-          }}
-        >
-          {item.item && (
-            <Animated.View
-              style={{
-                position: 'absolute',
-                left: 45,
-                top: 5,
-                backgroundColor: 'red',
-                borderRadius: 20,
-                paddingHorizontal: 5,
-                transform: [{ translateY: bounceY }],
-              }}
-            >
-              <Text style={{ color: '#FFF' }}>{item.item}</Text>
-            </Animated.View>
-          )}
-          <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
-        </TouchableOpacity>
 
-        <Text style={styles.cardText}>{item.title}</Text>
-      </View>
-    ))}
-  </View>
-</Animated.View>
+          <View style={styles.row}>
+            {(isLoadingTitle ? Array(8).fill(null) : data).map((item, index) => (
+              <View
+                key={item?.id || `skeleton-${index}`}
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  margin: 10,
+                  width: wp('14%'),
+                  height: wp('14%'),
+                  marginBottom: 25,
+                }}
+              >
+                {isLoadingTitle ? (
+                  <>
+                    {/* วงกลม shimmer */}
+                    <View style={{
+                      width: wp('14%'),
+                      height: wp('14%'),
+                      borderRadius: wp('7%'),
+                      backgroundColor: '#eee',
+                      overflow: 'hidden',
+                      marginBottom: 6,
+                    }}>
+                      <Animated.View
+                        style={{
+                          width: 60,
+                          height: '100%',
+                          transform: [{ translateX: shimmerAnim }],
+                        }}
+                      >
+                        <LinearGradient
+                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      </Animated.View>
+                    </View>
+
+                    {/* text shimmer */}
+                    <View style={{
+                      height: 10,
+                      width: 40,
+                      borderRadius: 5,
+                      backgroundColor: '#eee',
+                      overflow: 'hidden',
+                    }}>
+                      <Animated.View
+                        style={{
+                          width: 60,
+                          height: '100%',
+                          transform: [{ translateX: shimmerAnim }],
+                        }}
+                      >
+                        <LinearGradient
+                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      </Animated.View>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={styles.card}
+                      onPress={() => {
+                        if (item.id === '1') {
+                          updateCustomerData({
+                            startingPointId: '0',
+                            startingpoint_name: 'Starting Point',
+                            endPointId: '0',
+                            endpoint_name: 'Destination',
+                          });
+                        }
+                        if (item.navigate) {
+                          navigation.navigate(item.navigate);
+                        } else {
+                          alert('Coming soon...');
+                        }
+                      }}
+                    >
+                      {item.item && (
+                        <Animated.View
+                          style={{
+                            position: 'absolute',
+                            left: 45,
+                            top: 5,
+                            backgroundColor: 'red',
+                            borderRadius: 20,
+                            paddingHorizontal: 5,
+                            transform: [{ translateY: bounceY }],
+                          }}
+                        >
+                          <Text style={{ color: '#FFF' }}>{item.item}</Text>
+                        </Animated.View>
+                      )}
+                      <Ionicons name={item.icon} size={wp('7%')} color="#FD501E" />
+                    </TouchableOpacity>
+                    <Text style={styles.cardText}>{item.title}</Text>
+                  </>
+                )}
+              </View>
+            ))}
+          </View>
+
+        </Animated.View>
 
 
 
@@ -1081,26 +1179,56 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </Modal> */}
         <Animated.View style={{ transform: [{ translateX }], width: '100%' }}>
-
-          <LinearGradient
-            colors={['#FD501E', '#FFFF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              borderRadius: 25,
-              marginTop: -50,
-              marginBottom: 10,
-              alignSelf: 'flex-start',
-              width: '100%'
-            }}
-          >
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>
-              Hot <Text style={{ color: '#FFE1D8' }}>Deal</Text>
-            </Text>
-          </LinearGradient>
+          {isLoadingTitle ? (
+            <View
+              style={{
+                height: 36,
+                width: 150,
+                borderRadius: 25,
+                marginTop: -50,
+                marginBottom: 10,
+                marginLeft: 16,
+                overflow: 'hidden',
+                backgroundColor: '#eee',
+              }}
+            >
+              <Animated.View
+                style={{
+                  width: 100,
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
+          ) : (
+            <LinearGradient
+              colors={['#FD501E', '#FFFF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 25,
+                marginTop: -50,
+                marginBottom: 10,
+                alignSelf: 'flex-start',
+                width: '100%',
+              }}
+            >
+              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>
+                Hot <Text style={{ color: '#FFE1D8' }}>Deal</Text>
+              </Text>
+            </LinearGradient>
+          )}
         </Animated.View>
+
 
         <Banner />
         {/* <View style={styles.rowtrip}>
@@ -1138,10 +1266,42 @@ const HomeScreen = ({ navigation }) => {
         </View> */}
 
 
-        <Text style={[styles.titledeal, { marginTop: 10 }]}>
-          <Text style={styles.highlight}>Popular<Text style={{ color: '#FFA072' }}> Destination</Text></Text>
-        </Text>
-
+        {isLoadingTitle ? (
+          <View
+            style={{
+              height: 36,
+              width: 150,
+              borderRadius: 25,
+              marginTop: 10,
+              marginBottom: 10,
+              marginLeft: 0,
+              overflow: 'hidden',
+              backgroundColor: '#eee',
+              alignSelf: 'flex-start',
+            }}
+          >
+            <Animated.View
+              style={{
+                width: 100,
+                height: '100%',
+                transform: [{ translateX: shimmerAnim }],
+              }}
+            >
+              <LinearGradient
+                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                start={[0, 0]}
+                end={[1, 0]}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </Animated.View>
+          </View>
+        ) : (
+          <Text style={[styles.titledeal, { marginTop: 10 }]}>
+            <Text style={styles.highlight}>
+              Popular<Text style={{ color: '#FFA072' }}> Destination</Text>
+            </Text>
+          </Text>
+        )}
 
         <View
           style={{
@@ -1151,68 +1311,159 @@ const HomeScreen = ({ navigation }) => {
             paddingHorizontal: 10,
           }}
         >
-          {countrie.map((item) => (
-            <View
-              key={item.sys_countries_id}
-              style={{
-                width: '33%',
-                marginBottom: 15,
-                backgroundColor: '#fff',
-                borderRadius: 12,
-                overflow: 'hidden',
-                elevation: 0,
-                paddingHorizontal: 4,
+          {countrie.map((item, index) => {
+            const isLoaded = loadedIndexes.includes(index);
 
-              }}
-            ><TouchableOpacity onPress={() => {
-              updateCustomerData({
-                countrycode: item.sys_countries_id,
-                country: item.sys_countries_nameeng,
-              });
-              console.log('Selected Country ID:', customerData.popdestination);
-              navigation.navigate('PopularDestination');
-            }
-            }>
-                <View style={{ width: '100%', height: hp('18%') }}>
-                  <Image
-                    source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
-                    }}
-                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                  />
-                </View>
-                <Text
-                  style={{
-                    padding: 6,
-                    fontSize: 13,
-                    fontWeight: 'bold',
-                    textAlign: 'start',
-                    color: '#333',
+            return (
+              <View
+                key={item.sys_countries_id}
+                style={{
+                  width: '33%',
+                  marginBottom: 15,
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  elevation: 0,
+                  paddingHorizontal: 4,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => {
+                    updateCustomerData({
+                      countrycode: item.sys_countries_id,
+                      country: item.sys_countries_nameeng,
+                    });
+                    navigation.navigate('PopularDestination');
                   }}
-                  numberOfLines={2}
                 >
-                  {item.sys_countries_nameeng}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+                  <View style={{ width: '100%', height: hp('18%'), position: 'relative' }}>
+                    {!isLoaded && (
+                      <Animated.View
+                        style={{
+                          ...StyleSheet.absoluteFillObject,
+                          backgroundColor: '#eee',
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <Animated.View
+                          style={{
+                            width: 150,
+                            height: '100%',
+                            transform: [{ translateX: shimmerAnim }],
+                          }}
+                        >
+                          <LinearGradient
+                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                            start={[0, 0]}
+                            end={[1, 0]}
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </Animated.View>
+                      </Animated.View>
+                    )}
+                    <Image
+                      source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: 12,
+                      }}
+                      resizeMode="cover"
+                      onLoadEnd={() => setLoadedIndexes((prev) => [...prev, index])}
+                    />
+                  </View>
+                  {!isLoaded ? (
+                    <Animated.View
+                      style={{
+                        height: 16,
+                        marginTop: 6,
+                        marginHorizontal: 6,
+                        borderRadius: 10,
+                        backgroundColor: '#eee',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Animated.View
+                        style={{
+                          width: 100,
+                          height: '100%',
+                          transform: [{ translateX: shimmerAnim }],
+                        }}
+                      >
+                        <LinearGradient
+                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      </Animated.View>
+                    </Animated.View>
+                  ) : (
+                    <Text
+                      style={{
+                        padding: 6,
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                        textAlign: 'start',
+                        color: '#333',
+                      }}
+                      numberOfLines={2}
+                    >
+                      {item.sys_countries_nameeng}
+                    </Text>
+                  )}
+
+                </TouchableOpacity>
+              </View>
+            );
+          })}
         </View>
 
 
         <View style={{
           paddingBottom: 50,
         }}>
+       
+
+               {isLoadingTitle ? (
           <View
+            style={{
+              height: 36,
+              width: 150,
+              borderRadius: 25,
+              marginTop: 10,
+              marginBottom: 10,
+              marginLeft: 0,
+              overflow: 'hidden',
+              backgroundColor: '#eee',
+              alignSelf: 'flex-start',
+            }}
+          >
+            <Animated.View
+              style={{
+                width: 100,
+                height: '100%',
+                transform: [{ translateX: shimmerAnim }],
+              }}
+            >
+              <LinearGradient
+                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                start={[0, 0]}
+                end={[1, 0]}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </Animated.View>
+          </View>
+        ) : (
+             <View
             style={{
               flexDirection: 'row',
               justifyContent: 'center',
               alignItems: 'center',
             }}
           >
-            <Text style={[styles.titledeal, { marginTop: 1, flex: 1, textAlign: 'left' }]}>
+           <Text style={[styles.titledeal, { marginTop: 1, flex: 1, textAlign: 'left' }]}>
               <Text style={styles.highlight}>
                 Popular
                 <Text style={{ color: '#FFA072' }}> Route</Text>
@@ -1226,6 +1477,9 @@ const HomeScreen = ({ navigation }) => {
             )}
           </View>
 
+        )}
+
+         
           <View style={[styles.tabContainer]}>
             <View style={styles.tabContainer}>
               {countrie.map((item) => (
@@ -1258,7 +1512,7 @@ const HomeScreen = ({ navigation }) => {
             }}
           >
             {poppularroute.slice(0, visibleRoutes).map((item, index) => (
-             
+
               <View
                 key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
                 style={{
@@ -1271,83 +1525,83 @@ const HomeScreen = ({ navigation }) => {
                   paddingHorizontal: 4,
                 }}
               >
-                 <TouchableOpacity onPress={() => {
-                updateCustomerData({
-                  startingPointId: item.md_timetable_startid,
-                  startingpoint_name: item.start_location_name,
-                  endPointId: item.md_timetable_endid,
-                  endpoint_name: item.end_location_name,
-                });
-                navigation.navigate('SearchFerry');
-              }
-              }>
-                <View style={{ width: '100%', height: hp('18%') }}>
-                  <Image
-                    source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
-                    }}
-                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                  />
-                  {index < 2 && (
-                    <Animated.View
-                      style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
+                <TouchableOpacity onPress={() => {
+                  updateCustomerData({
+                    startingPointId: item.md_timetable_startid,
+                    startingpoint_name: item.start_location_name,
+                    endPointId: item.md_timetable_endid,
+                    endpoint_name: item.end_location_name,
+                  });
+                  navigation.navigate('SearchFerry');
+                }
+                }>
+                  <View style={{ width: '100%', height: hp('18%') }}>
+                    <Image
+                      source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                      }}
+                      resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                    />
+                    {index < 2 && (
+                      <Animated.View
+                        style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
 
+                      >
+                        <Text style={{ color: '#FE6D39', fontWeight: 'bold', fontSize: wp('3%') }}>Hot Route</Text>
+                      </Animated.View>
+                    )}
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                    <Text
+                      style={{
+                        fontSize: wp('3%'),
+                        fontWeight: 'bold',
+                        color: '#333',
+                        //  flexShrink: 1,
+                      }}
+                    // numberOfLines={2}
                     >
-                      <Text style={{ color: '#FE6D39', fontWeight: 'bold', fontSize: wp('3%') }}>Hot Route</Text>
-                    </Animated.View>
-                  )}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
-                  <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#333',
-                      //  flexShrink: 1,
-                    }}
-                  // numberOfLines={2}
-                  >
-                    {item.start_location_name}
-                  </Text>
+                      {item.start_location_name}
+                    </Text>
 
-                  <Ionicons
-                    name="arrow-forward"
-                    size={wp('3%')}
-                    color="black"
-                    style={{ marginHorizontal: 4 }}
-                  />
+                    <Ionicons
+                      name="arrow-forward"
+                      size={wp('3%')}
+                      color="black"
+                      style={{ marginHorizontal: 4 }}
+                    />
 
-                  <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#333',
-                      //   flexShrink: 1,
-                    }}
-                  //    numberOfLines={2}
-                  >
-                    {item.end_location_name}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
-                  <Text
-                    style={{
-                      fontSize: wp('3%'),
-                      fontWeight: 'bold',
-                      color: '#c5c5c7',
-                      //  flexShrink: 1,
-                    }}
-                  // numberOfLines={2}
-                  >
-                    {item.md_pier_nameeng}
-                  </Text>
-                </View>
+                    <Text
+                      style={{
+                        fontSize: wp('3%'),
+                        fontWeight: 'bold',
+                        color: '#333',
+                        //   flexShrink: 1,
+                      }}
+                    //    numberOfLines={2}
+                    >
+                      {item.end_location_name}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
+                    <Text
+                      style={{
+                        fontSize: wp('3%'),
+                        fontWeight: 'bold',
+                        color: '#c5c5c7',
+                        //  flexShrink: 1,
+                      }}
+                    // numberOfLines={2}
+                    >
+                      {item.md_pier_nameeng}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               </View>
-             
+
             ))}
           </View>
 
@@ -1389,15 +1643,15 @@ const HomeScreen = ({ navigation }) => {
                   navigation.navigate('LocationDetail');
                 }}
               >
-              <View key={index} style={styles.itemContainer}>
-                <Image
-                  source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                  style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
-                  resizeMode="cover"
-                />
-                <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
-                <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
-              </View>
+                <View key={index} style={styles.itemContainer}>
+                  <Image
+                    source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                    style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
+                    resizeMode="cover"
+                  />
+                  <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
+                  <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>

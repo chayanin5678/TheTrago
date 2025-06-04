@@ -13,7 +13,6 @@ export default function PromptPayScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const { customerData, updateCustomerData } = useCustomer();
   const [qrpayment, setqrpayment] = useState(Paymenttotal * 100);
-  const [intervalId, setIntervalId] = useState(null); // เก็บค่า intervalId
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
   let booking_code = bookingcode.length > 0 
@@ -34,7 +33,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
     const loadAll = async () => {
       try {
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
-          amount:qrpayment,
+          amount: parseFloat(qrpayment),
           currency: "thb",
         });
   
@@ -62,7 +61,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
        
   
       } catch (error) {
-        console.error("❌ Error in loadAll:", error);
+        Alert.alert('Failed to create QR code or booking');
       } finally {
         setLoading(false);
       }
@@ -86,7 +85,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         if (res.data.success && res.data.status === "successful") {
           updatestatus(booking_code); // อัปเดตสถานะการชำระเงิน
           navigation.navigate("ResultScreen", { success: true });
-          clearInterval(intervalId); // หยุดการทำงานของ setInterval
+          clearInterval(customerData.intervalId); // หยุดการทำงานของ setInterval
         }
       } catch (error) {
         console.error("Error during payment check:", error);
@@ -98,11 +97,10 @@ let booking_codeGroup = bookingcodeGroup.length > 0
       const id = setInterval(() => {
         checkPayment();
       }, 2000);
-
-      setIntervalId(id); // เก็บ intervalId ไว้ใน state
+      updateCustomerData({ intervalId: id }); // เก็บ intervalId ใน context หรือ state อื่น ๆ
 
       // ทำความสะอาดเมื่อ component ถูก unmount หรือสถานะการชำระเงินสำเร็จ
-      return () => clearInterval(id);  // ทำความสะอาดเมื่อ component unmount หรือ status เป็น "successful"
+      return () => clearInterval(customerData.intervalId);  // ทำความสะอาดเมื่อ component unmount หรือ status เป็น "successful"
     }
   }, [chargeid]);  // ทำงานเมื่อ `chargeid` เปลี่ยนแปลง
 
@@ -218,8 +216,8 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   
   const handlePress = () => {
     // หยุด setInterval เมื่อปุ่มถูกกด
-    if (intervalId) {
-      clearInterval(intervalId);  // หยุด setInterval เมื่อกดปุ่ม
+    if (customerData.intervalId) {
+      clearInterval(customerData.intervalId);  // หยุด setInterval เมื่อกดปุ่ม
       console.log('Interval stopped');
     }
 

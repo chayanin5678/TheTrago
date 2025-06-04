@@ -82,6 +82,7 @@ export const CustomerProvider = ({ children }) => {
     popdestination: '',
     discount:0,
     exchaneRate:0,
+    intervalId: null, // สำหรับเก็บ ID ของ setInterval
 
   });
 

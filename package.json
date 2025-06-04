@@ -10,6 +10,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/cli": "latest",
     "@react-native-community/datetimepicker": "8.3.0",
     "@react-native-picker/picker": "2.11.0",
@@ -18,6 +19,7 @@
     "@react-navigation/stack": "^7.1.1",
     "axios": "^1.8.4",
     "expo": "^53.0.8",
+    "expo-blur": "~14.1.4",
     "expo-camera": "~16.1.6",
     "expo-dev-client": "~5.1.8",
     "expo-file-system": "~18.1.9",
@@ -35,6 +37,7 @@
     "expo-status-bar": "~2.2.3",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.47",
+    "moti": "^0.30.0",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-native": "0.79.2",
@@ -56,9 +59,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-vision-camera": "^4.6.4",
     "react-native-webview": "13.13.5",
-    "tesseract.js": "^6.0.1",
-    "expo-blur": "~14.1.4",
-    "@react-native-async-storage/async-storage": "2.1.2"
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

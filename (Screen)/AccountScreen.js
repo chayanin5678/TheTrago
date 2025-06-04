@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Button ,Alert} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, } from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
 import { useCustomer } from './CustomerContext.js';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AccountScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
@@ -17,7 +18,26 @@ const AccountScreen = ({ navigation }) => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [isUploading, setIsUploading] = useState(false);
   const { customerData, updateCustomerData } = useCustomer();
-  
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const shimmerAnim = useRef(new Animated.Value(-200)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoadingProfile(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 200,
+        duration: 1300,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+
 
 
   const handlePressIn = () => {
@@ -46,7 +66,7 @@ const AccountScreen = ({ navigation }) => {
       email: '',
     });
     navigation.replace('LoginScreen');
-    
+
   };
 
   // ตรวจสอบสถานะการล็อกอินและโหลดข้อมูลเมื่อเริ่มต้น
@@ -91,11 +111,11 @@ const AccountScreen = ({ navigation }) => {
         if (data && Array.isArray(data.data)) {
           setUser(data.data);
           updateCustomerData({
-            Firstname : data.data[0].md_member_fname,
+            Firstname: data.data[0].md_member_fname,
             Lastname: data.data[0].md_member_lname,
             email: data.data[0].md_member_email,
           });
-          console.log('name:'+customerData.Firstname);
+          console.log('name:' + customerData.Firstname);
         } else {
           console.error('Data is not an array', data);
           setUser([]);
@@ -141,7 +161,7 @@ const AccountScreen = ({ navigation }) => {
     if (!pickerResult.canceled) {
       setProfileImage(pickerResult.assets[0].uri);
       // เรียก upload function ได้ตรงนี้ถ้าอยากอัปโหลดไป Server ทันที
-       uploadImage(pickerResult.assets[0].uri);
+      uploadImage(pickerResult.assets[0].uri);
     }
   };
 
@@ -178,57 +198,122 @@ const AccountScreen = ({ navigation }) => {
       setIsUploading(false);
     }
   };
-  
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
 
       <View style={styles.profileContainer}>
-        {/* รูปภาพโปรไฟล์ */}
-        {user.map((item, index) => (
-          <View key={index}>
-          
-           
-            {isUploading && <ActivityIndicator size="large" color="#FD501E" />}
-      {profileImage && !isUploading && (
-         <TouchableWithoutFeedback
-         onPressIn={handlePressIn}
-         onPressOut={handlePressOut}
-       >
-         <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
-           <Image
-           source={{ uri: profileImage }}
-             style={styles.profileImage}
-           />
-           <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
-         </Animated.View>
-       </TouchableWithoutFeedback>
-      
-      )}
-      {!profileImage &&!isUploading && (
-        <TouchableWithoutFeedback onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
-          <Image
-            source={
-              profileImage // ถ้าเลือกรูปใหม่
-                ? { uri: profileImage }
-                : item.md_member_photo // ถ้ามีรูปในฐาน
-                  ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
-                  : require('../assets/icontrago.png') // ถ้าไม่มีอะไรเลย
-            }
-            style={styles.profileImage}
-          />
-          <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
-        </Animated.View>
-      </TouchableWithoutFeedback>
-      )}
+        {(user.length === 0 || isLoadingProfile) ? (
+          // 🔸 Skeleton Loading
+          <View style={{ alignItems: 'center' }}>
+            {/* วงกลมแทนโปรไฟล์ */}
+            <View style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#eee',
+              overflow: 'hidden',
+              marginBottom: 10,
+              marginTop: 20,
+            }}>
+              <Animated.View
+                style={{
+                  width: 100,
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
 
-            <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
-            <Text style={styles.userEmail}>{item.md_member_email}</Text>
+            {/* ชื่อ */}
+            <View style={{
+              width: 120,
+              height: 14,
+              borderRadius: 6,
+              backgroundColor: '#eee',
+              overflow: 'hidden',
+              marginBottom: 6,
+            }}>
+              <Animated.View
+                style={{
+                  width: 100,
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
+
+            {/* อีเมล */}
+            <View style={{
+              width: 100,
+              height: 10,
+              borderRadius: 6,
+              backgroundColor: '#eee',
+              overflow: 'hidden',
+            }}>
+              <Animated.View
+                style={{
+                  width: 80,
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
           </View>
+        ) : (
+          // 🔸 แสดงโปรไฟล์จริงเมื่อโหลดเสร็จ
+          user.map((item, index) => (
+            <View key={index}>
+              {isUploading && <ActivityIndicator size="large" color="#FD501E" />}
 
-        ))}
+              <TouchableWithoutFeedback
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+              >
+                <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
+                  <Image
+                    source={
+                      profileImage
+                        ? { uri: profileImage }
+                        : item.md_member_photo
+                          ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
+                          : require('../assets/icontrago.png')
+                    }
+                    style={styles.profileImage}
+                  />
+                  <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
+                </Animated.View>
+              </TouchableWithoutFeedback>
+
+              <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
+              <Text style={styles.userEmail}>{item.md_member_email}</Text>
+            </View>
+          ))
+        )}
       </View>
+
 
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Dashboard')}>
