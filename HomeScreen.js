@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจา
 import { BlurView } from 'expo-blur';
 
 
+
 const data = [
   { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry', item: 'new' },
   { id: '2', title: 'Flights', icon: 'airplane', navigate: '', item: '' },
@@ -1230,7 +1231,38 @@ const HomeScreen = ({ navigation }) => {
         </Animated.View>
 
 
-        <Banner />
+        {isLoadingTitle ? (
+          <View
+            style={{
+              width: '90%',
+              height: 140,
+              borderRadius: 20,
+              backgroundColor: '#eee',
+              alignSelf: 'center',
+              marginBottom: 20,
+              overflow: 'hidden',
+            }}
+          >
+            <Animated.View
+              style={{
+                width: 300,
+                height: '100%',
+                transform: [{ translateX: shimmerAnim }],
+              }}
+            >
+              <LinearGradient
+                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                start={[0, 0]}
+                end={[1, 0]}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </Animated.View>
+          </View>
+        ) : (
+          <Banner />
+        )}
+
+
         {/* <View style={styles.rowtrip}>
           <View style={styles.coltrip}>
 
@@ -1506,81 +1538,127 @@ const HomeScreen = ({ navigation }) => {
               flexWrap: 'wrap',
               justifyContent: 'flex-start',
               paddingHorizontal: 10,
-
               marginTop: 20,
               alignContent: 'center',
             }}
           >
-            {poppularroute.slice(0, visibleRoutes).map((item, index) => (
-
-              <View
-                key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
-                style={{
-                  width: '33%',
-                  marginBottom: 15,
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  elevation: 0,
-                  paddingHorizontal: 4,
-                }}
-              >
-                <TouchableOpacity onPress={() => {
-                  updateCustomerData({
-                    startingPointId: item.md_timetable_startid,
-                    startingpoint_name: item.start_location_name,
-                    endPointId: item.md_timetable_endid,
-                    endpoint_name: item.end_location_name,
-                  });
-                  navigation.navigate('SearchFerry');
-                }
-                }>
-                  <View style={{ width: '100%', height: hp('18%') }}>
-                    <Image
-                      source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+            {isLoadingTitle
+              ? Array(6).fill(null).map((_, index) => (
+                <View
+                  key={`route-skeleton-${index}`}
+                  style={{
+                    width: '33%',
+                    marginBottom: 15,
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    elevation: 0,
+                    paddingHorizontal: 4,
+                  }}
+                >
+                  <View style={{ width: '100%', height: hp('18%'), position: 'relative', backgroundColor: '#eee', borderRadius: 12, overflow: 'hidden' }}>
+                    <Animated.View
                       style={{
-                        width: '100%',
+                        width: 150,
                         height: '100%',
-                        borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                        transform: [{ translateX: shimmerAnim }],
                       }}
-                      resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                    />
-                    {index < 2 && (
-                      <Animated.View
-                        style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
-
-                      >
-                        <Text style={{ color: '#FE6D39', fontWeight: 'bold', fontSize: wp('3%') }}>Hot Route</Text>
-                      </Animated.View>
-                    )}
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
-                    <Text
-                      style={{
-                        fontSize: wp('3%'),
-                        fontWeight: 'bold',
-                        color: '#333',
-                        //  flexShrink: 1,
-                      }}
-                    // numberOfLines={2}
                     >
-                      {item.start_location_name}
-                    </Text>
-
-                    <Ionicons
-                      name="arrow-forward"
-                      size={wp('3%')}
-                      color="black"
-                      style={{ marginHorizontal: 4 }}
-                    />
-
-                    <Text
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                  <View style={{ height: 16, marginTop: 6, marginHorizontal: 6, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
+                    <Animated.View
                       style={{
-                        fontSize: wp('3%'),
-                        fontWeight: 'bold',
-                        color: '#333',
-                        //   flexShrink: 1,
+                        width: 100,
+                        height: '100%',
+                        transform: [{ translateX: shimmerAnim }],
                       }}
+                    >
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                </View>
+              ))
+              : poppularroute.slice(0, visibleRoutes).map((item, index) => (
+                <View
+                  key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
+                  style={{
+                    width: '33%',
+                    marginBottom: 15,
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    elevation: 0,
+                    paddingHorizontal: 4,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => {
+                    updateCustomerData({
+                      startingPointId: item.md_timetable_startid,
+                      startingpoint_name: item.start_location_name,
+                      endPointId: item.md_timetable_endid,
+                      endpoint_name: item.end_location_name,
+                    });
+                    navigation.navigate('SearchFerry');
+                  }
+                  }>
+                    <View style={{ width: '100%', height: hp('18%') }}>
+                      <Image
+                        source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                        }}
+                        resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                      />
+                      {index < 2 && (
+                        <Animated.View
+                          style={{ position: 'absolute', left: 35, bottom: 3, backgroundColor: '#FFF', borderRadius: 20, paddingHorizontal: 5, transform: [{ translateY: bounceY }], }}
+
+                        >
+                          <Text style={{ color: '#FE6D39', fontWeight: 'bold', fontSize: wp('3%') }}>Hot Route</Text>
+                        </Animated.View>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                      <Text
+                        style={{
+                          fontSize: wp('3%'),
+                          fontWeight: 'bold',
+                          color: '#333',
+                          //  flexShrink: 1,
+                        }}
+                      // numberOfLines={2}
+                      >
+                        {item.start_location_name}
+                      </Text>
+
+                      <Ionicons
+                        name="arrow-forward"
+                        size={wp('3%')}
+                        color="black"
+                        style={{ marginHorizontal: 4 }}
+                      />
+
+                      <Text
+                        style={{
+                          fontSize: wp('3%'),
+                          fontWeight: 'bold',
+                          color: '#333',
+                          //   flexShrink: 1,
+                        }}
                     //    numberOfLines={2}
                     >
                       {item.end_location_name}
@@ -1618,44 +1696,61 @@ const HomeScreen = ({ navigation }) => {
 
         </View>
         <View style={styles.carouselContainerTop}>
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(event) => {
-              const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-              setCurrentBanner(index);
-            }}
-            style={{ width: screenWidth }}
-          >
-
-            {toptrending.map((item, index) => (
-              <TouchableOpacity
-                key={item.md_location_id || `top-${index}`}
-                onPress={() => {
-                  updateCustomerData({
-                    startingPointId: item.md_location_id,
-                    startingpoint_name: item.md_location_nameeng,
-                    countrycode: item.md_location_countriesid,
-                    country: item.sys_countries_nameeng,
-                  });
-                  navigation.navigate('LocationDetail');
+          {isLoadingTitle ? (
+            <View style={{ width: screenWidth, height: 180, borderRadius: 20, backgroundColor: '#eee', marginBottom: 10, overflow: 'hidden', alignSelf: 'center' }}>
+              <Animated.View
+                style={{
+                  width: 300,
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
                 }}
               >
-                <View key={index} style={styles.itemContainer}>
-                  <Image
-                    source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                    style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
-                    resizeMode="cover"
-                  />
-                  <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
-                  <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
+          ) : (
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+                setCurrentBanner(index);
+              }}
+              style={{ width: screenWidth }}
+            >
+              {toptrending.map((item, index) => (
+                <TouchableOpacity
+                  key={item.md_location_id || `top-${index}`}
+                  onPress={() => {
+                    updateCustomerData({
+                      startingPointId: item.md_location_id,
+                      startingpoint_name: item.md_location_nameeng,
+                      countrycode: item.md_location_countriesid,
+                      country: item.sys_countries_nameeng,
+                    });
+                    navigation.navigate('LocationDetail');
+                  }}
+                >
+                  <View key={index} style={styles.itemContainer}>
+                    <Image
+                      source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                      style={[styles.bannerImage, { width: screenWidth * 0.9 }]}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.locationName}>{item.sys_countries_nameeng}</Text>
+                    <Text style={[styles.locationName, { color: '#c5c5c7' }]}>{item.md_location_nameeng}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
         <View style={{
           paddingBottom: 20,
@@ -1689,65 +1784,112 @@ const HomeScreen = ({ navigation }) => {
             flexWrap: 'wrap',
             justifyContent: 'flex-start',
             paddingHorizontal: 10,
-
             marginTop: 0,
             alignContent: 'center',
           }}
         >
-          {poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
-            <View
-              key={item.md_tour_id ? `route-${item.md_tour_id}` : `route-index-${index}`}
-              style={{
-                width: '33%',
-                marginBottom: 15,
-                backgroundColor: '#fff',
-                borderRadius: 12,
-                overflow: 'hidden',
-                elevation: 0,
-                paddingHorizontal: 4,
-              }}
-            >
-              <View style={{ width: '100%', height: hp('18%') }}>
-                <Image
-                  source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
-                  }}
-                  resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
-                />
-
+          {isLoadingTitle
+            ? Array(6).fill(null).map((_, index) => (
                 <View
-                  style={{ position: 'absolute', left: 60, top: 10, borderRadius: 20, paddingHorizontal: 5, flexDirection: 'row', alignSelf: 'center' }}
-
+                  key={`attraction-skeleton-${index}`}
+                  style={{
+                    width: '33%',
+                    marginBottom: 15,
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    elevation: 0,
+                    paddingHorizontal: 4,
+                  }}
                 >
-                  <Ionicons name="star" size={wp(' 4%')} color="rgb(255, 211, 14)" /><Text style={{ paddingLeft: 2, color: '#FFF', fontWeight: 'bold', fontSize: wp('3%') }}>{formatDecimal(item.md_tour_star)}</Text>
+                  <View style={{ width: '100%', height: hp('18%'), position: 'relative', backgroundColor: '#eee', borderRadius: 12, overflow: 'hidden' }}>
+                    <Animated.View
+                      style={{
+                        width: 150,
+                        height: '100%',
+                        transform: [{ translateX: shimmerAnim }],
+                      }}
+                    >
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                  <View style={{ height: 16, marginTop: 6, marginHorizontal: 6, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
+                    <Animated.View
+                      style={{
+                        width: 100,
+                        height: '100%',
+                        transform: [{ translateX: shimmerAnim }],
+                      }}
+                    >
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
                 </View>
+              ))
+            : poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
+              <View
+                key={item.md_tour_id ? `route-${item.md_tour_id}` : `route-index-${index}`}
+                style={{
+                  width: '33%',
+                  marginBottom: 15,
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  elevation: 0,
+                  paddingHorizontal: 4,
+                }}
+              >
+                <View style={{ width: '100%', height: hp('18%') }}>
+                  <Image
+                    source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 12, // ไม่ต้องใส่ใน Image ถ้า View ครอบไว้แล้ว
+                    }}
+                    resizeMode="cover" // หรือเปลี่ยนเป็น "contain" หากรูปถูกครอปเกินไป
+                  />
 
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
-                <Text
-                  style={{
-                    fontSize: wp('3%'),
-                    fontWeight: 'bold',
-                    color: '#333',
-                    //  flexShrink: 1,
-                  }}
-                // numberOfLines={2}
-                >
-                  {truncateText(item.md_tour_name_eng)}
-                </Text>
+                  <View
+                    style={{ position: 'absolute', left: 60, top: 10, borderRadius: 20, paddingHorizontal: 5, flexDirection: 'row', alignSelf: 'center' }}
 
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
-                <Text
-                  style={{
-                    fontSize: wp('3%'),
-                    fontWeight: 'bold',
-                    color: '#c5c5c7',
-                    //  flexShrink: 1,
-                  }}
+                  >
+                    <Ionicons name="star" size={wp(' 4%')} color="rgb(255, 211, 14)" /><Text style={{ paddingLeft: 2, color: '#FFF', fontWeight: 'bold', fontSize: wp('3%') }}>{formatDecimal(item.md_tour_star)}</Text>
+                  </View>
+
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#333',
+                      //  flexShrink: 1,
+                    }}
+                  // numberOfLines={2}
+                  >
+                    {truncateText(item.md_tour_name_eng)}
+                  </Text>
+
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 6, paddingTop: 0, flexWrap: 'wrap' }}>
+                  <Text
+                    style={{
+                      fontSize: wp('3%'),
+                      fontWeight: 'bold',
+                      color: '#c5c5c7',
+                      //  flexShrink: 1,
+                    }}
                 // numberOfLines={2}
                 >
                   {item.md_tour_count} booked
@@ -1769,6 +1911,7 @@ const HomeScreen = ({ navigation }) => {
 
           ))}
         </View>
+
 
 
       </ScrollView >

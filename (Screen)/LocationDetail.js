@@ -51,6 +51,8 @@ const LocationDetail = ({ navigation, route }) => {
         fecthpoppulardestination(customerData.startingPointId);
     }, [customerData.startingPointId]);
 
+    const isLoading = popdestination.length === 0;
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {/* <ImageBackground
@@ -60,55 +62,62 @@ const LocationDetail = ({ navigation, route }) => {
             <View style={[styles.row, { alignSelf: '', width: '85%', marginLeft: '7%' }]}>
                 <Text style={[styles.titleSearch, { fontWeight: 'bold', fontSize: wp('6%') }]}> {customerData.country} - {customerData.startingpoint_name}</Text>
             </View>
-
             <View style={[styles.carouselContainerTop, { alignSelf: 'center' }]}>
-
-                {popdestination.map((item, index) => (
-                    
-                    <TouchableOpacity
-                     key={`pop-${item.md_timetable_endid || index}`}
-                    onPress={() => {
-                        updateCustomerData({ endPointId: item.md_timetable_endid, endpoint_name: item.endeng }); 
-                        navigation.navigate('SearchFerry'); }}>
-                    <View
-                        key={index}
-                        style={[
-                            styles.cardContainerDes,
-                            {
-                                width: screenWidth * 0.9,
-                                height: hp('10%'),
-                                backgroundColor: 'rgb(255, 242, 236)',
-                                elevation: 0,
-                                justifyContent: 'center',
-                                paddingHorizontal: 15,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 0 },
-                                shadowOpacity: 0,
-                                shadowRadius: 0,
-                                elevation: 0,
-                            },
-                        ]}
-                    >
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                            <Ionicons name="location-outline" size={20} color='rgb(12, 188, 135)' style={{ marginRight: 5 }} />
-                            <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
-                                {item.starteng}
-                            </Text>
-                            <Ionicons name="arrow-forward" size={16} color="black" style={{ marginHorizontal: 5 }} />
-                            <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
-                                {item.endeng}
-                            </Text>
+                {isLoading ? (
+                    // Skeleton Loader
+                    Array(3).fill(0).map((_, idx) => (
+                        <View key={idx} style={[styles.cardContainerDes, { width: screenWidth * 0.9, height: hp('10%'), borderRadius: 12, marginBottom: 16, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '80%' }}>
+                                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#e0e0e0', marginRight: 10 }} />
+                                <View style={{ width: 80, height: 16, borderRadius: 8, backgroundColor: '#e0e0e0', marginRight: 10 }} />
+                                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#e0e0e0', marginRight: 10 }} />
+                                <View style={{ width: 80, height: 16, borderRadius: 8, backgroundColor: '#e0e0e0' }} />
+                            </View>
                         </View>
-                    </View>
-                    </TouchableOpacity>
-
-                ))}
-
-
+                    ))
+                ) : (
+                    popdestination.map((item, index) => (
+                        <TouchableOpacity
+                            key={`pop-${item.md_timetable_endid || index}`}
+                            onPress={() => {
+                                updateCustomerData({ endPointId: item.md_timetable_endid, endpoint_name: item.endeng });
+                                navigation.navigate('SearchFerry');
+                            }}>
+                            <View
+                                key={index}
+                                style={[
+                                    styles.cardContainerDes,
+                                    {
+                                        width: screenWidth * 0.9,
+                                        height: hp('10%'),
+                                        backgroundColor: 'rgb(255, 242, 236)',
+                                        elevation: 0,
+                                        justifyContent: 'center',
+                                        paddingHorizontal: 15,
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 0 },
+                                        shadowOpacity: 0,
+                                        shadowRadius: 0,
+                                        elevation: 0,
+                                    },
+                                ]}
+                            >
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Ionicons name="location-outline" size={20} color='rgb(12, 188, 135)' style={{ marginRight: 5 }} />
+                                    <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
+                                        {item.starteng}
+                                    </Text>
+                                    <Ionicons name="arrow-forward" size={16} color="black" style={{ marginHorizontal: 5 }} />
+                                    <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
+                                        {item.endeng}
+                                    </Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    ))
+                )}
             </View>
-
             {/* </ImageBackground> */}
-
         </ScrollView>
     )
 }

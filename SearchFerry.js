@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect, use } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, FlatList, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, Animated, ActivityIndicator } from 'react-native';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
@@ -73,7 +74,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [contentHeights, setContentHeights] = useState({}); // เก็บความสูงของแต่ละ item
   const animatedHeights = useRef({}).current;
   const [discount, setDiscount] = useState(0);
-
+  const shimmerAnim = useRef(new Animated.Value(-300)).current;
 
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
@@ -755,7 +756,8 @@ const removeHtmlTags = (html) => {
                   <FlatList
                     data={childOptions}
                     renderItem={renderChildOption}
-                    keyExtractor={(item) => item.toString()}
+                    keyExtractor={(item) => item.toString()
+                    }
                   />
                 </View>
               </View>
@@ -776,7 +778,8 @@ const removeHtmlTags = (html) => {
                   <FlatList
                     data={infantOptions}
                     renderItem={renderInfantOption}
-                    keyExtractor={(item) => item.toString()}
+                    keyExtractor={(item) => item.toString()
+                    }
                   />
                 </View>
               </View>
@@ -934,9 +937,117 @@ const removeHtmlTags = (html) => {
 
       {/* แสดงรายการแต่ละหน้า */}
       {loading && (
-        <View style={[styles.loaderContainer,{alignSelf:'center', justifyContent:'center', alignItems:'center'}]}>
-          <ActivityIndicator size="large" color="#FD501E" />
-        </View>
+        <>
+          {/* Skeleton shimmer for booking section */}
+          <View style={{ width: '100%', marginTop: 20, marginBottom: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+              <View style={{ width: '48%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
+                <Animated.View style={{ width: 120, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                  <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                </Animated.View>
+              </View>
+              <View style={{ width: '48%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
+                <Animated.View style={{ width: 120, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                  <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                </Animated.View>
+              </View>
+            </View>
+            <View style={{ width: '100%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden', marginBottom: 10 }}>
+              <Animated.View style={{ width: 200, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+              </Animated.View>
+            </View>
+          </View>
+          {/* Skeleton shimmer for ferry cards */}
+          {Array(3).fill(0).map((_, idx) => (
+            <View key={idx} style={[styles.cardContainer, { marginTop: 20, minHeight: 180, backgroundColor: '#eee', borderRadius: 20, overflow: 'hidden', width: '100%' }]}> 
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                <View style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 10, backgroundColor: '#e0e0e0', overflow: 'hidden', marginRight: 16 }}>
+                  <Animated.View
+                    style={{
+                      width: 60,
+                      height: '100%',
+                      transform: [{ translateX: shimmerAnim }],
+                    }}
+                  >
+                    <LinearGradient
+                      colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                      start={[0, 0]}
+                      end={[1, 0]}
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  </Animated.View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ width: '100%', height: 16, borderRadius: 8, backgroundColor: '#e0e0e0', marginBottom: 8, overflow: 'hidden' }}>
+                    <Animated.View
+                      style={{
+                        width: 80,
+                        height: '100%',
+                        transform: [{ translateX: shimmerAnim }],
+                      }}
+                    >
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                  <View style={{ width: '70%', height: 12, borderRadius: 6, backgroundColor: '#e0e0e0', marginBottom: 4, overflow: 'hidden' }}>
+                    <Animated.View
+                      style={{
+                        width: 60,
+                        height: '100%',
+                        transform: [{ translateX: shimmerAnim }],
+                      }}
+                    >
+                      <LinearGradient
+                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                </View>
+              </View>
+              <View style={{ width: '100%', height: 20, borderRadius: 8, backgroundColor: '#e0e0e0', marginLeft: 16, marginBottom: 8, overflow: 'hidden' }}>
+                <Animated.View
+                  style={{
+                    width: 120,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
+              </View>
+              <View style={{ width: '60%', height: 14, borderRadius: 6, backgroundColor: '#e0e0e0', marginLeft: 16, marginBottom: 8, overflow: 'hidden' }}>
+                <Animated.View
+                  style={{
+                    width: 80,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
+              </View>
+            </View>
+          ))}
+        </>
       )}
       {!loading && pagedDataDepart && pagedDataReturn && (
         <>

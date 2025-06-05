@@ -55,6 +55,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [brand, setBrand] = useState(null);
+  const [isSkeletonLoading, setIsSkeletonLoading] = useState(true); // Skeleton loader state
 
 
   console.log("Year:", year);
@@ -227,6 +228,13 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
   const handlePayment = async () => {
+    // ✅ ใช้ selectedCard ที่ได้จากการเลือกบัตร
+    if (!selectedCard) {
+      Alert.alert("❌ No Card Selected", "Please select a card to continue.");
+      return;
+    }
+    // log ข้อมูลบัตรที่เลือก
+    console.log("Selected Card:", selectedCard);
 
     let newErrors = {};
     if (!cardName) newErrors.cardName = true;
@@ -246,6 +254,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
+      const [expMonth, expYear] = selectedCard.expiry.split("/");
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -437,19 +446,29 @@ const PaymentScreen = ({ navigation, route }) => {
       let url = event.url || "";
       console.log("🔗 Deep Link Received:", url);
 
+      // ตรวจสอบว่าหน้าปัจจุบันคือ PromptPayScreen หรือไม่
+      const currentRoute = navigation.getCurrentRoute && navigation.getCurrentRoute();
+      if (currentRoute && currentRoute.name !== "PromptPayScreen") {
+        console.log("⏹️ Stop: Not on PromptPayScreen, skipping payment status check.");
+        return;
+      }
+
       if (url.includes("payment/success")) {
         try {
           // ส่งคำขอตรวจสอบการชำระเงิน
           const res = await axios.post(`${ipAddress}/check-charge`, {
             charge_id: paymentcode,
           });
-
-          if (res.data.success && res.data.status === "successful") { //successful failed
-            // Alert.alert("✅ Payment Successful", "Your payment was completed successfully!");
+          console.log("LOG  Payment Status Response:", JSON.stringify(res.data));
+          // ถ้า authorize_uri เป็น null และไม่ได้อยู่ PromptPayScreen ให้หยุด
+          if (!res.data.authorize_uri && currentRoute && currentRoute.name !== "PromptPayScreen") {
+            console.log("⏹️ Stop: authorize_uri is null and not on PromptPayScreen");
+            return;
+          }
+          if (res.data.success && res.data.status === "successful") {
             updatestatus(booking_code);
             navigation.navigate("ResultScreen", { success: true });
           } else {
-            // Alert.alert("❌ Payment Failed", "Payment was not successful.");
             navigation.navigate("ResultScreen", { success: false });
           }
         } catch (error) {
@@ -512,6 +531,55 @@ const PaymentScreen = ({ navigation, route }) => {
     return "Unknown";
   };
 
+  // State for saved cards (mock, replace with backend/local storage as needed)
+  const [savedCards, setSavedCards] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [selectedCard, setSelectedCard] = useState(null); // สำหรับเก็บบัตรที่เลือก
+
+  // Sync selectedCard กับ selectedCardId เสมอ
+  useEffect(() => {
+    if (selectedCardId) {
+      const card = savedCards.find(card => card.id === selectedCardId);
+      setSelectedCard(card || null);
+    } else {
+      setSelectedCard(null);
+    }
+  }, [selectedCardId, savedCards]);
+
+  // Handle new card addition from AddCardScreen
+  useEffect(() => {
+    if (route.params && route.params.newCard) {
+      const newCard = route.params.newCard;
+      // Detect card brand before saving
+      const brand = detectCardBrand((newCard.cardNumber || '').replace(/\s/g, ''));
+      setSavedCards(prev => [...prev, { ...newCard, brand }]);
+      setSelectedCardId(newCard.id);
+      // Clear the param so it doesn't re-add on re-render
+      navigation.setParams({ newCard: undefined });
+    }
+  }, [route.params?.newCard]);
+
+  // Function to remove a card by id
+  const handleRemoveCard = (id) => {
+    setSavedCards(prev => prev.filter(card => card.id !== id));
+    // If the removed card was selected, clear selection and selectedCard
+    if (selectedCardId === id) {
+      setSelectedCardId(null);
+      setSelectedCard(null);
+    }
+  };
+
+  // When all required data is loaded, hide skeleton
+  useEffect(() => {
+    // If both timetableDepart and (if round trip) timetableReturn are loaded, hide skeleton
+    if (
+      timetableDepart.length > 0 &&
+      (customerData.roud !== 2 || timetableReturn.length > 0)
+    ) {
+      setIsSkeletonLoading(false);
+    }
+  }, [timetableDepart, timetableReturn, customerData.roud]);
+
   return (
     <View style={{ flex: 1 }}>
       {/* ✅ หน้าหมุนแสดงระหว่างรอการชำระเงิน */}
@@ -521,354 +589,353 @@ const PaymentScreen = ({ navigation, route }) => {
           <Text style={styles.loadingText}>Processing Payment...</Text>
         </View>
       )}
-      <ScrollView contentContainerStyle={styles.container}>
+      {/* Skeleton Loader */}
+      {isSkeletonLoading ? (
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonRow}>
+              <View style={styles.skeletonCircle} />
+              <View style={styles.skeletonLineShort} />
+            </View>
+            <View style={styles.skeletonCardList}>
+              {[1,2].map(i => (
+                <View key={i} style={styles.skeletonCardItem}>
+                  <View style={styles.skeletonCardIcon} />
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.skeletonLine} />
+                    <View style={styles.skeletonLineSmall} />
+                  </View>
+                </View>
+              ))}
+              <View style={styles.skeletonAddCardBtn} />
+            </View>
+          </View>
+          <View style={styles.skeletonCard}>
+            <View style={styles.skeletonLine} />
+            <View style={styles.skeletonLine} />
+            <View style={styles.skeletonLineSmall} />
+            <View style={styles.skeletonLineSmall} />
+            <View style={styles.skeletonLine} />
+          </View>
+          <View style={styles.skeletonButton} />
+        </ScrollView>
+      ) : (
+        // ...existing code for ScrollView and content...
+        <ScrollView contentContainerStyle={styles.container}>
+          <ImageBackground
+            source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+            style={styles.background}>
+            <LogoHeader />
+            <Step logoUri={3} />
+            <Text style={styles.header}>Payment</Text>
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
+                <Text style={styles.header}>Payment Options</Text>
+              </View>
 
-        <ImageBackground
-          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-          style={styles.background}>
-          <LogoHeader />
-          <Step logoUri={3} />
-          <Text style={styles.header}>Payment</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
-              <Text style={styles.header}>Payment Options</Text>
+              {/* Radio Button 1 */}
+              <View style={styles.radioContian}>
+                <TouchableOpacity
+                  style={styles.optionContainer}
+                  onPress={() => handleSelection("7")}
+                >
+                  <View
+                    style={[
+                      styles.radioButton,
+                      selectedOption === "7" && styles.selectedRadio,
+                    ]}
+                  />
+                  <View style={styles.logodown}>
+                    <Text style={styles.labelHead}>Credit and Debit Card</Text>
+                  </View>
+                  <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                </TouchableOpacity>
+                {selectedOption === "7" && (
+                  <View style={{ marginTop: 10 }}>
+                    {/* Card List */}
+                    {savedCards.length > 0 ? (
+                      savedCards.map(card => (
+                        <TouchableOpacity
+                          key={card.id}
+                          style={[styles.savedCardItem, selectedCardId === card.id && styles.selectedCard]}
+                          onPress={() => {
+                            setSelectedCardId(card.id);
+                            // setSelectedCard(card); // ไม่ต้อง set ตรงนี้แล้ว ให้ useEffect ข้างบนจัดการ
+                            console.log('Selected Card:', card);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.cardInfoRow}>
+                            <Image source={brandIcons[card.brand] || brandIcons.Unknown} style={styles.savedCardIcon} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.savedCardNumber}>{'**** **** **** ' + card.cardNumber.slice(-4)}</Text>
+                              <Text style={styles.savedCardName}>{card.cardName}  |  {card.expiry}</Text>
+                            </View>
+                            {selectedCardId === card.id && (
+                              <AntDesign name="checkcircle" size={22} color="#FD501E" style={{ marginLeft: 8 }} />
+                            )}
+                            {/* Remove button */}
+                            <TouchableOpacity
+                              onPress={() => handleRemoveCard(card.id)}
+                              style={{ marginLeft: 10, padding: 4 }}
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                              <AntDesign name="delete" size={20} color="#FD501E" />
+                            </TouchableOpacity>
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <Text style={{ color: '#888', marginBottom: 12 }}>No cards saved yet.</Text>
+                    )}
+                    {/* Add Card Button */}
+                    <TouchableOpacity
+                      style={styles.addCardButton}
+                      onPress={() => {
+                        navigation.navigate('AddCardScreen', {
+                          onAddCard: (newCard) => {
+                            // Pass new card back via navigation params
+                            navigation.setParams({ newCard });
+                          },
+                          nextCardId: (savedCards.length + 1).toString(),
+                        });
+                      }}
+                    >
+                      <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
+                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>เพิ่มบัตร</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+              </View>
+              {/* Radio Button 2 */}
+              <View style={styles.radioContian}>
+                <TouchableOpacity
+                  style={styles.optionContainer}
+                  onPress={() => handleSelection("2")}
+                >
+                  <View
+                    style={[
+                      styles.radioButton,
+                      selectedOption === "2" && styles.selectedRadio,
+                    ]}
+                  />
+                  <View style={styles.logodown}>
+                    <Text style={styles.labelHead}>PromptPay</Text>
+                  </View>
+                  <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+
+
+                </TouchableOpacity>
+              </View>
+              {/* Radio Button 3 */}
+              {/* <View style={styles.radioContian}>
+                <TouchableOpacity
+                  style={styles.optionContainer}
+                  onPress={() => handleSelection("Option 3")}
+                >
+                  <View
+                    style={[
+                      styles.radioButton,
+                      selectedOption === "Option 3" && styles.selectedRadio,
+                    ]}
+                  />
+                  <View style={styles.logodown}>
+                    <Text style={styles.labelHead}>eWallet</Text>
+                  </View>
+                  <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                </TouchableOpacity>
+              </View> */}
+              <View style={styles.row}>
+                <View style={styles.checkboxContainer}>
+                  <TouchableOpacity onPress={() => setPickup(!pickup)}>
+                    <MaterialIcons name={pickup ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" style={{ marginRight: 8, marginTop: -5 }} />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.label}>I understand and agree with th <Text style={styles.textcolor}>Terms of Services</Text> and <Text style={styles.textcolor}>Policy</Text></Text>
+                </View>
+              </View>
             </View>
 
-            {/* Radio Button 1 */}
-            <View style={styles.radioContian}>
-              <TouchableOpacity
-                style={styles.optionContainer}
-                onPress={() => handleSelection("7")}
-              >
-                <View
-                  style={[
-                    styles.radioButton,
-                    selectedOption === "7" && styles.selectedRadio,
-                  ]}
-                />
-                <View style={styles.logodown}>
-                  <Text style={styles.labelHead}>Credit and Debit Card</Text>
-                </View>
-                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-              </TouchableOpacity>
-              {selectedOption === "7" && (
-                <>
-                  <View style={styles.payment}>
-                    <View style={styles.row}>
-                      <Text style={styles.label}>We Accept:</Text>
-                      <Image source={{ uri: 'https://www.thetrago.com/assets/images/credit1.png' }}
-                        style={{ width: wp('35%'), height: hp('2%') }} />
-                    </View>
-                    <Text style={styles.label}>Card Holder Name </Text>
-                    <TextInput
-                      value={cardName}
-                      onChangeText={(text) => {
-                        setcardName(text);
-                        setErrors((prev) => ({ ...prev, cardName: false }));
-                      }}
-                      placeholder="Cardholder name"
-                      style={[styles.input, errors.cardName && styles.errorInput]}
-                    />
-                    <Text style={styles.label}>Card Number </Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        value={cardNumber}
-                        onChangeText={(text) => {
-                          const clean = text.replace(/\D/g, "").slice(0, 16); // ลบตัวอักษรที่ไม่ใช่ตัวเลข
-                          const formatted = clean.replace(/(.{4})/g, "$1 ").trim();
-                          setCardNumber(formatted);
-                          setErrors((prev) => ({ ...prev, cardNumber: false }));
-
-                          // 🔍 เดา brand เองโดยไม่ใช้ API
-                          if (clean.length >= 6) {
-                            const detectedBrand = detectCardBrand(clean);
-                            setBrand(detectedBrand);
-                          } else {
-                            setBrand(null);
-                          }
-                        }}
-                        placeholder="**** **** **** ****"
-                        keyboardType="number-pad"
-                        style={styles.textInput}
-                      />
-
-                      {brand && (
-                        <Image
-                          source={brandIcons[brand] || brandIcons.Unknown}
-                          style={styles.brandIcon}
-                          resizeMode="contain"
-                        />
-                      )}
-                    </View>
-
-
-                    <View style={styles.row}>
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Expiry Date</Text>
-                        <TextInput
-                          value={expirationDate}
-                          onChangeText={(text) => {
-                            handleChange(text);
-                            setErrors((prev) => ({ ...prev, expirationDate: false }));
-                          }}
-                          keyboardType="number-pad"
-                          placeholder="MM/YY"
-                          maxLength={5}  // จำกัดให้กรอกได้สูงสุด 5 ตัวอักษร (เช่น 12/34)
-                          style={[styles.input, errors.expirationDate && styles.errorInput]}
-                        />
-
-                      </View>
-
-
-                      <View style={styles.inputContainer}>
-
-                        <Text style={styles.label}>CVV / CVC *</Text>
-                        <TextInput
-                          value={cvv}
-                          onChangeText={(text) => {
-                            setCvv(text);
-                            setErrors((prev) => ({ ...prev, cvv: false }));
-                          }}
-                          keyboardType="number-pad"
-                          placeholder="***"
-                          secureTextEntry
-                          maxLength={3}
-                          style={[styles.input, errors.cvv && styles.errorInput]}
-                        />
-                      </View>
-                    </View>
+            <View style={styles.card}>
+              <Text style={styles.title}>Booking Summary</Text>
+              <View style={styles.divider} />
+              {timetableDepart.map((item, index) => (
+                <View key={index}>
+                  <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+                  <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+                  <View style={styles.row}>
+                    <Text style={{ color: '#666666' }}>Company </Text>
+                    <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
                   </View>
+                  <View style={styles.row}>
+                    <Text style={{ color: '#666666' }}>Seat</Text>
+                    <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={{ color: '#666666' }}>Boat </Text>
+                    <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={{ color: '#666666' }}>Departure Data</Text>
+                    <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                    <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                  </View>
+                  <View style={[styles.row, { marginTop: 5 }]}>
+                    <Text>Adult x {customerData.adult}</Text>
+                    <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+                  </View>
+                  {customerData.child !== 0 && (
+                    <View style={styles.row}>
+                      <Text>Child x {customerData.child}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                    </View>
+                  )}
+                  {customerData.infant !== 0 && (
+                    <View style={styles.row}>
+                      <Text>infant x {customerData.infant}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                    </View>
+                  )}
+                  {customerData.pickupPriceDepart != 0 && (
+                    <View style={styles.row}>
+                      <Text>Pick up</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+                    </View>
+                  )}
+                  {customerData.dropoffPriceDepart != 0 && (
+                    <View style={styles.row}>
+                      <Text>Drop off</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.row}>
+                    <Text>Discount</Text>
+                    <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text>Ticket fare</Text>
+                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+                  </View>
+                  <View style={styles.divider} />
+                </View>
+              ))}
+              {customerData.roud === 2 && (
+                <>
+                  {timetableReturn.map((item, index) => (
+                    <View key={index}>
+                      <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                      <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                        {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                      </Text>
+                      <View style={styles.row}>
+                        <Text style={{ color: '#666666' }}>Company </Text>
+                        <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                      </View>
+                      <View style={styles.row}>
+                        <Text style={{ color: '#666666' }}>Seat</Text>
+                        <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                      </View>
+                      <View style={styles.row}>
+                        <Text style={{ color: '#666666' }}>Boat </Text>
+                        <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                      </View>
+                      <View style={styles.row}>
+                        <Text style={{ color: '#666666' }}>Departure Data</Text>
+                        <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                      </View>
+                      <View style={styles.row}>
+                        <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                        <Text style={{ color: '#666666' }}>
+                          {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+                        </Text>
+                      </View>
+                      <View style={[styles.row, { marginTop: 5 }]}>
+                        <Text>Adult x {customerData.adult}</Text>
+                        <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                      </View>
+                      {customerData.child !== 0 && (
+                        <View style={styles.row}>
+                          <Text>Child x {customerData.child}</Text>
+                          <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.infant !== 0 && (
+                        <View style={styles.row}>
+                          <Text>infant x {customerData.infant}</Text>
+                          <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.pickupPriceReturn != 0 && (
+                        <View style={styles.row}>
+                          <Text>Pick up</Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.dropoffPriceReturn != 0 && (
+                        <View style={styles.row}>
+                          <Text>Drop off</Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                        </View>
+                      )}
+                      <View style={styles.row}>
+                        <Text>Discount</Text>
+                        <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                      </View>
+                      <View style={styles.row}>
+                        <Text>Ticket fare</Text>
+                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                      </View>
+                      <View style={styles.divider} />
+                    </View>
+                  ))}
                 </>
               )}
 
-            </View>
-            {/* Radio Button 2 */}
-            <View style={styles.radioContian}>
-              <TouchableOpacity
-                style={styles.optionContainer}
-                onPress={() => handleSelection("2")}
-              >
-                <View
-                  style={[
-                    styles.radioButton,
-                    selectedOption === "2" && styles.selectedRadio,
-                  ]}
-                />
-                <View style={styles.logodown}>
-                  <Text style={styles.labelHead}>PromptPay</Text>
-                </View>
-                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-
-
-              </TouchableOpacity>
-            </View>
-            {/* Radio Button 3 */}
-            {/* <View style={styles.radioContian}>
-              <TouchableOpacity
-                style={styles.optionContainer}
-                onPress={() => handleSelection("Option 3")}
-              >
-                <View
-                  style={[
-                    styles.radioButton,
-                    selectedOption === "Option 3" && styles.selectedRadio,
-                  ]}
-                />
-                <View style={styles.logodown}>
-                  <Text style={styles.labelHead}>eWallet</Text>
-                </View>
-                <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-              </TouchableOpacity>
-            </View> */}
-            <View style={styles.row}>
-              <View style={styles.checkboxContainer}>
-                <TouchableOpacity onPress={() => setPickup(!pickup)}>
-                  <MaterialIcons name={pickup ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" style={{ marginRight: 8, marginTop: -5 }} />
-                </TouchableOpacity>
+              <View style={styles.row}>
+                <Text>Subtotal </Text>
+                <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
               </View>
-              <View style={styles.textContainer}>
-                <Text style={styles.label}>I understand and agree with th <Text style={styles.textcolor}>Terms of Services</Text> and <Text style={styles.textcolor}>Policy</Text></Text>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text>Payment Fee </Text>
+                <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(totalpaymentfee))}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text>total </Text>
+                <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
               </View>
             </View>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.title}>Booking Summary</Text>
-            <View style={styles.divider} />
-            {timetableDepart.map((item, index) => (
-              <View key={index}>
-                <Text style={{ fontWeight: 'bold' }}>Depart</Text>
-                <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
-                <View style={styles.row}>
-                  <Text style={{ color: '#666666' }}>Company </Text>
-                  <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={{ color: '#666666' }}>Seat</Text>
-                  <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={{ color: '#666666' }}>Boat </Text>
-                  <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={{ color: '#666666' }}>Departure Data</Text>
-                  <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                  <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                </View>
-                <View style={[styles.row, { marginTop: 5 }]}>
-                  <Text>Adult x {customerData.adult}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-                </View>
-                {customerData.child !== 0 && (
-                  <View style={styles.row}>
-                    <Text>Child x {customerData.child}</Text>
-                    <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
-                  </View>
-                )}
-                {customerData.infant !== 0 && (
-                  <View style={styles.row}>
-                    <Text>infant x {customerData.infant}</Text>
-                    <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
-                  </View>
-                )}
-                {customerData.pickupPriceDepart != 0 && (
-                  <View style={styles.row}>
-                    <Text>Pick up</Text>
-                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
-                  </View>
-                )}
-                {customerData.dropoffPriceDepart != 0 && (
-                  <View style={styles.row}>
-                    <Text>Drop off</Text>
-                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
-                  </View>
-                )}
-                <View style={styles.row}>
-                  <Text>Discount</Text>
-                  <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text>Ticket fare</Text>
-                  <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-                </View>
-                <View style={styles.divider} />
-              </View>
-            ))}
-            {customerData.roud === 2 && (
-              <>
-                {timetableReturn.map((item, index) => (
-                  <View key={index}>
-                    <Text style={{ fontWeight: 'bold' }}>Return</Text>
-                    <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                      {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
-                    </Text>
-                    <View style={styles.row}>
-                      <Text style={{ color: '#666666' }}>Company </Text>
-                      <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
-                    </View>
-                    <View style={styles.row}>
-                      <Text style={{ color: '#666666' }}>Seat</Text>
-                      <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-                    </View>
-                    <View style={styles.row}>
-                      <Text style={{ color: '#666666' }}>Boat </Text>
-                      <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-                    </View>
-                    <View style={styles.row}>
-                      <Text style={{ color: '#666666' }}>Departure Data</Text>
-                      <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
-                    </View>
-                    <View style={styles.row}>
-                      <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                      <Text style={{ color: '#666666' }}>
-                        {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
-                      </Text>
-                    </View>
-                    <View style={[styles.row, { marginTop: 5 }]}>
-                      <Text>Adult x {customerData.adult}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
-                    </View>
-                    {customerData.child !== 0 && (
-                      <View style={styles.row}>
-                        <Text>Child x {customerData.child}</Text>
-                        <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
-                      </View>
-                    )}
-                    {customerData.infant !== 0 && (
-                      <View style={styles.row}>
-                        <Text>infant x {customerData.infant}</Text>
-                        <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
-                      </View>
-                    )}
-                    {customerData.pickupPriceReturn != 0 && (
-                      <View style={styles.row}>
-                        <Text>Pick up</Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
-                      </View>
-                    )}
-                    {customerData.dropoffPriceReturn != 0 && (
-                      <View style={styles.row}>
-                        <Text>Drop off</Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
-                      </View>
-                    )}
-                    <View style={styles.row}>
-                      <Text>Discount</Text>
-                      <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
-                    </View>
-                    <View style={styles.row}>
-                      <Text>Ticket fare</Text>
-                      <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
-                    </View>
-                    <View style={styles.divider} />
-                  </View>
-                ))}
-              </>
-            )}
-
-            <View style={styles.row}>
-              <Text>Subtotal </Text>
-              <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.row}>
-              <Text>Payment Fee </Text>
-              <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(totalpaymentfee))}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.row}>
-              <Text>total </Text>
-              <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
-            </View>
-          </View>
 
 
 
 
-          <TouchableOpacity
-            style={[styles.buttonContainer]} // Use an array if you want to combine styles
-            onPress={() => {
-              if (!pickup) {
-                Alert.alert('Terms and Conditions', 'Please check the Terms and Conditions before proceeding.');
-              } else if (selectedOption == "7") {
-                handlePayment();
-              } else if (selectedOption == "2") {
+            <TouchableOpacity
+              style={[styles.buttonContainer]} // Use an array if you want to combine styles
+              onPress={() => {
+                if (!pickup) {
+                  Alert.alert('Terms and Conditions', 'Please check the Terms and Conditions before proceeding.');
+                } else if (selectedOption == "7") {
+                  handlePayment();
+                } else if (selectedOption == "2") {
 
-                handlePaymentPromptpay();
+                  handlePaymentPromptpay();
 
-              } else {
-                Alert.alert('Payment Option', 'Please select a payment option.');
-              }
-            }}>
-            <Text style={styles.BackButtonText}>Payment ฿{formatNumberWithComma(totalPayment)}</Text>
-          </TouchableOpacity>
-        </ImageBackground>
-      </ScrollView>
+                } else {
+                  Alert.alert('Payment Option', 'Please select a payment option.');
+                }
+              }}>
+              <Text style={styles.BackButtonText}>Payment ฿{formatNumberWithComma(totalPayment)}</Text>
+            </TouchableOpacity>
+          </ImageBackground>
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -1068,8 +1135,130 @@ const styles = StyleSheet.create({
     width: 45,
     height: 35,
   },
-
-
+  // เพิ่มสไตล์สำหรับ card list
+  savedCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f6f6f6',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  selectedCard: {
+    borderColor: '#FD501E',
+    backgroundColor: '#fff7f3',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  cardInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  savedCardIcon: {
+    width: 38,
+    height: 28,
+    marginRight: 14,
+    resizeMode: 'contain',
+  },
+  savedCardNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#002348',
+  },
+  savedCardName: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 2,
+  },
+  addCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FD501E',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignSelf: 'flex-end',
+    marginTop: 6,
+  },
+  skeletonCard: {
+    backgroundColor: '#ececec',
+    borderRadius: 20,
+    width: '100%',
+    padding: 16,
+    marginVertical: 16,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  skeletonCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e0e0e0',
+    marginRight: 10,
+  },
+  skeletonLineShort: {
+    width: 120,
+    height: 18,
+    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+  },
+  skeletonCardList: {
+    marginTop: 10,
+  },
+  skeletonCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8e8e8',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
+  skeletonCardIcon: {
+    width: 38,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#d0d0d0',
+    marginRight: 14,
+  },
+  skeletonLine: {
+    width: '80%',
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+    marginBottom: 8,
+  },
+  skeletonLineSmall: {
+    width: '50%',
+    height: 12,
+    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+    marginBottom: 8,
+  },
+  skeletonAddCardBtn: {
+    width: 100,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#fdcdbb',
+    alignSelf: 'flex-end',
+    marginTop: 6,
+  },
+  skeletonButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#fdcdbb',
+    marginTop: 20,
+    marginBottom: 20,
+  },
 });
 
 export default PaymentScreen;

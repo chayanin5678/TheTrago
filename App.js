@@ -31,6 +31,9 @@ import OCRResultScreen from './(Screen)/OCRResultScreen';
 import SplashScreenComponent from './(component)/SplashScreenComponent';
 import PopularDestination from './(Screen)/populardestination';
 import LocationDetail from './(Screen)/LocationDetail';
+import QRCodeScannerScreen from './QRCodeScannerScreen';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AddCardScreen from './(Screen)/AddCardScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,10 +57,12 @@ const AppNavigator = () => (
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
+    <Stack.Screen name="QRCodeScannerScreen" component={QRCodeScannerScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -110,18 +115,19 @@ const MainNavigator = () => {
         tabBarLabelStyle: {
           fontSize: 12,
         },
-        tabBarIcon: ({ focused, size }) => {
+        tabBarIcon: ({ focused, size, color }) => {
+          if (route.name === 'Post') {
+            return (
+              <MaterialCommunityIcons name="qrcode-scan" size={size || 30} color={'#fff'} />
+            );
+          }
           let iconName;
-
           switch (route.name) {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Messages':
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              break;
-            case 'Post':
-              iconName = 'add';
               break;
             case 'Trips':
               iconName = focused ? 'reader' : 'reader-outline';
@@ -132,16 +138,11 @@ const MainNavigator = () => {
             default:
               iconName = 'ellipse';
           }
-
-          const color = route.name === 'Post'
-            ? (focused ? 'white' : 'white')
-            : (focused ? '#FD501E' : 'gray');
-
           return (
             <Icon
               name={iconName}
-              size={route.name === 'Post' ? 30 : size}
-              color={color}
+              size={size}
+              color={focused ? '#FD501E' : 'gray'}
             />
           );
         },
@@ -152,7 +153,7 @@ const MainNavigator = () => {
       {/* <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} /> */}
       <Tab.Screen
         name="Post"
-        component={SettingsScreen}
+        component={QRCodeScannerScreen}
         options={{
           title: '',
           tabBarButton: (props) => <CustomPostButton {...props} />,

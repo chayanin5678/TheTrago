@@ -31,7 +31,8 @@
       ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-barcode-scanner"
     ],
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
@@ -39,6 +40,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to scan your ID card"
       }
-    }
+    },
+    "jsEngine": "jsc"
   }
 }

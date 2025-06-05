@@ -15,11 +15,12 @@ export default function PromptPayScreen({ route, navigation }) {
   const [qrpayment, setqrpayment] = useState(Paymenttotal * 100);
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
+  const [intervalId, setIntervalId] = useState(null);
   let booking_code = bookingcode.length > 0 
   ? "TG" + (parseInt(bookingcode[0].booking_code) + 1) 
   : " "; // ใช้ "N/A" ถ้าไม่มี booking code
 let booking_codeGroup = bookingcodeGroup.length > 0
-  ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
+  ? "TG" + (parseInt(bookingcodeGroup[0].booking_codegroup) + 1)
   : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
 
   
@@ -72,6 +73,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
     // เพิ่ม qrpayment เพื่อให้ `loadQR` ทำงานเมื่อ qrpayment เปลี่ยนแปลง
 
   useEffect(() => {
+    let localIntervalId = null;
     const checkPayment = async () => {
       try {
         console.log("Charge ID:", chargeid);
@@ -85,22 +87,22 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         if (res.data.success && res.data.status === "successful") {
           updatestatus(booking_code); // อัปเดตสถานะการชำระเงิน
           navigation.navigate("ResultScreen", { success: true });
-          clearInterval(customerData.intervalId); // หยุดการทำงานของ setInterval
+          if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
         }
       } catch (error) {
         console.error("Error during payment check:", error);
       }
     };
 
-    if (chargeid) {  // ตรวจสอบว่ามี chargeid หรือไม่ก่อนเริ่มต้น
-      // เรียกเช็คสถานะการชำระเงินทุกๆ 2 วินาที (2000ms)
-      const id = setInterval(() => {
+    if (chargeid) {
+      localIntervalId = setInterval(() => {
         checkPayment();
       }, 2000);
-      updateCustomerData({ intervalId: id }); // เก็บ intervalId ใน context หรือ state อื่น ๆ
-
-      // ทำความสะอาดเมื่อ component ถูก unmount หรือสถานะการชำระเงินสำเร็จ
-      return () => clearInterval(customerData.intervalId);  // ทำความสะอาดเมื่อ component unmount หรือ status เป็น "successful"
+      setIntervalId(localIntervalId); // เก็บ id ไว้ใน state
+      // cleanup
+      return () => {
+        if (localIntervalId) clearInterval(localIntervalId);
+      };
     }
   }, [chargeid]);  // ทำงานเมื่อ `chargeid` เปลี่ยนแปลง
 
@@ -214,15 +216,24 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   };
   
   
-  const handlePress = () => {
-    // หยุด setInterval เมื่อปุ่มถูกกด
-    if (customerData.intervalId) {
-      clearInterval(customerData.intervalId);  // หยุด setInterval เมื่อกดปุ่ม
-      console.log('Interval stopped');
+  const handlePress = async () => {
+    if (intervalId) {
+      clearInterval(intervalId); // หยุด interval ทันทีเมื่อกด Paid
     }
-
-    // นำทางไปยังหน้าจอ ResultScreen พร้อมข้อมูล success: false
-    navigation.navigate('ResultScreen', { success: true });
+    let paid = false;
+    try {
+      // ตรวจสอบสถานะล่าสุดก่อน
+      const res = await axios.post(`${ipAddress}/check-charge`, {
+        charge_id: chargeid,
+      });
+      if (res.data.success && res.data.status === "successful") {
+        paid = true;
+        await updatestatus(booking_code);
+      }
+    } catch (e) {
+      console.error('Error checking payment status on manual paid:', e);
+    }
+    navigation.navigate('ResultScreen', { success: paid });
   };
 
   
@@ -230,34 +241,45 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Prompt Pay QR</Text>
-      {loading && <ActivityIndicator size="large" color="#000" />}
-      {!loading && qrUri && (
+      {loading ? (
         <>
-          <Image
-            source={{ uri: qrUri }}
-            style={styles.qr}
-            resizeMode="contain"
-          />
-          <Text style={styles.text}>฿ {Paymenttotal}</Text>
+          <View style={styles.skeletonContainer}>
+            <View style={styles.skeletonQR} />
+            <View style={styles.skeletonAmount} />
+          </View>
+          <View style={styles.skeletonButtonRow}>
+            <View style={styles.skeletonButton} />
+            <View style={styles.skeletonButton} />
+          </View>
+        </>
+      ) : (
+        <>
+          {qrUri && (
+            <>
+              <Image
+                source={{ uri: qrUri }}
+                style={styles.qr}
+                resizeMode="contain"
+              />
+              <Text style={styles.text}>฿ {Paymenttotal}</Text>
+            </>
+          )}
+          <View style={styles.rowButton}>
+            <TouchableOpacity
+              style={styles.BackButton}
+              onPress={saveQRToFile}
+            >
+              <Text style={styles.BackButtonText}>Save QR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.ActionButton}
+              onPress={handlePress}
+            >
+              <Text style={styles.searchButtonText}>Paid</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
-
-      <View style={styles.rowButton}>
-        <TouchableOpacity
-          style={styles.BackButton}
-          onPress={saveQRToFile}  // ใช้ฟังก์ชันห่อหุ้มเพื่อให้ทำงานเมื่อผู้ใช้กด
-        >
-          <Text style={styles.BackButtonText}>Save QR</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.ActionButton}
-          onPress={handlePress}  // ใช้ฟังก์ชันห่อหุ้มเพื่อให้ทำงานเมื่อผู้ใช้กด
-        >
-          <Text style={styles.searchButtonText}>Paid</Text>
-        </TouchableOpacity>
-
-      </View>
     </ScrollView>
   );
 }
@@ -325,5 +347,40 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     marginBottom: 20,
     fontWeight: 'bold',
-  }
+  },
+  // Skeleton loader styles
+  skeletonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 50,
+    marginBottom: 30,
+    justifyContent: 'flex-start',
+  },
+  skeletonQR: {
+    width: 300,
+    height: 300,
+    backgroundColor: '#eee',
+    borderRadius: 24,
+    marginBottom: 32,
+  },
+  skeletonAmount: {
+    width: 140,
+    height: 32,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 12,
+    marginBottom: 40,
+  },
+  skeletonButtonRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingHorizontal: 0,
+  },
+  skeletonButton: {
+    width: '48%',
+    height: 60,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 12,
+  },
 });
