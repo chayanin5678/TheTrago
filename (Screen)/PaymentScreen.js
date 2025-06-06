@@ -36,7 +36,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const year = '20' + expirationDate.substring(3, 5);
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
-  const [totalPayment, settotalPayment] = useState('');
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
   const { customerData, updateCustomerData } = useCustomer();
@@ -51,7 +50,6 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const [paymentcode, setpaymentcode] = useState('');
   const [paymentfee, setPaymentfee] = useState(0);
-  const [totalpaymentfee, setTotalPaymentfee] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [brand, setBrand] = useState(null);
@@ -212,10 +210,14 @@ const PaymentScreen = ({ navigation, route }) => {
       fetchTimetableReturn();
     }
 
-    setTotalPaymentfee(customerData.total * (paymentfee / 100));
-    settotalPayment(formatNumber(parseFloat(customerData.total) + totalpaymentfee));
+    // คำนวณค่าธรรมเนียมและยอดรวมแบบ real-time
+    const totalpaymentfee = customerData.total && paymentfee ? (parseFloat(customerData.total) * (parseFloat(paymentfee) / 100)) : 0;
+    const totalPayment = customerData.total ? (parseFloat(customerData.total) + totalpaymentfee) : 0;
 
-  }, [Discount, customerData.total, paymentfee, totalpaymentfee, customerData.timeTableReturnId, bookingcode, bookingcodeGroup]);
+    setTotalPaymentfee(totalpaymentfee);
+    settotalPayment(formatNumber(totalPayment));
+
+  }, [Discount, customerData.total, paymentfee, customerData.timeTableReturnId, bookingcode, bookingcodeGroup]);
 
 
   const calculateDiscountedPrice = (price) => {
@@ -228,8 +230,10 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
   const handlePayment = async () => {
+    setIsLoading(true); // Show loading spinner immediately
     // ✅ ใช้ selectedCard ที่ได้จากการเลือกบัตร
     if (!selectedCard) {
+      setIsLoading(false);
       Alert.alert("❌ No Card Selected", "Please select a card to continue.");
       return;
     }
@@ -237,51 +241,77 @@ const PaymentScreen = ({ navigation, route }) => {
     console.log("Selected Card:", selectedCard);
 
     let newErrors = {};
-    if (!cardName) newErrors.cardName = true;
-    if (!cardNumber) newErrors.cardNumber = true;
-    if (!expirationDate) newErrors.expirationDate = true;
-    if (!cvv) newErrors.cvv = true;
+    if (!selectedCard.cardName) newErrors.cardName = true;
+    if (!selectedCard.cardNumber) newErrors.cardNumber = true;
+    if (!selectedCard.expiry) newErrors.expirationDate = true;
+    if (!selectedCard.cvv) newErrors.cvv = true;
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      Alert.alert("❌ Incomplete Information", "Please fill in all required fields.");
+    // --- Robust expiration year and month handling ---
+    let expMonth, expYearRaw, expYear;
+    if (selectedCard.expiry && selectedCard.expiry.includes("/")) {
+      [expMonth, expYearRaw] = selectedCard.expiry.split("/");
+      expMonth = expMonth.trim();
+      expYearRaw = expYearRaw.trim();
+      // Pad month to 2 digits
+      if (/^\d{1}$/.test(expMonth)) {
+        expMonth = "0" + expMonth;
+      }
+      // Year logic
+      if (/^\d{4}$/.test(expYearRaw)) {
+        expYear = expYearRaw;
+      } else if (/^\d{2}$/.test(expYearRaw)) {
+        expYear = "20" + expYearRaw;
+      } else {
+        expYear = null;
+      }
+    } else {
+      expMonth = null;
+      expYear = null;
+    }
+    if (!expMonth || !expYear || !/^\d{2}$/.test(expMonth) || !/^\d{4}$/.test(expYear)) {
+      Alert.alert("❌ Invalid Expiry Date", "Please check the card's expiration date format (MM/YY or MM/YYYY). Month must be 2 digits, year must be 4 digits.");
       return;
     }
+    // --- End robust expiration year and month handling ---
 
-    setIsLoading(true);
-    console.log("🔄 Loading started...");
-
+    // Debug log the card data to be sent
+    const cardPayload = {
+      name: selectedCard.cardName || selectedCard.name || '',
+      number: selectedCard.cardNumber,
+      expiration_month: expMonth,
+      expiration_year: expYear,
+      security_code: selectedCard.cvv,
+    };
+    console.log("Card payload for token:", cardPayload);
 
     try {
       // ✅ 1. สร้าง Token ของบัตรเครดิต
-      const [expMonth, expYear] = selectedCard.expiry.split("/");
       const tokenResponse = await fetch(`${ipAddress}/create-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          card: {
-            name: cardName,
-            number: cardNumber,
-            expiration_month: month,
-            expiration_year: year,
-            security_code: cvv,
-          },
+          card: cardPayload,
         }),
       });
-
-
+      const tokenText = await tokenResponse.text();
+      console.log("Token API raw response:", tokenText);
+      let tokenData;
+      try {
+        tokenData = JSON.parse(tokenText);
+      } catch (e) {
+        throw new Error("❌ Invalid JSON from token API");
+      }
       if (!tokenResponse.ok) throw new Error("❌ Failed to create payment token");
-      const tokenData = await tokenResponse.json();
-      if (!tokenData.success) throw new Error(tokenData.error);
+      if (!tokenData.success) throw new Error(tokenData.error || "❌ Token API error");
 
       // ✅ 2. ทำการชำระเงิน
       const paymentResponse = await fetch(`${ipAddress}/charge`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
-          amount: totalPayment,
+          amount: totalPayment, // ส่งยอดรวมจริง
           token: tokenData.token,
-          return_uri: `${ipAddress}/redirect`, // ✅ ให้ Omise Redirect กลับมา
+          return_uri: `${ipAddress}/redirect`,
         }),
       });
 
@@ -310,10 +340,11 @@ const PaymentScreen = ({ navigation, route }) => {
         fetchBookingCodeGroup();
       }
       console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+      // แก้ไข: ไม่อัปเดต total ด้วยยอดรวม (totalPayment) แต่เก็บค่าธรรมเนียมแยก
       updateCustomerData({
         bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
-        paymentfee: totalPayment,
-        total: totalPayment,
+        paymentfee: totalpaymentfee, // เก็บค่าธรรมเนียมแยก
+        // total: customerData.total, // ไม่ต้องอัปเดต total
         bookingcode: booking_code,
         bookingcodegroup: booking_codeGroup,
       });
@@ -330,24 +361,21 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   const handlePaymentPromptpay = async () => {
-
-   
     setIsLoading(true);
     console.log("🔄 Loading started...");
-
-      fetchBookingCode();
-      if (customerData.roud === 2) {
-        fetchBookingCodeGroup();
-      }
-      console.log("📌 Updating Customer Data with Booking Code:", booking_code);
-     
-      updateCustomerData({
-        paymentfee: totalpaymentfee,
-        paymenttype: selectedOption,
-      });
-      setIsLoading(false);
-      console.log("✅ Loading stopped...");
-      navigation.navigate("PromptPayScreen", { Paymenttotal: totalPayment });
+    fetchBookingCode();
+    if (customerData.roud === 2) {
+      fetchBookingCodeGroup();
+    }
+    console.log("📌 Updating Customer Data with Booking Code:", booking_code);
+    updateCustomerData({
+      paymentfee: totalpaymentfee,
+      paymenttype: selectedOption,
+      // ไม่ต้องอัปเดต total
+    });
+    navigation.navigate("PromptPayScreen", { Paymenttotal: totalPayment });
+    setIsLoading(false);
+    console.log("✅ Loading stopped...");
   };
 
 

@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import ipAddress from './ipconfig';
 
 const StartingPointScreen = ({ navigation, route }) => {
-  const [startingPoint, setStartingPoint] = useState('Phuket');
   const [searchText, setSearchText] = useState('');
   const [filteredStartingPoints, setFilteredStartingPoints] = useState([]);
   const [allStartingPoints, setAllStartingPoints] = useState([]);
@@ -11,13 +12,10 @@ const StartingPointScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);  // ตั้งค่า loading เป็น true ก่อนการทำงาน
-
+    setLoading(true);
     fetch(`${ipAddress}/start`)
       .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+        if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
       })
       .then((data) => {
@@ -25,23 +23,19 @@ const StartingPointScreen = ({ navigation, route }) => {
           setAllStartingPoints(data.data);
           setFilteredStartingPoints(data.data);
         } else {
-          console.error('Data is not an array', data);
           setFilteredStartingPoints([]);
         }
       })
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        setFilteredStartingPoints([]);
       })
-      .finally(() => {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
-      });
+      .finally(() => setLoading(false));
   }, []);
-
 
   useEffect(() => {
     if (searchText) {
       const filteredData = allStartingPoints.filter(point =>
-        (`${point.md_location_nameeng}, ${point.sys_countries_nameeng}`).toLowerCase().includes(searchText.toLowerCase())
+        (`${point.md_location_nameeng}, ${point.sys_countries_nameeng}`.toLowerCase().includes(searchText.toLowerCase()))
       );
       setFilteredStartingPoints(filteredData);
     } else {
@@ -49,153 +43,182 @@ const StartingPointScreen = ({ navigation, route }) => {
     }
   }, [searchText, allStartingPoints]);
 
-
   const handleSelectStartingPoint = (selectedPoint) => {
-    setStartingPoint(selectedPoint);
     setSelectedItem({
       name: selectedPoint.md_location_nameeng,
       id: selectedPoint.md_location_id,
-      countryId: selectedPoint.md_location_countriesid,  // เก็บ id ประเทศ
+      countryId: selectedPoint.md_location_countriesid,
     });
-     console.log('Selected Starting Point:', selectedPoint);
-    // บันทึกค่าและย้อนกลับหน้าก่อน
-    handleSave({
-      id: selectedPoint.md_location_id,
-      name: selectedPoint.md_location_nameeng,
-      countryId: selectedPoint.md_location_countriesid,  // ส่ง id ประเทศไปด้วย
-    });
+    if (route.params?.setStartingPoint) {
+      route.params.setStartingPoint({
+        id: selectedPoint.md_location_id,
+        name: selectedPoint.md_location_nameeng,
+        countryId: selectedPoint.md_location_countriesid,
+      });
+    }
+    if (navigation.canGoBack()) navigation.goBack();
   };
 
-  const handleSave = (selectedData) => {
-    if (route.params?.setStartingPoint && selectedData) {
-      route.params.setStartingPoint(selectedData); // ใช้ callback ที่ส่งมาจาก HomeScreen
-    }
-    if (navigation.canGoBack()) {
-      navigation.goBack(); // ตรวจสอบก่อนว่าไปหน้าก่อนหน้านี้ได้
-    } else {
-      console.warn('No previous screen to go back to');
-    }
-  };
-
+  // Dummy airline/plane for demo UI (replace with real data if available)
+  const getSubText = (item) => item.airline || item.plane || item.sys_countries_nameeng || '';
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={[
-        styles.item,
-        selectedItem?.id === item.md_location_id && styles.selectedItem,
-      ]}
+      style={styles.suggestionItem}
       onPress={() => handleSelectStartingPoint(item)}
+      activeOpacity={0.8}
     >
-      <Text
-        style={[
-          styles.itemText,
-          selectedItem?.id === item.md_location_id && styles.selectedItemText,
-        ]}
-      >
-        {item.md_location_nameeng + ', ' + item.sys_countries_nameeng}
-      </Text>
+      <View style={styles.suggestionIconBox}>
+        <MaterialIcons name="location-on" size={22} color="#FD501E" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.suggestionTitle}>{item.md_location_nameeng} - {item.sys_countries_nameeng}</Text>
+        <Text style={styles.suggestionSub}>{getSubText(item)}</Text>
+      </View>
+      <AntDesign name="right" size={18} color="#B7B7B7" />
     </TouchableOpacity>
   );
 
-  const getItemLayout = (data, index) => ({
-    length: 60,
-    offset: 60 * index,
-    index,
-  });
-
   return (
-
-    <View style={styles.container}>
-      <Text style={styles.title}>Select Starting Point</Text>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search starting point..."
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
-      {loading && (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#FD501E" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <LinearGradient colors={["#FD501E", "#FF7B3E"]} style={styles.headerBg}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <AntDesign name="arrowleft" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Select Starting Point</Text>
         </View>
-      )}
-      {!loading && allStartingPoints && filteredStartingPoints && (
-        <FlatList
-          data={filteredStartingPoints}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.md_location_id.toString()}
-          getItemLayout={getItemLayout}
-          style={styles.list}
-        />
-      )}
-    </View>
+        <View style={styles.searchBarWrap}>
+          <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search city or airport"
+            placeholderTextColor="#B7B7B7"
+            value={searchText}
+            onChangeText={setSearchText}
+            underlineColorAndroid="transparent"
+          />
+        </View>
+      </LinearGradient>
+      <View style={{ flex: 1, backgroundColor: '#F7F7FA', borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: 44, paddingTop: 32 }}>
+        <Text style={styles.suggestionLabel}>Suggestion</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#FD501E" style={{ marginTop: 40 }} />
+        ) : (
+          <FlatList
+            data={filteredStartingPoints}
+            renderItem={renderItem}
+            keyExtractor={item => item.md_location_id.toString()}
+            contentContainerStyle={{ paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  headerBg: {
+    paddingTop: 0,
+    paddingBottom: 32,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    minHeight: 140,
+    justifyContent: 'flex-end',
+  },
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    marginTop: 18,
+    marginBottom: 12,
+    paddingHorizontal: 18,
   },
-  title: {
-    fontSize: 24,
+  backBtn: {
+    padding: 6,
+    marginRight: 8,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
-    marginTop: 30,
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 32,
   },
-  searchContainer: {
-    width: '100%',
-    marginBottom: 20,
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginHorizontal: 18,
+    marginBottom: -24,
+    marginTop: 0,
+    height: 48,
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   searchInput: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#f6f6f6',
-    borderRadius: 10,
-    paddingHorizontal: 10,
+    flex: 1,
     fontSize: 16,
+    color: '#222',
+    backgroundColor: 'transparent',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    height: 48,
   },
-  list: {
-    width: '100%',
-    marginTop: 20,
+  suggestionSection: {
+    flex: 1,
+    backgroundColor: '#F7F7FA',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -16,
+    paddingTop: 32,
+    paddingHorizontal: 0,
   },
-  item: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#f6f6f6',
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  selectedItem: {
-    backgroundColor: '#FD501E',  // Highlight color when selected
-  },
-  selectedItemText: {
-    color: '#fff',  // White color for selected item text
-  },
-  itemText: {
+  suggestionLabel: {
     fontSize: 16,
-    color: '#333',
-  },
-  saveButton: {
-    backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  saveButtonText: {
-    color: '#fff',
+    color: '#FD501E',
     fontWeight: 'bold',
-    fontSize: 16,
+    marginLeft: 28,
+    marginBottom: 8,
   },
-  loaderContainer: {
-    flex: 1, // ทำให้ View ครอบคลุมพื้นที่ทั้งหมด
-    justifyContent: 'center', // จัดตำแหน่งแนวตั้งให้อยู่ตรงกลาง
-    alignItems: 'center', // จัดตำแหน่งแนวนอนให้อยู่ตรงกลาง
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginHorizontal: 18,
+    marginBottom: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  suggestionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF3ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  suggestionTitle: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: 'bold',
+  },
+  suggestionSub: {
+    fontSize: 13,
+    color: '#B7B7B7',
+    marginTop: 2,
   },
 });
 
