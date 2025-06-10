@@ -12,7 +12,6 @@ import { navigationRef } from './navigationRef';
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
 import SearchFerry from './SearchFerry';
-import SearchFerryDemo from './SearchFerryDemo';
 import HomeScreen from './HomeScreen';
 import TripDetail from './TripDetail';
 import CustomerInfo from './(Screen)/CustomerInfo';
@@ -55,7 +54,6 @@ const AppNavigator = () => (
     <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
-    <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
@@ -219,7 +217,7 @@ export default function App() {
       ) : (
         <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
           <CustomerProvider>
-            <MainNavigator />
+            <AppNavigator />
           </CustomerProvider>
         </NavigationContainer>
       )}

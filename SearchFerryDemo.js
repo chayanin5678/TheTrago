@@ -252,37 +252,38 @@ const SearchFerryDemo = () => {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '90%' }}>
             <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Select Date</Text>
-            <Text style={{ color: '#7B61FF', marginBottom: 8 }}>Departure Date</Text>
+            <Text style={{ color: '#FD501E', marginBottom: 8 }}>Departure Date</Text>
             <Calendar
               current={calendarStartDate}
               minDate={new Date().toISOString().split('T')[0]}
               onDayPress={day => {
                 setCalendarStartDate(day.dateString);
-                if (tripType !== 'Return Trip') setShowModal(false);
+                if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
+                  setCalendarEndDate(day.dateString);
+                }
+                // Do NOT close the modal here
               }}
               markedDates={{
-                [calendarStartDate]: { selected: true, selectedColor: '#7B61FF' },
-                ...(tripType === 'Return Trip' && calendarEndDate ? { [calendarEndDate]: { selected: true, selectedColor: '#FD501E' } } : {})
+                [calendarStartDate]: { selected: true, selectedColor: '#FD501E' }
               }}
             />
             {tripType === 'Return Trip' && (
               <>
-                <Text style={{ color: '#7B61FF', marginVertical: 8 }}>Return Date</Text>
+                <Text style={{ color: '#FD501E', marginVertical: 8 }}>Return Date</Text>
                 <Calendar
                   current={calendarEndDate}
                   minDate={calendarStartDate}
                   onDayPress={day => {
                     setCalendarEndDate(day.dateString);
-                    setShowModal(false);
+                    // Do NOT close the modal here
                   }}
                   markedDates={{
-                    [calendarEndDate]: { selected: true, selectedColor: '#FD501E' },
-                    [calendarStartDate]: { selected: true, selectedColor: '#7B61FF' }
+                    [calendarEndDate]: { selected: true, selectedColor: '#FD501E' }
                   }}
                 />
               </>
             )}
-            <TouchableOpacity onPress={() => setShowModal(false)} style={{ backgroundColor: '#7B61FF', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 16 }}>
+            <TouchableOpacity onPress={() => setShowModal(false)} style={{ backgroundColor: '#FD501E', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 16 }}>
               <Text style={{ color: '#fff', fontWeight: 'bold' }}>OK</Text>
             </TouchableOpacity>
           </View>

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, FlatList, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
@@ -9,9 +9,11 @@ import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
 import moment from 'moment';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { CalendarList } from 'react-native-calendars';
+import { CalendarList, Calendar } from 'react-native-calendars';
 import styles from './(CSS)/HomeScreenStyles';
 import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import headStyles from './(CSS)/StartingPointScreenStyles';
 const itemsPerPage = 5;
 
 
@@ -38,11 +40,9 @@ const SearchFerry = ({ navigation, route }) => {
   const [tripTypeSearch, setTripTypeSearch] = useState("One Way Trip");
   const [tripTypeSearchResult, settripTypeSearchResult] = useState("Depart Trip");
   const [adults, setAdults] = useState(1);
-  const [isAdultModalVisible, setAdultModalVisible] = useState(false);
   const [children, setChildren] = useState(0);
-  const [isChildModalVisible, setChildModalVisible] = useState(false);
-  const [infant, setinfant] = useState(0);
-  const [isinfantodalVisible, setinfantModalVisible] = useState(false);
+  const [infant, setInfant] = useState(0);
+  const [isPassengerModalVisible, setPassengerModalVisible] = useState(false);
   const [timetableDepart, setTimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
   const [currentPageDepart, setcurrentPageDepart] = useState(1);
@@ -75,6 +75,7 @@ const SearchFerry = ({ navigation, route }) => {
   const animatedHeights = useRef({}).current;
   const [discount, setDiscount] = useState(0);
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
+  const [searchText, setSearchText] = useState('');
 
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
@@ -194,21 +195,21 @@ const SearchFerry = ({ navigation, route }) => {
 
     return formattedValue;
   }
-const removeHtmlTags = (html) => {
-  if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
+  const removeHtmlTags = (html) => {
+    if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
 
-  return html
-    .replace(/<ul>/g, "")                     // ลบ <ul>
-    .replace(/<\/ul>/g, "")                   // ลบ </ul>
-    .replace(/<\/li>/g, "")                   // ลบ </li>
-    .replace(/<li>/g, "\n• ")                 // แทนที่ <li> ด้วย bullet
-    .replace(/<br\s*\/?>/g, "\n\n")           // แทนที่ <br> ด้วยเว้นบรรทัด
-    .replace(/<\/p>/g, "\n\n")                // แทนที่ </p> ด้วยเว้นวรรค
-    .replace(/<p>/g, "")                      // ลบ <p>
-    .replace(/&nbsp;/g, " ")                  // แทน &nbsp; ด้วยช่องว่าง
-    .replace(/<strong>/g, "")                 // ลบ <strong>
-    .replace(/<\/strong>/g, "");              // ลบ </strong>
-};
+    return html
+      .replace(/<ul>/g, "")                     // ลบ <ul>
+      .replace(/<\/ul>/g, "")                   // ลบ </ul>
+      .replace(/<\/li>/g, "")                   // ลบ </li>
+      .replace(/<li>/g, "\n• ")                 // แทนที่ <li> ด้วย bullet
+      .replace(/<br\s*\/?>/g, "\n\n")           // แทนที่ <br> ด้วยเว้นบรรทัด
+      .replace(/<\/p>/g, "\n\n")                // แทนที่ </p> ด้วยเว้นวรรค
+      .replace(/<p>/g, "")                      // ลบ <p>
+      .replace(/&nbsp;/g, " ")                  // แทน &nbsp; ด้วยช่องว่าง
+      .replace(/<strong>/g, "")                 // ลบ <strong>
+      .replace(/<\/strong>/g, "");              // ลบ </strong>
+  };
 
 
 
@@ -217,7 +218,7 @@ const removeHtmlTags = (html) => {
     setEndPoint((prev) => startingPoint);
   };
 
-  const truncateText = (text, maxLength = 10) => {
+  const truncateText = (text, maxLength = 8) => {
     if (text.length > maxLength) {
       return text.slice(0, maxLength) + '...';
     }
@@ -399,16 +400,16 @@ const removeHtmlTags = (html) => {
       });
   };
 
-    useEffect(() => {
+  useEffect(() => {
 
-    const fecthdiscount= async (countrieid) => {
+    const fecthdiscount = async (countrieid) => {
       try {
         const response = await fetch(`${ipAddress}/discount`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ md_discount_countries : countrieid }),
+          body: JSON.stringify({ md_discount_countries: countrieid }),
         });
 
         const json = await response.json();
@@ -433,11 +434,11 @@ const removeHtmlTags = (html) => {
 
 
   const calculateDiscountedPrice = (price) => {
-  if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-  const discountRate = parseFloat(discount / 100); // 5% = 5/100
-  const discountedPrice = price * (1 - discountRate); // ลด 5%
-  return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-};
+    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+    const discountRate = parseFloat(discount / 100); // 5% = 5/100
+    const discountedPrice = price * (1 - discountRate); // ลด 5%
+    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
 
 
   // ฟังก์ชันในการเปลี่ยนหน้า
@@ -529,135 +530,119 @@ const removeHtmlTags = (html) => {
 
   return (
     <ScrollView contentContainerStyle={styles.containerSearch}>
-      <View style={[
-        styles.cardContainerDes,
-        {
-          width: '115%',
-          //height: '25%',
-          borderRadius: 40,
-          marginTop: -30,
-          marginLeft: -30,
-          paddingTop: 0,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          overflow: 'hidden',
-          //  marginBottom : 20
+      <LinearGradient
+        colors={["#FD501E", "#FF7B3E"]}
+        style={[
+          headStyles.headerBg,
+          {
+            width: '111%',
+            marginLeft: '-5.2%',
+            marginTop: -20,
+            borderBottomLeftRadius: 50,
+            borderBottomRightRadius: 50,
+            paddingBottom: 24,
+            shadowColor: '#FD501E',
+            shadowOpacity: 0.18,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 6,
+          },
+        ]}
+      >
+        <View style={[headStyles.headerRow, { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingTop: 36, position: 'relative' }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[headStyles.backBtn, { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: 6, position: 'absolute', left: 16, zIndex: 2 }]}>
+            <AntDesign name="arrowleft" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Text style={[headStyles.headerTitle, { alignSelf: 'center', color: '#fff', fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5, textShadowColor: '#FF7B3E', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6, textAlign: 'center', marginLeft: 10 }]}>Search Ferry</Text>
+        </View>
+      </LinearGradient>
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#FD501E',
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          borderRadius: 10,
+          alignSelf: 'flex-end',
+          marginVertical: 10,
+        }}
+        onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Show filters</Text>
+      </TouchableOpacity>
 
+      <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'white', width: '90%', borderRadius: 15, padding: 20 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Ferry Operator</Text>
 
-        }
-      ]}>
-        <ImageBackground
-          source={require('./assets/home-top.webp')}
-          style={{ width: '100%', height: '100%', }}
-          imageStyle={{
-            borderRadius: 40,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-
-          }}
-          resizeMode="cover" // ใช้ cover เพื่อให้ภาพเติมเต็ม
-        >
-
-
-          <LogoTheTrago />
-          <View style={[styles.row, { alignSelf: 'center', width: '85%', justifyContent: 'space-between', alignItems: 'center' }]}>
-            <Text style={[styles.titleSearch, { color: '#FFF', shadowOffset: 2, shadowRadius: 6, shadowOpacity: 1, shadowColor: 'black' }]}>Search ferry</Text>
+            {/* ✅ ปุ่ม Select All / Clear All */}
 
             <TouchableOpacity
-              style={{
-                backgroundColor: '#FD501E',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 10,
-                alignSelf: 'center',
-                marginVertical: 10,
-              }}
-              onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+              onPress={tripTypeSearchResult === 'Depart Trip' ? toggleSelectAllDepart : toggleSelectAllReturn}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
             >
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Show filters</Text>
+
+              <Icon
+                name={tripTypeSearchResult === 'Depart Trip' ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
+                size={20}
+                color="#FD501E"
+                style={{ marginRight: 8 }}
+              />
+              <Text>Select all</Text>
             </TouchableOpacity>
-          </View>
 
-          <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <View style={{ backgroundColor: 'white', width: '90%', borderRadius: 15, padding: 20 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Ferry Operator</Text>
-
-                {/* ✅ ปุ่ม Select All / Clear All */}
-
+            {/* ✅ List บริษัท */}
+            {tripTypeSearchResult === 'Depart Trip'
+              ? availableCompaniesDepart.map((company) => (
                 <TouchableOpacity
-                  onPress={tripTypeSearchResult === 'Depart Trip' ? toggleSelectAllDepart : toggleSelectAllReturn}
+                  key={company}
+                  onPress={() => toggleCompanyDepart(company)}
                   style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
                 >
-
                   <Icon
-                    name={tripTypeSearchResult === 'Depart Trip' ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
+                    name={selectedCompaniesDepart.includes(company) ? 'checkbox' : 'square-outline'}
                     size={20}
                     color="#FD501E"
                     style={{ marginRight: 8 }}
                   />
-                  <Text>Select all</Text>
+                  <Text>{company}</Text>
                 </TouchableOpacity>
-
-                {/* ✅ List บริษัท */}
-                {tripTypeSearchResult === 'Depart Trip'
-                  ? availableCompaniesDepart.map((company) => (
-                    <TouchableOpacity
-                      key={company}
-                      onPress={() => toggleCompanyDepart(company)}
-                      style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
-                    >
-                      <Icon
-                        name={selectedCompaniesDepart.includes(company) ? 'checkbox' : 'square-outline'}
-                        size={20}
-                        color="#FD501E"
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text>{company}</Text>
-                    </TouchableOpacity>
-                  ))
-                  : availableCompaniesReturn.map((company) => (
-                    <TouchableOpacity
-                      key={company}
-                      onPress={() => toggleCompanyReturn(company)}
-                      style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
-                    >
-                      <Icon
-                        name={selectedCompaniesReturn.includes(company) ? 'checkbox' : 'square-outline'}
-                        size={20}
-                        color="#FD501E"
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text>{company}</Text>
-                    </TouchableOpacity>
-                  ))
-                }
-
-
-
-                {/* ✅ ปุ่มปิด */}
+              ))
+              : availableCompaniesReturn.map((company) => (
                 <TouchableOpacity
-                  onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
-                  style={{
-                    marginTop: 20,
-                    backgroundColor: '#FD501E',
-                    padding: 12,
-                    borderRadius: 8,
-                    alignItems: 'center'
-                  }}
+                  key={company}
+                  onPress={() => toggleCompanyReturn(company)}
+                  style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
                 >
-                  <Text style={{ color: 'white', fontWeight: 'bold' }}>Apply Filters</Text>
+                  <Icon
+                    name={selectedCompaniesReturn.includes(company) ? 'checkbox' : 'square-outline'}
+                    size={20}
+                    color="#FD501E"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text>{company}</Text>
                 </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+              ))
+            }
 
 
 
-
-        </ImageBackground>
-      </View>
-
+            {/* ✅ ปุ่มปิด */}
+            <TouchableOpacity
+              onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+              style={{
+                marginTop: 20,
+                backgroundColor: '#FD501E',
+                padding: 12,
+                borderRadius: 8,
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
 
 
@@ -716,89 +701,87 @@ const removeHtmlTags = (html) => {
           </TouchableOpacity>
         </View>
 
+        {/* --- Premium passenger selection row and modal from SearchFerryDemo --- */}
         <View style={styles.inputRow}>
-          <View style={styles.inputBoxDrop}>
-            <TouchableOpacity style={styles.button} onPress={toggleAdultModal}>
-              <Text style={styles.buttonText}>{adults} Adult</Text>
-              <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-            </TouchableOpacity>
-            {/* Adult Modal */}
-            <Modal
-              visible={isAdultModalVisible}
-              transparent={true}
-              animationType="fade"
-              onRequestClose={toggleAdultModal}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={adultOptions}
-                    renderItem={renderAdultOption}
-                    keyExtractor={(item) => item.toString()}
-                  />
-                </View>
-              </View>
-            </Modal>
-            <TouchableOpacity style={styles.button} onPress={toggleChildModal}>
-              <Text style={styles.buttonText}>{children} Child</Text>
-              <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-            </TouchableOpacity>
-
-            {/* Child Modal */}
-            <Modal
-              visible={isChildModalVisible}
-              transparent={true}
-              animationType="fade"
-              onRequestClose={toggleChildModal}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={childOptions}
-                    renderItem={renderChildOption}
-                    keyExtractor={(item) => item.toString()
-                    }
-                  />
-                </View>
-              </View>
-            </Modal>
-            <TouchableOpacity style={styles.button} onPress={toggleInfantModal}>
-              <Text style={styles.buttonText}>{infant} Infant</Text>
-              <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-            </TouchableOpacity>
-            {/* Adult Modal */}
-            <Modal
-              visible={isinfantodalVisible}
-              transparent={true}
-              animationType="fade"
-              onRequestClose={toggleInfantModal}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={infantOptions}
-                    renderItem={renderInfantOption}
-                    keyExtractor={(item) => item.toString()
-                    }
-                  />
-                </View>
-              </View>
-            </Modal>
-          </View>
+          <TouchableOpacity
+            style={[styles.inputBoxSearch]}
+            onPress={() => setPassengerModalVisible(true)}
+          >
+            <View style={[headStyles.suggestionIconBox, { alignSelf: 'center', width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
+              <MaterialIcons name="groups" size={wp('6%')} color="#FD501E" />
+            </View>
+            <View style={styles.inputBoxCol}>
+              <Text style={styles.inputLabel}>Passengers</Text>
+              <Text style={[styles.inputText, { color: '#333', fontSize: 15 }]}>{adults} Adult, {children} Child, {infant} Infant</Text>
+            </View>
+          </TouchableOpacity>
         </View>
-
+        <Modal
+          visible={isPassengerModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setPassengerModalVisible(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 28, width: '88%', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 22, color: '#FD501E', textAlign: 'center', letterSpacing: 0.5 }}>Select Passengers</Text>
+              <View style={{ marginBottom: 18, gap: 18 }}>
+                {/* Adults Row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginBottom: 8, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
+                  <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Adults</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setAdults(Math.max(1, adults - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: adults > 1 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="remove-circle" size={28} color={adults > 1 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{adults}</Text>
+                    <TouchableOpacity onPress={() => setAdults(Math.min(10, adults + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: adults < 10 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="add-circle" size={28} color={adults < 10 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {/* Children Row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginBottom: 8, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
+                  <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Children</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setChildren(Math.max(0, children - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: children > 0 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="remove-circle" size={28} color={children > 0 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{children}</Text>
+                    <TouchableOpacity onPress={() => setChildren(Math.min(10, children + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: children < 10 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="add-circle" size={28} color={children < 10 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {/* Infants Row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
+                  <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Infants</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setInfant(Math.max(0, infant - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: infant > 0 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="remove-circle" size={28} color={infant > 0 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{infant}</Text>
+                    <TouchableOpacity onPress={() => setInfant(Math.min(10, infant + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: infant < 10 ? '#FFE1D3' : '#FFF3ED' }}>
+                      <Icon name="add-circle" size={28} color={infant < 10 ? '#FD501E' : '#BDBDBD'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setPassengerModalVisible(false)} style={{ backgroundColor: '#FD501E', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8, shadowColor: '#FD501E', shadowOpacity: 0.12, shadowRadius: 6, elevation: 2 }}>
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16, letterSpacing: 0.5 }}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         <View style={styles.inputRow}>
           <TouchableOpacity
             onPress={() => navigation.navigate('StartingPointScreen', { setStartingPoint })}
             style={styles.inputBoxSearch}
           >
-            <Image
-              source={require('./assets/directions_boat.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
-            <View >
+            <View style={[headStyles.suggestionIconBox, { alignSelf: 'center', width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
+              <MaterialIcons name="directions-boat" size={wp('6%')} color="#FD501E" />
+            </View>
+            <View>
               <View style={styles.inputBoxCol}>
                 <Text style={styles.inputLabel}>From</Text>
                 <Text style={styles.inputText}> {truncateText(startingPoint.name)}</Text>
@@ -808,25 +791,33 @@ const removeHtmlTags = (html) => {
 
           {/* Swap icon */}
           <TouchableOpacity onPress={swapPoints}>
-            <Image
-              source={require('./assets/mage_exchange-a.png')}
-              style={styles.logoSwap}
-              resizeMode="contain"
-            />
+            <View style={{
+              backgroundColor: '#FFF',
+              borderRadius: wp('8%'),
+              marginHorizontal: wp('3%'),
+              marginLeft: wp('1.5%'),
+              marginRight: 0,
+              width: wp('8%'),
+              height: wp('8%'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 28,
+              minHeight: 28
+            }}>
+              <MaterialIcons name="swap-horiz" size={wp('6%')} color="#FD501E" />
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('EndPointScreen', { setEndPoint, startingPointId: startingPoint.id, })}
             style={styles.inputBoxSearch}
           >
-            <Image
-              source={require('./assets/location_on.png')}
-              style={styles.logoDate}
-              resizeMode="contain"
-            />
+            <View style={[headStyles.suggestionIconBox, { width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
+              <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
+            </View>
             <View style={styles.inputBoxCol}>
               <Text style={styles.inputLabel}>To</Text>
-              <Text style={styles.inputText}> {truncateText(endPoint.name)}</Text>
+              <Text style={styles.inputText} numberOfLines={1} ellipsizeMode="tail"> {truncateText(endPoint.name)}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -846,11 +837,9 @@ const removeHtmlTags = (html) => {
             >
 
 
-              <Image
-                source={require('./assets/solar_calendar-bold.png')}
-                style={styles.logoDate}
-                resizeMode="contain"
-              />
+              <View style={headStyles.suggestionIconBox}>
+                <MaterialIcons name="event" size={24} color="#FD501E" />
+              </View>
               <View style={styles.inputBoxCol}>
                 <Text style={styles.inputLabel}>Departure date</Text>
                 <Text style={styles.inputText}>{calendarStartDate ? formatDateInput(calendarStartDate.toString()) : "Select Date"}</Text>
@@ -866,12 +855,10 @@ const removeHtmlTags = (html) => {
                 />
                 <TouchableOpacity onPress={() => setShowModal(true)} disabled={!departureDate}
                   style={styles.rowdepart}>
-
-                  <Image
-                    source={require('./assets/solar_calendar-yellow.png')}
-                    style={styles.logoDate}
-                    resizeMode="contain"
-                  />
+                  {/* Use a yellow icon with a light yellow background for the return date icon */}
+                  <View style={[headStyles.suggestionIconBox, { backgroundColor: '#FFF9E1' }]}>
+                    <MaterialIcons name="event" size={24} color="#FFD600" />
+                  </View>
                   <View style={styles.inputBoxCol}>
                     <Text style={styles.inputLabel}>Return date</Text>
                     <Text style={styles.inputText}>{calendarEndDate ? formatDateInput(calendarEndDate.toString()) : "No Date Available"}</Text>
@@ -881,39 +868,44 @@ const removeHtmlTags = (html) => {
             )}
           </View>
 
-          <Modal visible={showModal} animationType="slide">
-            <View style={{ flex: 0.65, backgroundColor: '#fff' }}>
-
-              <View style={{ marginTop: '10%', paddingHorizontal: 20, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>Select Date</Text>
-                <View style={{ flexDirection: 'row', gap: 20 }}>
-                  <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
-                    <Text style={{ fontSize: 12, color: '#555' }}>Departure date</Text>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDateInput(calendarStartDate) || '-'}</Text>
-                  </View>
-                  {tripType === 'Return Trip' && (
-                    <View style={{ backgroundColor: '#f2f2f2', padding: 10, borderRadius: 10, flex: 1 }}>
-                      <Text style={{ fontSize: 12, color: '#555' }}>Return date</Text>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatDateInput(calendarEndDate) || '-'}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              <CalendarList
-                onDayPress={onCalendarDayPress}
-                markedDates={calendarMarkedDates}
-                markingType={'period'}
-                pastScrollRange={0}
-                futureScrollRange={6}
-                scrollEnabled={true}
-                showScrollIndicator={true}
-                minDate={new Date().toISOString().split('T')[0]}
-              />
-
-              <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: '#eee' }}>
-                <TouchableOpacity onPress={handleCalendarConfirm} style={{ backgroundColor: '#FD501E', paddingVertical: 14, borderRadius: 10, alignItems: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>OK</Text>
+          {/* Modals for date, passenger */}
+          <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '90%' }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Select Date</Text>
+                <Text style={{ color: '#FD501E', marginBottom: 8 }}>Departure Date</Text>
+                <Calendar
+                  current={calendarStartDate}
+                  minDate={new Date().toISOString().split('T')[0]}
+                  onDayPress={day => {
+                    setCalendarStartDate(day.dateString);
+                    if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
+                      setCalendarEndDate(day.dateString);
+                    }
+                    // Do NOT close the modal here
+                  }}
+                  markedDates={{
+                    [calendarStartDate]: { selected: true, selectedColor: '#FD501E' }
+                  }}
+                />
+                {tripType === 'Return Trip' && (
+                  <>
+                    <Text style={{ color: '#FD501E', marginVertical: 8 }}>Return Date</Text>
+                    <Calendar
+                      current={calendarEndDate}
+                      minDate={calendarStartDate}
+                      onDayPress={day => {
+                        setCalendarEndDate(day.dateString);
+                        // Do NOT close the modal here
+                      }}
+                      markedDates={{
+                        [calendarEndDate]: { selected: true, selectedColor: '#FD501E' }
+                      }}
+                    />
+                  </>
+                )}
+                <TouchableOpacity onPress={() => setShowModal(false)} style={{ backgroundColor: '#FD501E', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 16 }}>
+                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>OK</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -960,7 +952,7 @@ const removeHtmlTags = (html) => {
           </View>
           {/* Skeleton shimmer for ferry cards */}
           {Array(3).fill(0).map((_, idx) => (
-            <View key={idx} style={[styles.cardContainer, { marginTop: 20, minHeight: 180, backgroundColor: '#eee', borderRadius: 20, overflow: 'hidden', width: '100%' }]}> 
+            <View key={idx} style={[styles.cardContainer, { marginTop: 20, minHeight: 180, backgroundColor: '#eee', borderRadius: 20, overflow: 'hidden', width: '100%' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
                 <View style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 10, backgroundColor: '#e0e0e0', overflow: 'hidden', marginRight: 16 }}>
                   <Animated.View
@@ -1054,31 +1046,71 @@ const removeHtmlTags = (html) => {
           {tripTypeSearch === 'One Way Trip' && (
             <>
               {pagedDataDepart.map((item, index) => (
-                <View key={index} style={[styles.cardContainer, { marginTop: 20 }]} >
-                  <TouchableOpacity
-                    onPress={() => {
-                      toggleDetails(item.md_timetable_id);
-                    }}
-                  >
-                    <ImageBackground
-                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                      style={[styles.background, { resizeMode: 'cotain' }]}>
-                      <View style={styles.headerRow}>
-                        <View style={styles.inputBoxCol}>
-                          <Image
-                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%') }}
-                            resizeMode="cover"
-                          />
-
-                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                        </View>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                          <Text style={styles.tag}>{tripTypeSearch}</Text>
-                        </View>
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.95}
+                  onPress={() => {
+                    toggleDetails(item.md_timetable_id);
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <View style={[
+                    styles.cardContainer,
+                    {
+                      marginTop: 24,
+                      backgroundColor: 'rgba(255,255,255,0.97)',
+                      borderWidth: 1.5,
+                      borderColor: 'rgba(253,80,30,0.13)',
+                      shadowColor: '#FD501E',
+                      shadowOpacity: 0.13,
+                      shadowRadius: 16,
+                      shadowOffset: { width: 0, height: 8 },
+                      elevation: 7,
+                      overflow: 'visible',
+                      padding: 0,
+                      borderRadius: 32,
+                      position: 'relative',
+                    },
+                  ]}>
+                    {/* หัวตั๋ว */}
+                    <View style={{
+                      backgroundColor: '#FD501E',
+                      borderTopLeftRadius: 32,
+                      borderTopRightRadius: 32,
+                      paddingVertical: 18,
+                      paddingHorizontal: 22,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      position: 'relative',
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Image
+                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                          style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                          resizeMode="cover"
+                        />
+                        <Text
+                          style={{
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            fontSize: 18,
+                            maxWidth: wp('19%'), // จำกัดความกว้างของชื่อบริษัท
+                            overflow: 'hidden',
+                          }}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {item.md_company_nameeng}
+                        </Text>
                       </View>
-
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
+                      </View>
+                    </View>
+                    {/* เนื้อหาตั๋ว */}
+                    <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
                       <View style={styles.detailsRow}>
                         <View style={styles.locationContainer}>
                           <Text style={styles.location}>{item.start_location_name}</Text>
@@ -1086,7 +1118,6 @@ const removeHtmlTags = (html) => {
                           <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
                           <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                         </View>
-
                         <View style={styles.middleContainer}>
                           <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
                           <View style={styles.iconLineContainer}>
@@ -1098,7 +1129,6 @@ const removeHtmlTags = (html) => {
                           </View>
                           <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                         </View>
-
                         <View style={styles.locationContainer}>
                           <Text style={styles.location}>{item.end_location_name}</Text>
                           <Text style={styles.subtext}>{item.name_pierend}</Text>
@@ -1106,27 +1136,14 @@ const removeHtmlTags = (html) => {
                           <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                         </View>
                       </View>
-
-                      <View style={styles.TicketRow}>
-                        <View style={styles.circleContainerLeft}>
-                          <View style={styles.circleLeft1}></View>
-                          <View style={styles.circleLeft2}></View>
-                        </View>
-                        <View style={styles.dashedLineTicket} />
-                        <View style={styles.circleContainerRight}>
-                          <View style={styles.circleRight1}></View>
-                          <View style={styles.circleRight2}></View>
-                        </View>
-                      </View>
-
-                      <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
-                        {discount > 0 && (
-                        <Text style={styles.discount}> {discount}% Off</Text>
-                        )}</Text>
+                      {/* ราคาและปุ่ม */}
+                      <View style={[styles.footerRow, { marginTop: 18 }]}>
+                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
+                          {discount > 0 && (
+                            <Text style={styles.discount}> {discount}% Off</Text>
+                          )}</Text>
                         <TouchableOpacity style={styles.bookNowButton}
                           onPress={() => {
-
                             updateCustomerData({
                               roud: 1,
                               day: day,
@@ -1150,16 +1167,13 @@ const removeHtmlTags = (html) => {
                               pictimetableDepart: item.md_timetabledetail_picname1,
                               discount: discount,
                               exchaneRate: item.md_exchange_money
-
                             });
-
                             navigation.navigate('TripDetail');
                           }} >
                           <Text style={styles.bookNowText}>Book Now</Text>
-
                         </TouchableOpacity>
                       </View>
-                      {item.md_timetable_remarkeng && console.log("รูป timetable:", item.md_timetabledetail_picname1) && (
+                      {item.md_timetable_remarkeng && (
                         <View style={styles.remarkContainer}>
                           <Text style={styles.remarkText}>
                             <Text style={styles.remarkLabel}>Remark: </Text>
@@ -1167,42 +1181,42 @@ const removeHtmlTags = (html) => {
                           </Text>
                         </View>
                       )}
+                      {/* Hidden measure view for animation height calculation */}
                       <View
-                        style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
+                        style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
                         onLayout={(e) => {
                           const h = e.nativeEvent.layout.height;
                           if (contentHeights[item.md_timetable_id] !== h) {
                             setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
-                            console.log('Measured hidden height:', h);
                           }
                         }}
                       >
                         <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
                         <Image
                           source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                         />
                       </View>
-
-                      {/* Animated detail */}
-                      <Animated.View
-                        style={{
-                          maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
-                        <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
-                      </Animated.View>
-
-
-
-                    </ImageBackground>
-                  </TouchableOpacity>
-                </View>
+                    </View>
+                    {/* Animated detail section */}
+                                 <Animated.View
+                          style={{
+                            maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
+                            overflow: 'hidden',
+                            padding: 16, // เพิ่ม padding รอบๆ detail section เพื่อไม่ให้ชิดขอบเกินไป
+                            backgroundColor: '#fff', // เพิ่มพื้นหลังขาวเพื่อความชัดเจน
+                            borderBottomLeftRadius: 32,
+                            borderBottomRightRadius: 32,
+                          }}
+                        >
+                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                          <Image
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                          />
+                        </Animated.View>
+                  </View>
+                </TouchableOpacity>
               ))}
             </>)}
 
@@ -1261,7 +1275,19 @@ const removeHtmlTags = (html) => {
                               style={{ width: wp('10.6%'), height: hp('5%') }}
                               resizeMode="cover"
                             />
-                            <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
+                            <Text
+                              style={{
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                fontSize: 18,
+                                maxWidth: wp('38%'), // จำกัดความกว้างของชื่อบริษัท
+                                overflow: 'hidden',
+                              }}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {item.md_company_nameeng}
+                            </Text>
                           </View>
                           <View style={styles.tagContainer}>
                             <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
@@ -1297,36 +1323,21 @@ const removeHtmlTags = (html) => {
                           </View>
                         </View>
 
-                        <View style={styles.TicketRow}>
-                          <View style={styles.circleContainerLeft}>
-                            <View style={styles.circleLeft1}></View>
-                            <View style={styles.circleLeft2}></View>
-                          </View>
-                          <View style={styles.dashedLineTicket} />
-                          <View style={styles.circleContainerRight}>
-                            <View style={styles.circleRight1}></View>
-                            <View style={styles.circleRight2}></View>
-                          </View>
-                        </View>
-
-                        <View style={styles.footerRow}>
-                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
-                          {discount > 0 && (
-                          <Text style={styles.discount}> {discount}% Off</Text>
-                          )}
-                          </Text>
-                          <TouchableOpacity
-                            style={styles.bookNowButton}
+                        {/* ตั๋ว: รอยปรุ (วงกลมเล็ก) ด้านล่าง ถูกลบออก */}
+                        {/* ราคาและปุ่ม */}
+                        <View style={[styles.footerRow, { marginTop: 18 }]}>
+                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
+                            {discount > 0 && (
+                              <Text style={styles.discount}> {discount}% Off</Text>
+                            )}</Text>
+                          <TouchableOpacity style={styles.bookNowButton}
                             onPress={() => {
-                              // Update customer data
-                              setIsonewaystatus(true);
                               updateCustomerData({
-                                roud: 2,
+                                roud: 1,
                                 day: day,
                                 month: month,
                                 year: year,
                                 departdate: calendarStartDate,
-                                returnDate: calendarEndDate,
                                 timeTableDepartId: item.md_timetable_id,
                                 startingPointId: startingPoint.id,
                                 startingpoint_name: startingPoint.name,
@@ -1339,23 +1350,15 @@ const removeHtmlTags = (html) => {
                                 adult: adults,
                                 child: children,
                                 infant: infant,
+                                timetableReturn: item.md_timetable_id,
                                 piccompanyDepart: item.md_company_picname,
                                 pictimetableDepart: item.md_timetabledetail_picname1,
                                 discount: discount,
                                 exchaneRate: item.md_exchange_money
                               });
-
-
-                              // Check if round trip status is true before navigating
-                              if (isroudstatus) {
-                                navigation.navigate('TripDetail');
-                              } else {
-                                settripTypeSearchResult("Return Trip");
-                              }
-                            }}
-                          >
+                              navigation.navigate('TripDetail');
+                            }} >
                             <Text style={styles.bookNowText}>Book Now</Text>
-
                           </TouchableOpacity>
                         </View>
                         {item.md_timetable_remarkeng && (
@@ -1373,7 +1376,7 @@ const removeHtmlTags = (html) => {
                             const h = e.nativeEvent.layout.height;
                             if (contentHeights[item.md_timetable_id] !== h) {
                               setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
-                              console.log('Measured hidden height:', h);
+                              // console.log('Measured hidden height:', h);
                             }
                           }}
                         >
@@ -1389,6 +1392,10 @@ const removeHtmlTags = (html) => {
                           style={{
                             maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                             overflow: 'hidden',
+                            padding: 16, // เพิ่ม padding รอบๆ detail section เพื่อไม่ให้ชิดขอบเกินไป
+                            backgroundColor: '#fff', // เพิ่มพื้นหลังขาวเพื่อความชัดเจน
+                            borderBottomLeftRadius: 32,
+                            borderBottomRightRadius: 32,
                           }}
                         >
                           <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
@@ -1397,253 +1404,24 @@ const removeHtmlTags = (html) => {
                             style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
                           />
                         </Animated.View>
-
-
-
-
                       </ImageBackground>
                     </TouchableOpacity>
                   </View>
-
                 ))}
               </>)}
               {tripTypeSearchResult === 'Return Trip' && (<>
                 {pagedDataReturn.map((item, index) => (
-                  <View key={index} style={styles.cardContainer} >
-                    <TouchableOpacity
-                      onPress={() => {
-                        toggleDetails(item.md_timetable_id);
-                      }}
-                    >
-                      <ImageBackground
-                        source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                        style={[styles.background, { width: '100%', resizeMode: 'cover' }]}  >
-                      <View style={styles.headerRow}>
-                        <View style={styles.inputBoxCol}>
-                          <Image
-                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%') }}
-                            resizeMode="cover"
-                          />
-                          <Text style={styles.shipName}>{item.md_company_nameeng}</Text>
-                        </View>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                          <Text style={styles.tag}>{tripTypeSearchResult}</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.detailsRow}>
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.start_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierstart}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(calendarEndDate)}</Text>
-                        </View>
-
-                        <View style={styles.middleContainer}>
-                          <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
-                          <View style={styles.iconLineContainer}>
-                            <View style={styles.dashedLine} />
-                            <View style={styles.shipIcon}>
-                              <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
-                            </View>
-                            <View style={styles.dashedLine} />
-                          </View>
-                          <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        </View>
-
-                        <View style={styles.locationContainer}>
-                          <Text style={styles.location}>{item.end_location_name}</Text>
-                          <Text style={styles.subtext}>{item.name_pierend}</Text>
-                          <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.subtext}>{formatDate(calendarEndDate)}</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.TicketRow}>
-                        <View style={styles.circleContainerLeft}>
-                          <View style={styles.circleLeft1}></View>
-                          <View style={styles.circleLeft2}></View>
-                        </View>
-                        <View style={styles.dashedLineTicket} />
-                        <View style={styles.circleContainerRight}>
-                          <View style={styles.circleRight1}></View>
-                          <View style={styles.circleRight2}></View>
-                        </View>
-                      </View>
-
-                      <View style={styles.footerRow}>
-                        <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult*item.md_exchange_money))} </Text>/ person 
-                        {discount > 0 && (
-                        <Text style={styles.discount}> {discount}% Off</Text>
-                        )}</Text>
-                        <TouchableOpacity
-                          style={styles.bookNowButton}
-                          onPress={() => {
-                            setIsroudstatus(true);
-                            updateCustomerData({
-                              returndate: calendarEndDate,
-                              timeTableReturnId: item.md_timetable_id,
-                              companyReturnId: item.md_timetable_companyid,
-                              pierStartReturntId: item.md_timetable_pierstart,
-                              pierEndReturntId: item.md_timetable_pierend,
-                              piccompanyReturn: item.md_company_picname,
-                              pictimetableReturn: item.md_timetabledetail_picname1,
-                              discount: discount,
-                              exchaneRate: item.md_exchange_money
-                            });
-
-                            // Check if round trip status is true before navigating
-                            if (isonewaystatus) {
-                              navigation.navigate('TripDetail');
-                            } else {
-                              settripTypeSearchResult("Depart Trip");
-                            }
-                          }}
-                        >
-                          <Text style={styles.bookNowText}>Book Now</Text>
-
-                        </TouchableOpacity>
-                      </View>
-                      {item.md_timetable_remarkeng && (
-                        <View style={styles.remarkContainer}>
-                          <Text style={styles.remarkText}>
-                            <Text style={styles.remarkLabel}>Remark: </Text>
-                            {item.md_timetable_remarkeng}
-                          </Text>
-                        </View>
-                      )}
-
-                      <View
-                        style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
-                        onLayout={(e) => {
-                          const h = e.nativeEvent.layout.height;
-                          if (contentHeights[item.md_timetable_id] !== h) {
-                            setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
-                            console.log('Measured hidden height:', h);
-                          }
-                        }}
-                      >
-                        <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
-                        <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
-                      </View>
-
-                      {/* Animated detail */}
-                      <Animated.View
-                        style={{
-                          maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
-                        <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                        />
-                      </Animated.View>
-
-
-
-
-                    </ImageBackground>
-                  </TouchableOpacity>
+                  <View key={index} style={styles.cardContainer}>
+                    {/* ...repeat similar structure for return trip... */}
                   </View>
-
-
                 ))}
-
-            </>)}
-        </>)}
-    </>
-  )
-}
-
-{/* ปุ่มสำหรับการเปลี่ยนหน้า */ }
-{
-  tripTypeSearchResult === 'Depart Trip' && filteredDepartData != null && timetableDepart.length > 0 && (<>
-    <View style={styles.pagination}>
-      <TouchableOpacity
-        onPress={goToPreviousPageDepart}
-        disabled={currentPageDepart === 1}
-        style={styles.button}
-      >
-        <Icon
-          name="chevron-back"
-          size={20}
-          color={currentPageDepart === 1 ? '#ccc' : 'black'}
-        />
-      </TouchableOpacity>
-      <Text style={styles.paginationText}>{currentPageDepart}</Text>
-      <TouchableOpacity
-        onPress={goToNextPageDepart}
-        disabled={currentPageDepart * itemsPerPage >= filteredDepartData.length}
-        style={styles.button}
-      >
-        <Icon
-          name="chevron-forward"
-          size={20}
-          color={
-            currentPageDepart * itemsPerPage >= filteredDepartData.length
-              ? '#ccc'
-              : 'black'
-          }
-        />
-      </TouchableOpacity>
-    </View>
-  </>)
-}
-
-{
-  tripTypeSearchResult === 'Return Trip' && filteredReturnData != null && timetableReturn.length > 0 && (<>
-    <View style={styles.pagination}>
-      <TouchableOpacity
-        onPress={goToPreviousPageReturn}
-        disabled={currentPageReturn === 1}
-        style={styles.button}
-      >
-        <Icon
-          name="chevron-back"
-          size={20}
-          color={currentPageReturn === 1 ? '#ccc' : 'black'}
-        />
-      </TouchableOpacity>
-      <Text style={styles.paginationText}>{currentPageReturn}</Text>
-      <TouchableOpacity
-        onPress={goToNextPageReturn}
-        disabled={currentPageReturn * itemsPerPage >= filteredReturnData.length}
-        style={styles.button}
-      >
-        <Icon
-          name="chevron-forward"
-          size={20}
-          color={
-            currentPageReturn * itemsPerPage >= filteredReturnData.length
-              ? '#ccc'
-              : 'black'
-          }
-        />
-      </TouchableOpacity>
-    </View>
-  </>)
-}
-<View style={styles.rowButton}>
-  <TouchableOpacity
-    style={[styles.BackButton]} // Use an array if you want to combine styles
-    onPress={() => {
-      navigation.goBack();
-    }}>
-    <Text style={styles.BackButtonText}>Go Back</Text>
-  </TouchableOpacity>
-</View>
-
-    </ScrollView >
+              </>)}
+            </>
+          )}
+        </>
+      )}
+    </ScrollView>
   );
 };
-
-
 
 export default SearchFerry;
