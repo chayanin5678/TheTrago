@@ -631,7 +631,7 @@ const TripDetail = ({ navigation, route }) => {
         setTotalChildReturn(formatNumberWithComma(childPriceReturn));
         setTotalInfantReturn(formatNumberWithComma(infantPriceReturn));
         setSubtotalReturn((parseFloat(dropoffPriceReturn)) + (parseFloat(pickupPriceReturn)) + parseFloat((calculateDiscountedPrice(adultPriceReturn + childPriceReturn + infantPriceReturn))));
-        setDiscountReturn(formatNumberWithComma((adultPriceReturn + childPriceReturn + infantPriceReturn) - (calculateDiscountedPrice(adultPriceReturn + childPriceReturn + infantPriceReturn))));
+        setDiscountReturn(formatNumberWithComma((adultPriceReturn + childPriceReturn + infantPriceReturn) - (calculateDiscountedPrice(adultPriceReturn + childPriceDepart + infantPriceReturn))));
         setTotal(parseFloat(subtotalDepart) + parseFloat(subtotalReturn));
       }
     }
@@ -1296,7 +1296,7 @@ const TripDetail = ({ navigation, route }) => {
                     )}
 
 
-                    <View style={styles.TicketRow}>
+                    {/* <View style={styles.TicketRow}>
                       <View style={styles.circleContainerLeft}>
                         <View style={styles.circleLeft1}></View>
                         <View style={styles.circleLeft2}></View>
@@ -1306,7 +1306,7 @@ const TripDetail = ({ navigation, route }) => {
                         <View style={styles.circleRight1}></View>
                         <View style={styles.circleRight2}></View>
                       </View>
-                    </View>
+                    </View> */}
                   </ImageBackground>
                 </View>
               ))
@@ -1592,7 +1592,7 @@ const TripDetail = ({ navigation, route }) => {
                             <View>
                               <Text style={styles.inputLabel}>Transport type</Text>
                               <TouchableOpacity
-                              style={[styles.buttonSelect, errors.selectedTransportDropoffReturnName && styles.errorInput]}
+                              style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
                               onPress={toggleModalTransportDropoffReturn}
                             >
                               <Text style={styles.buttonText}>{selectedTransportDropoffReturnName}</Text>
@@ -2309,18 +2309,20 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
 
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: wp('5%'),
-    margin: wp('1%'),
-    marginLeft: -3,
-    marginRight: -3,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: 36,
+    padding: 32,
+    marginHorizontal: 12,
+    marginTop: 28,
+    marginBottom: 36,
+    shadowColor: '#FD501E', // orange shadow
+    shadowOpacity: 0.22,
+    shadowRadius: 36,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(253,80,30,0.15)', // light orange border
+    // overflow: 'hidden', // สำหรับ blur/gradient
   },
   promo: {
     backgroundColor: 'white',

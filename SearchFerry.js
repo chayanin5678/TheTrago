@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
@@ -528,6 +528,29 @@ const SearchFerry = ({ navigation, route }) => {
 
 
 
+  // --- Boat loading animation for empty pagedDataDepart ---
+  const boatAnim = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(boatAnim, {
+          toValue: -24, // เพิ่มระยะขยับ
+          duration: 1400, // เพิ่มระยะเวลาให้สมูทขึ้น
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin), // ใช้ easing แบบ sin ให้ลื่นไหล
+        }),
+        Animated.timing(boatAnim, {
+          toValue: 0,
+          duration: 1400,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+      ])
+    ).start();
+  }, [boatAnim]);
+
+
+
   return (
     <ScrollView contentContainerStyle={styles.containerSearch}>
       <LinearGradient
@@ -1041,6 +1064,23 @@ const SearchFerry = ({ navigation, route }) => {
           ))}
         </>
       )}
+      {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 320, width: '100%' }}>
+          <Animated.View
+            style={{
+              transform: [{ translateY: boatAnim }],
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Image
+              source={require('./assets/ferryloading.png')}
+              style={{ width: 120, height: 120, resizeMode: 'contain', opacity: 0.85 }}
+            />
+          </Animated.View>
+          <Text style={{ marginTop: 24, color: '#FD501E', fontWeight: 'bold', fontSize: 18, letterSpacing: 0.5 }}>Searching for ferries...</Text>
+        </View>
+      )}
       {!loading && pagedDataDepart && pagedDataReturn && (
         <>
           {tripTypeSearch === 'One Way Trip' && (
@@ -1095,7 +1135,7 @@ const SearchFerry = ({ navigation, route }) => {
                             color: '#fff',
                             fontWeight: 'bold',
                             fontSize: 18,
-                            maxWidth: wp('19%'), // จำกัดความกว้างของชื่อบริษัท
+                            maxWidth: wp('19%'),
                             overflow: 'hidden',
                           }}
                           numberOfLines={1}
@@ -1199,22 +1239,22 @@ const SearchFerry = ({ navigation, route }) => {
                       </View>
                     </View>
                     {/* Animated detail section */}
-                                 <Animated.View
-                          style={{
-                            maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
-                            overflow: 'hidden',
-                            padding: 16, // เพิ่ม padding รอบๆ detail section เพื่อไม่ให้ชิดขอบเกินไป
-                            backgroundColor: '#fff', // เพิ่มพื้นหลังขาวเพื่อความชัดเจน
-                            borderBottomLeftRadius: 32,
-                            borderBottomRightRadius: 32,
-                          }}
-                        >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
-                          <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                          />
-                        </Animated.View>
+                    <Animated.View
+                      style={{
+                        maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
+                        overflow: 'hidden',
+                        padding: 16,
+                        backgroundColor: '#fff',
+                        borderBottomLeftRadius: 32,
+                        borderBottomRightRadius: 32,
+                      }}
+                    >
+                      <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                      <Image
+                        source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                        style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                      />
+                    </Animated.View>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -1258,43 +1298,73 @@ const SearchFerry = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
               {tripTypeSearchResult === 'Depart Trip' && (<>
-                {pagedDataDepart.map((item, index) => (
-                  <View key={index} style={styles.cardContainer} >
-                    <TouchableOpacity
-                      onPress={() => {
-                        toggleDetails(item.md_timetable_id);
-                      }}
-                    >
-                      <ImageBackground
-                        source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                        style={styles.background}>
-                        <View style={styles.headerRow}>
-                          <View style={styles.inputBoxCol}>
-                            <Image
-                              source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                              style={{ width: wp('10.6%'), height: hp('5%') }}
-                              resizeMode="cover"
-                            />
-                            <Text
-                              style={{
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                fontSize: 18,
-                                maxWidth: wp('38%'), // จำกัดความกว้างของชื่อบริษัท
-                                overflow: 'hidden',
-                              }}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {item.md_company_nameeng}
-                            </Text>
-                          </View>
-                          <View style={styles.tagContainer}>
-                            <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                            <Text style={styles.tag}>{tripTypeSearchResult}</Text>
-                          </View>
-                        </View>
 
+                {pagedDataDepart.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    activeOpacity={0.95}
+                    onPress={() => {
+                      toggleDetails(item.md_timetable_id);
+                    }}
+                    style={{ width: '100%' }}
+                  >
+                    <View style={[
+                      styles.cardContainer,
+                      {
+                        marginTop: 24,
+                        backgroundColor: 'rgba(255,255,255,0.97)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(253,80,30,0.13)',
+                        shadowColor: '#FD501E',
+                        shadowOpacity: 0.13,
+                        shadowRadius: 16,
+                        shadowOffset: { width: 0, height: 8 },
+                        elevation: 7,
+                        overflow: 'visible',
+                        padding: 0,
+                        borderRadius: 32,
+                        position: 'relative',
+                      },
+                    ]}>
+                      {/* หัวตั๋ว */}
+                      <View style={{
+                        backgroundColor: '#FD501E',
+                        borderTopLeftRadius: 32,
+                        borderTopRightRadius: 32,
+                        paddingVertical: 18,
+                        paddingHorizontal: 22,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Image
+                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                            resizeMode="cover"
+                          />
+                          <Text
+                            style={{
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              fontSize: 18,
+                              maxWidth: wp('19%'),
+                              overflow: 'hidden',
+                            }}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {item.md_company_nameeng}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
+                        </View>
+                      </View>
+                      {/* เนื้อหาตั๋ว */}
+                      <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
                         <View style={styles.detailsRow}>
                           <View style={styles.locationContainer}>
                             <Text style={styles.location}>{item.start_location_name}</Text>
@@ -1302,7 +1372,6 @@ const SearchFerry = ({ navigation, route }) => {
                             <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
                             <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                           </View>
-
                           <View style={styles.middleContainer}>
                             <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
                             <View style={styles.iconLineContainer}>
@@ -1314,7 +1383,6 @@ const SearchFerry = ({ navigation, route }) => {
                             </View>
                             <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                           </View>
-
                           <View style={styles.locationContainer}>
                             <Text style={styles.location}>{item.end_location_name}</Text>
                             <Text style={styles.subtext}>{item.name_pierend}</Text>
@@ -1322,8 +1390,6 @@ const SearchFerry = ({ navigation, route }) => {
                             <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                           </View>
                         </View>
-
-                        {/* ตั๋ว: รอยปรุ (วงกลมเล็ก) ด้านล่าง ถูกลบออก */}
                         {/* ราคาและปุ่ม */}
                         <View style={[styles.footerRow, { marginTop: 18 }]}>
                           <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
@@ -1332,12 +1398,14 @@ const SearchFerry = ({ navigation, route }) => {
                             )}</Text>
                           <TouchableOpacity style={styles.bookNowButton}
                             onPress={() => {
+                             setIsonewaystatus(true);
                               updateCustomerData({
-                                roud: 1,
+                                roud: 2,
                                 day: day,
                                 month: month,
                                 year: year,
                                 departdate: calendarStartDate,
+                                returnDate: calendarEndDate,
                                 timeTableDepartId: item.md_timetable_id,
                                 startingPointId: startingPoint.id,
                                 startingpoint_name: startingPoint.name,
@@ -1350,13 +1418,19 @@ const SearchFerry = ({ navigation, route }) => {
                                 adult: adults,
                                 child: children,
                                 infant: infant,
-                                timetableReturn: item.md_timetable_id,
                                 piccompanyDepart: item.md_company_picname,
                                 pictimetableDepart: item.md_timetabledetail_picname1,
                                 discount: discount,
                                 exchaneRate: item.md_exchange_money
                               });
-                              navigation.navigate('TripDetail');
+
+
+                              // Check if round trip status is true before navigating
+                              if (isroudstatus) {
+                                navigation.navigate('TripDetail');
+                              } else {
+                                settripTypeSearchResult("Return Trip");
+                              }
                             }} >
                             <Text style={styles.bookNowText}>Book Now</Text>
                           </TouchableOpacity>
@@ -1369,59 +1443,324 @@ const SearchFerry = ({ navigation, route }) => {
                             </Text>
                           </View>
                         )}
-
+                        {/* Hidden measure view for animation height calculation */}
                         <View
-                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
+                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
                           onLayout={(e) => {
                             const h = e.nativeEvent.layout.height;
                             if (contentHeights[item.md_timetable_id] !== h) {
                               setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
-                              // console.log('Measured hidden height:', h);
                             }
                           }}
                         >
                           <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
                           <Image
                             source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
+                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                           />
                         </View>
-
-                        {/* Animated detail */}
-                        <Animated.View
-                          style={{
-                            maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
-                            overflow: 'hidden',
-                            padding: 16, // เพิ่ม padding รอบๆ detail section เพื่อไม่ให้ชิดขอบเกินไป
-                            backgroundColor: '#fff', // เพิ่มพื้นหลังขาวเพื่อความชัดเจน
-                            borderBottomLeftRadius: 32,
-                            borderBottomRightRadius: 32,
-                          }}
-                        >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
-                          <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 10, borderRadius: 20 }}
-                          />
-                        </Animated.View>
-                      </ImageBackground>
-                    </TouchableOpacity>
-                  </View>
+                      </View>
+                      {/* Animated detail section */}
+                      <Animated.View
+                        style={{
+                          maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
+                          overflow: 'hidden',
+                          padding: 16,
+                          backgroundColor: '#fff',
+                          borderBottomLeftRadius: 32,
+                          borderBottomRightRadius: 32,
+                        }}
+                      >
+                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                        <Image
+                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                        />
+                      </Animated.View>
+                    </View>
+                  </TouchableOpacity>
                 ))}
+
               </>)}
               {tripTypeSearchResult === 'Return Trip' && (<>
                 {pagedDataReturn.map((item, index) => (
-                  <View key={index} style={styles.cardContainer}>
-                    {/* ...repeat similar structure for return trip... */}
-                  </View>
+                  <TouchableOpacity
+                    key={index}
+                    activeOpacity={0.95}
+                    onPress={() => {
+                      toggleDetails(item.md_timetable_id);
+                    }}
+                    style={{ width: '100%' }}
+                  >
+                    <View style={[
+                      styles.cardContainer,
+                      {
+                        marginTop: 24,
+                        backgroundColor: 'rgba(255,255,255,0.97)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(253,80,30,0.13)',
+                        shadowColor: '#FD501E',
+                        shadowOpacity: 0.13,
+                        shadowRadius: 16,
+                        shadowOffset: { width: 0, height: 8 },
+                        elevation: 7,
+                        overflow: 'visible',
+                        padding: 0,
+                        borderRadius: 32,
+                        position: 'relative',
+                      },
+                    ]}>
+                      {/* หัวตั๋ว */}
+                      <View style={{
+                        backgroundColor: '#FD501E',
+                        borderTopLeftRadius: 32,
+                        borderTopRightRadius: 32,
+                        paddingVertical: 18,
+                        paddingHorizontal: 22,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Image
+                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                            resizeMode="cover"
+                          />
+                          <Text
+                            style={{
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              fontSize: 18,
+                              maxWidth: wp('19%'),
+                              overflow: 'hidden',
+                            }}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {item.md_company_nameeng}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
+                        </View>
+                      </View>
+                      {/* เนื้อหาตั๋ว */}
+                      <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
+                        <View style={styles.detailsRow}>
+                          <View style={styles.locationContainer}>
+                            <Text style={styles.location}>{item.start_location_name}</Text>
+                            <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                          </View>
+                          <View style={styles.middleContainer}>
+                            <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                            <View style={styles.iconLineContainer}>
+                              <View style={styles.dashedLine} />
+                              <View style={styles.shipIcon}>
+                                <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
+                              </View>
+                              <View style={styles.dashedLine} />
+                            </View>
+                            <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                          </View>
+                          <View style={styles.locationContainer}>
+                            <Text style={styles.location}>{item.end_location_name}</Text>
+                            <Text style={styles.subtext}>{item.name_pierend}</Text>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
+                          </View>
+                        </View>
+                        {/* ราคาและปุ่ม */}
+                        <View style={[styles.footerRow, { marginTop: 18 }]}>
+                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
+                            {discount > 0 && (
+                              <Text style={styles.discount}> {discount}% Off</Text>
+                            )}</Text>
+                          <TouchableOpacity style={styles.bookNowButton}
+                            onPress={() => {
+                              setIsroudstatus(true);
+                              updateCustomerData({
+                                returndate: calendarEndDate,
+                                timeTableReturnId: item.md_timetable_id,
+                                companyReturnId: item.md_timetable_companyid,
+                                pierStartReturntId: item.md_timetable_pierstart,
+                                pierEndReturntId: item.md_timetable_pierend,
+                                piccompanyReturn: item.md_company_picname,
+                                pictimetableReturn: item.md_timetabledetail_picname1,
+                                discount: discount,
+                                exchaneRate: item.md_exchange_money
+                              });
+
+                              // Check if round trip status is true before navigating
+                              if (isonewaystatus) {
+                                navigation.navigate('TripDetail');
+                              } else {
+                                settripTypeSearchResult("Depart Trip");
+                              }
+                            }} >
+                            <Text style={styles.bookNowText}>Book Now</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {item.md_timetable_remarkeng && (
+                          <View style={styles.remarkContainer}>
+                            <Text style={styles.remarkText}>
+                              <Text style={styles.remarkLabel}>Remark: </Text>
+                              {item.md_timetable_remarkeng}
+                            </Text>
+                          </View>
+                        )}
+                        {/* Hidden measure view for animation height calculation */}
+                        <View
+                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
+                          onLayout={(e) => {
+                            const h = e.nativeEvent.layout.height;
+                            if (contentHeights[item.md_timetable_id] !== h) {
+                              setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
+                            }
+                          }}
+                        >
+                          <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                          <Image
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                          />
+                        </View>
+                      </View>
+                      {/* Animated detail section */}
+                      <Animated.View
+                        style={{
+                          maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
+                          overflow: 'hidden',
+                          padding: 16,
+                          backgroundColor: '#fff',
+                          borderBottomLeftRadius: 32,
+                          borderBottomRightRadius: 32,
+                        }}
+                      >
+                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                        <Image
+                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                        />
+                      </Animated.View>
+                    </View>
+                  </TouchableOpacity>
                 ))}
+               
+
               </>)}
-            </>
-          )}
+            </>)}
         </>
-      )}
-    </ScrollView>
+      )
+      }
+
+      {/* ปุ่มสำหรับการเปลี่ยนหน้า */}
+      {
+        tripTypeSearchResult === 'Depart Trip' && filteredDepartData != null && timetableDepart.length > 0 && (
+          <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginVertical: 28 }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#FFF3ED',
+              borderRadius: 32,
+              paddingVertical: 10,
+              paddingHorizontal: 24,
+              shadowColor: '#FD501E',
+              shadowOpacity: 0.10,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3,
+              minWidth: 180,
+            }}>
+              <TouchableOpacity
+                onPress={goToPreviousPageDepart}
+                disabled={currentPageDepart === 1}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: currentPageDepart === 1 ? '#f5c6b3' : '#FD501E',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 18,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.13,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                  opacity: currentPageDepart === 1 ? 0.6 : 1,
+                }}
+              >
+                <Icon
+                  name="chevron-back"
+                  size={26}
+                  color={'#fff'}
+                />
+              </TouchableOpacity>
+              <Text style={{
+                fontSize: 22,
+                fontWeight: 'bold',
+                color: '#FD501E',
+                backgroundColor: '#fff',
+                borderRadius: 16,
+                paddingHorizontal: 22,
+                paddingVertical: 8,
+                marginHorizontal: 2,
+                minWidth: 44,
+                textAlign: 'center',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 1,
+              }}>{currentPageDepart}</Text>
+              <TouchableOpacity
+                onPress={goToNextPageDepart}
+                disabled={currentPageDepart * itemsPerPage >= filteredDepartData.length}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? '#f5c6b3' : '#FD501E',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: 18,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.13,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                  opacity: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0.6 : 1,
+                }}
+              >
+                <Icon
+                  name="chevron-forward"
+                  size={26}
+                  color={'#fff'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )
+      }
+      <View style={styles.rowButton}>
+        <TouchableOpacity
+          style={[styles.BackButton]} // Use an array if you want to combine styles
+          onPress={() => {
+            navigation.goBack();
+          }}>
+          <Text style={styles.BackButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+
+    </ScrollView >
   );
 };
+
+
 
 export default SearchFerry;

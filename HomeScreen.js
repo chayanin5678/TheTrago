@@ -21,7 +21,7 @@ import { BlurView } from 'expo-blur';
 
 const data = [
   { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry', item: 'new' },
-  { id: '2', title: 'Flights', icon: 'airplane', navigate: '', item: '' },
+  { id: '2', title: 'Flights', icon: 'airplane', navigate: 'SearchFerryDemo', item: '' },
   { id: '3', title: 'Trains', icon: 'train', navigate: '', item: '' },
   { id: '4', title: 'Cars', icon: 'car', navigate: '', item: '' },
   { id: '5', title: 'Hotel', icon: 'bed', navigate: '', item: '' },
