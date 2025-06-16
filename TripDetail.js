@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
@@ -873,13 +873,17 @@ const TripDetail = ({ navigation, route }) => {
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <ImageBackground
-        source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-        style={styles.background}>
-        <LogoTheTrago />
-        <Step logoUri={1} />
-        <Text style={styles.title}>Shuttle Transfer</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
+        <LogoTheTrago style={{ marginBottom: 0, marginTop: 0 }} />
+        <Step logoUri={1} style={{ marginTop: 0, marginBottom: 0 }} />
+      </View>
+      <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Shuttle Transfer</Text>
+      <ScrollView contentContainerStyle={styles.container}>
+        <ImageBackground
+          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+          style={styles.background}
+        >
         {loading && (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#FD501E" />
@@ -889,7 +893,27 @@ const TripDetail = ({ navigation, route }) => {
           <>
             {
               timetableDepart.map((item) => (
-                <View key={item.md_timetable_id} style={styles.cardContainer}>
+                <View key={item.md_timetable_id} style={[styles.cardContainer,{ overflow: 'hidden',}]}>
+                  {/* Orange Header */}
+                  <View style={{
+                    backgroundColor: '#FD501E',
+                    paddingVertical: 20,
+                    alignItems: 'flex-start',
+                    alignSelf: 'stretch', // make header full width of card
+                    marginTop: -40,
+                    marginLeft: -40, // indent header
+                    marginRight: -40, // indent header
+                  }}>
+                    <Text style={{
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: 18,
+                      letterSpacing: 1,
+                      marginLeft: 40 // indent text
+                    }}>
+                      DEPART
+                    </Text>
+                  </View>
                   <ImageBackground
                     source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
                     style={styles.background}>
@@ -1316,6 +1340,23 @@ const TripDetail = ({ navigation, route }) => {
               <>
                 {timetableReturn.map((item) => (
                   <View key={item.md_timetable_id} style={styles.cardContainer}>
+                    {/* Orange Header */}
+                    <View style={{
+                      backgroundColor: '#FD501E',
+                      paddingVertical: 10,
+                      alignItems: 'flex-start',
+                      alignSelf: 'stretch', // make header full width of card
+                    }}>
+                      <Text style={{
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: 18,
+                        letterSpacing: 1,
+                        marginLeft: 18 // indent text
+                      }}>
+                        RETURN
+                      </Text>
+                    </View>
                     <ImageBackground
                       source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
                       style={styles.background}>
@@ -1601,7 +1642,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
                             {/* Modal for title selection */}
-                            <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffReturn}>
+                            <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportReturnDropoff}>
                               <View style={styles.modalOverlay}>
                                 <View style={styles.modalContentPre}>
                                   <FlatList
@@ -1768,7 +1809,7 @@ const TripDetail = ({ navigation, route }) => {
                     visible={modaladultVisibleDepart}
                     transparent={true}
                     animationType="fade"
-                    onRequestClose={closeModaladultDepart} // Close modal when pressing the back button
+                    onRequestClose={closeModaladultDepart}
                   >
                     <TouchableWithoutFeedback onPress={closeModaladultDepart}>
                       <View style={styles.modalOverlay}>
@@ -2047,8 +2088,10 @@ const TripDetail = ({ navigation, route }) => {
             <Text style={styles.searchButtonText}>Next Step</Text>
           </TouchableOpacity>
         </View>
-      </ImageBackground>
+      
+</ImageBackground>
     </ScrollView>
+    </SafeAreaView>
 
   );
 };
@@ -2385,7 +2428,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,  // ความหนาของเส้น
     borderColor: '#EAEAEA',  // สีของเส้นประ
     borderStyle: 'dashed',  // ทำให้เส้นเป็นประ
-    marginVertical: 10,  // ระยะห่างระหว่างเส้นประกับเนื้อหาภายใน
+    marginVertical: 10,  // ระยะห่างระหว่าง element
   },
   circleContainerLeft: {
     position: 'relative', // ทำให้สามารถจัดตำแหน่งภายใน container ได้

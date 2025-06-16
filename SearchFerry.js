@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
@@ -552,46 +552,55 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   return (
-    <ScrollView contentContainerStyle={styles.containerSearch}>
+   <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <LinearGradient
-        colors={["#FD501E", "#FF7B3E"]}
+        colors={["#fff", "#fff"]} // Changed to white to orange for more contrast with the logo
         style={[
           headStyles.headerBg,
           {
-            width: '111%',
-            marginLeft: '-5.2%',
+            width: '100%',
+            marginLeft: '0%',
             marginTop: -20,
             borderBottomLeftRadius: 50,
             borderBottomRightRadius: 50,
-            paddingBottom: 24,
+            paddingBottom: 0,
             shadowColor: '#FD501E',
             shadowOpacity: 0.18,
             shadowRadius: 12,
-            shadowOffset: { width: 0, height: 6 },
+            shadowOffset: { width: 0, height: 6 }, 
             elevation: 6,
+            padding: 10 ,
+            minHeight: hp('0%'), // Adjusted to ensure enough space for the header
           },
         ]}
       >
-        <View style={[headStyles.headerRow, { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingTop: 36, position: 'relative' }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={[headStyles.backBtn, { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: 6, position: 'absolute', left: 16, zIndex: 2 }]}>
-            <AntDesign name="arrowleft" size={26} color="#fff" />
+        <View style={[headStyles.headerRow, { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 0, paddingTop: 0, position: 'relative', marginTop: -10 }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[headStyles.backBtn, { backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, position: 'absolute', left: 16, zIndex: 2 }]}>
+            <AntDesign name="arrowleft" size={26} color="#FD501E" />
           </TouchableOpacity>
-          <Text style={[headStyles.headerTitle, { alignSelf: 'center', color: '#fff', fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5, textShadowColor: '#FF7B3E', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6, textAlign: 'center', marginLeft: 10 }]}>Search Ferry</Text>
+           <LogoTheTrago />
+        
         </View>
       </LinearGradient>
-      <TouchableOpacity
-        style={{
-          backgroundColor: '#FD501E',
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 10,
-          alignSelf: 'flex-end',
-          marginVertical: 10,
-        }}
-        onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
-      >
-        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Show filters</Text>
-      </TouchableOpacity>
+      {/* Title and Show Filters in one row */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginHorizontal: 20, marginBottom: 20 }}>
+        <Text style={[headStyles.headerTitle, { color: '#FD501E', fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5, textAlign: 'left', marginLeft: 0 }]}>Search Ferry</Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#FD501E',
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            borderRadius: 10,
+            alignSelf: 'auto',
+            marginVertical: 0,
+            marginRight: 0,
+          }}
+          onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Show filters</Text>
+        </TouchableOpacity>
+      </View>
+      {/* End row */}
 
       <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
@@ -681,6 +690,7 @@ const SearchFerry = ({ navigation, route }) => {
           />
           <Image source={require('./assets/BTN1.png')} />
         </View> */}
+           <ScrollView contentContainerStyle={styles.containerSearch}>
       <View style={styles.bookingSection}>
         <View style={styles.tripTypeContainer}>
           <TouchableOpacity
@@ -937,6 +947,7 @@ const SearchFerry = ({ navigation, route }) => {
 
         </View>
       </View>
+    
 
 
 
@@ -1397,8 +1408,9 @@ const SearchFerry = ({ navigation, route }) => {
                               <Text style={styles.discount}> {discount}% Off</Text>
                             )}</Text>
                           <TouchableOpacity style={styles.bookNowButton}
-                            onPress={() => {
-                             setIsonewaystatus(true);
+                             onPress={() => {
+                              // Update customer data
+                              setIsonewaystatus(true);
                               updateCustomerData({
                                 roud: 2,
                                 day: day,
@@ -1747,17 +1759,100 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
         )
       }
-      <View style={styles.rowButton}>
-        <TouchableOpacity
-          style={[styles.BackButton]} // Use an array if you want to combine styles
-          onPress={() => {
-            navigation.goBack();
-          }}>
-          <Text style={styles.BackButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      
+      {/* ปุ่มสำหรับการเปลี่ยนหน้า Return Trip */}
+      {
+        tripTypeSearchResult === 'Return Trip' && filteredReturnData != null && timetableReturn.length > 0 && (
+          <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginVertical: 28 }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#FFF3ED',
+              borderRadius: 32,
+              paddingVertical: 10,
+              paddingHorizontal: 24,
+              shadowColor: '#FD501E',
+              shadowOpacity: 0.10,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3,
+              minWidth: 180,
+            }}>
+              <TouchableOpacity
+                onPress={goToPreviousPageReturn}
+                disabled={currentPageReturn === 1}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: currentPageReturn === 1 ? '#f5c6b3' : '#FD501E',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 18,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.13,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                  opacity: currentPageReturn === 1 ? 0.6 : 1,
+                }}
+              >
+                <Icon
+                  name="chevron-back"
+                  size={26}
+                  color={'#fff'}
+                />
+              </TouchableOpacity>
+              <Text style={{
+                fontSize: 22,
+                fontWeight: 'bold',
+                color: '#FD501E',
+                backgroundColor: '#fff',
+                borderRadius: 16,
+                paddingHorizontal: 22,
+                paddingVertical: 8,
+                marginHorizontal: 2,
+                minWidth: 44,
+                textAlign: 'center',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 1,
+              }}>{currentPageReturn}</Text>
+              <TouchableOpacity
+                onPress={goToNextPageReturn}
+                disabled={currentPageReturn * itemsPerPage >= filteredReturnData.length}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? '#f5c6b3' : '#FD501E',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: 18,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.13,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                  opacity: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0.6 : 1,
+                }}
+              >
+                <Icon
+                  name="chevron-forward"
+                  size={26}
+                  color={'#fff'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )
+      }
+
 
     </ScrollView >
+    </SafeAreaView>
   );
 };
 
