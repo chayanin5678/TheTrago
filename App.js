@@ -35,11 +35,11 @@ import QRCodeScannerScreen from './QRCodeScannerScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AddCardScreen from './(Screen)/AddCardScreen';
 import SearchFerryDemo from './SearchFerryDemo';
+import ipAddress from './ipconfig';
+import { PromotionProvider } from './PromotionProvider';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-
-
 
 // Settings Screen
 const SettingsScreen = () => (
@@ -171,6 +171,7 @@ export default function App() {
 
   const [fontLoaded, setFontLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [promotionData, setPromotionData] = useState([]);
 
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
@@ -186,6 +187,17 @@ export default function App() {
       setFontLoaded(true);
     };
     loadFonts();
+  }, []);
+
+  useEffect(() => {
+    fetch(`${ipAddress}/promotion`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.data)) {
+          setPromotionData(data.data);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   // ✅ Hook ทั้งหมดอยู่ด้านบนก่อน return
@@ -213,7 +225,7 @@ export default function App() {
   }, []);
 
   return (
-     <>
+    <PromotionProvider>
       {!isReady ? (
         <SplashScreenComponent onAnimationEnd={() => setShowSplash(false)} />
       ) : (
@@ -223,7 +235,7 @@ export default function App() {
           </CustomerProvider>
         </NavigationContainer>
       )}
-    </>
+    </PromotionProvider>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator } from "react-native";
+import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator } from "react-native";
 import ipAddress from "../ipconfig";
-import LogoHeader from "./../(component)/Logo";
+import LogoTheTrago from "./../(component)/Logo";
 import Step from "../(component)/Step";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -12,6 +12,7 @@ import { useCustomer } from './CustomerContext';
 import moment from "moment-timezone";
 import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const brandIcons = {
   Visa: require("./../assets/visa.png"),
@@ -46,8 +47,8 @@ const PaymentScreen = ({ navigation, route }) => {
   let booking_codeGroup = bookingcodeGroup.length > 0
     ? "TG" + (parseInt(bookingcodeGroup[0].booking_code) + 1)
     : " "; // ใช้ "N/A" แทนค่าที่ไม่มี
-
-
+  const [totalPayment, settotalPayment] = useState(0);
+  const [totalpaymentfee, setTotalPaymentfee] = useState(0);
   const [paymentcode, setpaymentcode] = useState('');
   const [paymentfee, setPaymentfee] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState('');
@@ -234,7 +235,7 @@ const PaymentScreen = ({ navigation, route }) => {
     // ✅ ใช้ selectedCard ที่ได้จากการเลือกบัตร
     if (!selectedCard) {
       setIsLoading(false);
-      Alert.alert("❌ No Card Selected", "Please select a card to continue.");
+      Alert.alert("No Card Selected", "Please select a card to continue.");
       return;
     }
     // log ข้อมูลบัตรที่เลือก
@@ -269,7 +270,7 @@ const PaymentScreen = ({ navigation, route }) => {
       expYear = null;
     }
     if (!expMonth || !expYear || !/^\d{2}$/.test(expMonth) || !/^\d{4}$/.test(expYear)) {
-      Alert.alert("❌ Invalid Expiry Date", "Please check the card's expiration date format (MM/YY or MM/YYYY). Month must be 2 digits, year must be 4 digits.");
+      Alert.alert("Invalid Expiry Date", "Please check the card's expiration date format (MM/YY or MM/YYYY). Month must be 2 digits, year must be 4 digits.");
       return;
     }
     // --- End robust expiration year and month handling ---
@@ -299,10 +300,10 @@ const PaymentScreen = ({ navigation, route }) => {
       try {
         tokenData = JSON.parse(tokenText);
       } catch (e) {
-        throw new Error("❌ Invalid JSON from token API");
+        throw new Error(" Invalid JSON from token API");
       }
-      if (!tokenResponse.ok) throw new Error("❌ Failed to create payment token");
-      if (!tokenData.success) throw new Error(tokenData.error || "❌ Token API error");
+      if (!tokenResponse.ok) throw new Error("Failed to create payment token");
+      if (!tokenData.success) throw new Error(tokenData.error || " Token API error");
 
       // ✅ 2. ทำการชำระเงิน
       const paymentResponse = await fetch(`${ipAddress}/charge`, {
@@ -316,16 +317,16 @@ const PaymentScreen = ({ navigation, route }) => {
       });
 
 
-      if (!paymentResponse.ok) throw new Error("❌ Payment failed");
+      if (!paymentResponse.ok) throw new Error("Payment failed");
       const paymentResult = await paymentResponse.json();
-      if (!paymentResult.success) throw new Error("❌ Payment declined");
+      if (!paymentResult.success) throw new Error("Payment declined");
 
       if (paymentResult.authorize_uri) {
         console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
         await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
 
       } else {
-        throw new Error("❌ No authorize URI found.");
+        throw new Error("No authorize URI found.");
       }
 
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
@@ -608,6 +609,18 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   }, [timetableDepart, timetableReturn, customerData.roud]);
 
+  // โหลดบัตรที่เคยบันทึกไว้จาก AsyncStorage
+  useEffect(() => {
+    AsyncStorage.getItem('savedCards').then(data => {
+      if (data) setSavedCards(JSON.parse(data));
+    });
+  }, []);
+
+  // บันทึกบัตรลง AsyncStorage ทุกครั้งที่ savedCards เปลี่ยน
+  useEffect(() => {
+    AsyncStorage.setItem('savedCards', JSON.stringify(savedCards));
+  }, [savedCards]);
+
   return (
     <View style={{ flex: 1 }}>
       {/* ✅ หน้าหมุนแสดงระหว่างรอการชำระเงิน */}
@@ -649,13 +662,22 @@ const PaymentScreen = ({ navigation, route }) => {
         </ScrollView>
       ) : (
         // ...existing code for ScrollView and content...
+         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+              <View style={{ position: 'relative', alignItems: 'center', paddingTop: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
+                >
+                  <AntDesign name="arrowleft" size={26} color="#FD501E" />
+                </TouchableOpacity>
+                <LogoTheTrago style={{ marginTop: 0, marginBottom: 0, alignSelf: 'flex-start', marginLeft: 0 }} />
+                <Step logoUri={3} style={{ marginTop: 0, marginBottom: 0 }} />
+              </View>
+              <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Payment</Text>
         <ScrollView contentContainerStyle={styles.container}>
           <ImageBackground
             source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
             style={styles.background}>
-            <LogoHeader />
-            <Step logoUri={3} />
-            <Text style={styles.header}>Payment</Text>
             <View style={styles.card}>
               <View style={styles.row}>
                 <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
@@ -731,7 +753,7 @@ const PaymentScreen = ({ navigation, route }) => {
                       }}
                     >
                       <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
-                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>เพิ่มบัตร</Text>
+                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add Card</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -842,10 +864,12 @@ const PaymentScreen = ({ navigation, route }) => {
                       <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
                     </View>
                   )}
+                  {customerData.discountDepart != 0 && (
                   <View style={styles.row}>
                     <Text>Discount</Text>
                     <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
                   </View>
+                  )}
                   <View style={styles.row}>
                     <Text>Ticket fare</Text>
                     <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
@@ -911,10 +935,12 @@ const PaymentScreen = ({ navigation, route }) => {
                           <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
                         </View>
                       )}
+                      {customerData.discountReturn != 0 && (
                       <View style={styles.row}>
                         <Text>Discount</Text>
                         <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
                       </View>
+                      )}
                       <View style={styles.row}>
                         <Text>Ticket fare</Text>
                         <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
@@ -963,6 +989,7 @@ const PaymentScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </ImageBackground>
         </ScrollView>
+        </SafeAreaView>
       )}
     </View>
   );
@@ -1167,7 +1194,7 @@ const styles = StyleSheet.create({
   savedCardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f6f6f6',
+    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,

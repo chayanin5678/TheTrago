@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView,StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import LoGo from './../(component)/Logo';
+import LogoTheTrago from './../(component)/Logo';
 import Step from './../(component)/Step';
 import Textinput from '../(component)/Textinput';
 import ipAddress from '../ipconfig';
@@ -59,7 +59,7 @@ const CustomerInfo = ({ navigation }) => {
         newErrors.email = true;
       }
     }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+
     updateCustomerData({
       selectedTitle: selectedTitle,
       Firstname: Firstname,
@@ -135,14 +135,14 @@ const CustomerInfo = ({ navigation }) => {
       item.sys_countries_nameeng === 'Please Select'
         ? 'Please Select'
         : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
-  
+
     setSelectedTele(selectedValue);
     setCountry(item.sys_countries_code);
     setCountrycode(item.sys_countries_telephone); // ใช้ตอนส่งออก
     setErrors((prev) => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
   };
-  
+
 
 
   const filteredTelePhones = telePhone.filter((item) => {
@@ -238,224 +238,169 @@ const CustomerInfo = ({ navigation }) => {
       })
       .catch((error) => console.error('Error fetching data:', error));
   }, []);
-  
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-    
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-    <ScrollView contentContainerStyle={styles.container}>
-      <ImageBackground
-        source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-        style={styles.background}>
-        <LoGo />
-        <Step logoUri={2} />
-        <Text style={styles.title}>Customer Information</Text>
+      <View style={{ position: 'relative', alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
+        >
+          <AntDesign name="arrowleft" size={26} color="#FD501E" />
+        </TouchableOpacity>
+        <LogoTheTrago style={{ marginBottom: 0, marginTop: 0 }} />
+        <Step logoUri={2} style={{ marginTop: 0, marginBottom: 0 }} />
 
-        <View style={styles.promo}>
-          <Text style={styles.TextInput}>Passenger Details</Text>
+      </View>
+      <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Customer Information</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-          {/* คำนำหน้า */}
-          <Text style={styles.textHead}>Title</Text>
-          <TouchableOpacity
-            style={[styles.button, errors.selectedTitle && styles.errorInput]}
-            onPress={toggleModal}>
-            <Text style={styles.buttonText}>{selectedTitle}</Text>
-            <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-          </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.container}>
+          <ImageBackground
+            source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
+            style={styles.background}>
 
-          {/* Modal for title selection */}
-          <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContentPre}>
-                <FlatList
-                  data={titleOptions}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item)}>
-                      <Text style={styles.optionText}>{item}</Text>
-                    </TouchableOpacity>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  initialNumToRender={5}
-                  maxToRenderPerBatch={5}
-                  windowSize={5}
-                  pagingEnabled
-                />
-              </View>
+
+
+
+            <View style={styles.promo}>
+              <Text style={styles.TextInput}>Passenger Details</Text>
+
+              {/* คำนำหน้า */}
+              <Text style={styles.textHead}>Title</Text>
+              <TouchableOpacity
+                style={[styles.button, errors.selectedTitle && styles.errorInput]}
+                onPress={toggleModal}>
+                <Text style={styles.buttonText}>{selectedTitle}</Text>
+                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+              </TouchableOpacity>
+
+              {/* Modal for title selection */}
+              <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContentPre}>
+                    <FlatList
+                      data={titleOptions}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item)}>
+                          <Text style={styles.optionText}>{item}</Text>
+                        </TouchableOpacity>
+                      )}
+                      keyExtractor={(item, index) => index.toString()}
+                      initialNumToRender={5}
+                      maxToRenderPerBatch={5}
+                      windowSize={5}
+                      pagingEnabled
+                    />
+                  </View>
+                </View>
+              </Modal>
+              {/* ชื่อจริง & นามสกุล */}
+              <Text style={styles.textHead}>First Name</Text>
+              <TextInput
+                placeholder="First Name"
+                value={Firstname}
+                onChangeText={(text) => {
+                  setFirstname(text);
+                  setErrors((prev) => ({ ...prev, Firstname: false }));
+                }}
+                style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+              />
+
+              <Text style={styles.textHead}>Last Name</Text>
+              <TextInput
+                placeholder="Last Name"
+                value={Lastname}
+                onChangeText={(text) => {
+                  setLastname(text);
+                  setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
+                }}
+                style={[styles.input, errors.Lastname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+              />
+
+
+              {/* รายละเอียดการติดต่อ */}
+              <Text style={styles.TextInput}>Contact Details</Text>
+              <Text style={styles.textHead}>Phone number</Text>
+              <TouchableOpacity
+                style={[styles.button, errors.selectedTele && styles.errorInput]}
+                onPress={toggleTeleModal}>
+                <Text style={styles.buttonText}>{selectedTele}</Text>
+                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+              </TouchableOpacity>
+
+              {/* Modal for selecting telephone */}
+              <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <TextInput
+                      placeholder="Search country"
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      style={styles.textInput}
+                    />
+                    <FlatList
+                      data={filteredTelePhones}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
+                          <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                            {item.sys_countries_nameeng === 'Please Select'
+                              ? 'Please Select'
+                              : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      keyExtractor={(item, index) => index.toString()}
+                      initialNumToRender={5}
+                      maxToRenderPerBatch={5}
+                      windowSize={5}
+                      pagingEnabled
+                    />
+                  </View>
+                </View>
+              </Modal>
+
+              <TextInput
+                placeholder="Mobile Number"
+                value={mobileNumber}
+                keyboardType="number-pad"
+                onChangeText={(text) => {
+                  setmobileNumber(text);
+                  setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
+                }}
+                style={[styles.input, errors.mobileNumber && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+              />
+              <Text style={styles.title}>Where should we send your booking confirmation?</Text>
+              <Text style={styles.textHead}>Email</Text>
+              <TextInput
+                placeholder="Enter Your Email"
+                value={email}
+                onChangeText={(text) => {
+                  setemail(text);
+                  setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
+                }}
+                style={[styles.input, errors.email && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                editable={!customerData.email}
+              />
             </View>
-          </Modal>
-          {/* ชื่อจริง & นามสกุล */}
-          <Text style={styles.textHead}>First Name</Text>
-          <TextInput
-            placeholder="First Name"
-            value={Firstname}
-            onChangeText={(text) => {
-              setFirstname(text);
-              setErrors((prev) => ({ ...prev, Firstname: false }));
-            }}
-            style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-          />
-
-          <Text style={styles.textHead}>Last Name</Text>
-          <TextInput
-            placeholder="Last Name"
-            value={Lastname}
-            onChangeText={(text) => {
-              setLastname(text);
-              setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
-            }}
-            style={[styles.input, errors.Lastname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-          />
 
 
-          {/* รายละเอียดการติดต่อ */}
-          <Text style={styles.TextInput}>Contact Details</Text>
-          <Text style={styles.textHead}>Phone number</Text>
-          <TouchableOpacity
-            style={[styles.button, errors.selectedTele && styles.errorInput]}
-            onPress={toggleTeleModal}>
-            <Text style={styles.buttonText}>{selectedTele}</Text>
-            <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-          </TouchableOpacity>
-
-          {/* Modal for selecting telephone */}
-          <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <TextInput
-                  placeholder="Search country"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  style={styles.textInput}
-                />
-                <FlatList
-                  data={filteredTelePhones}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                    <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select' ]}>
-                      {item.sys_countries_nameeng === 'Please Select'
-                        ? 'Please Select'
-                        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
-                    </Text>
-                  </TouchableOpacity>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  initialNumToRender={5}
-                  maxToRenderPerBatch={5}
-                  windowSize={5}
-                  pagingEnabled
-                />
-              </View>
-            </View>
-          </Modal>
-        
-          <TextInput
-            placeholder="Mobile Number"
-            value={mobileNumber}
-            keyboardType="number-pad"
-            onChangeText={(text) => {
-              setmobileNumber(text);
-              setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
-            }}
-            style={[styles.input, errors.mobileNumber && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-          />
-          <Text style={styles.title}>Where should we send your bokking confirmation?</Text>
-          <Text style={styles.textHead}>Email</Text>
-          <TextInput
-            placeholder="Enter Your Email"
-            value={email}
-            onChangeText={(text) => {
-              setemail(text);
-              setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
-            }}
-            style={[styles.input, errors.email && styles.errorInput,customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-            editable={!customerData.email} 
-          />
-        </View>
-
-
-        <View style={styles.promo}>
-          <Text style={styles.title}>Booking Summary</Text>
-          <View style={styles.divider} />
-          {timetableDepart.map((item, index) => (
-            <View key={index}>
-             <Text style={{ fontWeight: 'bold' }}>Depart</Text>
-
-              <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#666666' }}>Company </Text>
-                <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
-              </View>
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#666666' }}>Seat</Text>
-                <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-              </View>
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#666666' }}>Boat </Text>
-                <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-              </View>
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#666666' }}>Departure Data</Text>
-                <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
-              </View>
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-              </View>
-              <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                <Text>Adult x {customerData.adult}</Text>
-                <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-              </View>
-              {customerData.child !== 0 && (
-                <View style={styles.rowpromo}>
-                  <Text>Child x {customerData.child}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
-                </View>
-              )}
-              {customerData.infant !== 0 && (
-                <View style={styles.rowpromo}>
-                  <Text>infant x {customerData.infant}</Text>
-                  <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
-                </View>
-              )}
-              {customerData.pickupPriceDepart != 0 && (
-                <View style={styles.rowpromo}>
-                  <Text>Pick up</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
-                </View>
-              )}
-              {customerData.dropoffPriceDepart != 0 && (
-                <View style={styles.rowpromo}>
-                  <Text>Drop off</Text>
-                  <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
-                </View>
-              )}
-              <View style={styles.rowpromo}>
-                <Text>Discount</Text>
-                <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
-              </View>
-              <View style={styles.rowpromo}>
-                <Text>Ticket fare</Text>
-                <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-              </View>
+            <View style={styles.promo}>
+              <Text style={styles.title}>Booking Summary</Text>
               <View style={styles.divider} />
-            </View>
-          ))}
-          {customerData.roud === 2 && (
-            <>
-              {timetableReturn.map((item, index) => (
+              {timetableDepart.map((item, index) => (
                 <View key={index}>
-                  <Text style={{ fontWeight: 'bold' }}>Return</Text>
-                  <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                    {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
-                  </Text>
+                  <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+
+                  <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                   <View style={styles.rowpromo}>
                     <Text style={{ color: '#666666' }}>Company </Text>
-                    <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                    <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
                   </View>
                   <View style={styles.rowpromo}>
                     <Text style={{ color: '#666666' }}>Seat</Text>
@@ -467,103 +412,168 @@ const CustomerInfo = ({ navigation }) => {
                   </View>
                   <View style={styles.rowpromo}>
                     <Text style={{ color: '#666666' }}>Departure Data</Text>
-                    <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                    <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
                   </View>
                   <View style={styles.rowpromo}>
                     <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                    <Text style={{ color: '#666666' }}>
-                      {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
-                    </Text>
+                    <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                   </View>
                   <View style={[styles.rowpromo, { marginTop: 5 }]}>
                     <Text>Adult x {customerData.adult}</Text>
-                    <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                    <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
                   </View>
                   {customerData.child !== 0 && (
                     <View style={styles.rowpromo}>
                       <Text>Child x {customerData.child}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
                     </View>
                   )}
                   {customerData.infant !== 0 && (
                     <View style={styles.rowpromo}>
                       <Text>infant x {customerData.infant}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                      <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
                     </View>
                   )}
-                  {customerData.pickupPriceReturn != 0 && (
+                  {customerData.pickupPriceDepart != 0 && (
                     <View style={styles.rowpromo}>
                       <Text>Pick up</Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
                     </View>
                   )}
-                  {customerData.dropoffPriceReturn != 0 && (
+                  {customerData.dropoffPriceDepart != 0 && (
                     <View style={styles.rowpromo}>
                       <Text>Drop off</Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
                     </View>
                   )}
+                  {customerData.discountDepart != 0 && (
                   <View style={styles.rowpromo}>
                     <Text>Discount</Text>
-                    <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                    <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
                   </View>
+                  )}
                   <View style={styles.rowpromo}>
                     <Text>Ticket fare</Text>
-                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
                   </View>
                   <View style={styles.divider} />
                 </View>
               ))}
-            </>
-          )}
-          <View style={styles.rowpromo}>
-            <Text>Subtotal </Text>
-            <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.rowpromo}>
-            <Text style={{ color: '#FD501E' }}>total </Text>
-            <Text style={{ color: '#FD501E' }}>฿ {formatNumberWithComma(customerData.total)}</Text>
-          </View>
-        </View>
+              {customerData.roud === 2 && (
+                <>
+                  {timetableReturn.map((item, index) => (
+                    <View key={index}>
+                      <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                      <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                        {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                      </Text>
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#666666' }}>Company </Text>
+                        <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                      </View>
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#666666' }}>Seat</Text>
+                        <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                      </View>
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#666666' }}>Boat </Text>
+                        <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                      </View>
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#666666' }}>Departure Data</Text>
+                        <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                      </View>
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                        <Text style={{ color: '#666666' }}>
+                          {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+                        </Text>
+                      </View>
+                      <View style={[styles.rowpromo, { marginTop: 5 }]}>
+                        <Text>Adult x {customerData.adult}</Text>
+                        <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                      </View>
+                      {customerData.child !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>Child x {customerData.child}</Text>
+                          <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.infant !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>infant x {customerData.infant}</Text>
+                          <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.pickupPriceReturn != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>Pick up</Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.dropoffPriceReturn != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>Drop off</Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                        </View>
+                      )}
+                      {customerData.discountReturn != 0 && (
+                      <View style={styles.rowpromo}>
+                        <Text>Discount</Text>
+                        <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                      </View>
+                      )}
+                      <View style={styles.rowpromo}>
+                        <Text>Ticket fare</Text>
+                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                      </View>
+                      <View style={styles.divider} />
+                    </View>
+                  ))}
+                </>
+              )}
+              <View style={styles.rowpromo}>
+                <Text>Subtotal </Text>
+                <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.rowpromo}>
+                <Text style={{ color: '#FD501E' }}>total </Text>
+                <Text style={{ color: '#FD501E' }}>฿ {formatNumberWithComma(customerData.total)}</Text>
+              </View>
+            </View>
 
-        <View style={styles.promo}>
-          <Text style={styles.promoLabel}>Promotion Code</Text>
+            <View style={styles.promo}>
+              <Text style={styles.promoLabel}>Promotion Code</Text>
 
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.promoInput}
-              placeholder="Coupon code"
-              value={code}
-              onChangeText={setcode}
-              placeholderTextColor="#A1A1A1"
-            />
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.promoInput}
+                  placeholder="Coupon code"
+                  value={code}
+                  onChangeText={setcode}
+                  placeholderTextColor="#A1A1A1"
+                />
 
-            <TouchableOpacity style={styles.applyButton} >
-              <Text style={styles.applyText}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.rowButton}>
-          <TouchableOpacity
-            style={[styles.BackButton]} // Use an array if you want to combine styles
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <Text style={styles.BackButtonText}>Go Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.ActionButton]} // Use an array if you want to combine styles
-            onPress={() => {
-              handleNext();
-            }}>
-            <Text style={styles.searchButtonText}>Next Step</Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-    </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+                <TouchableOpacity style={styles.applyButton} >
+                  <Text style={styles.applyText}>Apply</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.rowButton}>
+         
+              <TouchableOpacity
+                style={[styles.ActionButton, {width: '100%'}]} // Use an array if you want to combine styles
+                onPress={() => {
+                  handleNext();
+                }}>
+                <Text style={styles.searchButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -612,7 +622,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ced4da',
     borderRadius: 8,
-   // width: wp('78%'),
+    // width: wp('78%'),
     justifyContent: 'space-between',
     margin: 10,
 
@@ -761,11 +771,21 @@ const styles = StyleSheet.create({
 
   },
   textInput: {
-    width: '100%',       // กำหนดความกว้าง
-    padding: 10,        // กำหนดช่องว่างภายใน
-    borderWidth: 1,     // กำหนดความหนาของขอบ
-    borderColor: '#ced4da', // กำหนดสีของขอบ
-    borderRadius: 5,    // ปรับมุมขอบให้โค้ง
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#222',
+    borderRadius: 12,
+    backgroundColor: '#F3F0FF', // สีม่วงอ่อนคล้ายในภาพ
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   disabledInput: {
     backgroundColor: '#f0f0f0', // สีเทาเมื่อ email มีข้อมูล

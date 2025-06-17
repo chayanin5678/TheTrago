@@ -1,44 +1,23 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, PermissionsAndroid, Platform } from 'react-native';
-import { RNCamera } from 'react-native-camera';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { BarCodeScanner } from 'expo-barcode-scanner';
 
 const QRCodeScannerScreen = ({ navigation }) => {
-  const cameraRef = useRef(null);
-  const [isCameraReady, setIsCameraReady] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
+  const [scanned, setScanned] = useState(false);
 
   useEffect(() => {
     (async () => {
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission',
-            message: 'This app needs camera access to take pictures.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-      } else {
-        setHasPermission(true); // iOS จะขอผ่าน Info.plist
-      }
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
     })();
   }, []);
 
-  const takePicture = async () => {
-    if (cameraRef.current && isCameraReady) {
-      try {
-        const data = await cameraRef.current.takePictureAsync();
-        Alert.alert('ถ่ายรูปสำเร็จ', 'คุณได้ถ่ายภาพ QR แล้ว', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
-        // สามารถนำ data.uri ไปประมวลผลต่อได้
-      } catch (e) {
-        Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถถ่ายภาพได้');
-      }
-    }
+  const handleBarCodeScanned = ({ data }) => {
+    setScanned(true);
+    Alert.alert('QR code', data, [
+      { text: 'OK', onPress: () => navigation.goBack() },
+    ]);
   };
 
   if (hasPermission === null) {
@@ -68,13 +47,15 @@ const QRCodeScannerScreen = ({ navigation }) => {
         <Text style={styles.title}>ถ่ายภาพ QR Code</Text>
       </View>
       <View style={styles.cameraContainer}>
-        <RNCamera
-          ref={cameraRef}
+        <BarCodeScanner
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
           style={StyleSheet.absoluteFillObject}
-          type={RNCamera.Constants.Type.back}
-          onCameraReady={() => setIsCameraReady(true)}
-          captureAudio={false}
         />
+        {scanned && (
+          <Text style={styles.scanCompleteText}>
+            Scan complete
+          </Text>
+        )}
         {/* Overlay - single scan area centered */}
         <View style={styles.overlay} pointerEvents="none">
           <View style={styles.centeredOverlay}>
@@ -86,8 +67,8 @@ const QRCodeScannerScreen = ({ navigation }) => {
         </View>
       </View>
       <View style={styles.buttonRowCentered}>
-        <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
-          <Text style={styles.buttonText}>ถ่ายภาพ</Text>
+        <TouchableOpacity onPress={() => setScanned(false)} style={styles.captureButton}>
+          <Text style={styles.buttonText}>ถ่ายภาพใหม่</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -178,6 +159,13 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  scanCompleteText: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    color: '#FD501E',
+    fontWeight: 'bold',
+  },
 });
 
 export default QRCodeScannerScreen;

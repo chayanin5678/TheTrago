@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import ipAddress from './../ipconfig';
+import { PromotionContext } from '../PromotionProvider';
 
 export default function Banner() {
   const { width: screenWidth } = useWindowDimensions();
@@ -12,23 +13,34 @@ export default function Banner() {
   const cloneFactor = 3;
   const ITEM_WIDTH = screenWidth;
   const AUTO_SCROLL_INTERVAL = 3000;
+  const promotionContext = useContext(PromotionContext);
 
   useEffect(() => {
-    fetch(`${ipAddress}/promotion`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.data)) {
-          const cloned = Array(cloneFactor).fill(data.data).flat();
-          setPromotion(cloned);
-          setTimeout(() => {
-            const startX = data.data.length * ITEM_WIDTH;
-            scrollViewRef.current?.scrollTo({ x: startX, animated: false });
-            scrollX.current = startX;
-          }, 100);
-        }
-      })
-      .catch(console.error);
-  }, []);
+    if (promotionContext && promotionContext.length > 0) {
+      const cloned = Array(cloneFactor).fill(promotionContext).flat();
+      setPromotion(cloned);
+      setTimeout(() => {
+        const startX = promotionContext.length * ITEM_WIDTH;
+        scrollViewRef.current?.scrollTo({ x: startX, animated: false });
+        scrollX.current = startX;
+      }, 100);
+    } else {
+      fetch(`${ipAddress}/promotion`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.data)) {
+            const cloned = Array(cloneFactor).fill(data.data).flat();
+            setPromotion(cloned);
+            setTimeout(() => {
+              const startX = data.data.length * ITEM_WIDTH;
+              scrollViewRef.current?.scrollTo({ x: startX, animated: false });
+              scrollX.current = startX;
+            }, 100);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [promotionContext]);
 
   useEffect(() => {
     if (!promotion.length) return;

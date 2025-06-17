@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import LogoTheTrago from './(component)/Logo';
 import Step from './(component)/Step';
 import BackNextButton from './(component)/BackNextButton';
@@ -11,7 +12,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import moment from 'moment';
 import { useCustomer } from './(Screen)/CustomerContext';
 import { collectManifestSchemes } from 'expo-linking';
-
+import headStyles from './(CSS)/StartingPointScreenStyles';
 const TripDetail = ({ navigation, route }) => {
 
   const [tripType, setTripType] = useState("One Way Trip");
@@ -164,8 +165,8 @@ const TripDetail = ({ navigation, route }) => {
     }
     toggleModalPickupDepart();
   };
-  
-  
+
+
   const handleSelectedTranSportDropoffDepart = (item) => {
     setSelectedTranSportDropoffDepart(item.md_dropoff_cartypeid); // เก็บ id
     setSelectedTransportDropoffDepartName(item.md_cartype_nameeng); // เก็บชื่อ
@@ -192,7 +193,7 @@ const TripDetail = ({ navigation, route }) => {
     }
     toggleModalDropoffDepart();
   };
-  
+
   const handleSelectedTranSportPickupReturn = (item) => {
     setSelectedTranSportPickupReturn(item.md_pickup_cartypeid); // เก็บ id
     setSelectedTransportPickupReturnName(item.md_cartype_nameeng); // เก็บชื่อ
@@ -246,9 +247,9 @@ const TripDetail = ({ navigation, route }) => {
     }
     toggleModalDropoffReturn();
   };
-  
-  
-  
+
+
+
 
 
   const toggleTooltipadultDepart = () => {
@@ -492,13 +493,13 @@ const TripDetail = ({ navigation, route }) => {
     return moment(dateString).format("ddd, DD MMM YYYY");
   };
 
- 
-    const calculateDiscountedPrice = (price) => {
-  if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-  const discountRate = parseFloat(customerData.discount / 100); // 5% = 5/100
-  const discountedPrice = price * (1 - discountRate); // ลด 5%
-  return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-};
+
+  const calculateDiscountedPrice = (price) => {
+    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
+    const discountRate = parseFloat(customerData.discount / 100); // 5% = 5/100
+    const discountedPrice = price * (1 - discountRate); // ลด 5%
+    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+  };
 
 
   function formatNumberWithComma(value) {
@@ -609,7 +610,7 @@ const TripDetail = ({ navigation, route }) => {
       setSaleinfantDepart(timetableDepart[0].md_timetable_saleinfant * customerData.exchaneRate);
       setAdultPriceDepart((timetableDepart[0].md_timetable_saleadult * customerData.exchaneRate) * customerData.adult);
       setChildPriceDepart((timetableDepart[0].md_timetable_salechild * customerData.exchaneRate) * customerData.child);
-      setinfantPriceDepart((timetableDepart[0].md_timetable_saleinfant* customerData.exchaneRate) * customerData.infant);
+      setinfantPriceDepart((timetableDepart[0].md_timetable_saleinfant * customerData.exchaneRate) * customerData.infant);
       setTotalAdultDepart(formatNumberWithComma(adultPriceDepart));
       setTotalChildDepart(formatNumberWithComma(childPriceDepart));
       setTotalInfantDepart(formatNumberWithComma(infantPriceDepart));
@@ -874,7 +875,13 @@ const TripDetail = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={{ alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
+      <View style={{ position: 'relative', alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
+        >
+          <AntDesign name="arrowleft" size={26} color="#FD501E" />
+        </TouchableOpacity>
         <LogoTheTrago style={{ marginBottom: 0, marginTop: 0 }} />
         <Step logoUri={1} style={{ marginTop: 0, marginBottom: 0 }} />
       </View>
@@ -884,55 +891,84 @@ const TripDetail = ({ navigation, route }) => {
           source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
           style={styles.background}
         >
-        {loading && (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#FD501E" />
-          </View>
-        )}
-        {!loading && timetableDepart && timetableReturn && (
-          <>
-            {
-              timetableDepart.map((item) => (
-                <View key={item.md_timetable_id} style={[styles.cardContainer,{ overflow: 'hidden',}]}>
-                  {/* Orange Header */}
-                  <View style={{
-                    backgroundColor: '#FD501E',
-                    paddingVertical: 20,
-                    alignItems: 'flex-start',
-                    alignSelf: 'stretch', // make header full width of card
-                    marginTop: -40,
-                    marginLeft: -40, // indent header
-                    marginRight: -40, // indent header
-                  }}>
-                    <Text style={{
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      fontSize: 18,
-                      letterSpacing: 1,
-                      marginLeft: 40 // indent text
+          {loading && (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#FD501E" />
+            </View>
+          )}
+          {!loading && timetableDepart && timetableReturn && (
+            <>
+              {
+                timetableDepart.map((item) => (
+
+                  <View key={item.md_timetable_id} style={[
+                    styles.cardContainer,
+                    {
+                      marginTop: 24,
+                      backgroundColor: 'rgba(255,255,255,0.97)',
+                      borderWidth: 1.5,
+                      borderColor: 'rgba(253,80,30,0.13)',
+                      shadowColor: '#FD501E',
+                      shadowOpacity: 0.13,
+                      shadowRadius: 16,
+                      shadowOffset: { width: 0, height: 8 },
+                      elevation: 7,
+                      overflow: 'visible',
+                      padding: 0,
+                      borderRadius: 32,
+                      position: 'relative',
+                    },
+                  ]}>
+                    {/* หัวตั๋ว */}
+                    <View style={{
+                      backgroundColor: '#FD501E',
+                      borderTopLeftRadius: 32,
+                      borderTopRightRadius: 32,
+                      paddingVertical: 20,
+                      paddingHorizontal: 22,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      position: 'relative',
                     }}>
-                      DEPART
-                    </Text>
-                  </View>
-                  <ImageBackground
-                    source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                    style={styles.background}>
-                    <View style={styles.headerRow}>
-                      <Image
-                        source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                        style={{ width: wp('10.6%'), height: hp('5%'), marginRight: 10 }}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.coltitle}>
-                        <Text style={styles.titlehead}>{item.md_company_nameeng}</Text>
-                        <Text style={styles.timetable}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Image
+                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                          style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.coltitle}>
+                          <Text
+                            style={{
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              fontSize: 18,
+                              maxWidth: wp('20%'),
+                              overflow: 'hidden',
+                              flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                            }}
+                          >
+                            {item.md_company_nameeng}
+                          </Text>
+                          <Text
+                            style={{
+                              color: '#fff',
+                              fontSize: 12,
+                              maxWidth: wp('30%'),
+                              overflow: 'hidden',
+                              flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                            }}
+                          >{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                        </View>
                       </View>
-                      <View style={styles.tagContainer}>
-                        <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                        <Text style={styles.tag}>{tripType}</Text>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
                       </View>
                     </View>
-
+                    {/* <ImageBackground
+                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                      style={styles.background}> */}
                     {/* Trip Details */}
                     <View style={styles.tripInfo}>
                       <View style={styles.col}>
@@ -940,7 +976,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                       </View>
                       <View style={styles.col}>
-                        <View style={styles.circle} />
+                        <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
                         <Image source={require('./assets/Line 14.png')}
                           style={styles.line}
                         />
@@ -954,7 +990,10 @@ const TripDetail = ({ navigation, route }) => {
                     <View style={styles.tripInfo}>
                       <View style={styles.col} />
                       <View style={styles.col}>
-                        <Image source={require('./assets/boat.png')} />
+                        <View style={styles.orangeCircleIcon}>
+                          <Icon name="boat" size={24} color="#fff" />
+                        </View>
+
                         <Image source={require('./assets/Line 14.png')}
                           style={styles.line} />
                       </View>
@@ -969,7 +1008,9 @@ const TripDetail = ({ navigation, route }) => {
                         <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                       </View>
                       <View style={styles.col}>
-                        <Image source={require('./assets/location_on.png')} />
+                        <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
+                          <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
+                        </View>
                       </View>
                       <View style={styles.col}>
                         <Text style={styles.location}>{item.endpoint_name}</Text>
@@ -1331,48 +1372,77 @@ const TripDetail = ({ navigation, route }) => {
                         <View style={styles.circleRight2}></View>
                       </View>
                     </View> */}
-                  </ImageBackground>
-                </View>
-              ))
-            }
+                    {/* </ImageBackground> */}
+                  </View>
+                ))
+              }
 
-            {customerData.roud === 2 && (
-              <>
-                {timetableReturn.map((item) => (
-                  <View key={item.md_timetable_id} style={styles.cardContainer}>
-                    {/* Orange Header */}
-                    <View style={{
-                      backgroundColor: '#FD501E',
-                      paddingVertical: 10,
-                      alignItems: 'flex-start',
-                      alignSelf: 'stretch', // make header full width of card
-                    }}>
-                      <Text style={{
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: 18,
-                        letterSpacing: 1,
-                        marginLeft: 18 // indent text
+              {customerData.roud === 2 && (
+                <>
+                  {timetableReturn.map((item) => (
+                    <View key={item.md_timetable_id} style={[
+                      styles.cardContainer,
+                      {
+                        marginTop: 24,
+                        backgroundColor: 'rgba(255,255,255,0.97)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(253,80,30,0.13)',
+                        shadowColor: '#FD501E',
+                        shadowOpacity: 0.13,
+                        shadowRadius: 16,
+                        shadowOffset: { width: 0, height: 8 },
+                        elevation: 7,
+                        overflow: 'visible',
+                        padding: 0,
+                        borderRadius: 32,
+                        position: 'relative',
+                      },
+                    ]}>
+                      {/* หัวตั๋ว */}
+                      <View style={{
+                        backgroundColor: '#FD501E',
+                        borderTopLeftRadius: 32,
+                        borderTopRightRadius: 32,
+                        paddingVertical: 20,
+                        paddingHorizontal: 22,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        position: 'relative',
                       }}>
-                        RETURN
-                      </Text>
-                    </View>
-                    <ImageBackground
-                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                      style={styles.background}>
-                      <View style={styles.headerRow}>
-                        <Image
-                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%') }}
-                          resizeMode="cover"
-                        />
-                        <View style={styles.coltitle}>
-                          <Text style={styles.titlehead}>{item.md_company_nameeng}</Text>
-                          <Text style={styles.timetable}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Image
+                            source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                            resizeMode="cover"
+                          />
+                          <View style={styles.coltitle}>
+                            <Text
+                              style={{
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                fontSize: 18,
+                                maxWidth: wp('20%'),
+                                overflow: 'hidden',
+                                flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                              }}
+                            >
+                              {item.md_company_nameeng}
+                            </Text>
+                            <Text
+                              style={{
+                                color: '#fff',
+                                fontSize: 12,
+                                maxWidth: wp('30%'),
+                                overflow: 'hidden',
+                                flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                              }}
+                            >{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                          </View>
                         </View>
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tag}>{item.md_seat_nameeng}</Text>
-                          <Text style={styles.tag}>{tripType}</Text>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
                         </View>
                       </View>
 
@@ -1380,10 +1450,10 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.col}>
-                          <View style={styles.circle} />
+                          <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
                           <Image source={require('./assets/Line 14.png')}
                             style={styles.line}
                           />
@@ -1397,7 +1467,10 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col} />
                         <View style={styles.col}>
-                          <Image source={require('./assets/boat.png')} />
+                          <View style={styles.orangeCircleIcon}>
+                            <Icon name="boat" size={24} color="#fff" />
+                          </View>
+
                           <Image source={require('./assets/Line 14.png')}
                             style={styles.line} />
                         </View>
@@ -1409,16 +1482,19 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.col}>
-                          <Image source={require('./assets/location_on.png')} />
+                          <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
+                            <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
+                          </View>
                         </View>
                         <View style={styles.col}>
                           <Text style={styles.location}>{item.endpoint_name}</Text>
                           <Text style={styles.ship}>{item.endpier_name}</Text>
                         </View>
                       </View>
+
 
                       {item.md_location_airport === 1 && (
                         <>
@@ -1491,57 +1567,57 @@ const TripDetail = ({ navigation, route }) => {
                               {/* Button ที่คลิกเพื่อเปิด Modal */}
 
                               <TouchableOpacity
-                              style={[styles.buttonSelect, errors.selectedTranSportPickupReturn && styles.errorInput]}
-                              onPress={toggleModalTransportPickupReturn}
-                            >
-                              <Text style={styles.buttonText}>{selectedTransportPickupReturnName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
+                                style={[styles.buttonSelect, errors.selectedTranSportPickupReturn && styles.errorInput]}
+                                onPress={toggleModalTransportPickupReturn}
+                              >
+                                <Text style={styles.buttonText}>{selectedTransportPickupReturnName}</Text>
+                                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                              </TouchableOpacity>
 
 
-                            {/* Modal for title selection */}
-                            <Modal visible={isModalTransportReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupReturn}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupReturn(item)}>
-                                        <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
+                              {/* Modal for title selection */}
+                              <Modal visible={isModalTransportReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupReturn}>
+                                <View style={styles.modalOverlay}>
+                                  <View style={styles.modalContentPre}>
+                                    <FlatList
+                                      data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
+                                      renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupReturn(item)}>
+                                          <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
+                                        </TouchableOpacity>
+                                      )}
 
-                                    keyExtractor={(item, index) => index.toString()}
-                                    initialNumToRender={5}
-                                    maxToRenderPerBatch={5}
-                                    windowSize={5}
-                                    pagingEnabled
-                                  />
+                                      keyExtractor={(item, index) => index.toString()}
+                                      initialNumToRender={5}
+                                      maxToRenderPerBatch={5}
+                                      windowSize={5}
+                                      pagingEnabled
+                                    />
+                                  </View>
                                 </View>
-                              </View>
-                            </Modal>
+                              </Modal>
 
                               <Text style={styles.inputLabel}>Pick up area</Text>
                               <TouchableOpacity onPress={toggleModalPickupReturn} style={styles.buttonSelect}>
-                              <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
+                                <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
+                                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                              </TouchableOpacity>
 
-                            <Modal visible={isModalReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupReturn}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_pickup_id: "0", md_transfer_nameeng: "Please Select" }, ...pickupAreaReturn]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupReturn(item)}>
-                                        <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-                                    keyExtractor={(item, index) => index.toString()}
-                                  />
+                              <Modal visible={isModalReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupReturn}>
+                                <View style={styles.modalOverlay}>
+                                  <View style={styles.modalContentPre}>
+                                    <FlatList
+                                      data={[{ md_pickup_id: "0", md_transfer_nameeng: "Please Select" }, ...pickupAreaReturn]}
+                                      renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupReturn(item)}>
+                                          <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
+                                        </TouchableOpacity>
+                                      )}
+                                      keyExtractor={(item, index) => index.toString()}
+                                    />
+                                  </View>
                                 </View>
-                              </View>
-                            </Modal>
+                              </Modal>
                               {airPortPickupReturn === 1 && (
 
                                 <>
@@ -1633,57 +1709,57 @@ const TripDetail = ({ navigation, route }) => {
                             <View>
                               <Text style={styles.inputLabel}>Transport type</Text>
                               <TouchableOpacity
-                              style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
-                              onPress={toggleModalTransportDropoffReturn}
-                            >
-                              <Text style={styles.buttonText}>{selectedTransportDropoffReturnName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
+                                style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
+                                onPress={toggleModalTransportDropoffReturn}
+                              >
+                                <Text style={styles.buttonText}>{selectedTransportDropoffReturnName}</Text>
+                                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                              </TouchableOpacity>
 
 
-                            {/* Modal for title selection */}
-                            <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportReturnDropoff}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffReturn(item)}>
-                                        <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
+                              {/* Modal for title selection */}
+                              <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportReturnDropoff}>
+                                <View style={styles.modalOverlay}>
+                                  <View style={styles.modalContentPre}>
+                                    <FlatList
+                                      data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
+                                      renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffReturn(item)}>
+                                          <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
+                                        </TouchableOpacity>
+                                      )}
 
-                                    keyExtractor={(item, index) => index.toString()}
-                                    initialNumToRender={5}
-                                    maxToRenderPerBatch={5}
-                                    windowSize={5}
-                                    pagingEnabled
-                                  />
+                                      keyExtractor={(item, index) => index.toString()}
+                                      initialNumToRender={5}
+                                      maxToRenderPerBatch={5}
+                                      windowSize={5}
+                                      pagingEnabled
+                                    />
+                                  </View>
                                 </View>
-                              </View>
-                            </Modal>
+                              </Modal>
 
                               <Text style={styles.inputLabel}>Drop off area</Text>
                               <TouchableOpacity onPress={toggleModalDropoffReturn} style={styles.buttonSelect}>
-                              <Text style={styles.buttonText}>{selectedDropoffReturnName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
+                                <Text style={styles.buttonText}>{selectedDropoffReturnName}</Text>
+                                <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                              </TouchableOpacity>
 
-                            <Modal visible={isModalReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffReturn}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_dropoff_id: "0", md_transfer_nameeng: "Please Select" }, ...DropoffAreaReturn]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffReturn(item)}>
-                                        <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-                                    keyExtractor={(item, index) => index.toString()}
-                                  />
+                              <Modal visible={isModalReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffReturn}>
+                                <View style={styles.modalOverlay}>
+                                  <View style={styles.modalContentPre}>
+                                    <FlatList
+                                      data={[{ md_dropoff_id: "0", md_transfer_nameeng: "Please Select" }, ...DropoffAreaReturn]}
+                                      renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffReturn(item)}>
+                                          <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
+                                        </TouchableOpacity>
+                                      )}
+                                      keyExtractor={(item, index) => index.toString()}
+                                    />
+                                  </View>
                                 </View>
-                              </View>
-                            </Modal>
+                              </Modal>
                               {airPortDropoffReturn === 1 && (
                                 <>
                                   <Text style={styles.inputLabel}>Filght Number</Text>
@@ -1741,6 +1817,9 @@ const TripDetail = ({ navigation, route }) => {
                               )}
 
 
+
+
+
                               <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
                               <TextInput
                                 placeholder="Input Hotel / Drop off point"
@@ -1759,7 +1838,7 @@ const TripDetail = ({ navigation, route }) => {
                       )}
 
 
-                      <View style={styles.TicketRow}>
+                      {/* <View style={styles.TicketRow}>
                         <View style={styles.circleContainerLeft}>
                           <View style={styles.circleLeft1}></View>
                           <View style={styles.circleLeft2}></View>
@@ -1769,328 +1848,322 @@ const TripDetail = ({ navigation, route }) => {
                           <View style={styles.circleRight1}></View>
                           <View style={styles.circleRight2}></View>
                         </View>
-                      </View>
-                    </ImageBackground>
-                  </View>
-                ))}
-              </>
-            )}
+                      </View> */}
+
+                    </View>
+                  ))}
+                </>
+              )}
 
 
 
 
-            {timetableDepart.map((item) => (
-              <View key={item.md_timetable_id} style={styles.promo}>
+              {timetableDepart.map((item) => (
+                <View key={item.md_timetable_id} style={styles.promo}>
 
-                <Text style={styles.TextInput}>
-                  Booking Summary
-                </Text>
+                  <Text style={styles.TextInput}>
+                    Booking Summary
+                  </Text>
 
-                <View style={styles.divider} />
-                <Text style={styles.margin}>
-                  Depart
-                </Text>
-                <View style={styles.rowpromo}>
-                  <View style={styles.rowpromo}>
-                    <Text>
-                      Adult x {customerData.adult}
-
-
-
-                    </Text>
-                    {/* Tooltip icon */}
-                    <TouchableOpacity onPress={toggleTooltipadultDepart}>
-                      <Icon name="information-circle-outline" size={20} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                  <Text>฿ {totalAdultDepart} </Text>
-                  {/* Modal (tooltip) */}
-                  <Modal
-                    visible={modaladultVisibleDepart}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={closeModaladultDepart}
-                  >
-                    <TouchableWithoutFeedback onPress={closeModaladultDepart}>
-                      <View style={styles.modalOverlay}>
-                        {/* This area will close the modal when tapped */}
-                        <TouchableWithoutFeedback>
-                          <View style={styles.tooltip}>
-                            <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(saleadultDepart)}/persons</Text>
-                          </View>
-                        </TouchableWithoutFeedback>
-                      </View>
-                    </TouchableWithoutFeedback>
-                  </Modal>
-
-
-                </View>
-                {customerData.child !== 0 && (
+                  <View style={styles.divider} />
+                  <Text style={styles.margin}>
+                    Depart
+                  </Text>
                   <View style={styles.rowpromo}>
                     <View style={styles.rowpromo}>
                       <Text>
-                        Child x {customerData.child}
+                        Adult x {customerData.adult}
+
+
+
                       </Text>
-                      <TouchableOpacity onPress={toggleTooltipchildDepart}>
+                      {/* Tooltip icon */}
+                      <TouchableOpacity onPress={toggleTooltipadultDepart}>
                         <Icon name="information-circle-outline" size={20} color="red" />
                       </TouchableOpacity>
                     </View>
-                    <Text>฿ {totalChildDepart} </Text>
+                    <Text>฿ {totalAdultDepart} </Text>
                     {/* Modal (tooltip) */}
                     <Modal
-                      visible={modalchildVisibleDepart}
+                      visible={modaladultVisibleDepart}
                       transparent={true}
                       animationType="fade"
-                      onRequestClose={closeModalchildDepart} // Close modal when pressing the back button
+                      onRequestClose={closeModaladultDepart}
                     >
-                      <TouchableWithoutFeedback onPress={closeModalchildDepart}>
+                      <TouchableWithoutFeedback onPress={closeModaladultDepart}>
                         <View style={styles.modalOverlay}>
                           {/* This area will close the modal when tapped */}
                           <TouchableWithoutFeedback>
                             <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(salechildDepart)}/persons</Text>
+                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(saleadultDepart)}/persons</Text>
                             </View>
                           </TouchableWithoutFeedback>
                         </View>
                       </TouchableWithoutFeedback>
                     </Modal>
-                  </View>
-                )}
-                {customerData.infant !== 0 && (
-                  <View style={styles.rowpromo}>
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        infant x {customerData.infant}
-                      </Text>
-                      <TouchableOpacity onPress={toggleTooltipinfantDepart}>
-                        <Icon name="information-circle-outline" size={20} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                    <Text>฿ {totalInfantDepart} </Text>
-                    {/* Modal (tooltip) */}
-                    <Modal
-                      visible={modalInfantVisibleDepart}
-                      transparent={true}
-                      animationType="fade"
-                      onRequestClose={closeModalindantDepart} // Close modal when pressing the back button
-                    >
-                      <TouchableWithoutFeedback onPress={closeModalindantDepart}>
-                        <View style={styles.modalOverlay}>
-                          {/* This area will close the modal when tapped */}
-                          <TouchableWithoutFeedback>
-                            <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantDepart)}/persons</Text>
-                            </View>
-                          </TouchableWithoutFeedback>
-                        </View>
-                      </TouchableWithoutFeedback>
-                    </Modal>
-                  </View>
-                )}
-                {pickupDepart && pickupPriceDepart != 0 && (
-                  <View style={styles.rowpromo}>
-                    <Text>
-                      Pick up
-                    </Text>
-                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceDepart)} </Text>
+
 
                   </View>
-                )}
-                {dropoffDepart && dropoffPriceDepart != 0 && (
-                  <View style={styles.rowpromo}>
-                    <Text>
-                      Drop off
-                    </Text>
-                    <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceDepart)} </Text>
-
-                  </View>
-                )}
-                {discountDepart !== 0 && (
-                <View style={styles.rowpromo}>
-                  <Text>
-                    Discount
-                  </Text>
-                  <Text style={styles.redText}>
-                    - ฿ {discountDepart} </Text>
-
-                </View>
-                )}
-                <View style={styles.rowpromo}>
-                  <Text>
-                    Subtotal
-                  </Text>
-                  <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalDepart)} </Text>
-                </View>
-                <View style={styles.divider} />
-
-                {customerData.roud === 2 && (
-                  <>
-                    <Text style={styles.margin}>
-                      Return
-                    </Text>
+                  {customerData.child !== 0 && (
                     <View style={styles.rowpromo}>
                       <View style={styles.rowpromo}>
                         <Text>
-                          Adult x {customerData.adult}
-
-
-
+                          Child x {customerData.child}
                         </Text>
-                        {/* Tooltip icon */}
-                        <TouchableOpacity onPress={toggleTooltipadultReturn}>
+                        <TouchableOpacity onPress={toggleTooltipchildDepart}>
                           <Icon name="information-circle-outline" size={20} color="red" />
                         </TouchableOpacity>
                       </View>
-                      <Text>฿ {totalAdultReturn} </Text>
+                      <Text>฿ {totalChildDepart} </Text>
                       {/* Modal (tooltip) */}
                       <Modal
-                        visible={modaladultVisibleReturn}
+                        visible={modalchildVisibleDepart}
                         transparent={true}
                         animationType="fade"
-                        onRequestClose={closeModaladultReturn} // Close modal when pressing the back button
+                        onRequestClose={closeModalchildDepart} // Close modal when pressing the back button
                       >
-                        <TouchableWithoutFeedback onPress={closeModaladultReturn}>
+                        <TouchableWithoutFeedback onPress={closeModalchildDepart}>
                           <View style={styles.modalOverlay}>
                             {/* This area will close the modal when tapped */}
                             <TouchableWithoutFeedback>
                               <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(saleadultReturn)}/persons</Text>
+                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(salechildDepart)}/persons</Text>
                               </View>
                             </TouchableWithoutFeedback>
                           </View>
                         </TouchableWithoutFeedback>
                       </Modal>
-
+                    </View>
+                  )}
+                  {customerData.infant !== 0 && (
+                    <View style={styles.rowpromo}>
+                      <View style={styles.rowpromo}>
+                        <Text>
+                          infant x {customerData.infant}
+                        </Text>
+                        <TouchableOpacity onPress={toggleTooltipinfantDepart}>
+                          <Icon name="information-circle-outline" size={20} color="red" />
+                        </TouchableOpacity>
+                      </View>
+                      <Text>฿ {totalInfantDepart} </Text>
+                      {/* Modal (tooltip) */}
+                      <Modal
+                        visible={modalInfantVisibleDepart}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={closeModalindantDepart} // Close modal when pressing the back button
+                      >
+                        <TouchableWithoutFeedback onPress={closeModalindantDepart}>
+                          <View style={styles.modalOverlay}>
+                            {/* This area will close the modal when tapped */}
+                            <TouchableWithoutFeedback>
+                              <View style={styles.tooltip}>
+                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantDepart)}/persons</Text>
+                              </View>
+                            </TouchableWithoutFeedback>
+                          </View>
+                        </TouchableWithoutFeedback>
+                      </Modal>
+                    </View>
+                  )}
+                  {pickupDepart && pickupPriceDepart != 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>
+                        Pick up
+                      </Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceDepart)} </Text>
 
                     </View>
-                    {customerData.child !== 0 && (
-                      <View style={styles.rowpromo}>
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            Child x {customerData.child}
-                          </Text>
-                          <TouchableOpacity onPress={toggleTooltipchildReturn}>
-                            <Icon name="information-circle-outline" size={20} color="red" />
-                          </TouchableOpacity>
-                        </View>
-                        <Text>฿ {totalChildReturn} </Text>
-                        {/* Modal (tooltip) */}
-                        <Modal
-                          visible={modalchildVisibleReturn}
-                          transparent={true}
-                          animationType="fade"
-                          onRequestClose={closeModalchildReturn} // Close modal when pressing the back button
-                        >
-                          <TouchableWithoutFeedback onPress={closeModalchildReturn}>
-                            <View style={styles.modalOverlay}>
-                              {/* This area will close the modal when tapped */}
-                              <TouchableWithoutFeedback>
-                                <View style={styles.tooltip}>
-                                  <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(salechildReturn)}/persons</Text>
-                                </View>
-                              </TouchableWithoutFeedback>
-                            </View>
-                          </TouchableWithoutFeedback>
-                        </Modal>
-                      </View>
-                    )}
-                    {customerData.infant !== 0 && (
-                      <View style={styles.rowpromo}>
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            infant x {customerData.infant}
-                          </Text>
-                          <TouchableOpacity onPress={toggleTooltipinfantReturn}>
-                            <Icon name="information-circle-outline" size={20} color="red" />
-                          </TouchableOpacity>
-                        </View>
-                        <Text>฿ {totalInfantReturn} </Text>
-                        {/* Modal (tooltip) */}
-                        <Modal
-                          visible={modalInfantVisibleReturn}
-                          transparent={true}
-                          animationType="fade"
-                          onRequestClose={closeModalinfantReturn} // Close modal when pressing the back button
-                        >
-                          <TouchableWithoutFeedback onPress={closeModalinfantReturn}>
-                            <View style={styles.modalOverlay}>
-                              {/* This area will close the modal when tapped */}
-                              <TouchableWithoutFeedback>
-                                <View style={styles.tooltip}>
-                                  <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantReturn)}/persons</Text>
-                                </View>
-                              </TouchableWithoutFeedback>
-                            </View>
-                          </TouchableWithoutFeedback>
-                        </Modal>
-                      </View>
-                    )}
-                    {pickupReturn && pickupPriceReturn != 0 && (
-                      <View style={styles.rowpromo}>
-                        <Text>
-                          Pick up
-                        </Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceReturn)} </Text>
+                  )}
+                  {dropoffDepart && dropoffPriceDepart != 0 && (
+                    <View style={styles.rowpromo}>
+                      <Text>
+                        Drop off
+                      </Text>
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceDepart)} </Text>
 
-                      </View>
-                    )}
-                    {dropoffReturn && dropoffPriceReturn != 0 && (
-                      <View style={styles.rowpromo}>
-                        <Text>
-                          Drop off
-                        </Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceReturn)} </Text>
-
-                      </View>
-                    )}
-                    {discountReturn !== 0 && (
+                    </View>
+                  )}
+                  {discountDepart != 0 && (
                     <View style={styles.rowpromo}>
                       <Text>
                         Discount
                       </Text>
                       <Text style={styles.redText}>
-                        - ฿ {discountReturn} </Text>
+                        - ฿ {discountDepart} </Text>
 
                     </View>
-                    )}
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        Subtotal
+                  )}
+                  <View style={styles.rowpromo}>
+                    <Text>
+                      Subtotal
+                    </Text>
+                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalDepart)} </Text>
+                  </View>
+                  <View style={styles.divider} />
+
+                  {customerData.roud === 2 && (
+                    <>
+                      <Text style={styles.margin}>
+                        Return
                       </Text>
-                      <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalReturn)} </Text>
-                    </View>
-                    <View style={styles.divider} />
-                  </>
-                )}
+                      <View style={styles.rowpromo}>
+                        <View style={styles.rowpromo}>
+                          <Text>
+                            Adult x {customerData.adult}
 
-                <View style={styles.rowpromo}>
-                  <Text style={styles.totaltext}>Total</Text>
-                  <Text style={styles.totaltext}>฿ {formatNumberWithComma(total)}</Text>
+
+
+                          </Text>
+                          {/* Tooltip icon */}
+                          <TouchableOpacity onPress={toggleTooltipadultReturn}>
+                            <Icon name="information-circle-outline" size={20} color="red" />
+                          </TouchableOpacity>
+                        </View>
+                        <Text>฿ {totalAdultReturn} </Text>
+                        {/* Modal (tooltip) */}
+                        <Modal
+                          visible={modaladultVisibleReturn}
+                          transparent={true}
+                          animationType="fade"
+                          onRequestClose={closeModaladultReturn} // Close modal when pressing the back button
+                        >
+                          <TouchableWithoutFeedback onPress={closeModaladultReturn}>
+                            <View style={styles.modalOverlay}>
+                              {/* This area will close the modal when tapped */}
+                              <TouchableWithoutFeedback>
+                                <View style={styles.tooltip}>
+                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(saleadultReturn)}/persons</Text>
+                                </View>
+                              </TouchableWithoutFeedback>
+                            </View>
+                          </TouchableWithoutFeedback>
+                        </Modal>
+
+
+                      </View>
+                      {customerData.child !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <View style={styles.rowpromo}>
+                            <Text>
+                              Child x {customerData.child}
+                            </Text>
+                            <TouchableOpacity onPress={toggleTooltipchildReturn}>
+                              <Icon name="information-circle-outline" size={20} color="red" />
+                            </TouchableOpacity>
+                          </View>
+                          <Text>฿ {totalChildReturn} </Text>
+                          {/* Modal (tooltip) */}
+                          <Modal
+                            visible={modalchildVisibleReturn}
+                            transparent={true}
+                            animationType="fade"
+                            onRequestClose={closeModalchildReturn} // Close modal when pressing the back button
+                          >
+                            <TouchableWithoutFeedback onPress={closeModalchildReturn}>
+                              <View style={styles.modalOverlay}>
+                                {/* This area will close the modal when tapped */}
+                                <TouchableWithoutFeedback>
+                                  <View style={styles.tooltip}>
+                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(salechildReturn)}/persons</Text>
+                                  </View>
+                                </TouchableWithoutFeedback>
+                              </View>
+                            </TouchableWithoutFeedback>
+                          </Modal>
+                        </View>
+                      )}
+                      {customerData.infant !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <View style={styles.rowpromo}>
+                            <Text>
+                              infant x {customerData.infant}
+                            </Text>
+                            <TouchableOpacity onPress={toggleTooltipinfantReturn}>
+                              <Icon name="information-circle-outline" size={20} color="red" />
+                            </TouchableOpacity>
+                          </View>
+                          <Text>฿ {totalInfantReturn} </Text>
+                          {/* Modal (tooltip) */}
+                          <Modal
+                            visible={modalInfantVisibleReturn}
+                            transparent={true}
+                            animationType="fade"
+                            onRequestClose={closeModalinfantReturn} // Close modal when pressing the back button
+                          >
+                            <TouchableWithoutFeedback onPress={closeModalinfantReturn}>
+                              <View style={styles.modalOverlay}>
+                                {/* This area will close the modal when tapped */}
+                                <TouchableWithoutFeedback>
+                                  <View style={styles.tooltip}>
+                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantReturn)}/persons</Text>
+                                  </View>
+                                </TouchableWithoutFeedback>
+                              </View>
+                            </TouchableWithoutFeedback>
+                          </Modal>
+                        </View>
+                      )}
+                      {pickupReturn && pickupPriceReturn != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>
+                            Pick up
+                          </Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceReturn)} </Text>
+
+                        </View>
+                      )}
+                      {dropoffReturn && dropoffPriceReturn != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>
+                            Drop off
+                          </Text>
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceReturn)} </Text>
+
+                        </View>
+                      )}
+                      {discountReturn != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>
+                            Discount
+                          </Text>
+                          <Text style={styles.redText}>
+                            - ฿ {discountReturn} </Text>
+
+                        </View>
+                      )}
+                      <View style={styles.rowpromo}>
+                        <Text>
+                          Subtotal
+                        </Text>
+                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalReturn)} </Text>
+                      </View>
+                      <View style={styles.divider} />
+                    </>
+                  )}
+
+                  <View style={styles.rowpromo}>
+                    <Text style={styles.totaltext}>Total</Text>
+                    <Text style={styles.totaltext}>฿ {formatNumberWithComma(total)}</Text>
+                  </View>
                 </View>
-              </View>
 
-            ))}
-          </>)}
+              ))}
+            </>)}
 
-        <View style={styles.rowButton}>
-          <TouchableOpacity
-            style={[styles.BackButton]} // Use an array if you want to combine styles
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <Text style={styles.BackButtonText}>Go Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.ActionButton]} // Use an array if you want to combine styles
-            onPress={() => {
-              handleNext();
-            }}>
-            <Text style={styles.searchButtonText}>Next Step</Text>
-          </TouchableOpacity>
-        </View>
-      
-</ImageBackground>
-    </ScrollView>
+          <View style={styles.rowButton}>
+   
+            <TouchableOpacity
+              style={[styles.ActionButton,{ width: '100%',}]} // Use an array if you want to combine styles
+              onPress={() => {
+                handleNext();
+              }}>
+              <Text style={styles.searchButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+
+        </ImageBackground>
+      </ScrollView>
     </SafeAreaView>
 
   );
@@ -2342,10 +2415,10 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-   justifyContent: 'space-between',
+    justifyContent: 'space-between',
     flexDirection: 'row',
     alignItems: 'center',
-   // padding:  wp('1%'),
+    // padding:  wp('1%'),
     width: '50%',
     marginRight: wp('1%'),
 
@@ -2359,10 +2432,10 @@ const styles = StyleSheet.create({
     marginTop: 28,
     marginBottom: 36,
     shadowColor: '#FD501E', // orange shadow
-    shadowOpacity: 0.22,
-    shadowRadius: 36,
-    shadowOffset: { width: 0, height: 18 },
-    elevation: 16,
+    shadowOpacity: 0.13,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 7,
     borderWidth: 2,
     borderColor: 'rgba(253,80,30,0.15)', // light orange border
     // overflow: 'hidden', // สำหรับ blur/gradient
@@ -2411,6 +2484,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#002348',
     marginTop: 4,
+
   },
 
 
@@ -2523,7 +2597,8 @@ const styles = StyleSheet.create({
     color: '#666'
   },
   section: {
-    marginBottom: 20
+    marginBottom: 0,
+    padding: 20,
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -2558,9 +2633,11 @@ const styles = StyleSheet.create({
   col: {
     flexDirection: 'column',
     margin: wp('1%'),
-    width: 100,
+    width: 110,
+    // alignItems: 'center',
+    padding: wp('3%'),
     alignItems: 'center',
-    padding: wp('3%')
+
   },
   ship: {
     fontSize: 12,
@@ -2715,6 +2792,14 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
+  },
+  orangeCircleIcon: {
+    backgroundColor: '#FD501E',
+    borderRadius: 50,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
