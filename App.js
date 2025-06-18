@@ -31,7 +31,6 @@ import OCRResultScreen from './(Screen)/OCRResultScreen';
 import SplashScreenComponent from './(component)/SplashScreenComponent';
 import PopularDestination from './(Screen)/populardestination';
 import LocationDetail from './(Screen)/LocationDetail';
-import QRCodeScannerScreen from './QRCodeScannerScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AddCardScreen from './(Screen)/AddCardScreen';
 import SearchFerryDemo from './SearchFerryDemo';
@@ -63,7 +62,6 @@ const AppNavigator = () => (
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
-    <Stack.Screen name="QRCodeScannerScreen" component={QRCodeScannerScreen} options={{ headerShown: false }} />
      <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
   </Stack.Navigator>
 );

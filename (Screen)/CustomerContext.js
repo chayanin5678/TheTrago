@@ -82,7 +82,22 @@ export const CustomerProvider = ({ children }) => {
     popdestination: '',
     discount:0,
     exchaneRate:0,
-    intervalId: null, // สำหรับเก็บ ID ของ setInterval
+    intervalId: null, 
+    international : '',
+    passenger: [
+      {
+        prefix: '',
+        fname: '',
+        lname: '',
+        idtype: '',
+        nationality: '',
+        passport: '',
+        dateofissue: '',
+        passportexpiry: '',
+        birthday: '',
+        type: ''
+      }
+    ]
 
   });
 

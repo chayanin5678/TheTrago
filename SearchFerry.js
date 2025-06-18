@@ -1215,7 +1215,8 @@ const SearchFerry = ({ navigation, route }) => {
                                 piccompanyDepart: item.md_company_picname,
                                 pictimetableDepart: item.md_timetabledetail_picname1,
                                 discount: discount,
-                                exchaneRate: item.md_exchange_money
+                                exchaneRate: item.md_exchange_money,
+                                international: item.md_timetable_international,
                               });
                               navigation.navigate('TripDetail');
                             }} >
@@ -1431,7 +1432,8 @@ const SearchFerry = ({ navigation, route }) => {
                                   piccompanyDepart: item.md_company_picname,
                                   pictimetableDepart: item.md_timetabledetail_picname1,
                                   discount: discount,
-                                  exchaneRate: item.md_exchange_money
+                                  exchaneRate: item.md_exchange_money,
+                                  international: item.md_timetable_international,
                                 });
 
 

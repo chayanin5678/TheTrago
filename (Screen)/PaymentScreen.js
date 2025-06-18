@@ -55,7 +55,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [brand, setBrand] = useState(null);
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true); // Skeleton loader state
-
+ 
 
   console.log("Year:", year);
   console.log("Booking DateTime:", currentDateTime);
@@ -357,7 +357,7 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("❌ Error:", error);
       setIsLoading(false);
-      Alert.alert("❌ Error", error.message);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -385,6 +385,7 @@ const PaymentScreen = ({ navigation, route }) => {
   // 🛠️ ฟังก์ชันสำหรับสร้าง Booking
   const createBooking = async (paymentCode) => {
     try {
+      console.log("country:", customerData.country);
       console.log("📌 Creating Booking with Payment Code:", paymentCode);
       await axios.post(`${ipAddress}/booking`, {
         md_booking_memberid: 0,//1
@@ -432,7 +433,7 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("✅ Booking created successfully");
     } catch (error) {
       console.error("❌ Error submitting booking:", error);
-      throw new Error("❌ Failed to create booking");
+      throw new Error("Failed to create booking");
     }
   };
 

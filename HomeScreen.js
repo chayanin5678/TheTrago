@@ -509,7 +509,9 @@ const HomeScreen = ({ navigation }) => {
       if (response.ok) {
         console.log('Country data:', json.data);
         updateCustomerData({
-          selectcoountrycode: `(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`
+          selectcoountrycode: `(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`,
+          country: json.data[0].sys_countries_code,
+          countrycode: json.data[0].sys_countries_telephone,
         });
         return json.data;
       } else {

@@ -31,8 +31,7 @@
       ]
     },
     "plugins": [
-      "expo-secure-store",
-      "expo-barcode-scanner"
+      "expo-secure-store"
     ],
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
