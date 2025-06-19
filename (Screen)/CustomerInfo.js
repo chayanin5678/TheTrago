@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
@@ -9,6 +9,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.'];
 
@@ -45,15 +46,15 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
     }),
     validate: () => {
       let errors = {};
-      if (!selectedTitle || selectedTitle === 'Please Select') errors.selectedTitle = '';
-      if (!fname || fname.trim() === '') errors.fname = '';
-      if (!lname || lname.trim() === '') errors.lname = '';
-      if (!selectedNationality || selectedNationality === 'Please Select') errors.nationality = '';
-      if (!passport || passport.trim() === '') errors.passport = '';
-      if (!dateOfIssue) errors.dateOfIssue = '';
-      if (!passportExpiry) errors.passportExpiry = '';
-      if (!birthday) errors.birthday = '';
-      setFieldErrors(errors);
+      if (!selectedTitle || selectedTitle === 'Please Select') errors.selectedTitle = true;
+      if (!fname || fname.trim() === '') errors.fname = true;
+      if (!lname || lname.trim() === '') errors.lname = true;
+      if (!selectedNationality || selectedNationality === 'Please Select') errors.nationality = true;
+      if (!passport || passport.trim() === '') errors.passport = true;
+      if (!dateOfIssue) errors.dateOfIssue = true;
+      if (!passportExpiry) errors.passportExpiry = true;
+      if (!birthday) errors.birthday = true;
+      setFieldErrors(errors); // This will trigger red border for all empty fields
       return errors;
     },
     setFieldErrors: (errors) => {
@@ -65,7 +66,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
     item.sys_countries_nameeng.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Clear error when user types
+  // Add error state for each field
   const handleFnameChange = (text) => {
     setFname(text);
     setFieldErrors((prev) => ({ ...prev, fname: undefined }));
@@ -78,6 +79,18 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
     setPassport(text);
     setFieldErrors((prev) => ({ ...prev, passport: undefined }));
   };
+  const handleDateOfIssue = (date) => {
+    setDateOfIssue(date);
+    setFieldErrors((prev) => ({ ...prev, dateOfIssue: undefined }));
+  };
+  const handlePassportExpiry = (date) => {
+    setPassportExpiry(date);
+    setFieldErrors((prev) => ({ ...prev, passportExpiry: undefined }));
+  };
+  const handleBirthday = (date) => {
+    setBirthday(date);
+    setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
+  };
 
   return (
     <View style={styles.promo}>
@@ -86,7 +99,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* คำนำหน้า */}
       <Text style={styles.textHead}>Title</Text>
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, fieldErrors.selectedTitle && styles.errorInput]}
         onPress={() => setModalVisible(true)}>
         <Text style={styles.buttonText}>{selectedTitle}</Text>
         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -159,13 +172,12 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
                   } else {
                     setSelectedNationality(`(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`);
                   }
-                  setFieldErrors((prev) => ({ ...prev, nationality: undefined }));
                   setNationalityModalVisible(false);
                   setSearchQuery('');
                 }}>
                   <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                    {item.sys_countries_nameeng === 'Please Select' || !item.sys_countries_telephone
-                      ? item.sys_countries_nameeng
+                    {item.sys_countries_nameeng === 'Please Select'
+                      ? 'Please Select'
                       : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
                   </Text>
                 </TouchableOpacity>
@@ -193,7 +205,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* Date of Issue */}
       <Text style={styles.textHead}>Date of Issue</Text>
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, fieldErrors.dateOfIssue && styles.errorInput]}
         onPress={() => setShowDatePicker(!showDatePicker)}>
         <Text style={styles.buttonText}>
           {dateOfIssue ? new Date(dateOfIssue).toLocaleDateString('en-GB') : 'Select Date'}
@@ -207,7 +219,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           maximumDate={new Date()}
           onChange={(event, selectedDate) => {
-            if (selectedDate) setDateOfIssue(selectedDate.toISOString().split('T')[0]);
+            if (selectedDate) handleDateOfIssue(selectedDate.toISOString().split('T')[0]);
           }}
         />
       )}
@@ -215,7 +227,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* Passport Expiry Date */}
       <Text style={styles.textHead}>Passport Expiry Date</Text>
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, fieldErrors.passportExpiry && styles.errorInput]}
         onPress={() => setShowPassportExpiryPicker(!showPassportExpiryPicker)}>
         <Text style={styles.buttonText}>
           {passportExpiry ? new Date(passportExpiry).toLocaleDateString('en-GB') : 'Select Date'}
@@ -229,7 +241,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           minimumDate={new Date()}
           onChange={(event, selectedDate) => {
-            if (selectedDate) setPassportExpiry(selectedDate.toISOString().split('T')[0]);
+            if (selectedDate) handlePassportExpiry(selectedDate.toISOString().split('T')[0]);
           }}
         />
       )}
@@ -237,7 +249,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* Date of Birth */}
       <Text style={styles.textHead}>Date of Birth</Text>
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, fieldErrors.birthday && styles.errorInput]}
         onPress={() => setShowBirthdayPicker(!showBirthdayPicker)}>
         <Text style={styles.buttonText}>
           {birthday ? new Date(birthday).toLocaleDateString('en-GB') : 'Select Date'}
@@ -251,7 +263,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           maximumDate={new Date()}
           onChange={(event, selectedDate) => {
-            if (selectedDate) setBirthday(selectedDate.toISOString().split('T')[0]);
+            if (selectedDate) handleBirthday(selectedDate.toISOString().split('T')[0]);
           }}
         />
       )}
@@ -277,7 +289,10 @@ const CustomerInfo = ({ navigation }) => {
   const [country, setCountry] = useState(customerData.country); // ใช้ค่าเริ่มต้นจาก customerData
   const [countrycode, setCountrycode] = useState(customerData.countrycode); // ใช้ค่าเริ่มต้นจาก customerData
   const [errors, setErrors] = useState({});
-  const passengerFormRefs = React.useRef([]);
+  const [isWhatsapp, setIsWhatsapp] = useState(0); // State for Whatsapp checkbox
+  // State for Contact Details errors
+  const [contactErrors, setContactErrors] = useState({ phone: false, mobile: false, email: false });
+  const passengerFormRefs = useRef([]);
 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
@@ -295,80 +310,23 @@ const CustomerInfo = ({ navigation }) => {
   // ฟังก์ชันตรวจสอบข้อผิดพลาด
   const handleNext = () => {
     if (customerData.international == 0) {
-    let newErrors = {};
-    if (selectedTitle === 'Please Select') newErrors.selectedTitle = true;
-    if (!Firstname) newErrors.Firstname = true;
-    if (!Lastname) newErrors.Lastname = true;
-    if (selectedTele === 'Please Select') newErrors.selectedTele = true;
-    if (!mobileNumber) newErrors.mobileNumber = true;
-    if (!email) newErrors.email = true;
+      let newErrors = {};
+      if (selectedTitle === 'Please Select') newErrors.selectedTitle = true;
+      if (!Firstname) newErrors.Firstname = true;
+      if (!Lastname) newErrors.Lastname = true;
+      if (selectedTele === 'Please Select') newErrors.selectedTele = true;
+      if (!mobileNumber) newErrors.mobileNumber = true;
+      if (!email) newErrors.email = true;
 
-    if (!email) {
-      newErrors.email = true;
-    } else {
-      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-      if (!emailRegex.test(email)) {
+      if (!email) {
         newErrors.email = true;
-      }
-    }
-
-    updateCustomerData({
-      selectedTitle: selectedTitle,
-      Firstname: Firstname,
-      Lastname: Lastname,
-      tel: mobileNumber,
-      email: email,
-      companyname: timetableDepart[0].md_company_nameeng,
-      startingpoint_name: timetableDepart[0].startingpoint_name,
-      endpoint_name: timetableDepart[0].endpoint_name,
-      boatypeid: timetableDepart[0].md_timetable_boattypeid,
-      country: country,
-      countrycode: '+' + countrycode,
-      time: timetableDepart[0].md_timetable_time,
-      departtime: timetableDepart[0].md_timetable_departuretime,
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors); // Update the errors state
-
-      // Show an alert if there are missing fields or invalid email
-      if (newErrors.email) {
-        Alert.alert('Invalid Email', 'Please enter a valid email address.', [
-          { text: 'OK', onPress: () => console.log('OK Pressed') }
-        ]);
       } else {
-        Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
-          { text: 'OK', onPress: () => console.log('OK Pressed') }
-        ]);
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (!emailRegex.test(email)) {
+          newErrors.email = true;
+        }
       }
 
-      return;
-    }
-
-
-    // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
-    navigation.navigate('PaymentScreen');
-    } else {
-      // ตรวจสอบข้อมูลผู้โดยสาร (PassengerForm)
-      let passengerErrors = [];
-      let hasPassengerError = false;
-      if (passengerFormRefs && passengerFormRefs.current) {
-        passengerErrors = passengerFormRefs.current.map(ref => ref?.validate?.() || {});
-        hasPassengerError = passengerErrors.some(err => Object.keys(err).length > 0);
-        // set error ให้ทุกฟอร์ม
-        passengerFormRefs.current.forEach((formRef, idx) => {
-          if (formRef && passengerErrors[idx]) {
-            formRef.setFieldErrors?.(passengerErrors[idx]);
-          }
-        });
-      }
-      if (hasPassengerError) {
-        Alert.alert('Incomplete Passenger Info', 'Please fill in all required passenger fields.', [
-          { text: 'OK', onPress: () => {} }
-        ]);
-        return;
-      }
-      // ถ้าข้อมูลครบ
       updateCustomerData({
         selectedTitle: selectedTitle,
         Firstname: Firstname,
@@ -384,7 +342,75 @@ const CustomerInfo = ({ navigation }) => {
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
       });
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors); // Update the errors state
+
+        // Show an alert if there are missing fields or invalid email
+        if (newErrors.email) {
+          Alert.alert('Invalid Email', 'Please enter a valid email address.', [
+            { text: 'OK', onPress: () => console.log('OK Pressed') }
+          ]);
+        } else {
+          Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
+            { text: 'OK', onPress: () => console.log('OK Pressed') }
+          ]);
+        }
+
+        return;
+      }
+
+
       // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
+      navigation.navigate('PaymentScreen');
+    } else {
+      // ตรวจสอบข้อมูลผู้โดยสาร (PassengerForm)
+      const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
+      if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
+        Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
+          { text: 'OK', onPress: () => {} }
+        ]);
+        return;
+      }
+      let passengerErrors = [];
+      let hasPassengerError = false;
+      passengerErrors = passengerFormRefs.current.map(ref => ref?.validate?.() || {});
+      hasPassengerError = passengerErrors.some(err => Object.keys(err).length > 0);
+      passengerFormRefs.current.forEach((formRef, idx) => {
+        if (formRef) {
+          const data = formRef.getData?.() || {};
+          const allFields = ['selectedTitle','fname','lname','nationality','passport','dateOfIssue','passportExpiry','birthday'];
+          const errorObj = {};
+          allFields.forEach(f => {
+            if (!data[f] || data[f] === 'Please Select') errorObj[f] = true;
+          });
+          formRef.setFieldErrors?.(errorObj);
+        }
+      });
+      if (hasPassengerError) {
+        Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
+          { text: 'OK', onPress: () => {} }
+        ]);
+        return;
+      }
+      // ถ้าข้อมูลครบ
+      const passengerDataArr = passengerFormRefs.current.map(ref => ref?.getData?.() || {});
+      updateCustomerData({
+        selectedTitle: selectedTitle,
+        Firstname: Firstname,
+        Lastname: Lastname,
+        tel: mobileNumber,
+        email: email,
+        companyname: timetableDepart[0].md_company_nameeng,
+        startingpoint_name: timetableDepart[0].startingpoint_name,
+        endpoint_name: timetableDepart[0].endpoint_name,
+        boatypeid: timetableDepart[0].md_timetable_boattypeid,
+        country: country,
+        countrycode: '+' + countrycode,
+        time: timetableDepart[0].md_timetable_time,
+        departtime: timetableDepart[0].md_timetable_departuretime,
+        passenger: passengerDataArr
+      });
       navigation.navigate('PaymentScreen');
     }
   };
@@ -521,7 +547,7 @@ const CustomerInfo = ({ navigation }) => {
             ...data.data
           ];
           setTelePhone(countryList);
-          
+
         } else {
           console.error('Data is not an array', data);
           setTelePhone([]);
@@ -691,7 +717,6 @@ const CustomerInfo = ({ navigation }) => {
                     type="adult"
                     index={i}
                     telePhone={telePhone}
-                    ref={el => passengerFormRefs.current[i] = el}
                   />
                 ))}
                 {[...Array(customerData.child)].map((_, i) => (
@@ -700,7 +725,6 @@ const CustomerInfo = ({ navigation }) => {
                     type="child"
                     index={i}
                     telePhone={telePhone}
-                    ref={el => passengerFormRefs.current[i + customerData.adult] = el}
                   />
                 ))}
                 {[...Array(customerData.infant)].map((_, i) => (
@@ -709,9 +733,82 @@ const CustomerInfo = ({ navigation }) => {
                     type="infant"
                     index={i}
                     telePhone={telePhone}
-                    ref={el => passengerFormRefs.current[i + customerData.adult + customerData.child] = el}
                   />
                 ))}
+
+                {/* Contact Details Section (after all PassengerForms) */}
+                <View style={styles.promo}>
+                  <Text style={styles.TextInput}>Contact Details</Text>
+                  <Text style={styles.textHead}>Phone number</Text>
+                  <TouchableOpacity
+                    style={[styles.button, errors.selectedTele && styles.errorInput]}
+                    onPress={toggleTeleModal}>
+                    <Text style={styles.buttonText}>{selectedTele}</Text>
+                    <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                  </TouchableOpacity>
+
+                  {/* Modal for selecting telephone */}
+                  <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
+                    <View style={styles.modalOverlay}>
+                      <View style={styles.modalContent}>
+                        <TextInput
+                          placeholder="Search country"
+                          value={searchQuery}
+                          onChangeText={setSearchQuery}
+                          style={styles.textInput}
+                          placeholderTextColor="#888"
+                        />
+                        <FlatList
+                          data={filteredTelePhones}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
+                              <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                                {item.sys_countries_nameeng === 'Please Select'
+                                  ? 'Please Select'
+                                  : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          keyExtractor={(item, index) => index.toString()}
+                          initialNumToRender={5}
+                          maxToRenderPerBatch={5}
+                          windowSize={5}
+                          pagingEnabled
+                        />
+                      </View>
+                    </View>
+                  </Modal>
+                  <TextInput
+                    placeholder="Enter your mobile number"
+                    style={[styles.input, contactErrors.mobile && styles.errorInput]}
+                    keyboardType="number-pad"
+                    value={mobileNumber}
+                    onChangeText={text => {
+                      setmobileNumber(text);
+                      setContactErrors(prev => ({ ...prev, mobile: false }));
+                    }}
+                  />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginBottom: 10 }}>
+                    <TouchableOpacity
+                      onPress={() => setIsWhatsapp(isWhatsapp ? 0 : 1)}
+                      style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center', marginRight: 6 }}>
+                      <MaterialIcons name={isWhatsapp ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                    </TouchableOpacity>
+                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Whatsapp</Text>
+                  </View>
+                  <Text style={styles.title}>Where should we send your booking confirmation?</Text>
+                  <Text style={styles.textHead}>Email</Text>
+                  <TextInput
+                    placeholder="Enter Your Email"
+                    style={[styles.input, contactErrors.email && styles.errorInput]}
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={text => {
+                      setemail(text);
+                      setContactErrors(prev => ({ ...prev, email: false }));
+                    }}
+                  />
+                </View>
               </>
             )}
 
@@ -801,10 +898,10 @@ const CustomerInfo = ({ navigation }) => {
                     </View>
                   )}
                   {customerData.discountDepart != 0 && (
-                  <View style={styles.rowpromo}>
-                    <Text>Discount</Text>
-                    <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
-                  </View>
+                    <View style={styles.rowpromo}>
+                      <Text>Discount</Text>
+                      <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
+                    </View>
                   )}
                   <View style={styles.rowpromo}>
                     <Text>Ticket fare</Text>
@@ -872,10 +969,10 @@ const CustomerInfo = ({ navigation }) => {
                         </View>
                       )}
                       {customerData.discountReturn != 0 && (
-                      <View style={styles.rowpromo}>
-                        <Text>Discount</Text>
-                        <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
-                      </View>
+                        <View style={styles.rowpromo}>
+                          <Text>Discount</Text>
+                          <Text style={styles.redText}>- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                        </View>
                       )}
                       <View style={styles.rowpromo}>
                         <Text>Ticket fare</Text>
@@ -915,9 +1012,9 @@ const CustomerInfo = ({ navigation }) => {
               </View>
             </View>
             <View style={styles.rowButton}>
-         
+
               <TouchableOpacity
-                style={[styles.ActionButton, {width: '100%'}]} // Use an array if you want to combine styles
+                style={[styles.ActionButton, { width: '100%' }]} // Use an array if you want to combine styles
                 onPress={() => {
                   handleNext();
                 }}>

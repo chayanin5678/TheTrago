@@ -25,7 +25,7 @@ export const CustomerProvider = ({ children }) => {
     boatypeid: '', //ประเภทเรือ
     country: '', //ประเทศ
     countrycode: 'Please Select', //รหัสประเทศ
-    roud: '', //ประเภทการเดินทาง
+    roud: 1, //ประเภทการเดินทาง
     price:'', //ราคา
     total:0, //ราคารวม
     currency:'THB', //สกุลเงิน
