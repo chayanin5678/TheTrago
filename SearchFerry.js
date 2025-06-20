@@ -329,8 +329,7 @@ const SearchFerry = ({ navigation, route }) => {
   useEffect(() => {
     if (
       customerData?.roud !== undefined &&
-      startingPoint?.id &&
-      endPoint?.id &&
+      startingPoint?.id && startingPoint.id !=0 && endPoint?.id && endPoint.id != 0 &&
       calendarStartDate &&
       (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
     ) {
@@ -433,7 +432,7 @@ const SearchFerry = ({ navigation, route }) => {
 
       if (response.data.status === 'success') {
         setDepartTrips(response.data.data.departtrip);
-        setReturnDate(response.data.data.returntrip);
+        setReturnTrips(response.data.data.returntrip);
 
       } else {
         setError('ไม่สามารถโหลดข้อมูลได้');
@@ -1275,7 +1274,7 @@ const SearchFerry = ({ navigation, route }) => {
                         </View>
                         {/* ราคาและปุ่ม */}
                         <View style={[styles.footerRow, { marginTop: 18 }]}>
-                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{item.md_timetable_saleadult} </Text>/ person
+                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
                             {item.md_timetable_discount > 0 && (
                               <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
                             )}</Text>
@@ -1293,16 +1292,16 @@ const SearchFerry = ({ navigation, route }) => {
                                 endPointId: endPoint.id,
                                 endpoint_name: endPoint.name,
                                 companyDepartId: item.md_timetable_companyid,
-                                pierStartDepartId: item.md_timetable_pierstart,
-                                pierEndDepartId: item.md_timetable_pierend,
+                                pierStartDepartId: item.md_timetable_pierstartid,
+                                pierEndDepartId: item.md_timetable_pierendid,
                                 netDepart: item.md_timetable_netadult,
                                 adult: adults,
                                 child: children,
                                 infant: infant,
                                 timetableReturn: item.md_timetable_id,
-                                piccompanyDepart: item.md_company_picname,
-                                pictimetableDepart: item.md_timetabledetail_picname1,
-                                discount: discount,
+                                piccompanyDepart: item.md_timetable_companypic,
+                                pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                discount: item.md_timetable_discount,
                                 exchaneRate: item.md_exchange_money,
                                 international: item.md_timetable_international,
                               });
@@ -1320,32 +1319,29 @@ const SearchFerry = ({ navigation, route }) => {
                           </View>
                         )}
                         {/* Hidden measure view for animation height calculation */}
-                        {item.md_timetable_tripdetail.map((trip) => (
-                          <View key={trip.md_timetabledetail_id}>
-                            <View
-                              style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
-                              onLayout={(e) => {
-                                const h = e.nativeEvent.layout.height;
-                                if (contentHeights[trip.md_timetable_id] !== h) {
-                                  setContentHeights(prev => ({ ...prev, [trip.md_timetabledetail_id]: h }));
-                                }
-                              }}
-                            >
-                              <Text>{removeHtmlTags(trip.md_timetabledetail_detaileng1 || "")}</Text>
-                              <Image
-                                source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${trip.md_timetabledetail_picname1}` }}
-                                style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                              />
-                            </View>
-                          </View>
-                        ))}
+
+                        <View
+                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
+                          onLayout={(e) => {
+                            const h = e.nativeEvent.layout.height;
+                            if (contentHeights[item.md_timetable_id] !== h) {
+                              setContentHeights(prev => ({ ...prev, [item.md_timetable_id]: h }));
+                            }
+                          }}
+                        >
+                          <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
+                          <Image
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
+                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
+                          />
+                        </View>
+
                       </View>
                       {/* Animated detail section */}
-                       {item.md_timetable_tripdetail.map((trip) => (
-                          <View key={trip.md_timetabledetail_id}>
+
                       <Animated.View
                         style={{
-                          maxHeight: selectedPickup === trip.md_timetabledetail_id ? getAnimatedHeight(trip.md_timetabledetail_id) : 0,
+                          maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                           overflow: 'hidden',
                           padding: 16,
                           backgroundColor: '#fff',
@@ -1353,14 +1349,13 @@ const SearchFerry = ({ navigation, route }) => {
                           borderBottomRightRadius: 32,
                         }}
                       >
-                        <Text style={{ color: '#666666' }}>{removeHtmlTags(trip.md_timetabledetail_detaileng1 || "")}</Text>
+                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
                         <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${trip.md_timetabledetail_picname1}` }}
+                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
                           style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                         />
                       </Animated.View>
-                    </View>
-                      ))}
+
                     </View>
 
                   </TouchableOpacity>
@@ -1448,7 +1443,7 @@ const SearchFerry = ({ navigation, route }) => {
                         }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Image
-                              source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                              source={{ uri: `${item.md_timetable_companypic}` }}
                               style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
                               resizeMode="cover"
                             />
@@ -1463,11 +1458,11 @@ const SearchFerry = ({ navigation, route }) => {
                               numberOfLines={1}
                               ellipsizeMode="tail"
                             >
-                              {item.md_company_nameeng}
+                              {item.md_timetable_companyname}
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', gap: 6 }}>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_timetable_seatid}</Text>
                             <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
                           </View>
                         </View>
@@ -1475,13 +1470,13 @@ const SearchFerry = ({ navigation, route }) => {
                         <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
                           <View style={styles.detailsRow}>
                             <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.start_location_name}</Text>
-                              <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                              <Text style={styles.location}>{item.md_timetable_startid}</Text>
+                              <Text style={styles.subtext}>{item.md_timetable_pierstart}</Text>
                               <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
                               <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                             </View>
                             <View style={styles.middleContainer}>
-                              <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                              <Text style={styles.duration}>{item.md_timetable_boattypeid}</Text>
                               <View style={styles.iconLineContainer}>
                                 <View style={styles.dashedLine} />
                                 <View style={styles.shipIcon}>
@@ -1489,21 +1484,28 @@ const SearchFerry = ({ navigation, route }) => {
                                 </View>
                                 <View style={styles.dashedLine} />
                               </View>
-                              <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                              <Text style={styles.duration}>{item.md_timetable_time}</Text>
                             </View>
                             <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.end_location_name}</Text>
-                              <Text style={styles.subtext}>{item.name_pierend}</Text>
+                              <Text style={styles.location}>{item.md_timetable_endid}</Text>
+                              <Text style={styles.subtext}>{item.md_timetable_pierend}</Text>
                               <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
                               <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                             </View>
                           </View>
                           {/* ราคาและปุ่ม */}
                           <View style={[styles.footerRow, { marginTop: 18 }]}>
-                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
-                              {discount > 0 && (
-                                <Text style={styles.discount}> {discount}% Off</Text>
-                              )}</Text>
+                            <Text style={styles.price}>
+                              THB <Text style={styles.pricebig}>
+                                {item.md_timetable_saleadult_round !== 0
+                                  ? formatNumberWithComma(item.md_timetable_saleadult_round)
+                                  : formatNumberWithComma(item.md_timetable_saleadult)}
+                              </Text> / person
+                            </Text>
+
+                            {item.md_timetable_discount > 0 && (
+                              <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
+                            )}
                             <TouchableOpacity style={styles.bookNowButton}
                               onPress={() => {
                                 // Update customer data
@@ -1521,15 +1523,15 @@ const SearchFerry = ({ navigation, route }) => {
                                   endPointId: endPoint.id,
                                   endpoint_name: endPoint.name,
                                   companyDepartId: item.md_timetable_companyid,
-                                  pierStartDepartId: item.md_timetable_pierstart,
-                                  pierEndDepartId: item.md_timetable_pierend,
+                                  pierStartDepartId: item.md_timetable_pierstartid,
+                                  pierEndDepartId: item.md_timetable_pierendid,
                                   netDepart: item.md_timetable_netadult,
                                   adult: adults,
                                   child: children,
                                   infant: infant,
-                                  piccompanyDepart: item.md_company_picname,
-                                  pictimetableDepart: item.md_timetabledetail_picname1,
-                                  discount: discount,
+                                  piccompanyDepart: item.md_timetable_companypic,
+                                  pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                  discount: item.md_timetable_discount,
                                   exchaneRate: item.md_exchange_money,
                                   international: item.md_timetable_international,
                                 });
@@ -1545,11 +1547,11 @@ const SearchFerry = ({ navigation, route }) => {
                               <Text style={styles.bookNowText}>Book Now</Text>
                             </TouchableOpacity>
                           </View>
-                          {item.md_timetable_remarkeng && (
+                          {item.md_timetable_remark.en && (
                             <View style={styles.remarkContainer}>
                               <Text style={styles.remarkText}>
                                 <Text style={styles.remarkLabel}>Remark: </Text>
-                                {item.md_timetable_remarkeng}
+                                {item.md_timetable_remark.en}
                               </Text>
                             </View>
                           )}
@@ -1563,9 +1565,9 @@ const SearchFerry = ({ navigation, route }) => {
                               }
                             }}
                           >
-                            <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                            <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
                             <Image
-                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
                               style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                             />
                           </View>
@@ -1581,9 +1583,9 @@ const SearchFerry = ({ navigation, route }) => {
                             borderBottomRightRadius: 32,
                           }}
                         >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
                           <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
                             style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                           />
                         </Animated.View>
@@ -1634,7 +1636,7 @@ const SearchFerry = ({ navigation, route }) => {
                         }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Image
-                              source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                              source={{ uri: `${item.md_timetable_companypic}` }}
                               style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
                               resizeMode="cover"
                             />
@@ -1649,11 +1651,11 @@ const SearchFerry = ({ navigation, route }) => {
                               numberOfLines={1}
                               ellipsizeMode="tail"
                             >
-                              {item.md_company_nameeng}
+                              {item.md_timetable_companyname}
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', gap: 6 }}>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_timetable_seatid}</Text>
                             <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
                           </View>
                         </View>
@@ -1661,13 +1663,13 @@ const SearchFerry = ({ navigation, route }) => {
                         <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
                           <View style={styles.detailsRow}>
                             <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.start_location_name}</Text>
-                              <Text style={styles.subtext}>{item.name_pierstart}</Text>
+                              <Text style={styles.location}>{item.md_timetable_startid}</Text>
+                              <Text style={styles.subtext}>{item.md_timetable_pierstart}</Text>
                               <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
                               <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                             </View>
                             <View style={styles.middleContainer}>
-                              <Text style={styles.duration}>{item.md_boattype_nameeng}</Text>
+                              <Text style={styles.duration}>{item.md_timetable_boattypeid}</Text>
                               <View style={styles.iconLineContainer}>
                                 <View style={styles.dashedLine} />
                                 <View style={styles.shipIcon}>
@@ -1675,20 +1677,20 @@ const SearchFerry = ({ navigation, route }) => {
                                 </View>
                                 <View style={styles.dashedLine} />
                               </View>
-                              <Text style={styles.duration}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                              <Text style={styles.duration}>{item.md_timetable_time}</Text>
                             </View>
                             <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.end_location_name}</Text>
-                              <Text style={styles.subtext}>{item.name_pierend}</Text>
+                              <Text style={styles.location}>{item.md_timetable_endid}</Text>
+                              <Text style={styles.subtext}>{item.md_timetable_pierend}</Text>
                               <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
                               <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                             </View>
                           </View>
                           {/* ราคาและปุ่ม */}
                           <View style={[styles.footerRow, { marginTop: 18 }]}>
-                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(calculateDiscountedPrice(item.md_timetable_saleadult * item.md_exchange_money))} </Text>/ person
-                              {discount > 0 && (
-                                <Text style={styles.discount}> {discount}% Off</Text>
+                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{item.md_timetable_saleadult_round !== 0 ? formatNumberWithComma(item.md_timetable_saleadult_round) : formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
+                              {item.md_timetable_discount > 0 && (
+                                <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
                               )}</Text>
                             <TouchableOpacity style={styles.bookNowButton}
                               onPress={() => {
@@ -1697,11 +1699,11 @@ const SearchFerry = ({ navigation, route }) => {
                                   returndate: calendarEndDate,
                                   timeTableReturnId: item.md_timetable_id,
                                   companyReturnId: item.md_timetable_companyid,
-                                  pierStartReturntId: item.md_timetable_pierstart,
-                                  pierEndReturntId: item.md_timetable_pierend,
-                                  piccompanyReturn: item.md_company_picname,
-                                  pictimetableReturn: item.md_timetabledetail_picname1,
-                                  discount: discount,
+                                  pierStartReturntId: item.md_timetable_pierstartid,
+                                  pierEndReturntId: item.md_timetable_pierendid,
+                                  piccompanyReturn: item.md_timetable_companypic,
+                                  pictimetableReturn: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                  discount: item.md_timetable_discount,
                                   exchaneRate: item.md_exchange_money
                                 });
 
@@ -1715,11 +1717,11 @@ const SearchFerry = ({ navigation, route }) => {
                               <Text style={styles.bookNowText}>Book Now</Text>
                             </TouchableOpacity>
                           </View>
-                          {item.md_timetable_remarkeng && (
+                          {item.md_timetable_remark.en && (
                             <View style={styles.remarkContainer}>
                               <Text style={styles.remarkText}>
                                 <Text style={styles.remarkLabel}>Remark: </Text>
-                                {item.md_timetable_remarkeng}
+                                {item.md_timetable_remark.en}
                               </Text>
                             </View>
                           )}
@@ -1733,9 +1735,9 @@ const SearchFerry = ({ navigation, route }) => {
                               }
                             }}
                           >
-                            <Text>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                            <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
                             <Image
-                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
                               style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                             />
                           </View>
@@ -1751,9 +1753,9 @@ const SearchFerry = ({ navigation, route }) => {
                             borderBottomRightRadius: 32,
                           }}
                         >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetabledetail_detaileng1 || "")}</Text>
+                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
                           <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetabledetail_picname1}` }}
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
                             style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
                           />
                         </Animated.View>

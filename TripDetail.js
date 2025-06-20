@@ -11,8 +11,7 @@ import BackNextButton from './(component)/BackNextButton';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import moment from 'moment';
 import { useCustomer } from './(Screen)/CustomerContext';
-import { collectManifestSchemes } from 'expo-linking';
-import headStyles from './(CSS)/StartingPointScreenStyles';
+import axios from 'axios';
 const TripDetail = ({ navigation, route }) => {
 
   const [tripType, setTripType] = useState("One Way Trip");
@@ -58,8 +57,9 @@ const TripDetail = ({ navigation, route }) => {
   const [pickupReturn, setpickupReturn] = useState(false);
   const [dropoffDepart, setDropoffDepart] = useState(false);
   const [dropoffReturn, setDropoffReturn] = useState(false);
-
-
+  const [priceDepart, setPriceDepart] = useState([]);
+  const [priceReturn, setPriceReturn] = useState([]);
+  const [error, setError] = useState(null);
 
   const [TranSportDepartPickup, setTranSportDepartPickup] = useState([]);
   const [TranSportReturnPickup, setTranSportReturnPickup] = useState([]);
@@ -557,6 +557,80 @@ const TripDetail = ({ navigation, route }) => {
       }).finally(() => {
         setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
+  };
+
+  useEffect(() => {
+
+    fetchPriceferry();
+
+  }, [selectedPickupDepart, selectedDropoffDepart, selectedPickupReturn, selectedDropoffReturn, customerData]);
+
+  const fetchPriceferry = async () => {
+    try {
+      console.log({
+        currency: 'THB',
+        roundtrip: customerData.roud,
+        departtrip: customerData.timeTableDepartId,
+        returntrip: customerData.timeTableReturnId,
+        adult: customerData.adult,
+        child: customerData.child,
+        infant: customerData.infant,
+        departdate: customerData.departdate,
+        returndate: customerData.returndate,
+        pickupdepart1: selectedPickupDepart,
+        dropoffdepart1: selectedDropoffDepart,
+        pickupdepart2: selectedPickupReturn,
+        dropoffdepart2: selectedDropoffReturn,
+      });
+
+      const response = await axios.post(
+        'https://thetrago.com/api/V1/ferry/Getprice',
+        {
+          currency: 'THB',
+          roundtrip: customerData.roud,
+          departtrip: customerData.timeTableDepartId,
+          returntrip: customerData.timeTableReturnId,
+          adult: customerData.adult,
+          child: customerData.child,
+          infant: customerData.infant,
+          departdate: customerData.departdate,
+          returndate: customerData.returndate,
+          ...(selectedPickupDepart != 0 && { pickupdepart1: selectedPickupDepart }),
+          ...(selectedDropoffDepart != 0 && { dropoffdepart1: selectedDropoffDepart }),
+          ...(selectedPickupReturn != 0 && { pickupdepart2: selectedPickupReturn }),
+          ...(selectedDropoffReturn != 0 && { dropoffdepart2: selectedDropoffReturn }),
+          paymentfee: 0
+
+
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.status === 'success') {
+        console.log("🚀 Price Data:", response.data.data.totalDepart);
+        setPriceDepart(Array.isArray(response.data.data)
+          ? response.data.data
+          : [response.data.data]); // บังคับให้เป็น array
+
+        setPriceReturn(Array.isArray(response.data.data.totalReturn)
+          ? response.data.data.totalReturn
+          : [response.data.data.totalReturn]); // บังคับให้เป็น array
+
+      } else {
+        setError('ไม่สามารถโหลดข้อมูลได้');
+      }
+    } catch (err) {
+      console.error("❌ API Error:", err.response?.data || err.message);
+      setPriceDepart([]);
+      setPriceReturn([]);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -1718,7 +1792,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
                               {/* Modal for title selection */}
-                              <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportReturnDropoff}>
+                              <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffReturn}>
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
@@ -1858,8 +1932,9 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-              {timetableDepart.map((item) => (
-                <View key={item.md_timetable_id} style={styles.promo}>
+              {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
+
+                <View key={index} style={styles.promo}>
 
                   <Text style={styles.TextInput}>
                     Booking Summary
@@ -1882,7 +1957,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Icon name="information-circle-outline" size={20} color="red" />
                       </TouchableOpacity>
                     </View>
-                    <Text>฿ {totalAdultDepart} </Text>
+                    <Text>฿ {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
                     {/* Modal (tooltip) */}
                     <Modal
                       visible={modaladultVisibleDepart}
@@ -1895,7 +1970,7 @@ const TripDetail = ({ navigation, route }) => {
                           {/* This area will close the modal when tapped */}
                           <TouchableWithoutFeedback>
                             <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(saleadultDepart)}/persons</Text>
+                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2))}/persons</Text>
                             </View>
                           </TouchableWithoutFeedback>
                         </View>
@@ -1914,7 +1989,16 @@ const TripDetail = ({ navigation, route }) => {
                           <Icon name="information-circle-outline" size={20} color="red" />
                         </TouchableOpacity>
                       </View>
-                      <Text>฿ {totalChildDepart} </Text>
+                      {parseFloat(item.totalDepart.salechild.replace(/,/g, "")) !== 0 ? (
+                        <Text>
+                          ฿ {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")) * customerData.child)}
+                        </Text>
+                      ) : (
+                        <Text>
+                         Free
+                        </Text>
+                      )}
+
                       {/* Modal (tooltip) */}
                       <Modal
                         visible={modalchildVisibleDepart}
@@ -1927,7 +2011,7 @@ const TripDetail = ({ navigation, route }) => {
                             {/* This area will close the modal when tapped */}
                             <TouchableWithoutFeedback>
                               <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(salechildDepart)}/persons</Text>
+                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")).toFixed(2))}/persons</Text>
                               </View>
                             </TouchableWithoutFeedback>
                           </View>
@@ -1945,7 +2029,16 @@ const TripDetail = ({ navigation, route }) => {
                           <Icon name="information-circle-outline" size={20} color="red" />
                         </TouchableOpacity>
                       </View>
-                      <Text>฿ {totalInfantDepart} </Text>
+                      {parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) !== 0 ? (
+                        <Text>
+                          ฿ {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) * customerData.infant)}
+                        </Text>
+                      ) : (
+                        <Text>
+                         Free
+                        </Text>
+                      )}
+
                       {/* Modal (tooltip) */}
                       <Modal
                         visible={modalInfantVisibleDepart}
@@ -1958,7 +2051,7 @@ const TripDetail = ({ navigation, route }) => {
                             {/* This area will close the modal when tapped */}
                             <TouchableWithoutFeedback>
                               <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantDepart)}/persons</Text>
+                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")))}/persons</Text>
                               </View>
                             </TouchableWithoutFeedback>
                           </View>
@@ -1966,31 +2059,37 @@ const TripDetail = ({ navigation, route }) => {
                       </Modal>
                     </View>
                   )}
-                  {pickupDepart && pickupPriceDepart != 0 && (
+                  {pickupDepart &&  (
                     <View style={styles.rowpromo}>
                       <Text>
                         Pick up
                       </Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceDepart)} </Text>
-
+                      {parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")) != 0 ? (
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")))} </Text>
+                      )  : (
+                       <Text>Free</Text>
+                      )}
                     </View>
                   )}
-                  {dropoffDepart && dropoffPriceDepart != 0 && (
+                  {dropoffDepart &&  (
                     <View style={styles.rowpromo}>
                       <Text>
                         Drop off
                       </Text>
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceDepart)} </Text>
-
+                      {parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
+                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")))} </Text>
+                      ) : (
+                        <Text>Free</Text>
+                      )}
                     </View>
                   )}
-                  {discountDepart != 0 && (
+                  {item.totalDepart.save != 0 && (
                     <View style={styles.rowpromo}>
                       <Text>
                         Discount
                       </Text>
                       <Text style={styles.redText}>
-                        - ฿ {discountDepart} </Text>
+                        - ฿ {formatNumberWithComma(parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2))} </Text>
 
                     </View>
                   )}
@@ -1998,10 +2097,10 @@ const TripDetail = ({ navigation, route }) => {
                     <Text>
                       Subtotal
                     </Text>
-                    <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalDepart)} </Text>
+                    <Text style={{ fontWeight: 'bold' }}>  ฿ {formatNumberWithComma(parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
                   </View>
                   <View style={styles.divider} />
-
+                  
                   {customerData.roud === 2 && (
                     <>
                       <Text style={styles.margin}>
@@ -2020,7 +2119,7 @@ const TripDetail = ({ navigation, route }) => {
                             <Icon name="information-circle-outline" size={20} color="red" />
                           </TouchableOpacity>
                         </View>
-                        <Text>฿ {totalAdultReturn} </Text>
+                        <Text>฿  {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
                         {/* Modal (tooltip) */}
                         <Modal
                           visible={modaladultVisibleReturn}
@@ -2033,7 +2132,7 @@ const TripDetail = ({ navigation, route }) => {
                               {/* This area will close the modal when tapped */}
                               <TouchableWithoutFeedback>
                                 <View style={styles.tooltip}>
-                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(saleadultReturn)}/persons</Text>
+                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2))}/persons</Text>
                                 </View>
                               </TouchableWithoutFeedback>
                             </View>
@@ -2052,7 +2151,11 @@ const TripDetail = ({ navigation, route }) => {
                               <Icon name="information-circle-outline" size={20} color="red" />
                             </TouchableOpacity>
                           </View>
-                          <Text>฿ {totalChildReturn} </Text>
+                          {parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) !== 0 ? (
+                           <Text>฿ {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child)} </Text>
+                          ) : (
+                            <Text>Free</Text>
+                          )}
                           {/* Modal (tooltip) */}
                           <Modal
                             visible={modalchildVisibleReturn}
@@ -2065,7 +2168,7 @@ const TripDetail = ({ navigation, route }) => {
                                 {/* This area will close the modal when tapped */}
                                 <TouchableWithoutFeedback>
                                   <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(salechildReturn)}/persons</Text>
+                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2))}/persons</Text>
                                   </View>
                                 </TouchableWithoutFeedback>
                               </View>
@@ -2083,7 +2186,11 @@ const TripDetail = ({ navigation, route }) => {
                               <Icon name="information-circle-outline" size={20} color="red" />
                             </TouchableOpacity>
                           </View>
-                          <Text>฿ {totalInfantReturn} </Text>
+                          {parseFloat(item.totalReturn.saleinfant) !== 0 ? (
+                          <Text>฿ {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2) *  customerData.infant)} </Text>
+                          ) : (
+                            <Text>Free</Text>
+                          )}
                           {/* Modal (tooltip) */}
                           <Modal
                             visible={modalInfantVisibleReturn}
@@ -2096,7 +2203,7 @@ const TripDetail = ({ navigation, route }) => {
                                 {/* This area will close the modal when tapped */}
                                 <TouchableWithoutFeedback>
                                   <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(saleinfantReturn)}/persons</Text>
+                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2))}/persons</Text>
                                   </View>
                                 </TouchableWithoutFeedback>
                               </View>
@@ -2104,31 +2211,37 @@ const TripDetail = ({ navigation, route }) => {
                           </Modal>
                         </View>
                       )}
-                      {pickupReturn && pickupPriceReturn != 0 && (
+                      {pickupReturn && (
                         <View style={styles.rowpromo}>
                           <Text>
                             Pick up
                           </Text>
-                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(pickupPriceReturn)} </Text>
-
+                          { parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")) != 0 ? (
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                            ) : (
+                              <Text>Free</Text>
+                            )}
                         </View>
                       )}
-                      {dropoffReturn && dropoffPriceReturn != 0 && (
+                      {dropoffReturn &&  (
                         <View style={styles.rowpromo}>
                           <Text>
                             Drop off
                           </Text>
-                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(dropoffPriceReturn)} </Text>
-
+                          {parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
+                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                            ) : (
+                              <Text>Free</Text> 
+                            )}
                         </View>
                       )}
-                      {discountReturn != 0 && (
+                      {item.totalReturn.save != 0 && (
                         <View style={styles.rowpromo}>
                           <Text>
                             Discount
                           </Text>
                           <Text style={styles.redText}>
-                            - ฿ {discountReturn} </Text>
+                            - ฿ {formatNumberWithComma(parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2))} </Text>
 
                         </View>
                       )}
@@ -2136,7 +2249,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Text>
                           Subtotal
                         </Text>
-                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(subtotalReturn)} </Text>
+                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
                       </View>
                       <View style={styles.divider} />
                     </>
@@ -2144,7 +2257,7 @@ const TripDetail = ({ navigation, route }) => {
 
                   <View style={styles.rowpromo}>
                     <Text style={styles.totaltext}>Total</Text>
-                    <Text style={styles.totaltext}>฿ {formatNumberWithComma(total)}</Text>
+                    <Text style={styles.totaltext}>฿ {formatNumberWithComma(parseFloat(item.total.replace(/,/g, "")).toFixed(2))}</Text>
                   </View>
                 </View>
 
@@ -2152,9 +2265,9 @@ const TripDetail = ({ navigation, route }) => {
             </>)}
 
           <View style={styles.rowButton}>
-   
+
             <TouchableOpacity
-              style={[styles.ActionButton,{ width: '100%',}]} // Use an array if you want to combine styles
+              style={[styles.ActionButton, { width: '100%', }]} // Use an array if you want to combine styles
               onPress={() => {
                 handleNext();
               }}>
