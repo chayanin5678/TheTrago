@@ -524,6 +524,9 @@ const TripDetail = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           settimetableDepart(data.data);
+          updateCustomerData({  
+            international: data.data[0].md_timetable_international
+          });
         } else {
           console.error('Data is not an array', data);
           settimetableDepart([]);
