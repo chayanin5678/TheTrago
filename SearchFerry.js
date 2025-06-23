@@ -81,6 +81,10 @@ const SearchFerry = ({ navigation, route }) => {
   const [departTrips, setDepartTrips] = useState([]);
   const [returnTrips, setReturnTrips] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedCurrency, setSelectedCurrency] = useState('THB');
+  const [selectedSysmbol, setSelectedSysmbol] = useState('฿');
+  const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [currencyList, setCurrencyList] = useState([]);
 
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
@@ -142,6 +146,24 @@ const SearchFerry = ({ navigation, route }) => {
       alert('กรุณาเลือกวันที่ให้ครบ');
     }
   };
+
+  useEffect(() => {
+    fetch(`${ipAddress}/currency`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          setCurrencyList(data.data);
+        } else {
+          console.error('Unexpected response:', data);
+        }
+      })
+      .catch((err) => {
+        console.error('Fetch error:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
 
 
@@ -329,13 +351,13 @@ const SearchFerry = ({ navigation, route }) => {
   useEffect(() => {
     if (
       customerData?.roud !== undefined &&
-      startingPoint?.id && startingPoint.id !=0 && endPoint?.id && endPoint.id != 0 &&
+      startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
       calendarStartDate &&
       (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
     ) {
       fetchFerryRoute();
     }
-  }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate]);
+  }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate, selectedCurrency]);
 
   useEffect(() => {
     console.log("departTrips", departTrips);
@@ -413,7 +435,7 @@ const SearchFerry = ({ navigation, route }) => {
         'https://thetrago.com/api/V1/ferry/Getroute',
         {
           lang: 'en',
-          currency: 'THB',
+          currency: selectedCurrency,
           roundtrip: customerData.roud,
           locationstart: startingPoint.id,
           locationend: endPoint.id,
@@ -654,13 +676,154 @@ const SearchFerry = ({ navigation, route }) => {
           },
         ]}
       >
-        <View style={[headStyles.headerRow, { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 0, paddingTop: 0, position: 'relative', marginTop: -10 }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={[headStyles.backBtn, { backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, position: 'absolute', left: 16, zIndex: 2 }]}>
+        <View
+          style={[
+            headStyles.headerRow,
+            {
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 0,
+              paddingTop: 0,
+              position: 'relative',
+              marginTop: -10,
+              height: 56,
+            },
+          ]}
+        >
+          {/* Back Button - Left */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              position: 'absolute',
+              left: 16,
+              backgroundColor: '#FFF3ED',
+              borderRadius: 20,
+              padding: 6,
+              zIndex: 2,
+            }}
+          >
             <AntDesign name="arrowleft" size={26} color="#FD501E" />
           </TouchableOpacity>
-          <LogoTheTrago />
 
+          {/* Logo - Center */}
+          <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+            <LogoTheTrago />
+          </View>
+
+          {/* Currency Button - Right */}
+          <TouchableOpacity
+            onPress={() => setCurrencyModalVisible(true)}
+            style={{
+              position: 'absolute',
+              right: 16,
+              backgroundColor: '#FFF3ED',
+              padding: 8,
+              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              zIndex: 2,
+            }}
+          >
+            <Icon name="cash-outline" size={20} color="#FD501E" style={{ marginRight: 6 }} />
+            <Text style={{ fontWeight: 'bold', color: '#FD501E' }}>{selectedCurrency}</Text>
+          </TouchableOpacity>
+
+          {/* Currency Modal */}
+          <Modal visible={isCurrencyModalVisible} transparent animationType="fade">
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 24,
+                  paddingVertical: 24,
+                  paddingHorizontal: 20,
+                  width: '100%',
+                  maxWidth: 360,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 6 },
+                  elevation: 10,
+                  position: 'relative',
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => setCurrencyModalVisible(false)}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    zIndex: 10,
+                    backgroundColor: '#FFF3ED',
+                    padding: 6,
+                    borderRadius: 20,
+                  }}
+                >
+                  <AntDesign name="close" size={20} color="#FD501E" />
+                </TouchableOpacity>
+
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 'bold',
+                    color: '#FD501E',
+                    textAlign: 'center',
+                    marginBottom: 16,
+                  }}
+                >
+                  Select Your Currency
+                </Text>
+
+                <ScrollView style={{ maxHeight: 300 }}>
+                  {currencyList.map((currency) => (
+                    <TouchableOpacity
+                      key={currency.md_currency_id}
+                      onPress={() => {
+                        setSelectedCurrency(currency.md_currency_code);
+                        setSelectedSysmbol(currency.md_currency_symbol);
+                        setCurrencyModalVisible(false);
+                      }}
+                      style={{
+                        paddingVertical: 14,
+                        paddingHorizontal: 10,
+                        borderRadius: 12,
+                        backgroundColor:
+                          selectedCurrency === currency.md_currency_code ? '#FFF3ED' : '#F9F9F9',
+                        marginBottom: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        shadowColor:
+                          selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
+                        shadowOpacity: 0.08,
+                        shadowRadius: 6,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
+                      }}
+                    >
+                      <Text style={{ fontSize: 16, color: '#333' }}>
+                        {currency.md_currency_symbol} {currency.md_currency_name} (
+                        {currency.md_currency_code})
+                      </Text>
+                      {selectedCurrency === currency.md_currency_code && (
+                        <AntDesign name="checkcircle" size={18} color="#FD501E" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </View>
+
       </LinearGradient>
       {/* Title and Show Filters in one row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginHorizontal: 20, marginBottom: 20 }}>
@@ -999,6 +1162,7 @@ const SearchFerry = ({ navigation, route }) => {
                     minDate={new Date().toISOString().split('T')[0]}
                     onDayPress={day => {
                       setCalendarStartDate(day.dateString);
+                      setCalendarEndDate(day.dateString); // Reset return date when departure date changes
                       if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
                         setCalendarEndDate(day.dateString);
                       }
@@ -1263,7 +1427,7 @@ const SearchFerry = ({ navigation, route }) => {
                               <View style={styles.dashedLine} />
                             </View>
                             <Text style={styles.duration}>{item.md_timetable_time}</Text>
-                            <Text style={styles.duration}>{item.md_timetable_count} booked</Text>
+                            <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
                           </View>
                           <View style={styles.locationContainer}>
                             <Text style={styles.location}>{item.md_timetable_endid}</Text>
@@ -1274,7 +1438,7 @@ const SearchFerry = ({ navigation, route }) => {
                         </View>
                         {/* ราคาและปุ่ม */}
                         <View style={[styles.footerRow, { marginTop: 18 }]}>
-                          <Text style={styles.price}>THB <Text style={styles.pricebig}>{formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
+                          <Text style={styles.price}>{selectedCurrency} <Text style={styles.pricebig}>{formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
                             {item.md_timetable_discount > 0 && (
                               <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
                             )}</Text>
@@ -1304,6 +1468,8 @@ const SearchFerry = ({ navigation, route }) => {
                                 discount: item.md_timetable_discount,
                                 exchaneRate: item.md_exchange_money,
                                 international: item.md_timetable_international,
+                                currency: selectedCurrency,
+                                symbol: selectedSysmbol,
                               });
                               navigation.navigate('TripDetail');
                             }} >
@@ -1485,6 +1651,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 <View style={styles.dashedLine} />
                               </View>
                               <Text style={styles.duration}>{item.md_timetable_time}</Text>
+                              <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
                             </View>
                             <View style={styles.locationContainer}>
                               <Text style={styles.location}>{item.md_timetable_endid}</Text>
@@ -1496,7 +1663,7 @@ const SearchFerry = ({ navigation, route }) => {
                           {/* ราคาและปุ่ม */}
                           <View style={[styles.footerRow, { marginTop: 18 }]}>
                             <Text style={styles.price}>
-                              THB <Text style={styles.pricebig}>
+                              {selectedCurrency} <Text style={styles.pricebig}>
                                 {item.md_timetable_saleadult_round !== 0
                                   ? formatNumberWithComma(item.md_timetable_saleadult_round)
                                   : formatNumberWithComma(item.md_timetable_saleadult)}
@@ -1534,6 +1701,8 @@ const SearchFerry = ({ navigation, route }) => {
                                   discount: item.md_timetable_discount,
                                   exchaneRate: item.md_exchange_money,
                                   international: item.md_timetable_international,
+                                  currency: selectedCurrency,
+                                  symbol: selectedSysmbol,
                                 });
 
 
@@ -1678,6 +1847,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 <View style={styles.dashedLine} />
                               </View>
                               <Text style={styles.duration}>{item.md_timetable_time}</Text>
+                              <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
                             </View>
                             <View style={styles.locationContainer}>
                               <Text style={styles.location}>{item.md_timetable_endid}</Text>
@@ -1688,7 +1858,7 @@ const SearchFerry = ({ navigation, route }) => {
                           </View>
                           {/* ราคาและปุ่ม */}
                           <View style={[styles.footerRow, { marginTop: 18 }]}>
-                            <Text style={styles.price}>THB <Text style={styles.pricebig}>{item.md_timetable_saleadult_round !== 0 ? formatNumberWithComma(item.md_timetable_saleadult_round) : formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
+                            <Text style={styles.price}>{selectedCurrency} <Text style={styles.pricebig}>{item.md_timetable_saleadult_round !== 0 ? formatNumberWithComma(item.md_timetable_saleadult_round) : formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
                               {item.md_timetable_discount > 0 && (
                                 <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
                               )}</Text>

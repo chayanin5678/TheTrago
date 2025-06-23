@@ -97,8 +97,8 @@ export const CustomerProvider = ({ children }) => {
         birthday: '',
         type: ''
       }
-    ]
-
+    ],
+    symbol:'฿', //สัญลักษณ์เงิน
   });
 
   const updateCustomerData = (newData) => {

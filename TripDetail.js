@@ -107,13 +107,13 @@ const TripDetail = ({ navigation, route }) => {
   // console.log(departDateTimeTable);
   // console.log(adults);
   const [selectedTranSportPickupDepart, setSelectedTranSportPickupDepart] = useState('0');
-  const [selectedPickupDepart, setSelectedPickupDepart] = useState('0');
+  const [selectedPickupDepart, setSelectedPickupDepart] = useState("");
   const [selectedTranSportDropoffDepart, setSelectedTranSportDropoffDepart] = useState('0');
-  const [selectedDropoffDepart, setSelectedDropoffDepart] = useState('0');
+  const [selectedDropoffDepart, setSelectedDropoffDepart] = useState("");
   const [selectedTranSportPickupReturn, setSelectedTranSportPickupReturn] = useState('0');
-  const [selectedPickupReturn, setSelectedPickupReturn] = useState('0');
+  const [selectedPickupReturn, setSelectedPickupReturn] = useState("");
   const [selectedTranSportDropoffReturn, setSelectedTranSportDropoffReturn] = useState('0');
-  const [selectedDropoffReturn, setSelectedDropoffReturn] = useState('0');
+  const [selectedDropoffReturn, setSelectedDropoffReturn] = useState("");
   const [selectedTransportPickupDepartName, setSelectedTransportPickupDepartName] = useState("Select Transport Type");
   const [selectedPickupDepartName, setSelectedPickupDepartName] = useState("Please Select");
   const [selectedTransportDropoffDepartName, setSelectedTransportDropoffDepartName] = useState("Select Transport Type");
@@ -524,7 +524,7 @@ const TripDetail = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           settimetableDepart(data.data);
-          updateCustomerData({  
+          updateCustomerData({
             international: data.data[0].md_timetable_international
           });
         } else {
@@ -535,7 +535,7 @@ const TripDetail = ({ navigation, route }) => {
       .catch((error) => {
         console.error('Error fetching data:', error);
       }).finally(() => {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+        setLoading(false);
       });
   }, []);
 
@@ -564,6 +564,60 @@ const TripDetail = ({ navigation, route }) => {
 
   useEffect(() => {
 
+    if (customerData.roud === 2) {
+      fetchTimetableReturn();
+      fetchPickupData();
+      fetchPickupDataReturn();
+      fetchDropoffData();
+      fetchDropoffDataReturn();
+
+    }
+    if (!pickupDepart) {
+      setpickupPriceDepart(0);
+      setSelectedPickupDepart("");
+
+    }
+
+
+    if (pickupDepart && selectedPickupDepart != 0) {
+      setpickupPriceDepart(customerData.pickupPriceDepart);
+
+
+    }
+
+    if (pickupReturn && selectedPickupReturn != 0) {
+      setpickupPriceReturn(customerData.pickupPriceReturn);
+
+    }
+
+
+    if (!dropoffDepart) {
+      setDropoffPriceDepart(0);
+      setSelectedDropoffDepart("");
+
+    }
+
+    if (!dropoffReturn) {
+      setDropoffPriceReturn(0);
+      setSelectedDropoffReturn("");
+
+    }
+
+    if (dropoffDepart && selectedDropoffDepart != 0) {
+      setDropoffPriceDepart(customerData.dropoffPriceDepart);
+
+    }
+
+    if (dropoffReturn && selectedDropoffReturn != 0) {
+      setDropoffPriceReturn(customerData.dropoffPriceReturn);
+
+    }
+
+  }, [pickupDepart, pickupReturn, selectedPickupReturn, selectedDropoffDepart, selectedDropoffReturn, selectedPickupDepart, dropoffDepart, dropoffReturn, customerData.roud, customerData.companyDepartId, customerData.companyReturnId, customerData.pierStartReturntId, customerData.pierEndDepartId, customerData.pierEndReturntId, selectedTranSportDropoffReturn, selectedTranSportPickupReturn, customerData.timeTableReturnId]);
+
+
+  useEffect(() => {
+
     fetchPriceferry();
 
   }, [selectedPickupDepart, selectedDropoffDepart, selectedPickupReturn, selectedDropoffReturn, customerData]);
@@ -571,7 +625,7 @@ const TripDetail = ({ navigation, route }) => {
   const fetchPriceferry = async () => {
     try {
       console.log({
-        currency: 'THB',
+        currency: customerData.currency,
         roundtrip: customerData.roud,
         departtrip: customerData.timeTableDepartId,
         returntrip: customerData.timeTableReturnId,
@@ -589,7 +643,7 @@ const TripDetail = ({ navigation, route }) => {
       const response = await axios.post(
         'https://thetrago.com/api/V1/ferry/Getprice',
         {
-          currency: 'THB',
+          currency: customerData.currency,
           roundtrip: customerData.roud,
           departtrip: customerData.timeTableDepartId,
           returntrip: customerData.timeTableReturnId,
@@ -598,10 +652,10 @@ const TripDetail = ({ navigation, route }) => {
           infant: customerData.infant,
           departdate: customerData.departdate,
           returndate: customerData.returndate,
-          ...(selectedPickupDepart != 0 && { pickupdepart1: selectedPickupDepart }),
-          ...(selectedDropoffDepart != 0 && { dropoffdepart1: selectedDropoffDepart }),
-          ...(selectedPickupReturn != 0 && { pickupdepart2: selectedPickupReturn }),
-          ...(selectedDropoffReturn != 0 && { dropoffdepart2: selectedDropoffReturn }),
+          pickupdepart1: selectedPickupDepart,
+          dropoffdepart1: selectedDropoffDepart,
+          pickupdepart2: selectedPickupReturn,
+          dropoffdepart2: selectedDropoffReturn,
           paymentfee: 0
 
 
@@ -636,48 +690,6 @@ const TripDetail = ({ navigation, route }) => {
     }
   };
 
-  useEffect(() => {
-
-    if (customerData.roud === 2) {
-      fetchTimetableReturn();
-      fetchPickupData();
-      fetchPickupDataReturn();
-      fetchDropoffData();
-      fetchDropoffDataReturn();
-    }
-    if (!pickupDepart) {
-      setpickupPriceDepart(0);
-    }
-    if (!pickupReturn) {
-      setpickupPriceReturn(0);
-    }
-
-    if (pickupDepart && selectedPickupDepart != 0) {
-      setpickupPriceDepart(customerData.pickupPriceDepart);
-    }
-
-    if (pickupReturn && selectedPickupReturn != 0) {
-      setpickupPriceReturn(customerData.pickupPriceReturn);
-    }
-
-
-    if (!dropoffDepart) {
-      setDropoffPriceDepart(0);
-    }
-
-    if (!dropoffReturn) {
-      setDropoffPriceReturn(0);
-    }
-
-    if (dropoffDepart && selectedDropoffDepart != 0) {
-      setDropoffPriceDepart(customerData.dropoffPriceDepart)
-    }
-
-    if (dropoffReturn && selectedDropoffReturn != 0) {
-      setDropoffPriceReturn(customerData.dropoffPriceReturn)
-    }
-
-  }, [pickupDepart, pickupReturn, selectedPickupReturn, selectedDropoffDepart, selectedDropoffReturn, selectedPickupDepart, dropoffDepart, dropoffReturn, customerData.roud, customerData.companyDepartId, customerData.companyReturnId, customerData.pierStartReturntId, customerData.pierEndDepartId, customerData.pierEndReturntId, selectedTranSportDropoffReturn, selectedTranSportPickupReturn, customerData.timeTableReturnId]);
 
 
   useEffect(() => {
@@ -883,7 +895,7 @@ const TripDetail = ({ navigation, route }) => {
   };
 
 
-  const handleNext = () => {
+  const handleNext = (item) => {
     let newErrors = {};
     if (pickupDepart) {
       if (!HotelpickupDepart) newErrors.HotelpickupDepart = true;
@@ -900,21 +912,21 @@ const TripDetail = ({ navigation, route }) => {
     }
 
     updateCustomerData({
-      totaladultDepart: adultPriceDepart, //รวมราคาจำนวนผู้ใหญ่
-      totaladultReturn: adultPriceReturn, //รวมราคาจำนวนผู้ใหญ่
-      totalchildDepart: childPriceDepart, //รวมราคาจำนวนเด็ก
-      totalchildReturn: childPriceReturn, //รวมราคาจำนวนเด็ก
-      totalinfantDepart: infantPriceDepart, //รวมราคาจำนวนเด็ก
-      totalinfantReturn: infantPriceReturn, //รวมราคาจำนวนเด็ก
-      discountDepart: discountDepart, //ส่วนลด
-      discountReturn: discountReturn, //ส่วนลด
-      subtotalDepart: subtotalDepart, //ราคารวม
-      subtotalReturn: subtotalReturn, //ราคารวม
-      pickupPriceDepart: pickupPriceDepart,
-      dropoffPriceDepart: dropoffPriceDepart,
-      pickupPriceReturn: pickupPriceReturn,
-      dropoffPriceReturn: dropoffPriceReturn,
-      total: total,
+      totaladultDepart: parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
+      totaladultReturn: parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
+      totalchildDepart: parseFloat(item.totalDepart.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
+      totalchildReturn: parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
+      totalinfantDepart: parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
+      totalinfantReturn: parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
+      discountDepart: parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
+      discountReturn: parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
+      subtotalDepart: parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
+      subtotalReturn: parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
+      pickupPriceDepart: parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
+      dropoffPriceDepart: parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
+      pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
+      dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
+      total: parseFloat(item.total.replace(/,/g, "")).toFixed(2), //ราคารวมทั้งหมด
 
     });
 
@@ -1960,7 +1972,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Icon name="information-circle-outline" size={20} color="red" />
                       </TouchableOpacity>
                     </View>
-                    <Text>฿ {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
+                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
                     {/* Modal (tooltip) */}
                     <Modal
                       visible={modaladultVisibleDepart}
@@ -1994,11 +2006,11 @@ const TripDetail = ({ navigation, route }) => {
                       </View>
                       {parseFloat(item.totalDepart.salechild.replace(/,/g, "")) !== 0 ? (
                         <Text>
-                          ฿ {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")) * customerData.child)}
+                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")) * customerData.child)}
                         </Text>
                       ) : (
                         <Text>
-                         Free
+                          Free
                         </Text>
                       )}
 
@@ -2034,11 +2046,11 @@ const TripDetail = ({ navigation, route }) => {
                       </View>
                       {parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) !== 0 ? (
                         <Text>
-                          ฿ {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) * customerData.infant)}
+                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) * customerData.infant)}
                         </Text>
                       ) : (
                         <Text>
-                         Free
+                          Free
                         </Text>
                       )}
 
@@ -2062,25 +2074,25 @@ const TripDetail = ({ navigation, route }) => {
                       </Modal>
                     </View>
                   )}
-                  {pickupDepart &&  (
+                  {pickupDepart && (
                     <View style={styles.rowpromo}>
                       <Text>
                         Pick up
                       </Text>
                       {parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")) != 0 ? (
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")))} </Text>
-                      )  : (
-                       <Text>Free</Text>
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")))} </Text>
+                      ) : (
+                        <Text>Free</Text>
                       )}
                     </View>
                   )}
-                  {dropoffDepart &&  (
+                  {dropoffDepart && (
                     <View style={styles.rowpromo}>
                       <Text>
                         Drop off
                       </Text>
                       {parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
-                      <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")))} </Text>
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")))} </Text>
                       ) : (
                         <Text>Free</Text>
                       )}
@@ -2092,7 +2104,7 @@ const TripDetail = ({ navigation, route }) => {
                         Discount
                       </Text>
                       <Text style={styles.redText}>
-                        - ฿ {formatNumberWithComma(parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2))} </Text>
+                        - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2))} </Text>
 
                     </View>
                   )}
@@ -2100,10 +2112,10 @@ const TripDetail = ({ navigation, route }) => {
                     <Text>
                       Subtotal
                     </Text>
-                    <Text style={{ fontWeight: 'bold' }}>  ฿ {formatNumberWithComma(parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
+                    <Text style={{ fontWeight: 'bold' }}>  {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
                   </View>
                   <View style={styles.divider} />
-                  
+
                   {customerData.roud === 2 && (
                     <>
                       <Text style={styles.margin}>
@@ -2122,7 +2134,7 @@ const TripDetail = ({ navigation, route }) => {
                             <Icon name="information-circle-outline" size={20} color="red" />
                           </TouchableOpacity>
                         </View>
-                        <Text>฿  {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
+                        <Text>{customerData.symbol}  {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
                         {/* Modal (tooltip) */}
                         <Modal
                           visible={modaladultVisibleReturn}
@@ -2155,7 +2167,7 @@ const TripDetail = ({ navigation, route }) => {
                             </TouchableOpacity>
                           </View>
                           {parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) !== 0 ? (
-                           <Text>฿ {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child)} </Text>
+                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child)} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2190,7 +2202,7 @@ const TripDetail = ({ navigation, route }) => {
                             </TouchableOpacity>
                           </View>
                           {parseFloat(item.totalReturn.saleinfant) !== 0 ? (
-                          <Text>฿ {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2) *  customerData.infant)} </Text>
+                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant)} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2219,23 +2231,23 @@ const TripDetail = ({ navigation, route }) => {
                           <Text>
                             Pick up
                           </Text>
-                          { parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")) != 0 ? (
-                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")).toFixed(2))} </Text>
-                            ) : (
-                              <Text>Free</Text>
-                            )}
+                          {parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")) != 0 ? (
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                          ) : (
+                            <Text>Free</Text>
+                          )}
                         </View>
                       )}
-                      {dropoffReturn &&  (
+                      {dropoffReturn && (
                         <View style={styles.rowpromo}>
                           <Text>
                             Drop off
                           </Text>
                           {parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
-                          <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2))} </Text>
-                            ) : (
-                              <Text>Free</Text> 
-                            )}
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                          ) : (
+                            <Text>Free</Text>
+                          )}
                         </View>
                       )}
                       {item.totalReturn.save != 0 && (
@@ -2244,7 +2256,7 @@ const TripDetail = ({ navigation, route }) => {
                             Discount
                           </Text>
                           <Text style={styles.redText}>
-                            - ฿ {formatNumberWithComma(parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2))} </Text>
+                            - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2))} </Text>
 
                         </View>
                       )}
@@ -2252,7 +2264,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Text>
                           Subtotal
                         </Text>
-                        <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
+                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
                       </View>
                       <View style={styles.divider} />
                     </>
@@ -2260,23 +2272,25 @@ const TripDetail = ({ navigation, route }) => {
 
                   <View style={styles.rowpromo}>
                     <Text style={styles.totaltext}>Total</Text>
-                    <Text style={styles.totaltext}>฿ {formatNumberWithComma(parseFloat(item.total.replace(/,/g, "")).toFixed(2))}</Text>
+                    <Text style={styles.totaltext}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total.replace(/,/g, "")).toFixed(2))}</Text>
                   </View>
                 </View>
 
               ))}
             </>)}
-
-          <View style={styles.rowButton}>
-
-            <TouchableOpacity
-              style={[styles.ActionButton, { width: '100%', }]} // Use an array if you want to combine styles
-              onPress={() => {
-                handleNext();
-              }}>
-              <Text style={styles.searchButtonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
+          {Array.isArray(priceDepart) &&
+            priceDepart
+              .filter(item => item.totalDepart) // ป้องกัน undefined
+              .map((item, index) => (
+                <View key={index} style={styles.rowButton}>
+                  <TouchableOpacity
+                    style={[styles.ActionButton, { width: '100%' }]}
+                    onPress={() => handleNext(item)}
+                  >
+                    <Text style={styles.searchButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
 
         </ImageBackground>
       </ScrollView>
