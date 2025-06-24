@@ -99,8 +99,8 @@ const TripDetail = ({ navigation, route }) => {
   const [errors, setErrors] = useState({});
 
 
-  console.log(customerData.timeTableDepartId);
-  console.log(customerData.departdate);
+
+
   // console.log(timeTablecCmpanyId);
   // console.log(timeTablecPierStartId);
   // console.log(timeTablecPierEndId);
@@ -138,12 +138,13 @@ const TripDetail = ({ navigation, route }) => {
   const toggleModalPickupReturn = () => setModalReturnPickupVisible(!isModalReturnPickupVisible);
   const toggleModalTransportDropoffReturn = () => setModalTransportReturnDropoffVisible(!isModalTransportReturnDropoffVisible);
   const toggleModalDropoffReturn = () => setModalReturnDropoffVisible(!isModalReturnDropoffVisible);
+    console.log('pickupselect', selectedPickupDepart);
 
   const handleSelectedTranSportPickupDepart = (item) => {
     setSelectedTranSportPickupDepart(item.md_pickup_cartypeid); // เก็บ id
     setSelectedTransportPickupDepartName(item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportPickupDepartName: false })); // Clear the error state
-    setSelectedPickupDepart('0');
+    setSelectedPickupDepart("");
     setSelectedPickupDepartName("Please Select");
     setpickupPriceDepart(0);
     setAirPortPickupDepart('');
@@ -157,11 +158,11 @@ const TripDetail = ({ navigation, route }) => {
     if (item.md_pickup_id === "0") {
       setpickupPriceDepart(0);
       setAirPortPickupDepart('');
-      updateCustomerData({ pickupPriceDepart: 0 });
+      updateCustomerData({ pickupDepartId: "" });
     } else {
       setAirPortPickupDepart(item.md_transfer_airport);
       setpickupPriceDepart(item.md_pickup_price);
-      updateCustomerData({ pickupPriceDepart: item.md_pickup_price });
+      updateCustomerData({ pickupDepartId: item.md_pickup_id });
     }
     toggleModalPickupDepart();
   };
@@ -171,7 +172,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTranSportDropoffDepart(item.md_dropoff_cartypeid); // เก็บ id
     setSelectedTransportDropoffDepartName(item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportDropoffDepartName: false })); // Clear the error state
-    setSelectedDropoffDepart('0');
+    setSelectedDropoffDepart("");
     setSelectedDropoffDepartName("Please Select");
     setDropoffPriceDepart(0);
     setAirPortDropoffDepart('');
@@ -185,11 +186,11 @@ const TripDetail = ({ navigation, route }) => {
     if (item.md_dropoff_id === "0") {
       setDropoffPriceDepart(0);
       setAirPortDropoffDepart('');
-      updateCustomerData({ dropoffPriceDepart: 0 });
+      updateCustomerData({ dropoffDepartId: "" });
     } else {
       setAirPortDropoffDepart(item.md_transfer_airport);
       setDropoffPriceDepart(item.md_dropoff_price);
-      updateCustomerData({ dropoffPriceDepart: item.md_dropoff_price });
+      updateCustomerData({ dropoffDepartId: item.md_dropoff_id });
     }
     toggleModalDropoffDepart();
   };
@@ -198,7 +199,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTranSportPickupReturn(item.md_pickup_cartypeid); // เก็บ id
     setSelectedTransportPickupReturnName(item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportPickupReturnName: false })); // Clear the error state
-    setSelectedPickupReturn('0');
+    setSelectedPickupReturn("");
     setSelectedPickupReturnName("Please Select");
     setpickupPriceReturn(0);
     setAirPortPickupReturn('');
@@ -212,11 +213,11 @@ const TripDetail = ({ navigation, route }) => {
     if (item.md_pickup_id === "0") {
       setpickupPriceReturn(0);
       setAirPortPickupReturn('');
-      updateCustomerData({ pickupPriceReturn: 0 });
+      updateCustomerData({ pickupReturnId: "" });
     } else {
       setAirPortPickupReturn(item.md_transfer_airport);
       setpickupPriceReturn(item.md_pickup_price);
-      updateCustomerData({ pickupPriceReturn: item.md_pickup_price });
+      updateCustomerData({ pickupReturnId: item.md_pickup_id });
     }
     toggleModalPickupReturn();
   };
@@ -225,7 +226,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTranSportDropoffReturn(item.md_dropoff_cartypeid); // เก็บ id
     setSelectedTransportDropoffReturnName(item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportDropoffReturnName: false })); // Clear the error state
-    setSelectedDropoffReturn('0');
+    setSelectedDropoffReturn("");
     setSelectedDropoffReturnName("Please Select");
     setDropoffPriceReturn(0);
     setAirPortDropoffReturn('');
@@ -239,11 +240,11 @@ const TripDetail = ({ navigation, route }) => {
     if (item.md_dropoff_id === "0") {
       setDropoffPriceReturn(0);
       setAirPortDropoffReturn('');
-      updateCustomerData({ dropoffPriceReturn: 0 });
+      updateCustomerData({ dropoffReturnId: "" });
     } else {
       setAirPortDropoffReturn(item.md_transfer_airport);
       setDropoffPriceReturn(item.md_dropoff_price);
-      updateCustomerData({ dropoffPriceReturn: item.md_dropoff_price });
+      updateCustomerData({ dropoffReturnId: item.md_dropoff_id });
     }
     toggleModalDropoffReturn();
   };
@@ -509,7 +510,7 @@ const TripDetail = ({ navigation, route }) => {
       maximumFractionDigits: 2
     });
 
-    console.log("Formatted Value:", formattedValue);
+
     return formattedValue;
   }
 
@@ -575,18 +576,24 @@ const TripDetail = ({ navigation, route }) => {
     if (!pickupDepart) {
       setpickupPriceDepart(0);
       setSelectedPickupDepart("");
+       
+    }
+
+      if (!pickupReturn) {
+      setpickupPriceReturn(0);
+      setSelectedPickupReturn("");
+      }
+
+
+    if (pickupDepart && customerData.pickupDepartId !== "") {
+      setSelectedPickupDepart(customerData.pickupDepartId);
+    
+    
 
     }
 
-
-    if (pickupDepart && selectedPickupDepart != 0) {
-      setpickupPriceDepart(customerData.pickupPriceDepart);
-
-
-    }
-
-    if (pickupReturn && selectedPickupReturn != 0) {
-      setpickupPriceReturn(customerData.pickupPriceReturn);
+    if (pickupReturn && customerData.pickupReturnId !== "") {
+      setSelectedPickupReturn(customerData.pickupReturnId);
 
     }
 
@@ -594,51 +601,53 @@ const TripDetail = ({ navigation, route }) => {
     if (!dropoffDepart) {
       setDropoffPriceDepart(0);
       setSelectedDropoffDepart("");
-
     }
 
     if (!dropoffReturn) {
       setDropoffPriceReturn(0);
       setSelectedDropoffReturn("");
+       
 
     }
 
-    if (dropoffDepart && selectedDropoffDepart != 0) {
-      setDropoffPriceDepart(customerData.dropoffPriceDepart);
+    if (dropoffDepart && customerData.dropoffDepartId !== "") {
+      setSelectedDropoffDepart(customerData.dropoffDepartId);
 
     }
 
-    if (dropoffReturn && selectedDropoffReturn != 0) {
-      setDropoffPriceReturn(customerData.dropoffPriceReturn);
+    if (dropoffReturn && customerData.dropoffReturnId !== "") {
+      setSelectedDropoffReturn(customerData.dropoffReturnId);
 
     }
+
+
 
   }, [pickupDepart, pickupReturn, selectedPickupReturn, selectedDropoffDepart, selectedDropoffReturn, selectedPickupDepart, dropoffDepart, dropoffReturn, customerData.roud, customerData.companyDepartId, customerData.companyReturnId, customerData.pierStartReturntId, customerData.pierEndDepartId, customerData.pierEndReturntId, selectedTranSportDropoffReturn, selectedTranSportPickupReturn, customerData.timeTableReturnId]);
 
 
   useEffect(() => {
-
     fetchPriceferry();
+
 
   }, [selectedPickupDepart, selectedDropoffDepart, selectedPickupReturn, selectedDropoffReturn, customerData]);
 
   const fetchPriceferry = async () => {
     try {
-      console.log({
-        currency: customerData.currency,
-        roundtrip: customerData.roud,
-        departtrip: customerData.timeTableDepartId,
-        returntrip: customerData.timeTableReturnId,
-        adult: customerData.adult,
-        child: customerData.child,
-        infant: customerData.infant,
-        departdate: customerData.departdate,
-        returndate: customerData.returndate,
-        pickupdepart1: selectedPickupDepart,
-        dropoffdepart1: selectedDropoffDepart,
-        pickupdepart2: selectedPickupReturn,
-        dropoffdepart2: selectedDropoffReturn,
-      });
+      // console.log({
+      //   currency: customerData.currency,
+      //   roundtrip: customerData.roud,
+      //   departtrip: customerData.timeTableDepartId,
+      //   returntrip: customerData.timeTableReturnId,
+      //   adult: customerData.adult,
+      //   child: customerData.child,
+      //   infant: customerData.infant,
+      //   departdate: customerData.departdate,
+      //   returndate: customerData.returndate,
+      //   pickupdepart1: selectedPickupDepart,
+      //   dropoffdepart1: selectedDropoffDepart,
+      //   pickupdepart2: selectedPickupReturn,
+      //   dropoffdepart2: selectedDropoffReturn,
+      // });
 
       const response = await axios.post(
         'https://thetrago.com/api/V1/ferry/Getprice',
@@ -652,10 +661,10 @@ const TripDetail = ({ navigation, route }) => {
           infant: customerData.infant,
           departdate: customerData.departdate,
           returndate: customerData.returndate,
-          pickupdepart1: selectedPickupDepart,
-          dropoffdepart1: selectedDropoffDepart,
-          pickupdepart2: selectedPickupReturn,
-          dropoffdepart2: selectedDropoffReturn,
+          pickupdepart1: selectedPickupDepart === "0" ? "" : selectedPickupDepart,
+          pickupdepart2: selectedPickupReturn === "0" ? "" : selectedPickupReturn,
+          dropoffdepart1: selectedDropoffDepart === "0" ? "" : selectedDropoffDepart,
+          dropoffdepart2: selectedDropoffReturn === "0" ? "" : selectedDropoffReturn,
           paymentfee: 0
 
 
@@ -668,7 +677,7 @@ const TripDetail = ({ navigation, route }) => {
       );
 
       if (response.data.status === 'success') {
-        console.log("🚀 Price Data:", response.data.data.totalDepart);
+
         setPriceDepart(Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data]); // บังคับให้เป็น array
@@ -716,7 +725,7 @@ const TripDetail = ({ navigation, route }) => {
         setAdultPriceReturn(timetableReturn[0].md_timetable_saleadult * customerData.adult);
         setChildPriceReturn(timetableReturn[0].md_timetable_salechild * customerData.child);
         setinfantPriceReturn(timetableReturn[0].md_timetable_saleinfant * customerData.infant);
-        console.log("dropoff price", dropoffPriceReturn);
+    
         setTotalAdultReturn(formatNumberWithComma(adultPriceReturn));
         setTotalChildReturn(formatNumberWithComma(childPriceReturn));
         setTotalInfantReturn(formatNumberWithComma(infantPriceReturn));
@@ -913,22 +922,27 @@ const TripDetail = ({ navigation, route }) => {
 
     updateCustomerData({
       totaladultDepart: parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
-      totaladultReturn: parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
       totalchildDepart: parseFloat(item.totalDepart.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
-      totalchildReturn: parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
       totalinfantDepart: parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
-      totalinfantReturn: parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
       discountDepart: parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
-      discountReturn: parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
       subtotalDepart: parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
-      subtotalReturn: parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
       pickupPriceDepart: parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
       dropoffPriceDepart: parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
-      pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
-      dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
       total: parseFloat(item.total.replace(/,/g, "")).toFixed(2), //ราคารวมทั้งหมด
 
     });
+
+    if (customerData.roud === 2) {
+      updateCustomerData({
+        totaladultReturn: parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
+        totalchildReturn: parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
+        totalinfantReturn: parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
+        discountReturn: parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
+        subtotalReturn: parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
+        pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
+        dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
+      });
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors); // Update the errors state

@@ -359,12 +359,7 @@ const SearchFerry = ({ navigation, route }) => {
     }
   }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate, selectedCurrency]);
 
-  useEffect(() => {
-    console.log("departTrips", departTrips);
-    console.log("filteredDepartData", filteredDepartData);
-    console.log("pagedDataDepart", pagedDataDepart);
 
-  }, [departTrips, filteredDepartData, pagedDataDepart]);
 
 
   useFocusEffect(
@@ -420,7 +415,7 @@ const SearchFerry = ({ navigation, route }) => {
       // ตรวจสอบค่าก่อนส่ง (optional แต่ดีมาก)
       console.log({
         lang: 'en',
-        currency: 'THB',
+        currency: selectedCurrency,
         roundtrip: customerData.roud,
         locationstart: startingPoint.id,
         locationend: endPoint.id,
@@ -460,7 +455,19 @@ const SearchFerry = ({ navigation, route }) => {
         setError('ไม่สามารถโหลดข้อมูลได้');
       }
     } catch (err) {
-      console.error("❌ API Error:", err.response?.data || err.message);
+      const apiError = err.response?.data;
+
+      const ignoredMessages = [
+        'ไอดีพื้นที่ขาไปไม่ถูกต้อง',
+        'ไอดีพื้นที่ขากลับไม่ถูกต้อง',
+      ];
+
+      if (ignoredMessages.includes(apiError?.message)) {
+      
+        return;
+      }
+
+      console.error("❌ API Error:", apiError || err.message);
       setDepartTrips([]);
       setReturnTrips([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');

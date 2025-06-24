@@ -57,6 +57,10 @@ export const CustomerProvider = ({ children }) => {
     ip:'', //ไอพี
     paymentid:'', //รหัสการชำระ
     bookingdate:'', //วันที่จอง
+    pickupDepartId:'', //รหัสรถรับส่ง
+    pickupReturnId:'', //รหัสรถรับส่งกลับ
+    dropoffDepartId:'', //รหัสรถส่ง
+    dropoffReturnId:'', //รหัสรถส่งกลับ
     pickupPriceDepart:0, //ราคารถรับส่ง
     pickupPriceReturn:0, //ราคารถรับส่งกลับ
     dropoffPriceDepart:0, //ราคารถส่ง

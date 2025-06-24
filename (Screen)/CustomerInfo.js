@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef,useImperativeHandle } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
@@ -11,10 +11,10 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.'];
+const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.', 'Master'];
 
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
-const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
+const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
   const [selectedTitle, setSelectedTitle] = React.useState('Please Select');
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [selectedNationality, setSelectedNationality] = React.useState('Please Select');
@@ -30,14 +30,16 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
   const [birthday, setBirthday] = React.useState('');
   const [showBirthdayPicker, setShowBirthdayPicker] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState({});
+  const [nationalityCode, setNationalityCode] = useState('');
 
-  React.useImperativeHandle(ref, () => ({
+
+  useImperativeHandle(ref, () => ({
     getData: () => ({
       prefix: selectedTitle,
       fname,
       lname,
-      idtype: '',
-      nationality: selectedNationality,
+      idtype: 1,
+      nationality: nationalityCode,
       passport,
       dateofissue: dateOfIssue,
       passportexpiry: passportExpiry,
@@ -54,13 +56,14 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       if (!dateOfIssue) errors.dateOfIssue = true;
       if (!passportExpiry) errors.passportExpiry = true;
       if (!birthday) errors.birthday = true;
-      setFieldErrors(errors); // This will trigger red border for all empty fields
+      setFieldErrors(errors);
       return errors;
     },
     setFieldErrors: (errors) => {
       setFieldErrors(errors || {});
     }
   }));
+
 
   const filteredCountries = telePhone.filter((item) =>
     item.sys_countries_nameeng.toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,7 +102,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* คำนำหน้า */}
       <Text style={styles.textHead}>Title</Text>
       <TouchableOpacity
-        style={[styles.button, fieldErrors.selectedTitle && styles.errorInput]}
+        style={[styles.button, (fieldErrors.selectedTitle || (showAllErrors && (selectedTitle === 'Please Select' || !selectedTitle))) && styles.errorInput]}
         onPress={() => setModalVisible(true)}>
         <Text style={styles.buttonText}>{selectedTitle}</Text>
         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -128,9 +131,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
         placeholder="First Name"
         value={fname}
         onChangeText={handleFnameChange}
-        style={[styles.input, fieldErrors.fname && styles.errorInput]}
+        style={[styles.input, (fieldErrors.fname || (showAllErrors && !fname)) && styles.errorInput]}
       />
-      {fieldErrors.fname && <Text style={styles.errorText}>{fieldErrors.fname}</Text>}
+
 
       {/* Last Name */}
       <Text style={styles.textHead}>Last Name</Text>
@@ -138,9 +141,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
         placeholder="Last Name"
         value={lname}
         onChangeText={handleLnameChange}
-        style={[styles.input, fieldErrors.lname && styles.errorInput]}
+        style={[styles.input, (fieldErrors.lname || (showAllErrors && !lname)) && styles.errorInput]}
       />
-      {fieldErrors.lname && <Text style={styles.errorText}>{fieldErrors.lname}</Text>}
+   
 
       {/* Nationality */}
       <Text style={styles.textHead}>Nationality</Text>
@@ -169,8 +172,11 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
                 <TouchableOpacity style={styles.optionItem} onPress={() => {
                   if (item.sys_countries_nameeng === 'Please Select') {
                     setSelectedNationality('Please Select');
+                    setNationalityCode('');
                   } else {
                     setSelectedNationality(`(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`);
+                    setNationalityCode(item.sys_countries_code);
+                    setFieldErrors((prev) => ({ ...prev, nationality: undefined })); // Clear error on select
                   }
                   setNationalityModalVisible(false);
                   setSearchQuery('');
@@ -198,14 +204,14 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
         placeholder="Passport Number"
         value={passport}
         onChangeText={handlePassportChange}
-        style={[styles.input, fieldErrors.passport && styles.errorInput]}
+        style={[styles.input, (fieldErrors.passport || (showAllErrors && !passport)) && styles.errorInput]}
       />
-      {fieldErrors.passport && <Text style={styles.errorText}>{fieldErrors.passport}</Text>}
+     
 
       {/* Date of Issue */}
       <Text style={styles.textHead}>Date of Issue</Text>
       <TouchableOpacity
-        style={[styles.button, fieldErrors.dateOfIssue && styles.errorInput]}
+        style={[styles.button, (fieldErrors.dateOfIssue || (showAllErrors && !dateOfIssue)) && styles.errorInput]}
         onPress={() => setShowDatePicker(!showDatePicker)}>
         <Text style={styles.buttonText}>
           {dateOfIssue ? new Date(dateOfIssue).toLocaleDateString('en-GB') : 'Select Date'}
@@ -227,7 +233,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone }, ref) => {
       {/* Passport Expiry Date */}
       <Text style={styles.textHead}>Passport Expiry Date</Text>
       <TouchableOpacity
-        style={[styles.button, fieldErrors.passportExpiry && styles.errorInput]}
+        style={[styles.button, (fieldErrors.passportExpiry || (showAllErrors && !passportExpiry)) && styles.errorInput]}
         onPress={() => setShowPassportExpiryPicker(!showPassportExpiryPicker)}>
         <Text style={styles.buttonText}>
           {passportExpiry ? new Date(passportExpiry).toLocaleDateString('en-GB') : 'Select Date'}
@@ -293,6 +299,7 @@ const CustomerInfo = ({ navigation }) => {
   // State for Contact Details errors
   const [contactErrors, setContactErrors] = useState({ phone: false, mobile: false, email: false });
   const passengerFormRefs = useRef([]);
+  const [showAllErrors, setShowAllErrors] = useState(false);
 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
@@ -344,7 +351,8 @@ const CustomerInfo = ({ navigation }) => {
       });
 
       if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors); // Update the errors state
+        setErrors(newErrors);
+        setShowAllErrors(true);
 
         // Show an alert if there are missing fields or invalid email
         if (newErrors.email) {
@@ -359,8 +367,7 @@ const CustomerInfo = ({ navigation }) => {
 
         return;
       }
-
-
+      setShowAllErrors(false);
       // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
       navigation.navigate('PaymentScreen');
     } else {
@@ -368,7 +375,7 @@ const CustomerInfo = ({ navigation }) => {
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
         Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
-          { text: 'OK', onPress: () => {} }
+          { text: 'OK', onPress: () => { } }
         ]);
         return;
       }
@@ -378,8 +385,10 @@ const CustomerInfo = ({ navigation }) => {
       hasPassengerError = passengerErrors.some(err => Object.keys(err).length > 0);
       passengerFormRefs.current.forEach((formRef, idx) => {
         if (formRef) {
+          console.log('formRef', formRef);
           const data = formRef.getData?.() || {};
-          const allFields = ['selectedTitle','fname','lname','nationality','passport','dateOfIssue','passportExpiry','birthday'];
+          const allFields = ['prefix', 'fname', 'lname', 'nationality', 'passport', 'dateofissue', 'passportexpiry', 'birthday'];
+          console.log('🧾 Form data:', passengerFormRefs.current.map(r => r?.getData?.()));
           const errorObj = {};
           allFields.forEach(f => {
             if (!data[f] || data[f] === 'Please Select') errorObj[f] = true;
@@ -388,13 +397,16 @@ const CustomerInfo = ({ navigation }) => {
         }
       });
       if (hasPassengerError) {
+        setShowAllErrors(true);
         Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
-          { text: 'OK', onPress: () => {} }
+          { text: 'OK', onPress: () => { } }
         ]);
         return;
       }
+      setShowAllErrors(false);
       // ถ้าข้อมูลครบ
       const passengerDataArr = passengerFormRefs.current.map(ref => ref?.getData?.() || {});
+      console.log("🧾 passengerDataArr", passengerDataArr);
       updateCustomerData({
         selectedTitle: selectedTitle,
         Firstname: Firstname,
@@ -593,6 +605,7 @@ const CustomerInfo = ({ navigation }) => {
                 {/* คำนำหน้า */}
                 <Text style={styles.textHead}>Title</Text>
                 <TouchableOpacity
+                
                   style={[styles.button, errors.selectedTitle && styles.errorInput]}
                   onPress={toggleModal}>
                   <Text style={styles.buttonText}>{selectedTitle}</Text>
@@ -628,7 +641,7 @@ const CustomerInfo = ({ navigation }) => {
                     setFirstname(text);
                     setErrors((prev) => ({ ...prev, Firstname: false }));
                   }}
-                  style={[styles.input, errors.Firstname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                  style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                 />
 
                 <Text style={styles.textHead}>Last Name</Text>
@@ -639,7 +652,7 @@ const CustomerInfo = ({ navigation }) => {
                     setLastname(text);
                     setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
                   }}
-                  style={[styles.input, errors.Lastname && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                  style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                 />
 
 
@@ -693,7 +706,7 @@ const CustomerInfo = ({ navigation }) => {
                     setmobileNumber(text);
                     setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
                   }}
-                  style={[styles.input, errors.mobileNumber && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                  style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                 />
                 <Text style={styles.title}>Where should we send your booking confirmation?</Text>
                 <Text style={styles.textHead}>Email</Text>
@@ -704,35 +717,44 @@ const CustomerInfo = ({ navigation }) => {
                     setemail(text);
                     setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
                   }}
-                  style={[styles.input, errors.email && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                  style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                   editable={!customerData.email}
                 />
               </View>
             ) : (
               // ถ้า international ไม่ใช่ 0 ให้แสดงฟอร์มตามจำนวนผู้โดยสาร
               <>
+                {/* ก่อน map ทุกครั้ง ให้ reset refs */}
+                {passengerFormRefs.current = []}
+
                 {[...Array(customerData.adult)].map((_, i) => (
                   <PassengerForm
+                    ref={el => (passengerFormRefs.current[i] = el)}
                     key={`adult-${i}`}
                     type="adult"
                     index={i}
                     telePhone={telePhone}
+                    showAllErrors={showAllErrors}
                   />
                 ))}
                 {[...Array(customerData.child)].map((_, i) => (
                   <PassengerForm
+                    ref={el => (passengerFormRefs.current[customerData.adult + i] = el)}
                     key={`child-${i}`}
                     type="child"
                     index={i}
                     telePhone={telePhone}
+                    showAllErrors={showAllErrors}
                   />
                 ))}
                 {[...Array(customerData.infant)].map((_, i) => (
                   <PassengerForm
+                    ref={el => (passengerFormRefs.current[customerData.adult + customerData.child + i] = el)}
                     key={`infant-${i}`}
                     type="infant"
                     index={i}
                     telePhone={telePhone}
+                    showAllErrors={showAllErrors}
                   />
                 ))}
 
@@ -1181,8 +1203,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   errorInput: {
-    borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด
+    borderColor: 'red',
+
   },
+
   rowButton: {
     width: '100%',
     alignItems: 'center',

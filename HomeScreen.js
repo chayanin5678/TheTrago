@@ -507,7 +507,7 @@ const HomeScreen = ({ navigation }) => {
 
 
       if (response.ok) {
-        console.log('Country data:', json.data);
+       
         updateCustomerData({
           selectcoountrycode: `(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`,
           country: json.data[0].sys_countries_code,
@@ -541,7 +541,7 @@ const HomeScreen = ({ navigation }) => {
 
         if (response.ok) {
           setPoppularAttraction(json.data);
-          console.log('poppularAttraction:', json.data);
+         
           return json.data;
         } else {
           console.warn('Not found or error:', json.message);
@@ -571,9 +571,9 @@ const HomeScreen = ({ navigation }) => {
 
 
         if (response.ok) {
-          console.log('Country data:', json.data);
+   
           setPoppularRoute(json.data);
-          console.log('poppularRoute:', json.data);
+       
           return json.data;
         } else {
           console.warn('Not found or error:', json.message);
