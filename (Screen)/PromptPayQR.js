@@ -61,7 +61,12 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   
         // ✅ สร้าง booking โดยใช้ booking code ที่ได้จริง
         await createBooking(response.data.charge_id, newBookingCode, newGroupBookingCode);
+        if (customerData.international=== "1") {
+     
+          await submitPassengers(customerData.passenger, newBookingCode);
+        } else {
         await createPassenger(newBookingCode);
+        }
        
   
       } catch (error) {
@@ -213,6 +218,47 @@ let booking_codeGroup = bookingcodeGroup.length > 0
       console.error("❌ Error submitting booking:", error);
     }
   };
+
+    const submitPassengers = async (passengers, bookingCode) => {
+  try {
+    if (!Array.isArray(passengers) || passengers.length === 0) {
+      console.error("❌ No passenger data:", passengers);
+      return;
+    }
+
+    for (const p of passengers) {
+      console.log('🚀 Submitting passenger:', p);
+
+      const payload = {
+        md_passenger_bookingcode: bookingCode || '',
+        md_passenger_prefix: p?.prefix || '',
+        md_passenger_fname: p?.fname || '',
+        md_passenger_lname: p?.lname || '',
+        md_passenger_idtype: p?.idtype || '',
+        md_passenger_nationality: p?.nationality || '',
+        md_passenger_passport: p?.passport || '',
+        md_passenger_passportexpiry: p?.passportexpiry || '',
+        md_passenger_dateoflssue: p?.dateofissue || '',
+        md_passenger_birthday: p?.birthday || '',
+        md_passenger_type: p?.type || '',
+      };
+
+      const response = await axios.post(
+        `${ipAddress}/passengernation`,
+        payload,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      console.log('✅ Sent:', response.data);
+    }
+
+    Alert.alert('Success', 'All passengers submitted!');
+  } catch (error) {
+    console.error('❌ Failed to submit passenger:', error.response?.data || error.message);
+    Alert.alert('Error', 'Could not submit passenger data');
+  }
+};
+
 
   
   const updatestatus = async (bookingCode) => {

@@ -13,7 +13,7 @@
         "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
       }
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
@@ -37,7 +37,9 @@
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "We need camera access to scan your ID card"
+        "NSCameraUsageDescription": "We need camera access to scan your ID card",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting and uploading images.",
+        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
       }
     },
     "jsEngine": "jsc"

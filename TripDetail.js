@@ -1226,7 +1226,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
                             <Text style={styles.inputLabel}>Pick up area</Text>
-                            <TouchableOpacity onPress={toggleModalPickupDepart} style={styles.buttonSelect}>
+                            <TouchableOpacity onPress={toggleModalPickupDepart} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
                               <Text style={styles.buttonText}>{selectedPickupDepartName}</Text>
                               <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                             </TouchableOpacity>
@@ -1701,7 +1701,7 @@ const TripDetail = ({ navigation, route }) => {
                               </Modal>
 
                               <Text style={styles.inputLabel}>Pick up area</Text>
-                              <TouchableOpacity onPress={toggleModalPickupReturn} style={styles.buttonSelect}>
+                              <TouchableOpacity onPress={toggleModalPickupReturn}     style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
                                 <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                               </TouchableOpacity>
