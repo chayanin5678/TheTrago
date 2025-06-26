@@ -1010,41 +1010,41 @@ const PaymentScreen = ({ navigation, route }) => {
                     </View>
                     <View style={[styles.row, { marginTop: 5 }]}>
                       <Text>Adult x {customerData.adult}</Text>
-                      <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+                      <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
                     </View>
                     {customerData.child !== 0 && (
                       <View style={styles.row}>
                         <Text>Child x {customerData.child}</Text>
-                        <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                        <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
                       </View>
                     )}
                     {customerData.infant !== 0 && (
                       <View style={styles.row}>
                         <Text>infant x {customerData.infant}</Text>
-                        <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                        <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
                       </View>
                     )}
                     {customerData.pickupPriceDepart != 0 && (
                       <View style={styles.row}>
                         <Text>Pick up</Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
                       </View>
                     )}
                     {customerData.dropoffPriceDepart != 0 && (
                       <View style={styles.row}>
                         <Text>Drop off</Text>
-                        <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
                       </View>
                     )}
                     {customerData.discountDepart != 0 && (
                       <View style={styles.row}>
                         <Text>Discount</Text>
-                        <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountDepart)}</Text>
+                        <Text className="redText">- {customerData.symbol} {formatNumberWithComma(customerData.discountDepart)}</Text>
                       </View>
                     )}
                     <View style={styles.row}>
                       <Text>Ticket fare</Text>
-                      <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+                      <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalDepart)}</Text>
                     </View>
                     <View style={styles.divider} />
                   </View>
@@ -1081,41 +1081,41 @@ const PaymentScreen = ({ navigation, route }) => {
                         </View>
                         <View style={[styles.row, { marginTop: 5 }]}>
                           <Text>Adult x {customerData.adult}</Text>
-                          <Text>฿ {formatNumberWithComma(customerData.totaladultReturn)}</Text>
+                          <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultReturn)}</Text>
                         </View>
                         {customerData.child !== 0 && (
                           <View style={styles.row}>
                             <Text>Child x {customerData.child}</Text>
-                            <Text>฿ {formatNumberWithComma(customerData.totalchildReturn)}</Text>
+                            <Text> {formatNumberWithComma(customerData.totalchildReturn)}</Text>
                           </View>
                         )}
                         {customerData.infant !== 0 && (
                           <View style={styles.row}>
                             <Text>infant x {customerData.infant}</Text>
-                            <Text>฿ {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
+                            <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
                           </View>
                         )}
                         {customerData.pickupPriceReturn != 0 && (
                           <View style={styles.row}>
                             <Text>Pick up</Text>
-                            <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
                           </View>
                         )}
                         {customerData.dropoffPriceReturn != 0 && (
                           <View style={styles.row}>
                             <Text>Drop off</Text>
-                            <Text style={{ color: 'green' }}>+ ฿ {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
                           </View>
                         )}
                         {customerData.discountReturn != 0 && (
                           <View style={styles.row}>
                             <Text>Discount</Text>
-                            <Text className="redText">- ฿ {formatNumberWithComma(customerData.discountReturn)}</Text>
+                            <Text className="redText">- {customerData.symbol} {formatNumberWithComma(customerData.discountReturn)}</Text>
                           </View>
                         )}
                         <View style={styles.row}>
                           <Text>Ticket fare</Text>
-                          <Text style={{ fontWeight: 'bold' }}>฿ {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+                          <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalReturn)}</Text>
                         </View>
                         <View style={styles.divider} />
                       </View>
@@ -1125,14 +1125,14 @@ const PaymentScreen = ({ navigation, route }) => {
 
                 <View style={styles.row}>
                   <Text>Subtotal </Text>
-                  <Text>฿ {formatNumberWithComma(customerData.total)}</Text>
+                  <Text>{customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
                 </View>
                 <View style={styles.divider} />
                 {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
                   <View key={index} >
                     <View style={styles.row}>
                       <Text>Payment Fee </Text>
-                      <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(formatNumber(item.paymentfee))}</Text>
+                      <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(formatNumber(item.paymentfee))}</Text>
 
                     </View>
                     <View style={styles.divider} />
@@ -1142,7 +1142,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
                 <View style={styles.row}>
                   <Text>total </Text>
-                  <Text> ฿ {formatNumberWithComma(formatNumber(totalPayment))}</Text>
+                  <Text> {customerData.symbol} {formatNumberWithComma(formatNumber(totalPayment))}</Text>
                 </View>
               </View>
 
@@ -1164,7 +1164,7 @@ const PaymentScreen = ({ navigation, route }) => {
                     Alert.alert('Payment Option', 'Please select a payment option.');
                   }
                 }}>
-                <Text style={styles.BackButtonText}>Payment ฿{formatNumberWithComma(totalPayment)}</Text>
+                <Text style={styles.BackButtonText}>Payment {customerData.symbol} {formatNumberWithComma(totalPayment)}</Text>
               </TouchableOpacity>
             </ImageBackground>
           </ScrollView>

@@ -333,7 +333,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                 style={styles.qr}
                 resizeMode="contain"
               />
-              <Text style={[styles.text, {marginTop: 20}]}>฿ {Paymenttotal}</Text>
+              <Text style={[styles.text, {marginTop: 20}]}>{customerData.symbol} {Paymenttotal}</Text>
             </>
           )}
           <View style={styles.rowButton}>

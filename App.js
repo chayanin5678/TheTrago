@@ -36,6 +36,8 @@ import AddCardScreen from './(Screen)/AddCardScreen';
 import SearchFerryDemo from './SearchFerryDemo';
 import ipAddress from './ipconfig';
 import { PromotionProvider } from './PromotionProvider';
+import TermsScreen from './(Screen)/TermsScreen';
+import PrivacyPolicyScreen from './(Screen)/PrivacyPolicyScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -63,6 +65,7 @@ const AppNavigator = () => (
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
      <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
+     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -77,6 +80,8 @@ const Loginnavigator = () => (
     <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
     <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -151,14 +156,14 @@ const MainNavigator = () => {
     >
       <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
       {/* <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} /> */}
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Post"
         component={QRCodeScannerScreen}
         options={{
           title: '',
           tabBarButton: (props) => <CustomPostButton {...props} />,
         }}
-      />
+      /> */}
       {/* <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} /> */}
       <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
     </Tab.Navigator>
@@ -229,7 +234,7 @@ export default function App() {
       ) : (
         <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
           <CustomerProvider>
-            <AppNavigator />
+            <MainNavigator />
           </CustomerProvider>
         </NavigationContainer>
       )}

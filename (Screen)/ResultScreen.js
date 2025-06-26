@@ -541,54 +541,54 @@ const ResultScreen = ({ navigation, route }) => {
 
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text >Adult x {customerData.adult} </Text>
-            <Text>฿ {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+            <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
           </View>
           {customerData.child !== 0 && (
             <View style={[styles.row, { justifyContent: 'space-between' }]}>
               <Text>Child x {customerData.child}</Text>
-              <Text>฿ {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+              <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
             </View>
           )}
           {customerData.infant !== 0 && (
             <View style={[styles.row, { justifyContent: 'space-between' }]}>
               <Text>Infant x {customerData.infant}</Text>
-              <Text>฿ {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+              <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
             </View>
           )}
             {customerData.pickupPriceDepart !== 0 && (
             <View style={[styles.row, { justifyContent: 'space-between' }]}>
               <Text>Pickup {customerData.infant}</Text>
-              <Text>฿ {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+              <Text>{customerData.symbol} {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
             </View>
           )}
             {customerData.dropoffPriceDepart !== 0 && (
             <View style={[styles.row, { justifyContent: 'space-between' }]}>
               <Text>Drop off {customerData.infant}</Text>
-              <Text>฿ {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+              <Text>{customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
             </View>
           )}
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>Discount</Text>
-            <Text style={styles.redText}>- ฿  {formatNumberWithComma(customerData.discountDepart)}</Text>
+            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountDepart)}</Text>
           </View>
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>Ticket fare</Text>
-            <Text>฿ {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+            <Text>{customerData.symbol} {formatNumberWithComma(customerData.subtotalDepart)}</Text>
           </View>
           <View style={styles.divider} />
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>Subtotal </Text>
-            <Text>฿ {formatNumberWithComma((parseFloat(customerData.subtotalDepart) + parseFloat(customerData.subtotalReturn)))}</Text>
+            <Text>{customerData.symbol} {formatNumberWithComma((parseFloat(customerData.subtotalDepart) + parseFloat(customerData.subtotalReturn)))}</Text>
           </View>
           <View style={styles.divider} />
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>Payment Fee </Text>
-            <Text style={styles.greenText}>+ ฿ {formatNumberWithComma(customerData.paymentfee)}</Text>
+            <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(customerData.paymentfee)}</Text>
           </View>
           <View style={styles.divider} />
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text>total </Text>
-            <Text> ฿ {formatNumberWithComma(customerData.total)}</Text>
+            <Text> {customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.bookingCodeText}>

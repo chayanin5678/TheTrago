@@ -29,7 +29,16 @@ const ProfileScreen = ({ navigation }) => {
   const [birthdate, setBirthdate] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [countryName, setCountryName] = useState('');
+  const [isLoading, setIsLoading] = useState(true); // เพิ่มสถานะโหลด
 
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // เพิ่ม state สำหรับค่ารหัสผ่าน
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
 
 
@@ -305,6 +314,67 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  // เพิ่ม function สำหรับเปลี่ยนรหัสผ่าน
+  const handleChangePassword = async () => {
+    // ตรวจสอบว่ากรอกข้อมูลครบถ้วน
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert("⚠️ Please fill in all password fields");
+      return;
+    }
+
+    // ตรวจสอบว่ารหัสผ่านใหม่ตรงกัน
+    if (newPassword !== confirmPassword) {
+      alert("⚠️ New password and confirm password do not match");
+      return;
+    }
+
+    // ตรวจสอบความยาวรหัสผ่านใหม่
+    if (newPassword.length < 6) {
+      alert("⚠️ New password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+
+      if (!token) {
+        alert("User token not found");
+        return;
+      }
+
+      const response = await fetch(`${ipAddress}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      const json = await response.json();
+
+      if (json.status === 'success') {
+        alert("✅ Password changed successfully");
+        // เคลียร์ข้อมูลในฟอร์ม
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+      } else {
+        alert("❌ " + json.message);
+      }
+
+    } catch (error) {
+      console.error("handleChangePassword error:", error);
+      alert("⚠️ Error occurred while changing password");
+    }
+  };
+
 
 
   const isEmailVerified = !!customerData.email;
@@ -331,6 +401,36 @@ const ProfileScreen = ({ navigation }) => {
 
   const progressPercent = (verifiedCount / 4) * 100;
 
+
+  if (isLoading) {
+    // Skeleton Loader UI
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <View style={{ flex: 1, padding: 16 }}>
+          {/* Skeleton for Progress Card */}
+          <View style={[styles.progressCard, { opacity: 0.7 }]}>  
+            <View style={[styles.skeleton, { width: 120, height: 18, marginBottom: 10 }]} />
+            <View style={[styles.skeleton, { width: '100%', height: 10, marginBottom: 8 }]} />
+            <View style={[styles.skeleton, { width: 180, height: 12, marginBottom: 10 }]} />
+            <View style={{ gap: 6 }}>
+              {[1,2,3,4].map((_,i) => (
+                <View key={i} style={[styles.skeleton, { width: 160, height: 16, marginBottom: 4 }]} />
+              ))}
+            </View>
+          </View>
+          {/* Skeleton for Form Card */}
+          <View style={[styles.formCard, { opacity: 0.7 }]}>  
+            <View style={[styles.skeleton, { width: 140, height: 18, marginBottom: 12 }]} />
+            {[1,2,3,4,5,6].map((_,i) => (
+              <View key={i} style={[styles.skeleton, { width: '100%', height: 38, marginBottom: 12, borderRadius: 8 }]} />
+            ))}
+            <View style={[styles.skeleton, { width: 100, height: 38, borderRadius: 8 }]} />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -362,8 +462,7 @@ const ProfileScreen = ({ navigation }) => {
 
               <TouchableOpacity onPress={() => navigation.navigate('IDCardCameraScreen')}>
                 <Text style={isIdVerified ? styles.verified : styles.unverified}>
-                  <Icon name={isIdVerified ? "check-circle" : "times-circle"} size={16} color={isIdVerified ? "green" : "orangered"} />
-                  Verified ID Card/Passport
+                  <Icon name={isIdVerified ? "check-circle" : "times-circle"} size={16} color={isIdVerified ? "green" : "orangered"} /> Verified ID Card/Passport
                 </Text>
               </TouchableOpacity>
 
@@ -496,18 +595,42 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.formCard}>
             <Text style={styles.sectionTitle}>Change Password</Text>
             <View style={styles.passwordField}>
-              <TextInput style={styles.inputFlex} placeholder="Current Password" secureTextEntry />
-              <Entypo name="eye-with-line" size={20} color="#aaa" />
+              <TextInput 
+                style={styles.inputFlex} 
+                placeholder="Current Password" 
+                secureTextEntry={!showCurrentPassword}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+              />
+              <TouchableOpacity onPress={() => setShowCurrentPassword((prev) => !prev)}>
+                <Entypo name={showCurrentPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
+              </TouchableOpacity>
             </View>
             <View style={styles.passwordField}>
-              <TextInput style={styles.inputFlex} placeholder="New Password" secureTextEntry />
-              <Entypo name="eye-with-line" size={20} color="#aaa" />
+              <TextInput 
+                style={styles.inputFlex} 
+                placeholder="New Password" 
+                secureTextEntry={!showNewPassword}
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+              <TouchableOpacity onPress={() => setShowNewPassword((prev) => !prev)}>
+                <Entypo name={showNewPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
+              </TouchableOpacity>
             </View>
             <View style={styles.passwordField}>
-              <TextInput style={styles.inputFlex} placeholder="Confirm Password" secureTextEntry />
-              <Entypo name="eye-with-line" size={20} color="#aaa" />
+              <TextInput 
+                style={styles.inputFlex} 
+                placeholder="Confirm Password" 
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
+                <Entypo name={showConfirmPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.saveButton}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword}>
               <Text style={styles.buttonText}>Change Password</Text>
             </TouchableOpacity>
           </View>
@@ -668,6 +791,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,     // กำหนดความหนาของขอบ
     borderColor: '#ced4da', // กำหนดสีของขอบ
     borderRadius: 5,    // ปรับมุมขอบให้โค้ง
+  },
+  skeleton: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: 6,
+    marginBottom: 8,
   },
 
 });
