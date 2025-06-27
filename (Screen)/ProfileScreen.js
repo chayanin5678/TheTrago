@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar } from 'react-native';
-import { Entypo } from '@expo/vector-icons';
+import React, { useEffect, useState, useRef } from "react";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions } from 'react-native';
+import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCustomer } from './CustomerContext.js';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
 const ProfileScreen = ({ navigation }) => {
@@ -29,22 +32,48 @@ const ProfileScreen = ({ navigation }) => {
   const [birthdate, setBirthdate] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [countryName, setCountryName] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // เพิ่มสถานะโหลด
+  const [isLoading, setIsLoading] = useState(true);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // เพิ่ม state สำหรับค่ารหัสผ่าน
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Ultra Premium Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  
+  // Floating particles animation
+  const floatingAnims = useRef(
+    [...Array(6)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2), // Center around screen
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
+
+  // Card staggered animations
+  const cardAnims = useRef(
+    [...Array(3)].map(() => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(30),
+      scale: new Animated.Value(0.9),
+    }))
+  ).current;
 
 
 
   const formatDate = (dateString) => {
     if (!dateString || isNaN(new Date(dateString))) {
-      return 'Select your birthday'; // หรือ 'N/A', หรือไม่ต้องแสดงเลย
+      return 'Select your birthday';
     }
 
     const date = new Date(dateString);
@@ -54,6 +83,145 @@ const ProfileScreen = ({ navigation }) => {
       year: 'numeric',
     }).format(date);
   };
+
+  // Premium animations initialization
+  useEffect(() => {
+    // Premium entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        delay: 300,
+        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 500,
+        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.3,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.2,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.8,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 500);
+    });
+
+    // Card staggered animations
+    cardAnims.forEach((anim, index) => {
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: 0,
+            duration: 900,
+            easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.scale, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, index * 200 + 800);
+    });
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Continuous rotation for decorative elements
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
 
 
@@ -403,243 +571,991 @@ const ProfileScreen = ({ navigation }) => {
 
 
   if (isLoading) {
-    // Skeleton Loader UI
+    // Premium Skeleton Loader UI
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <View style={{ flex: 1, padding: 16 }}>
-          {/* Skeleton for Progress Card */}
-          <View style={[styles.progressCard, { opacity: 0.7 }]}>  
-            <View style={[styles.skeleton, { width: 120, height: 18, marginBottom: 10 }]} />
-            <View style={[styles.skeleton, { width: '100%', height: 10, marginBottom: 8 }]} />
-            <View style={[styles.skeleton, { width: 180, height: 12, marginBottom: 10 }]} />
-            <View style={{ gap: 6 }}>
-              {[1,2,3,4].map((_,i) => (
-                <View key={i} style={[styles.skeleton, { width: 160, height: 16, marginBottom: 4 }]} />
-              ))}
-            </View>
-          </View>
-          {/* Skeleton for Form Card */}
-          <View style={[styles.formCard, { opacity: 0.7 }]}>  
-            <View style={[styles.skeleton, { width: 140, height: 18, marginBottom: 12 }]} />
-            {[1,2,3,4,5,6].map((_,i) => (
-              <View key={i} style={[styles.skeleton, { width: '100%', height: 38, marginBottom: 12, borderRadius: 8 }]} />
-            ))}
-            <View style={[styles.skeleton, { width: 100, height: 38, borderRadius: 8 }]} />
-          </View>
+      <SafeAreaView style={styles.containerPremium}>
+        <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
+        
+        {/* Floating Particles Background */}
+        <View style={styles.particlesContainer}>
+          {floatingAnims.map((anim, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                styles.floatingParticle,
+                {
+                  transform: [
+                    { translateX: anim.x },
+                    { translateY: anim.y },
+                    { scale: anim.scale },
+                  ],
+                  opacity: anim.opacity,
+                },
+              ]}
+            />
+          ))}
         </View>
+
+        {/* Premium Header */}
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile Settings</Text>
+            <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+            
+            {/* Floating decorative elements */}
+            <Animated.View 
+              style={[
+                styles.floatingDecor,
+                { transform: [{ rotate: spin }] }
+              ]}
+            >
+              <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
+            </Animated.View>
+          </View>
+        </LinearGradient>
+
+        <ScrollView style={styles.scrollViewPremium}>
+          <View style={styles.contentContainer}>
+            {/* Skeleton for Progress Card */}
+            <Animated.View style={[styles.progressCardPremium, { opacity: 0.7 }]}>  
+              <View style={[styles.skeletonPremium, { width: 200, height: 24, marginBottom: 15 }]} />
+              <View style={[styles.skeletonPremium, { width: '100%', height: 12, marginBottom: 12, borderRadius: 6 }]} />
+              <View style={[styles.skeletonPremium, { width: 280, height: 16, marginBottom: 15 }]} />
+              <View style={{ gap: 8 }}>
+                {[1,2,3,4].map((_,i) => (
+                  <View key={i} style={[styles.skeletonPremium, { width: 180, height: 18, marginBottom: 6 }]} />
+                ))}
+              </View>
+            </Animated.View>
+            
+            {/* Skeleton for Form Cards */}
+            {[1,2].map((_, index) => (
+              <Animated.View key={index} style={[styles.formCardPremium, { opacity: 0.7, marginBottom: 25 }]}>  
+                <View style={[styles.skeletonPremium, { width: 160, height: 22, marginBottom: 20 }]} />
+                {[1,2,3,4,5,6].map((_,i) => (
+                  <View key={i} style={[styles.skeletonPremium, { width: '100%', height: 48, marginBottom: 16, borderRadius: 12 }]} />
+                ))}
+                <View style={[styles.skeletonPremium, { width: 120, height: 48, borderRadius: 12 }]} />
+              </Animated.View>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={styles.containerPremium}>
+      <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
+      
+      {/* Floating Particles Background */}
+      <View style={styles.particlesContainer}>
+        {floatingAnims.map((anim, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.floatingParticle,
+              {
+                transform: [
+                  { translateX: anim.x },
+                  { translateY: anim.y },
+                  { scale: anim.scale },
+                ],
+                opacity: anim.opacity,
+              },
+            ]}
+          />
+        ))}
+      </View>
+
+      {/* Premium Header */}
+      <Animated.View
+        style={[
+          styles.headerContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile Settings</Text>
+            <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+            
+            {/* Floating decorative elements */}
+            <Animated.View 
+              style={[
+                styles.floatingDecor,
+                { transform: [{ rotate: spin }] }
+              ]}
+            >
+              <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
+            </Animated.View>
+            
+            <Animated.View 
+              style={[
+                styles.floatingDecor2,
+                { transform: [{ rotate: spin }] }
+              ]}
+            >
+              <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
+            </Animated.View>
+          </View>
+        </LinearGradient>
+      </Animated.View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.container}>
-          {/* Profile Progress */}
-          <View style={styles.progressCard}>
-            <Text style={styles.title}>Complete Your Profile</Text>
-            <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-            </View>
-
-            <Text style={styles.infoText}>
-              Get the best out of booking by adding the remaining details!
-            </Text>
-            <View style={styles.verificationList}>
-              <Text style={isEmailVerified ? styles.verified : styles.unverified}>
-                <Icon name={isEmailVerified ? "check-circle" : "times-circle"} size={16} color={isEmailVerified ? "green" : "orangered"} /> Verified Email
-              </Text>
-
-              <Text style={isProfileVerified ? styles.verified : styles.unverified}>
-                <Icon name={isProfileVerified ? "check-circle" : "times-circle"} size={16} color={isProfileVerified ? "green" : "orangered"} /> Verified Profile
-              </Text>
-
-              <TouchableOpacity onPress={() => navigation.navigate('IDCardCameraScreen')}>
-                <Text style={isIdVerified ? styles.verified : styles.unverified}>
-                  <Icon name={isIdVerified ? "check-circle" : "times-circle"} size={16} color={isIdVerified ? "green" : "orangered"} /> Verified ID Card/Passport
-                </Text>
-              </TouchableOpacity>
-
-              <Text style={isBankVerified ? styles.verified : styles.unverified}>
-                <Icon name={isBankVerified ? "check-circle" : "times-circle"} size={16} color={isBankVerified ? "green" : "orangered"} /> Verified Bank Account
-              </Text>
-            </View>
-
-          </View>
-
-          {/* Personal Information Form */}
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
-            <TextInput style={styles.input} placeholder="First Name" value={Firstname} />
-            <TextInput style={styles.input} placeholder="Last Name" value={Lastname} />
-            <TouchableOpacity
-              style={[styles.button, errors.selectedTele && styles.errorInput]}
-              onPress={toggleTeleModal}>
-              <Text style={{ color: 'black' }}>{selectedTele}</Text>
-              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-            </TouchableOpacity>
-
-            {/* Modal for selecting telephone */}
-            <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <TextInput
-                    placeholder="Search country"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    style={styles.textInput}
-                  />
-                  <FlatList
-                    data={filteredTelePhones}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                        <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                          {item.sys_countries_nameeng === 'Please Select'
-                            ? 'Please Select'
-                            : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    keyExtractor={(item, index) => index.toString()}
-                    initialNumToRender={5}
-                    maxToRenderPerBatch={5}
-                    windowSize={5}
-                    pagingEnabled
-                  />
-                </View>
-              </View>
-            </Modal>
-            <TextInput
-              style={styles.input}
-              placeholder="Phone"
-              value={tel}
-              onChangeText={setTel}
-              keyboardType="numeric"
-            />
-
-            <TextInput style={[styles.input, styles.disabled]} placeholder="Email" value={email} editable={false} />
-            <TouchableOpacity
-              style={[styles.button, errors.selectedTele && styles.errorInput]}
-              onPress={toggleCountryModal}>
-              <Text style={{ color: 'black' }}>{selectedCountry}</Text>
-              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-            </TouchableOpacity>
-
-            {/* Modal for selecting telephone */}
-            <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <TextInput
-                    placeholder="Search country"
-                    value={searchQueryCountry}
-                    onChangeText={setSearchQueryCountry}
-                    style={styles.textInput}
-                  />
-                  <FlatList
-                    data={filteredCountry}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectCountry(item)}>
-                        <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                          {item.sys_countries_nameeng === 'Please Select'
-                            ? 'Please Select'
-                            : `${item.sys_countries_nameeng}`}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    keyExtractor={(item, index) => index.toString()}
-                    initialNumToRender={5}
-                    maxToRenderPerBatch={5}
-                    windowSize={5}
-                    pagingEnabled
-                  />
-                </View>
-              </View>
-            </Modal>
-            <TouchableOpacity
-              style={{
-                borderWidth: 1,
-                borderColor: '#ccc',
-                padding: 12,
-                borderRadius: 8,
-
-              }}
-              onPress={() => setShowPicker(true)}
+        <ScrollView 
+          style={styles.scrollViewPremium}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
+          <View style={styles.contentContainer}>
+            {/* Premium Profile Progress Card */}
+            <Animated.View
+              style={[
+                styles.progressCardPremium,
+                {
+                  opacity: cardAnims[0]?.opacity || 1,
+                  transform: [
+                    { translateY: cardAnims[0]?.translateY || 0 },
+                    { scale: cardAnims[0]?.scale || 1 },
+                  ],
+                },
+              ]}
             >
-              <Text>
-                {birthdate ? formatDate(birthdate) : 'Select your birthday'}
-              </Text>
-            </TouchableOpacity>
+              <LinearGradient
+                colors={['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.05)']}
+                style={styles.progressGradient}
+              >
+                <View style={styles.progressHeader}>
+                  <MaterialCommunityIcons name="account-check" size={24} color="#FD501E" />
+                  <Text style={styles.titlePremium}>Complete Your Profile</Text>
+                </View>
+                
+                <View style={styles.progressBarBackgroundPremium}>
+                  <Animated.View 
+                    style={[
+                      styles.progressBarFillPremium, 
+                      { 
+                        width: `${progressPercent}%`,
+                        transform: [{ scale: pulseAnim }]
+                      }
+                    ]} 
+                  />
+                </View>
 
-            {showPicker && (
-              <DateTimePicker
-                value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleConfirm}
-                maximumDate={new Date()} // ห้ามเลือกวันอนาคต
-                style={{ width: '100%', alignItems: 'center' }} // กำหนดขนาดของ DateTimePicker
-              />
-            )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+                <Text style={styles.infoTextPremium}>
+                  Get the best out of booking by adding the remaining details!
+                </Text>
+                
+                <View style={styles.verificationListPremium}>
+                  {[
+                    { label: 'Verified Email', verified: isEmailVerified },
+                    { label: 'Verified Profile', verified: isProfileVerified },
+                    { label: 'Verified ID Card/Passport', verified: isIdVerified, nav: 'IDCardCameraScreen' },
+                    { label: 'Verified Bank Account', verified: isBankVerified }
+                  ].map((item, index) => (
+                    <TouchableOpacity 
+                      key={index}
+                      style={styles.verificationItem}
+                      onPress={() => item.nav && navigation.navigate(item.nav)}
+                      activeOpacity={item.nav ? 0.7 : 1}
+                    >
+                      <View style={[styles.verificationIcon, item.verified ? styles.verifiedIcon : styles.unverifiedIcon]}>
+                        <MaterialIcons 
+                          name={item.verified ? "check" : "close"} 
+                          size={16} 
+                          color={item.verified ? "#22C55E" : "#EF4444"} 
+                        />
+                      </View>
+                      <Text style={item.verified ? styles.verifiedPremium : styles.unverifiedPremium}>
+                        {item.label}
+                      </Text>
+                      {item.nav && (
+                        <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </LinearGradient>
+            </Animated.View>
 
-          {/* Change Password */}
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Change Password</Text>
-            <View style={styles.passwordField}>
-              <TextInput 
-                style={styles.inputFlex} 
-                placeholder="Current Password" 
-                secureTextEntry={!showCurrentPassword}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-              />
-              <TouchableOpacity onPress={() => setShowCurrentPassword((prev) => !prev)}>
-                <Entypo name={showCurrentPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
+            {/* Premium Personal Information Form */}
+            <Animated.View
+              style={[
+                styles.formCardPremium,
+                {
+                  opacity: cardAnims[1]?.opacity || 1,
+                  transform: [
+                    { translateY: cardAnims[1]?.translateY || 0 },
+                    { scale: cardAnims[1]?.scale || 1 },
+                  ],
+                },
+              ]}
+            >
+              <View style={styles.sectionHeaderPremium}>
+                <MaterialCommunityIcons name="account-edit" size={24} color="#FD501E" />
+                <Text style={styles.sectionTitlePremium}>Personal Information</Text>
+              </View>
+              
+              <View style={styles.inputRowPremium}>
+                <View style={styles.inputWrapperPremium}>
+                  <Text style={styles.inputLabelPremium}>First Name</Text>
+                  <TextInput 
+                    style={styles.inputPremium} 
+                    placeholder="Enter your first name" 
+                    value={Firstname}
+                    onChangeText={setFirstname}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+                <View style={styles.inputWrapperPremium}>
+                  <Text style={styles.inputLabelPremium}>Last Name</Text>
+                  <TextInput 
+                    style={styles.inputPremium} 
+                    placeholder="Enter your last name" 
+                    value={Lastname}
+                    onChangeText={setLastname}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Country Code</Text>
+                <TouchableOpacity
+                  style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]}
+                  onPress={toggleTeleModal}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonTextPremium}>{selectedTele}</Text>
+                  <MaterialIcons name="expand-more" size={20} color="#FD501E" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Phone Number</Text>
+                <TextInput
+                  style={styles.inputPremium}
+                  placeholder="Enter your phone number"
+                  value={tel}
+                  onChangeText={setTel}
+                  keyboardType="numeric"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Email Address</Text>
+                <TextInput 
+                  style={[styles.inputPremium, styles.disabledPremium]} 
+                  placeholder="Email address" 
+                  value={email} 
+                  editable={false}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Nationality</Text>
+                <TouchableOpacity
+                  style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]}
+                  onPress={toggleCountryModal}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonTextPremium}>{selectedCountry}</Text>
+                  <MaterialIcons name="expand-more" size={20} color="#FD501E" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Date of Birth</Text>
+                <TouchableOpacity
+                  style={styles.buttonPremium}
+                  onPress={() => setShowPicker(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonTextPremium}>
+                    {birthdate ? formatDate(birthdate) : 'Select your birthday'}
+                  </Text>
+                  <MaterialIcons name="calendar-today" size={20} color="#FD501E" />
+                </TouchableOpacity>
+              </View>
+
+              {showPicker && (
+                <DateTimePicker
+                  value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleConfirm}
+                  maximumDate={new Date()}
+                  style={{ width: '100%', alignItems: 'center' }}
+                />
+              )}
+              
+              <TouchableOpacity 
+                style={styles.saveButtonPremium} 
+                onPress={handleSave}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#FD501E', '#FF6B40']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.saveGradient}
+                >
+                  <MaterialIcons name="save" size={20} color="#FFFFFF" />
+                  <Text style={styles.saveButtonTextPremium}>Save Profile</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </View>
-            <View style={styles.passwordField}>
-              <TextInput 
-                style={styles.inputFlex} 
-                placeholder="New Password" 
-                secureTextEntry={!showNewPassword}
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
-              <TouchableOpacity onPress={() => setShowNewPassword((prev) => !prev)}>
-                <Entypo name={showNewPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
+            </Animated.View>
+
+            {/* Premium Change Password Form */}
+            <Animated.View
+              style={[
+                styles.formCardPremium,
+                {
+                  opacity: cardAnims[2]?.opacity || 1,
+                  transform: [
+                    { translateY: cardAnims[2]?.translateY || 0 },
+                    { scale: cardAnims[2]?.scale || 1 },
+                  ],
+                },
+              ]}
+            >
+              <View style={styles.sectionHeaderPremium}>
+                <MaterialCommunityIcons name="lock-reset" size={24} color="#FD501E" />
+                <Text style={styles.sectionTitlePremium}>Change Password</Text>
+              </View>
+              
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Current Password</Text>
+                <View style={styles.passwordFieldPremium}>
+                  <TextInput 
+                    style={styles.inputFlexPremium} 
+                    placeholder="Enter current password" 
+                    secureTextEntry={!showCurrentPassword}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setShowCurrentPassword((prev) => !prev)}
+                    style={styles.eyeButtonPremium}
+                  >
+                    <Entypo name={showCurrentPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>New Password</Text>
+                <View style={styles.passwordFieldPremium}>
+                  <TextInput 
+                    style={styles.inputFlexPremium} 
+                    placeholder="Enter new password" 
+                    secureTextEntry={!showNewPassword}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setShowNewPassword((prev) => !prev)}
+                    style={styles.eyeButtonPremium}
+                  >
+                    <Entypo name={showNewPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputWrapperPremium}>
+                <Text style={styles.inputLabelPremium}>Confirm Password</Text>
+                <View style={styles.passwordFieldPremium}>
+                  <TextInput 
+                    style={styles.inputFlexPremium} 
+                    placeholder="Confirm new password" 
+                    secureTextEntry={!showConfirmPassword}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setShowConfirmPassword((prev) => !prev)}
+                    style={styles.eyeButtonPremium}
+                  >
+                    <Entypo name={showConfirmPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.saveButtonPremium} 
+                onPress={handleChangePassword}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#FD501E', '#FF6B40']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.saveGradient}
+                >
+                  <MaterialIcons name="lock" size={20} color="#FFFFFF" />
+                  <Text style={styles.saveButtonTextPremium}>Change Password</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </View>
-            <View style={styles.passwordField}>
-              <TextInput 
-                style={styles.inputFlex} 
-                placeholder="Confirm Password" 
-                secureTextEntry={!showConfirmPassword}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
-              <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
-                <Entypo name={showConfirmPassword ? "eye" : "eye-with-line"} size={20} color="#aaa" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword}>
-              <Text style={styles.buttonText}>Change Password</Text>
-            </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Premium Modals */}
+      <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
+        <View style={styles.modalOverlayPremium}>
+          <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
+              style={styles.modalGradient}
+            >
+              <View style={styles.modalHeaderPremium}>
+                <Text style={styles.modalTitlePremium}>Select Country Code</Text>
+                <TouchableOpacity onPress={toggleTeleModal} style={styles.closeButtonPremium}>
+                  <MaterialIcons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                placeholder="Search country"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                style={styles.searchInputPremium}
+                placeholderTextColor="#9CA3AF"
+              />
+              
+              <FlatList
+                data={filteredTelePhones}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.optionItemPremium} 
+                    onPress={() => handleSelectTele(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.optionTextPremium}>
+                      {item.sys_countries_nameeng === 'Please Select'
+                        ? 'Please Select'
+                        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                showsVerticalScrollIndicator={false}
+              />
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
+        <View style={styles.modalOverlayPremium}>
+          <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
+              style={styles.modalGradient}
+            >
+              <View style={styles.modalHeaderPremium}>
+                <Text style={styles.modalTitlePremium}>Select Nationality</Text>
+                <TouchableOpacity onPress={toggleCountryModal} style={styles.closeButtonPremium}>
+                  <MaterialIcons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                placeholder="Search country"
+                value={searchQueryCountry}
+                onChangeText={setSearchQueryCountry}
+                style={styles.searchInputPremium}
+                placeholderTextColor="#9CA3AF"
+              />
+              
+              <FlatList
+                data={filteredCountry}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.optionItemPremium} 
+                    onPress={() => handleSelectCountry(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.optionTextPremium}>
+                      {item.sys_countries_nameeng === 'Please Select'
+                        ? 'Please Select'
+                        : `${item.sys_countries_nameeng}`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                showsVerticalScrollIndicator={false}
+              />
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
+  // Ultra Premium Container
+  containerPremium: {
+    flex: 1,
+    backgroundColor: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
+  },
+
+  // Floating Particles
+  particlesContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    pointerEvents: 'none',
+  },
+  floatingParticle: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    backgroundColor: '#FD501E',
+    borderRadius: 4,
+    opacity: 0.1,
+  },
+
+  // Premium Header
+  headerContainer: {
+    zIndex: 2,
+  },
+  headerGradient: {
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerContent: {
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 3,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  floatingDecor: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    opacity: 0.4,
+  },
+  floatingDecor2: {
+    position: 'absolute',
+    bottom: -5,
+    left: 30,
+    opacity: 0.3,
+  },
+
+  // Premium Content
+  scrollViewPremium: {
+    flex: 1,
+    zIndex: 1,
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+
+  // Progress Card Premium
+  progressCardPremium: {
+    marginBottom: 25,
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  progressGradient: {
+    padding: 25,
+    borderRadius: 25,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  titlePremium: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginLeft: 10,
+    letterSpacing: 0.3,
+  },
+  progressBarBackgroundPremium: {
+    height: 12,
+    backgroundColor: 'rgba(253, 80, 30, 0.1)',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: 15,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressBarFillPremium: {
+    height: '100%',
+    backgroundColor: '#FD501E',
+    borderRadius: 6,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  infoTextPremium: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 20,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  verificationListPremium: {
+    gap: 12,
+  },
+  verificationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    padding: 15,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  verificationIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  verifiedIcon: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+  },
+  unverifiedIcon: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  verifiedPremium: {
+    fontSize: 15,
+    color: '#22C55E',
+    fontWeight: '600',
+    flex: 1,
+    letterSpacing: 0.2,
+  },
+  unverifiedPremium: {
+    fontSize: 15,
+    color: '#EF4444',
+    fontWeight: '600',
+    flex: 1,
+    letterSpacing: 0.2,
+  },
+
+  // Form Card Premium
+  formCardPremium: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 25,
+    padding: 25,
+    marginBottom: 25,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 25,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.1)',
+    backdropFilter: 'blur(20px)',
+  },
+  sectionHeaderPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  sectionTitlePremium: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginLeft: 12,
+    letterSpacing: 0.3,
+  },
+
+  // Input Premium
+  inputRowPremium: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  inputWrapperPremium: {
+    flex: 1,
+    marginBottom: 20,
+  },
+  inputLabelPremium: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    letterSpacing: 0.2,
+  },
+  inputPremium: {
+    borderWidth: 1,
+    borderColor: 'rgba(209, 213, 219, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 15,
+    borderRadius: 15,
+    fontSize: 16,
+    color: '#1F2937',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    fontWeight: '500',
+  },
+  disabledPremium: {
+    backgroundColor: 'rgba(243, 244, 246, 0.8)',
+    color: '#9CA3AF',
+  },
+
+  // Button Premium
+  buttonPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(209, 213, 219, 0.8)',
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  buttonTextPremium: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
+    flex: 1,
+  },
+  errorInputPremium: {
+    borderColor: '#EF4444',
+    shadowColor: '#EF4444',
+  },
+
+  // Password Field Premium
+  passwordFieldPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(209, 213, 219, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  inputFlexPremium: {
+    flex: 1,
+    paddingVertical: 15,
+    paddingLeft: 15,
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  eyeButtonPremium: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+
+  // Save Button Premium
+  saveButtonPremium: {
+    marginTop: 10,
+    borderRadius: 18,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  saveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 25,
+  },
+  saveButtonTextPremium: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 10,
+    letterSpacing: 0.5,
+  },
+
+  // Modal Premium
+  modalOverlayPremium: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContentPremium: {
+    width: '100%',
+    maxHeight: '70%',
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  modalGradient: {
+    padding: 0,
+  },
+  modalHeaderPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 231, 235, 0.5)',
+  },
+  modalTitlePremium: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: 0.3,
+  },
+  closeButtonPremium: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(107, 114, 128, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchInputPremium: {
+    margin: 20,
+    marginTop: 15,
+    marginBottom: 10,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(209, 213, 219, 0.8)',
+    borderRadius: 15,
+    fontSize: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  optionItemPremium: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 231, 235, 0.3)',
+  },
+  optionTextPremium: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+
+  // Skeleton Premium
+  skeletonPremium: {
+    backgroundColor: 'rgba(229, 231, 235, 0.6)',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+
+  // Legacy styles (keeping for backward compatibility)
   container: {
     padding: 16,
     backgroundColor: '#fff',
@@ -742,10 +1658,9 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-between',
     marginBottom: 10,
-
   },
   errorInput: {
-    borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด
+    borderColor: 'red',
   },
   icon: {
     marginLeft: 10,
@@ -753,51 +1668,46 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',  // ให้ Modal อยู่ด้านล่าง
+    justifyContent: 'center',
     alignItems: 'center',
-
   },
   modalContentPre: {
     backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
+    width: '80%',
     borderRadius: 10,
     padding: 15,
     elevation: 5,
-
   },
   modalContent: {
     backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
-    height: '40%',  // จำกัดขนาดความสูง
+    width: '80%',
+    height: '40%',
     borderRadius: 10,
     padding: 15,
     elevation: 5,
-
   },
   optionItem: {
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
-
   },
   optionText: {
     fontSize: 16,
     fontclor: '#333',
   },
   textInput: {
-    width: '100%',       // กำหนดความกว้าง
-    padding: 10,        // กำหนดช่องว่างภายใน
-    borderWidth: 1,     // กำหนดความหนาของขอบ
-    borderColor: '#ced4da', // กำหนดสีของขอบ
-    borderRadius: 5,    // ปรับมุมขอบให้โค้ง
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 5,
   },
   skeleton: {
     backgroundColor: '#e0e0e0',
     borderRadius: 6,
     marginBottom: 8,
   },
-
 });
 
 export default ProfileScreen;

@@ -4,9 +4,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from './navigationRef';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
@@ -45,7 +47,111 @@ const Tab = createBottomTabNavigator();
 // Settings Screen
 const SettingsScreen = () => (
   <View style={styles.screen}>
-    <Text>Settings Screen</Text>
+    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>Settings Screen</Text>
+  </View>
+);
+
+// Booking Screen
+const BookingScreen = () => (
+  <View style={[styles.screen, { backgroundColor: '#F8FAFC', paddingBottom: 100 }]}>
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      padding: 30,
+      margin: 20,
+      shadowColor: '#FD501E',
+      shadowOffset: {
+        width: 0,
+        height: 10,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(253, 80, 30, 0.1)',
+    }}>
+      <View style={{
+        alignItems: 'center',
+        marginBottom: 20,
+      }}>
+        <View style={{
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          backgroundColor: 'rgba(253, 80, 30, 0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 15,
+        }}>
+          <Icon name="calendar" size={30} color="#FD501E" />
+        </View>
+        <Text style={{ 
+          fontSize: 24, 
+          fontWeight: '700', 
+          color: '#1F2937',
+          marginBottom: 8,
+          letterSpacing: 0.5,
+        }}>Your Bookings</Text>
+        <Text style={{ 
+          fontSize: 16, 
+          color: '#6B7280',
+          textAlign: 'center',
+          lineHeight: 24,
+        }}>All your booking history and{'\n'}current reservations appear here</Text>
+      </View>
+      
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+      }}>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(253, 80, 30, 0.05)',
+          borderRadius: 15,
+          padding: 15,
+          marginRight: 10,
+          borderWidth: 1,
+          borderColor: 'rgba(253, 80, 30, 0.1)',
+        }}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: '700',
+            color: '#FD501E',
+            textAlign: 'center',
+          }}>2</Text>
+          <Text style={{
+            fontSize: 12,
+            color: '#6B7280',
+            textAlign: 'center',
+            marginTop: 5,
+          }}>Pending</Text>
+        </View>
+        
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(34, 197, 94, 0.05)',
+          borderRadius: 15,
+          padding: 15,
+          marginLeft: 10,
+          borderWidth: 1,
+          borderColor: 'rgba(34, 197, 94, 0.1)',
+        }}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: '700',
+            color: '#22C55E',
+            textAlign: 'center',
+          }}>8</Text>
+          <Text style={{
+            fontSize: 12,
+            color: '#6B7280',
+            textAlign: 'center',
+            marginTop: 5,
+          }}>Completed</Text>
+        </View>
+      </View>
+    </View>
   </View>
 );
 
@@ -64,173 +170,383 @@ const AppNavigator = () => (
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
-     <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
-     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
-);
-
-
-// ลบ NavigationContainer ใน Loginnavigator
-const Loginnavigator = () => (
-  <Stack.Navigator initialRouteName="AccountScreen">
-    <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
-    <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
 
-const CustomPostButton = ({ children, onPress }) => (
-  <TouchableOpacity
-    style={styles.customButtonContainer}
-    onPress={onPress}
-  >
-    <View style={styles.customButton}>
-      <View style={{ transform: [{ translateY: 6 }] }}>
-        {children}
+// Smart Login Navigator - เช็ค login status และนำทางไปหน้าที่เหมาะสม
+const Loginnavigator = () => {
+  const [initialRoute, setInitialRoute] = React.useState(null);
+  
+  React.useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const storedToken = await SecureStore.getItemAsync('userToken');
+        // ถ้ามี token = login แล้ว → ไปหน้า AccountScreen
+        // ถ้าไม่มี token = ยังไม่ login → ไปหน้า LoginScreen
+        setInitialRoute(storedToken ? 'AccountScreen' : 'LoginScreen');
+      } catch (error) {
+        console.warn('Error checking login status:', error);
+        setInitialRoute('LoginScreen'); // fallback to login screen
+      }
+    };
+    
+    checkLoginStatus();
+  }, []);
+
+  if (initialRoute === null) {
+    // Loading state while checking login status
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Loading...</Text>
       </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator initialRouteName={initialRoute}>
+      <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
+
+
+const CustomTabBar = ({ state, descriptors, navigation }) => {
+  const [activeAnim] = useState(new Animated.Value(0));
+
+  React.useEffect(() => {
+    Animated.spring(activeAnim, {
+      toValue: state.index,
+      useNativeDriver: false,
+      tension: 100,
+      friction: 8,
+    }).start();
+  }, [state.index]);
+
+  return (
+    <View style={{
+      position: 'absolute',
+      bottom: 25,
+      left: 20,
+      right: 20,
+      height: 70,
+      borderRadius: 35,
+      overflow: 'visible',
+    }}>
+      {/* Animated Background Slider */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 15,
+          left: activeAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [15, '65%'],
+          }),
+          width: '30%',
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: 'rgba(253, 80, 30, 0.15)',
+          borderWidth: 2,
+          borderColor: 'rgba(253, 80, 30, 0.3)',
+        }}
+      />
+      
+      <LinearGradient
+        colors={[
+          'rgba(255, 255, 255, 0.98)', 
+          'rgba(248, 250, 252, 0.95)',
+          'rgba(255, 255, 255, 0.98)'
+        ]}
+        style={{
+          flexDirection: 'row',
+          height: '100%',
+          borderRadius: 35,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          borderWidth: 1.5,
+          borderColor: 'rgba(253, 80, 30, 0.1)',
+          shadowColor: '#FD501E',
+          shadowOffset: { width: 0, height: 15 },
+          shadowOpacity: 0.25,
+          shadowRadius: 25,
+          elevation: 20,
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label = options.tabBarLabel !== undefined 
+            ? options.tabBarLabel 
+            : options.title !== undefined 
+            ? options.title 
+            : route.name;
+
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          let iconName;
+          switch (route.name) {
+            case 'Home':
+              iconName = isFocused ? 'home' : 'home-outline';
+              break;
+            case 'Booking':
+              iconName = isFocused ? 'calendar' : 'calendar-outline';
+              break;
+            case 'Login':
+              iconName = isFocused ? 'person-circle' : 'person-circle-outline';
+              break;
+            default:
+              iconName = 'ellipse';
+          }
+
+          return (
+            <TouchableOpacity
+              key={index}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              onPress={onPress}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 6,
+              }}
+            >
+              <Animated.View
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: [
+                    { 
+                      scale: isFocused ? 1.15 : 1,
+                    },
+                    {
+                      translateY: isFocused ? -2 : 0,
+                    }
+                  ],
+                }}
+              >
+                {/* Pulsing Effect for Active Icon */}
+                {isFocused && (
+                  <View style={{
+                    position: 'absolute',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(253, 80, 30, 0.08)',
+                    opacity: 0.8,
+                  }} />
+                )}
+                
+                <Icon
+                  name={iconName}
+                  size={isFocused ? 24 : 20}
+                  color={isFocused ? '#FD501E' : '#9CA3AF'}
+                  style={{
+                    textShadowColor: isFocused ? 'rgba(253, 80, 30, 0.5)' : 'transparent',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 3,
+                    zIndex: 2,
+                  }}
+                />
+
+                {/* Badge */}
+                {options.tabBarBadge && (
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      backgroundColor: '#FF3B30',
+                      borderRadius: 10,
+                      minWidth: 18,
+                      height: 18,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderWidth: 2,
+                      borderColor: '#FFFFFF',
+                      shadowColor: '#FF3B30',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.5,
+                      shadowRadius: 4,
+                      elevation: 5,
+                      transform: [{ scale: isFocused ? 1.1 : 1 }],
+                    }}
+                  >
+                    <Text style={{
+                      color: '#FFFFFF',
+                      fontSize: 8,
+                      fontWeight: '900',
+                      letterSpacing: 0.3,
+                    }}>{options.tabBarBadge}</Text>
+                  </Animated.View>
+                )}
+
+              </Animated.View>
+
+              {/* Label with Animation */}
+              <Animated.View
+                style={{
+                  marginTop: isFocused ? 6 : 4,
+                  opacity: isFocused ? 1 : 0.7,
+                  transform: [{ scale: isFocused ? 1 : 0.9 }],
+                }}
+              >
+                <Text style={{
+                  fontSize: isFocused ? 9 : 8,
+                  fontWeight: isFocused ? '800' : '600',
+                  color: isFocused ? '#FD501E' : '#9CA3AF',
+                  textAlign: 'center',
+                  letterSpacing: 0.2,
+                  textShadowColor: isFocused ? 'rgba(253, 80, 30, 0.2)' : 'transparent',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 1,
+                }}>
+                  {label}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          );
+        })}
+      </LinearGradient>
+
+      {/* Bottom Glow Effect */}
+      <LinearGradient
+        colors={['transparent', 'rgba(253, 80, 30, 0.1)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          position: 'absolute',
+          bottom: -2,
+          left: 0,
+          right: 0,
+          height: 3,
+          borderRadius: 1.5,
+        }}
+      />
     </View>
-  </TouchableOpacity>
-);
+  );
+};
 const MainNavigator = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
+      tabBar={props => <CustomTabBar {...props} />}
       screenListeners={({ route }) => ({
         tabPress: (e) => {
           if (route.name === 'Home') {
-            e.preventDefault(); // ป้องกัน default behavior
+            e.preventDefault();
             if (navigationRef.isReady()) {
               navigationRef.navigate('Home', { screen: 'HomeScreen' });
             }
           }
         }
       })}
-      screenOptions={({ route }) => ({
+      screenOptions={{
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarStyle: {
-          height: 70,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-        },
-        tabBarIcon: ({ focused, size, color }) => {
-          if (route.name === 'Post') {
-            return (
-              <MaterialCommunityIcons name="qrcode-scan" size={size || 30} color={'#fff'} />
-            );
-          }
-          let iconName;
-          switch (route.name) {
-            case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Messages':
-              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              break;
-            case 'Trips':
-              iconName = focused ? 'reader' : 'reader-outline';
-              break;
-            case 'Login':
-              iconName = focused ? 'person-circle' : 'person-circle-outline';
-              break;
-            default:
-              iconName = 'ellipse';
-          }
-          return (
-            <Icon
-              name={iconName}
-              size={size}
-              color={focused ? '#FD501E' : 'gray'}
-            />
-          );
-        },
-        tabBarActiveTintColor: '#FD501E',
-      })}
+      }}
     >
-      <Tab.Screen name="Home" component={AppNavigator} options={{ title: 'Home' }} />
-      {/* <Tab.Screen name="Messages" component={SettingsScreen} options={{ title: 'Message' }} /> */}
-      {/* <Tab.Screen
-        name="Post"
-        component={QRCodeScannerScreen}
-        options={{
-          title: '',
-          tabBarButton: (props) => <CustomPostButton {...props} />,
-        }}
-      /> */}
-      {/* <Tab.Screen name="Trips" component={SettingsScreen} options={{ title: 'Booking' }} /> */}
-      <Tab.Screen name="Login" component={Loginnavigator} options={{ title: 'Login' }} />
+      <Tab.Screen 
+        name="Home" 
+        component={AppNavigator} 
+        options={{ 
+          title: 'Home',
+          tabBarBadge: null,
+        }} 
+      />
+      <Tab.Screen 
+        name="Login" 
+        component={Loginnavigator} 
+        options={{ 
+          title: 'Account',
+        }} 
+      />
     </Tab.Navigator>
   );
 };
 
 export default function App() {
-
   const [fontLoaded, setFontLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [promotionData, setPromotionData] = useState([]);
 
   useEffect(() => {
-    SplashScreen.preventAutoHideAsync();
-    setTimeout(() => SplashScreen.hideAsync(), 1000);
-  }, []);
+    const initializeApp = async () => {
+      try {
+        // Prevent the splash screen from auto-hiding
+        await SplashScreen.preventAutoHideAsync();
 
-  useEffect(() => {
-    const loadFonts = async () => {
-      await Font.loadAsync({
-        'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
-        'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
-      });
-      setFontLoaded(true);
+        // Load fonts
+        await Font.loadAsync({
+          'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
+          'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
+        });
+        
+        setFontLoaded(true);
+
+        // Hide native splash screen after fonts are loaded
+        setTimeout(() => {
+          SplashScreen.hideAsync();
+        }, 1000);
+
+        // Load promotion data
+        fetch(`${ipAddress}/promotion`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data.data)) {
+              setPromotionData(data.data);
+            }
+          })
+          .catch((error) => {
+            console.warn('Error loading promotion data:', error);
+          });
+
+      } catch (error) {
+        console.warn('Error during app initialization:', error);
+        setFontLoaded(true); // Fallback to continue app loading
+      }
     };
-    loadFonts();
+
+    initializeApp();
   }, []);
 
-  useEffect(() => {
-    fetch(`${ipAddress}/promotion`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.data)) {
-          setPromotionData(data.data);
-        }
-      })
-      .catch(console.error);
-  }, []);
-
-  // ✅ Hook ทั้งหมดอยู่ด้านบนก่อน return
+  // App is ready when fonts are loaded and splash animation is complete
   const isReady = fontLoaded && !showSplash;
-  useEffect(() => {
-    // Prevent the Splash Screen from auto-hiding
-    SplashScreen.preventAutoHideAsync();
 
-    // Set a timeout to hide the splash screen after a specific time (e.g., 3 seconds)
+  const handleSplashEnd = () => {
+    console.log('Splash screen animation ended');
+    // Add small delay to ensure navigation is ready
     setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, 3000); // 3000 ms = 3 seconds
-  }, []);
-
-  useEffect(() => {
-    const loadFonts = async () => {
-      await Font.loadAsync({
-        'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
-        'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
-      });
-      setFontLoaded(true);
-    };
-
-    loadFonts();
-  }, []);
+      setShowSplash(false);
+    }, 200);
+  };
 
   return (
     <PromotionProvider>
       {!isReady ? (
-        <SplashScreenComponent onAnimationEnd={() => setShowSplash(false)} />
+        <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
       ) : (
         <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
           <CustomerProvider>
@@ -247,6 +563,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
   customButtonContainer: {
     top: -10,
@@ -260,12 +577,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#FD501E',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#FD501E',
     shadowOffset: {
       width: 0,
-      height: 5,
+      height: 8,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  tabBarContainer: {
+    paddingBottom: 110, // Increased padding for floating tab bar to prevent overlap
+  },
+  premiumContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    padding: 25,
+    margin: 20,
+    shadowColor: '#FD501E',
+    shadowOffset: {
+      width: 0,
+      height: 15,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 25,
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.08)',
+  },
+  premiumText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: 0.5,
+  },
+  premiumSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 8,
+    lineHeight: 20,
   },
 });

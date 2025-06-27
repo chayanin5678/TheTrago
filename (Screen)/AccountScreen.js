@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, SafeAreaView, Dimensions } from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -10,9 +10,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 const AccountScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // ใช้ token state
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
   const scaleAnim = useState(new Animated.Value(1))[0];
@@ -21,12 +24,182 @@ const AccountScreen = ({ navigation }) => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const shimmerAnim = useRef(new Animated.Value(-200)).current;
 
+  // Ultra Premium Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const profileScaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const menuCardAnims = useRef([...Array(4)].map(() => new Animated.Value(0))).current;
+  
+  // Floating particles animation
+  const floatingAnims = useRef(
+    [...Array(8)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth),
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
+
+  // Menu item staggered animations
+  const menuItemAnims = useRef(
+    [...Array(8)].map(() => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(30),
+      scale: new Animated.Value(0.9),
+    }))
+  ).current;
+
   useEffect(() => {
     const timer = setTimeout(() => setIsLoadingProfile(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    // Premium entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        delay: 300,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(profileScaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 500,
+        easing: Easing.out(Easing.back(1.2)),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 300,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.4,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.3,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.7,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 400);
+    });
+
+    // Menu items staggered animation
+    menuItemAnims.forEach((anim, index) => {
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: 0,
+            duration: 900,
+            easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.scale, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, index * 120 + 1000);
+    });
+
+    // Menu cards staggered animation
+    menuCardAnims.forEach((anim, index) => {
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 600,
+        delay: 700 + (index * 100),
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    });
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.03,
+          duration: 2500,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Rotation animation for floating elements
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 30000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Shimmer animation
     Animated.loop(
       Animated.timing(shimmerAnim, {
         toValue: 200,
@@ -36,6 +209,11 @@ const AccountScreen = ({ navigation }) => {
       })
     ).start();
   }, []);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
 
 
@@ -65,8 +243,8 @@ const AccountScreen = ({ navigation }) => {
       Lastname: '',
       email: '',
     });
-    navigation.replace('LoginScreen');
-
+    // ไม่ต้องไปหน้า login หลังจาก logout
+    console.log('User logged out, staying on account screen');
   };
 
   // ตรวจสอบสถานะการล็อกอินและโหลดข้อมูลเมื่อเริ่มต้น
@@ -76,14 +254,12 @@ const AccountScreen = ({ navigation }) => {
       setToken(storedToken); // อัปเดตสถานะ token
 
       if (!storedToken) {
-        // หากไม่มี token, นำทางไปที่หน้า LoginScreen
-        navigation.replace('LoginScreen');
+        // หากไม่มี token, แค่ไม่ต้องทำอะไร ไม่ต้องไปหน้า login
+        console.log('No token found, staying on account screen');
       } else {
-
-        setIsLoading(false); // หยุดการโหลดหลังจากตรวจสอบเสร็จ
-        // console.log(user); // แสดง token ใน console
-
+        console.log('Token found, user is logged in');
       }
+      setIsLoading(false); // หยุดการโหลดหลังจากตรวจสอบเสร็จ
     };
     checkLoginStatus(); // เรียกใช้เมื่อหน้าโหลด
 
@@ -144,38 +320,86 @@ const AccountScreen = ({ navigation }) => {
   }
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    // Show action sheet with options
+    Alert.alert(
+      "Select Profile Picture",
+      "Choose how you'd like to update your profile picture",
+      [
+        {
+          text: "Camera",
+          onPress: () => openCamera(),
+          style: "default"
+        },
+        {
+          text: "Photo Library",
+          onPress: () => openImageLibrary(),
+          style: "default"
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ],
+      { cancelable: true }
+    );
+  };
 
-    if (permissionResult.granted === false) {
-      alert("Permission to access camera roll is required!");
+  const openCamera = async () => {
+    // Request camera permissions
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (cameraPermission.granted === false) {
+      Alert.alert("Permission Required", "Camera access is required to take photos.");
       return;
     }
 
-    let pickerResult = await ImagePicker.launchImageLibraryAsync({
+    let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.8,
     });
 
-    if (!pickerResult.canceled) {
-      setProfileImage(pickerResult.assets[0].uri);
-      // เรียก upload function ได้ตรงนี้ถ้าอยากอัปโหลดไป Server ทันที
-      uploadImage(pickerResult.assets[0].uri);
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+      uploadImage(result.assets[0].uri);
+    }
+  };
+
+  const openImageLibrary = async () => {
+    // Request media library permissions
+    const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (libraryPermission.granted === false) {
+      Alert.alert("Permission Required", "Photo library access is required to select images.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      allowsMultipleSelection: false,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+      uploadImage(result.assets[0].uri);
     }
   };
 
   const uploadImage = async (imageUri) => {
     setIsUploading(true);
 
-    const formData = new FormData();
-    formData.append('profile_image', {
-      uri: imageUri,
-      name: 'profile.jpg', // ชื่อส่งไป ไม่มีผลเพราะ Server แปลงเป็น webp
-      type: 'image/jpeg',
-    });
-
     try {
+      const formData = new FormData();
+      formData.append('profile_image', {
+        uri: imageUri,
+        name: 'profile.jpg',
+        type: 'image/jpeg',
+      });
+
       const response = await fetch(`${ipAddress}/upload-member`, {
         method: 'POST',
         headers: {
@@ -186,14 +410,27 @@ const AccountScreen = ({ navigation }) => {
       });
 
       const result = await response.json();
-      if (result.status === 'success') {
-        Alert.alert("Success", "Profile image uploaded!");
+      
+      if (response.ok && result.status === 'success') {
+        // Profile picture updated successfully - no alert needed
+        console.log('Profile picture updated successfully');
       } else {
-        Alert.alert("Error", result.message || "Upload failed.");
+        throw new Error(result.message || "Upload failed");
       }
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert("Error", "Upload failed.");
+      
+      // Reset the profile image on error
+      setProfileImage(null);
+      
+      Alert.alert(
+        "Upload Failed ❌", 
+        "There was an error updating your profile picture. Please try again.",
+        [
+          { text: "Try Again", onPress: () => pickImage() },
+          { text: "Cancel", style: "cancel" }
+        ]
+      );
     } finally {
       setIsUploading(false);
     }
@@ -201,231 +438,749 @@ const AccountScreen = ({ navigation }) => {
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Floating Particles Background */}
+      <View style={styles.particlesContainer}>
+        {floatingAnims.map((anim, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.floatingParticle,
+              {
+                left: anim.x,
+                transform: [
+                  { translateY: anim.y },
+                  { scale: anim.scale },
+                ],
+                opacity: anim.opacity,
+              },
+            ]}
+          />
+        ))}
+      </View>
 
-      <View style={styles.profileContainer}>
-        {(user.length === 0 || isLoadingProfile) ? (
-          // 🔸 Skeleton Loading
-          <View style={{ alignItems: 'center' }}>
-            {/* วงกลมแทนโปรไฟล์ */}
-            <View style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: '#eee',
-              overflow: 'hidden',
-              marginBottom: 10,
-              marginTop: 20,
-            }}>
-              <Animated.View
-                style={{
-                  width: 100,
-                  height: '100%',
-                  transform: [{ translateX: shimmerAnim }],
-                }}
-              >
-                <LinearGradient
-                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                  start={[0, 0]}
-                  end={[1, 0]}
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Animated.View>
-            </View>
-
-            {/* ชื่อ */}
-            <View style={{
-              width: 120,
-              height: 14,
-              borderRadius: 6,
-              backgroundColor: '#eee',
-              overflow: 'hidden',
-              marginBottom: 6,
-            }}>
-              <Animated.View
-                style={{
-                  width: 100,
-                  height: '100%',
-                  transform: [{ translateX: shimmerAnim }],
-                }}
-              >
-                <LinearGradient
-                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                  start={[0, 0]}
-                  end={[1, 0]}
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Animated.View>
-            </View>
-
-            {/* อีเมล */}
-            <View style={{
-              width: 100,
-              height: 10,
-              borderRadius: 6,
-              backgroundColor: '#eee',
-              overflow: 'hidden',
-            }}>
-              <Animated.View
-                style={{
-                  width: 80,
-                  height: '100%',
-                  transform: [{ translateX: shimmerAnim }],
-                }}
-              >
-                <LinearGradient
-                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                  start={[0, 0]}
-                  end={[1, 0]}
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Animated.View>
-            </View>
+      {/* Premium Header with Gradient */}
+      <Animated.View
+        style={[
+          styles.headerContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>My Account</Text>
+            <Text style={styles.headerSubtitle}>Manage your profile and preferences</Text>
+            
+            {/* Floating decorative elements */}
+            <Animated.View 
+              style={[
+                styles.floatingDecor,
+                { transform: [{ rotate: spin }] }
+              ]}
+            >
+              <MaterialCommunityIcons name="sparkle" size={20} color="rgba(255,255,255,0.3)" />
+            </Animated.View>
+            
+            <Animated.View 
+              style={[
+                styles.floatingDecor2,
+                { transform: [{ rotate: spin }] }
+              ]}
+            >
+              <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
+            </Animated.View>
           </View>
-        ) : (
-          // 🔸 แสดงโปรไฟล์จริงเมื่อโหลดเสร็จ
-          user.map((item, index) => (
-            <View key={index}>
-              {isUploading && <ActivityIndicator size="large" color="#FD501E" />}
+        </LinearGradient>
+      </Animated.View>
 
-              <TouchableWithoutFeedback
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-              >
-                <Animated.View style={[styles.profileWrapper, { transform: [{ scale: scaleAnim }] }]}>
-                  <Image
-                    source={
-                      profileImage
-                        ? { uri: profileImage }
-                        : item.md_member_photo
-                          ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
-                          : require('../assets/icontrago.png')
-                    }
-                    style={styles.profileImage}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
+
+        {/* Premium Profile Card */}
+        <Animated.View
+          style={[
+            styles.profileCard,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: profileScaleAnim },
+              ],
+            },
+          ]}
+        >
+          {(user.length === 0 || isLoadingProfile) ? (
+            // 🔸 Enhanced Skeleton Loading
+            <View style={styles.skeletonContainer}>
+              {/* Profile Image Skeleton */}
+              <View style={styles.skeletonProfileImage}>
+                <Animated.View
+                  style={{
+                    width: 120,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#f0f0f000', '#e0e0e0cc', '#f0f0f000']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
                   />
-                  <Feather name="edit" size={24} color="#FD501E" style={styles.edit} />
                 </Animated.View>
-              </TouchableWithoutFeedback>
+              </View>
 
-              <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
-              <Text style={styles.userEmail}>{item.md_member_email}</Text>
+              {/* Name Skeleton */}
+              <View style={styles.skeletonName}>
+                <Animated.View
+                  style={{
+                    width: 140,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#f0f0f000', '#e0e0e0cc', '#f0f0f000']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
+              </View>
+
+              {/* Email Skeleton */}
+              <View style={styles.skeletonEmail}>
+                <Animated.View
+                  style={{
+                    width: 100,
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#f0f0f000', '#e0e0e0cc', '#f0f0f000']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
+              </View>
             </View>
-          ))
-        )}
-      </View>
+          ) : (
+            // 🔸 Enhanced Profile Display
+            user.map((item, index) => (
+              <View key={index} style={styles.profileContent}>
+                {isUploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color="#FD501E" />
+                    <Text style={styles.uploadingText}>Uploading...</Text>
+                  </View>
+                )}
 
+                <TouchableWithoutFeedback
+                  onPressIn={handlePressIn}
+                  onPressOut={handlePressOut}
+                >
+                  <Animated.View style={[styles.profileImageContainer, { transform: [{ scale: scaleAnim }] }]}>
+                    <View style={styles.profileImageWrapper}>
+                      <Image
+                        source={
+                          profileImage
+                            ? { uri: profileImage }
+                            : item.md_member_photo
+                              ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
+                              : require('../assets/icontrago.png')
+                        }
+                        style={styles.profileImage}
+                        onLoadStart={() => console.log('Image loading started')}
+                        onLoadEnd={() => console.log('Image loading finished')}
+                        onError={(error) => console.log('Image loading error:', error)}
+                      />
+                      {/* Pulse animation on edit button */}
+                      <Animated.View style={[styles.editPulse, {
+                        transform: [{
+                          scale: scaleAnim.interpolate({
+                            inputRange: [0.9, 1],
+                            outputRange: [1.2, 1],
+                            extrapolate: 'clamp',
+                          })
+                        }]
+                      }]} />
+                      <Animated.View 
+                        style={[
+                          styles.editIconContainer,
+                          { transform: [{ scale: pulseAnim }] }
+                        ]}
+                      >
+                        <Feather name="camera" size={16} color="#FFFFFF" />
+                      </Animated.View>
+                    </View>
+                  </Animated.View>
+                </TouchableWithoutFeedback>
 
-      <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Dashboard')}>
-          <MaterialIcons name="space-dashboard" size={24} color="#FD501E" />
-          <Text style={styles.menuText}>Dashboard</Text>
-        </TouchableOpacity>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.userName}>{item.md_member_fname} {item.md_member_lname}</Text>
+                  <Text style={styles.userEmail}>{item.md_member_email}</Text>
+                  <View style={styles.statusBadge}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusText}>Active Member</Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          )}
+        </Animated.View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyBookings')}>
-          <FontAwesome6 name="ticket" size={24} color="#FD501E" />
-          <Text style={styles.menuText}>My Booking</Text>
-        </TouchableOpacity>
+        {/* Premium Menu Section */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          
+          <View style={styles.menuGrid}>
+            {[
+              { title: 'Dashboard', subtitle: 'View analytics', icon: 'space-dashboard', nav: 'Dashboard' },
+              { title: 'My Booking', subtitle: 'Manage bookings', icon: 'ticket', nav: 'MyBookings', isFA6: true },
+              { title: 'Profile', subtitle: 'Edit details', icon: 'person', nav: 'ProfileScreen', isIonicons: true },
+              { title: 'Affiliate', subtitle: 'Earn rewards', icon: 'groups', nav: 'Affiliate' }
+            ].map((item, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.menuCardWrapper,
+                  {
+                    opacity: menuItemAnims[index]?.opacity || 1,
+                    transform: [
+                      { translateY: menuItemAnims[index]?.translateY || 0 },
+                      { scale: menuItemAnims[index]?.scale || 1 },
+                    ],
+                  },
+                ]}
+              >
+                <TouchableOpacity 
+                  style={styles.menuCard} 
+                  onPress={() => navigation.navigate(item.nav)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.menuIconContainer}>
+                    {item.isFA6 ? (
+                      <FontAwesome6 name={item.icon} size={24} color="#FD501E" />
+                    ) : item.isIonicons ? (
+                      <Ionicons name={item.icon} size={24} color="#FD501E" />
+                    ) : (
+                      <MaterialIcons name={item.icon} size={24} color="#FD501E" />
+                    )}
+                  </View>
+                  <Text style={styles.menuTitle}>{item.title}</Text>
+                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ProfileScreen')}>
-          <Ionicons name="person" size={24} color="#FD501E" />
-          <Text style={styles.menuText}>Profile</Text>
-        </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Account Management</Text>
+          
+          <View style={styles.listSection}>
+            {[
+              { title: 'Privacy & Security', subtitle: 'Manage your privacy settings', icon: 'security', color: '#6B7280' },
+              { title: 'Notifications', subtitle: 'Configure alert preferences', icon: 'notifications', color: '#6B7280' },
+              { title: 'Delete Account', subtitle: 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' }
+            ].map((item, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.listItemWrapper,
+                  {
+                    opacity: menuItemAnims[index + 4]?.opacity || 1,
+                    transform: [
+                      { translateY: menuItemAnims[index + 4]?.translateY || 0 },
+                      { scale: menuItemAnims[index + 4]?.scale || 1 },
+                    ],
+                  },
+                ]}
+              >
+                <TouchableOpacity 
+                  style={styles.listItem}
+                  onPress={() => item.nav && navigation.navigate(item.nav)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.listIconContainer}>
+                    <MaterialIcons name={item.icon} size={20} color={item.color} />
+                  </View>
+                  <View style={styles.listContent}>
+                    <Text style={[styles.listTitle, { color: item.color === '#EF4444' ? '#EF4444' : '#1F2937' }]}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.listSubtitle}>{item.subtitle}</Text>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={20} color="#D1D5DB" />
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
 
-        <Text style={styles.affiliateTitle}>Affiliate Program</Text>
+          {/* Premium Logout Button */}
+          <Animated.View
+            style={[
+              styles.logoutButtonWrapper,
+              {
+                opacity: menuItemAnims[7]?.opacity || 1,
+                transform: [
+                  { translateY: menuItemAnims[7]?.translateY || 0 },
+                  { scale: menuItemAnims[7]?.scale || 1 },
+                ],
+              },
+            ]}
+          >
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#FD501E', '#FF6B40']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.logoutGradient}
+              >
+                <MaterialIcons name="logout" size={20} color="#FFFFFF" />
+                <Text style={styles.logoutText}>Sign Out</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Affiliate')}>
-          <Text style={styles.menuText}>Affiliate</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('DeleteProfile')}>
-          <Text style={styles.menuText}>Delete Profile</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
   },
-  profileContainer: {
+  
+  // Floating Particles
+  particlesContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    pointerEvents: 'none',
+  },
+  floatingParticle: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    backgroundColor: '#FD501E',
+    borderRadius: 3,
+    opacity: 0.1,
+  },
+
+  // Premium Header
+  headerContainer: {
+    zIndex: 2,
+  },
+  headerGradient: {
+    paddingTop: 50,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 15,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerContent: {
     alignItems: 'center',
-    marginBottom: 40,
+    position: 'relative',
+    zIndex: 3,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.95)',
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  floatingDecor: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    opacity: 0.4,
+  },
+  floatingDecor2: {
+    position: 'absolute',
+    bottom: -5,
+    left: 30,
+    opacity: 0.3,
+  },
+  
+  scrollContent: {
+    paddingBottom: 140,
+    zIndex: 1,
+  },
+  
+  // Ultra Premium Profile Card
+  profileCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 30,
+    padding: 30,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.15)',
+    // Glassmorphism effect
+    backdropFilter: 'blur(20px)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  
+  // Enhanced Skeleton
+  skeletonContainer: {
+    alignItems: 'center',
+    paddingVertical: 25,
+  },
+  skeletonProfileImage: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+    marginBottom: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  skeletonName: {
+    width: 170,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  skeletonEmail: {
+    width: 130,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+  },
+  
+  // Enhanced Profile Display
+  profileContent: {
+    alignItems: 'center',
+    position: 'relative',
+  },
+  uploadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+    zIndex: 20,
+    backdropFilter: 'blur(10px)',
+  },
+  uploadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    color: '#FD501E',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  profileImageContainer: {
+    marginBottom: 25,
+    position: 'relative',
+  },
+  profileImageWrapper: {
+    position: 'relative',
+    borderRadius: 65,
+    overflow: 'visible',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
   },
   profileImage: {
-    marginTop: 20,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-    borderWidth: 2,
-    alignSelf: 'center',
-    borderColor: '#FD501E',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+  },
+  editIconContainer: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#FD501E',
+    borderRadius: 22,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 30,
+  },
+  editPulse: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: 'rgba(253, 80, 30, 0.25)',
+    borderRadius: 22,
+    width: 44,
+    height: 44,
+    zIndex: 15,
+  },
+  profileInfo: {
+    alignItems: 'center',
   },
   userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#777',
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 8,
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
-  menuContainer: {
-    flex: 1,
+  userEmail: {
+    fontSize: 17,
+    color: '#6B7280',
+    marginBottom: 15,
+    fontWeight: '500',
   },
-  menuItem: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f2',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 25,
+    shadowColor: '#22C55E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  menuText: {
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#22C55E',
+    marginRight: 8,
+    shadowColor: '#22C55E',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statusText: {
+    fontSize: 13,
+    color: '#22C55E',
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+
+  // Premium Menu Section
+  menuSection: {
+    marginTop: 35,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 20,
+    marginTop: 25,
+    letterSpacing: 0.5,
+  },
+  menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  menuCardWrapper: {
+    width: '48%',
+    marginBottom: 15,
+  },
+  menuCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: '100%',
+    padding: 25,
+    borderRadius: 25,
+    alignItems: 'center',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.08)',
+    // Glassmorphism
+    backdropFilter: 'blur(15px)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  menuIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(253, 80, 30, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  menuTitle: {
     fontSize: 16,
-    marginLeft: 10,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 6,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
-  affiliateTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 20,
-    color: '#FD501E',
+  menuSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+
+  // List Section
+  listSection: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 25,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 6,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.05)',
+  },
+  listItemWrapper: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 231, 235, 0.5)',
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'transparent',
+  },
+  listIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(107, 114, 128, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  listContent: {
+    flex: 1,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+    letterSpacing: 0.2,
+  },
+  listSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+
+  // Premium Logout Button
+  logoutButtonWrapper: {
+    marginTop: 30,
+    marginBottom: 20,
   },
   logoutButton: {
-    marginTop: 20,
+    borderRadius: 25,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  logoutGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FD501E',
-    paddingVertical: 12,
-    borderRadius: 8,
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
   },
   logoutText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 10,
+    letterSpacing: 0.5,
   },
+  
+  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // พื้นหลังโปร่งใส
+    backgroundColor: '#F8FAFC',
   },
-  edit: {
-    bottom: 35,
-    fontSize: wp('5%'),
-    left: 120,
-    backgroundColor: 'white',
-    borderRadius: 50,
-    padding: 5,
-    width: 30,
-    marginBottom: -20,
-
-  }
 });
 
 export default AccountScreen;

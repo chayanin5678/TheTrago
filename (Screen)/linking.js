@@ -6,6 +6,7 @@ export default {
   config: {
     screens: {
       HomeScreen: "home",
+      LoginScreen: "login",
       PaymentScreen: "payment",
       ResultScreen: "payment/success",
     }
