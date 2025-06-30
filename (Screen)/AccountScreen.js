@@ -35,7 +35,7 @@ const AccountScreen = ({ navigation }) => {
   // Floating particles animation
   const floatingAnims = useRef(
     [...Array(8)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth),
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2),
       y: new Animated.Value(Math.random() * screenHeight * 0.8),
       opacity: new Animated.Value(0.1),
       scale: new Animated.Value(1),
@@ -96,6 +96,20 @@ const AccountScreen = ({ navigation }) => {
               Animated.timing(anim.y, {
                 toValue: screenHeight * 0.8,
                 duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.x, {
+                toValue: (Math.random() * screenWidth - screenWidth/2) * 0.3,
+                duration: 2000 + index * 200,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.x, {
+                toValue: Math.random() * screenWidth - screenWidth/2,
+                duration: 2000 + index * 200,
+                easing: Easing.inOut(Easing.sin),
                 useNativeDriver: true,
               }),
             ]),
@@ -237,14 +251,21 @@ const AccountScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
-    await SecureStore.deleteItemAsync('userToken');
-    updateCustomerData({
-      Firstname: '',
-      Lastname: '',
-      email: '',
-    });
-    // ไม่ต้องไปหน้า login หลังจาก logout
-    console.log('User logged out, staying on account screen');
+    try {
+      await SecureStore.deleteItemAsync('userToken');
+      updateCustomerData({
+        Firstname: '',
+        Lastname: '',
+        email: '',
+      });
+      
+      // Navigate to login screen after logout
+      navigation.navigate('LoginScreen');
+      console.log('User logged out, navigating to login screen');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
   };
 
   // ตรวจสอบสถานะการล็อกอินและโหลดข้อมูลเมื่อเริ่มต้น
@@ -447,8 +468,8 @@ const AccountScreen = ({ navigation }) => {
             style={[
               styles.floatingParticle,
               {
-                left: anim.x,
                 transform: [
+                  { translateX: anim.x },
                   { translateY: anim.y },
                   { scale: anim.scale },
                 ],
@@ -486,7 +507,7 @@ const AccountScreen = ({ navigation }) => {
                 { transform: [{ rotate: spin }] }
               ]}
             >
-              <MaterialCommunityIcons name="sparkle" size={20} color="rgba(255,255,255,0.3)" />
+              <MaterialCommunityIcons name="shimmer" size={20} color="rgba(255,255,255,0.3)" />
             </Animated.View>
             
             <Animated.View 

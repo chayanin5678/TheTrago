@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
@@ -33,6 +33,7 @@ const ProfileScreen = ({ navigation }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [countryName, setCountryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isPassportVerified, setIsPassportVerified] = useState(false);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -302,6 +303,7 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     fetchData();
+    checkPassportStatus();
 
 
   }, []);
@@ -363,7 +365,38 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  const checkPassportStatus = async () => {
+    try {
+      const storedToken = await SecureStore.getItemAsync('userToken');
+      
+      if (!storedToken) {
+        console.warn('No token found');
+        return;
+      }
 
+      const response = await fetch(`${ipAddress}/passport-info`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const json = await response.json();
+
+      if (response.ok && json.status === 'success') {
+        const { has_passport, has_document } = json.data;
+        // Set passport as verified if user has both passport number and document
+        setIsPassportVerified(has_passport && has_document);
+      } else {
+        console.warn('Passport check failed:', json.message);
+        setIsPassportVerified(false);
+      }
+    } catch (error) {
+      console.error('Error checking passport status:', error);
+      setIsPassportVerified(false);
+    }
+  };
 
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
   const toggleCountryModal = () => setIsCountryModalVisible(!isCountryModalVisible);
@@ -392,7 +425,9 @@ const ProfileScreen = ({ navigation }) => {
     let country_id = item.sys_countries_id;
     setCountryId(country_id);
     //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
-    setErrors((prev) => ({ ...prev, selectedCountry: false }));
+    setErrors((prev) => ({ ...prev, selectedCountry: false })); md_member_passport, 
+      md_member_passport_doc,
+
     toggleCountryModal();
   };
 
@@ -557,7 +592,7 @@ const ProfileScreen = ({ navigation }) => {
     customerData.selectcoountrycode;
 
   // สมมุติยังไม่เชื่อม ID และ Bank Status
-  const isIdVerified = false;
+  const isIdVerified = isPassportVerified;
   const isBankVerified = false;
 
   const verifiedCount = [
@@ -786,7 +821,22 @@ const ProfileScreen = ({ navigation }) => {
                     <TouchableOpacity 
                       key={index}
                       style={styles.verificationItem}
-                      onPress={() => item.nav && navigation.navigate(item.nav)}
+                      onPress={() => {
+                        if (item.nav === 'IDCardCameraScreen') {
+                          // Check if profile is verified before allowing ID verification
+                          if (!isProfileVerified) {
+                            Alert.alert(
+                              'Please update your profile!',
+                              'Your profile is not yet complete. Please Update to proceed.',
+                              [
+                                { text: 'OK', style: 'default' }
+                              ]
+                            );
+                            return;
+                          }
+                        }
+                        item.nav && navigation.navigate(item.nav);
+                      }}
                       activeOpacity={item.nav ? 0.7 : 1}
                     >
                       <View style={[styles.verificationIcon, item.verified ? styles.verifiedIcon : styles.unverifiedIcon]}>

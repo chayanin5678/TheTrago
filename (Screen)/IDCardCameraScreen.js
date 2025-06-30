@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -23,6 +22,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useCustomer } from './CustomerContext.js';
 import { Linking } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import ipAddress from "../ipconfig";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -36,12 +37,30 @@ const IDCardCameraScreen = ({ navigation }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [documentType, setDocumentType] = useState('ID Card'); // ID Card or Passport
   
+  // New states for ID card/passport data from API
+  const [existingPassportInfo, setExistingPassportInfo] = useState({
+    passport_number: '', // Used for ID number or passport number
+    document_path: '',
+    has_passport: false, // Used for has_document
+    has_document: false,
+    last_updated: null
+  });
+  const [isLoadingPassport, setIsLoadingPassport] = useState(false);
+  const [token, setToken] = useState(null);
+  const [ocrProgress, setOcrProgress] = useState('');
+  const [imageLoadError, setImageLoadError] = useState(false);
+
   // Premium Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Loading icon animation - separate refs for different contexts
+  const loadingRotateAnim = useRef(new Animated.Value(0)).current;
+  const uploadLoadingRotateAnim = useRef(new Animated.Value(0)).current;
+  const saveLoadingRotateAnim = useRef(new Animated.Value(0)).current;
   
   // Floating particles animation
   const floatingAnims = useRef(
@@ -61,6 +80,34 @@ const IDCardCameraScreen = ({ navigation }) => {
       scale: new Animated.Value(0.9),
     }))
   ).current;
+
+  // Safety timeout to prevent stuck loading states - optimized for faster processing
+  useEffect(() => {
+    let loadingTimeout;
+    
+    if (isProcessing) {
+      // Shorter timeout since we've optimized for speed
+      loadingTimeout = setTimeout(() => {
+        console.log('⚠️ Auto-clearing stuck loading state after timeout');
+        setIsProcessing(false);
+        setOcrProgress('');
+        Alert.alert(
+          'Processing Taking Too Long ⏱️',
+          'Document scanning is taking longer than expected.\n\n🚀 This usually means:\n• Slow internet connection\n• Large image file\n• Network congestion\n\n💡 Try:\n• Check WiFi/4G signal\n• Take a clearer, smaller photo\n• Or enter details manually',
+          [
+            { text: 'Try Again', onPress: () => pickImage() },
+            { text: 'Enter Manually', style: 'default' }
+          ]
+        );
+      }, 120000); // 2 minute safety timeout (optimized for speed)
+    }
+    
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
+  }, [isProcessing]);
 
   // Premium animations initialization
   useEffect(() => {
@@ -194,79 +241,207 @@ const IDCardCameraScreen = ({ navigation }) => {
         useNativeDriver: true,
       })
     ).start();
+
+    // Loading icon rotation animation
+    Animated.loop(
+      Animated.timing(loadingRotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Upload loading rotation animation
+    Animated.loop(
+      Animated.timing(uploadLoadingRotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Save loading rotation animation
+    Animated.loop(
+      Animated.timing(saveLoadingRotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
   }, []);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg']
   });
-  // Enhanced camera function with ID card cropping and better UX for OCR
+
+  const loadingSpin = loadingRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  const uploadLoadingSpin = uploadLoadingRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  const saveLoadingSpin = saveLoadingRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+  // Enhanced image picker with options for camera or gallery
   const pickImage = async () => {
-    let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert(
-        "Camera Permission Required", 
-        "Permission to access camera is required to scan your ID card!",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => Linking.openSettings() }
-        ]
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    
-    // Open camera with optimized settings for ID cards and OCR
-    let result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [85.6, 54], // Thai ID card aspect ratio (85.6mm x 54mm)
-      quality: 1.0, // High quality for better OCR
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      exif: false, // Reduce file size
-    });
-
-    if (!result.canceled) {
-      // Auto-crop and process the captured image for better OCR
-      const croppedImage = await cropIDCard(result.assets[0].uri);
-      setPhoto(croppedImage);
-      
-      // Show processing message
-      Alert.alert(
-        'กำลังสแกนข้อมูล...',
-        'ระบบได้ตัดภาพบัตรอัตโนมัติแล้ว กำลังอ่านข้อมูล...',
-        [{ text: 'ตกลง' }]
-      );
-      
-      // Auto-extract text from the cropped image
-      await recognizeText(croppedImage);
-    } else {
-      // If user cancels, allow manual input
-      Alert.alert(
-        'ไม่มีการถ่ายรูป',
-        'คุณสามารถกรอกข้อมูลด้วยตนเองได้',
-        [{ text: 'ตกลง' }]
-      );
-    }
-    
-    setIsProcessing(false);
+      // Show action sheet with options and helpful tips
+    Alert.alert(
+      "Select ID Card/Passport Image",
+      "For best results:\n• Use good lighting\n• Keep document flat and stable\n• Ensure all text is clearly visible\n• Make sure the entire document is in frame\n\nChoose how you'd like to upload your document:",
+      [
+        {
+          text: "Take Photo",
+          onPress: () => openCamera(),
+          style: "default"
+        },
+        {
+          text: "Choose from Gallery",
+          onPress: () => openGallery(),
+          style: "default"
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ],
+      { cancelable: true }
+    );
   };
 
-  // Auto-crop ID card from image for better OCR accuracy
+  // Open camera function
+  const openCamera = async () => {
+    try {
+      let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (permissionResult.granted === false) {        Alert.alert(
+          "Camera Permission Required",
+          "Permission to access camera is required to scan your ID card or passport!",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() }
+          ]
+        );
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      // Open camera with optimized settings for documents and OCR
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [85.6, 54], // Standard ID/passport aspect ratio (85.6mm x 54mm)
+        quality: 1.0, // High quality for better OCR
+        mediaTypes: 'Images', // Changed from ImagePicker.MediaTypeOptions.Images
+        exif: false, // Reduce file size
+      });
+
+      if (!result.canceled) {
+        // Auto-crop and process the captured image for better OCR
+        const croppedImage = await cropIDCard(result.assets[0].uri);
+        setPhoto(croppedImage);
+        
+        // Check network and process with user guidance
+        await checkNetworkAndProcess(croppedImage);
+      } else {
+        // User canceled - clear loading and allow manual input
+        setIsProcessing(false);
+        Alert.alert(
+          'No Photo Taken',
+          'You can enter your information manually',
+          [{ text: 'OK' }]
+        );
+      }
+      
+    } catch (error) {
+      console.error('Error in openCamera:', error);
+      setIsProcessing(false); // Only clear on error
+      Alert.alert(
+        'Error',
+        'Unable to open camera. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  // Open gallery function
+  const openGallery = async () => {
+    try {
+      // Request media library permissions
+      let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Gallery Permission Required", 
+          "Permission to access photo library is required to select images!",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() }
+          ]
+        );
+        return;
+      }
+
+      setIsProcessing(true);
+
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'Images', // Changed from ImagePicker.MediaTypeOptions.Images
+        allowsEditing: true,
+        aspect: [85.6, 54], // Standard ID/passport aspect ratio
+        quality: 1.0, // High quality for better OCR
+        exif: false,
+      });
+
+      if (!result.canceled) {
+        // Auto-crop and process the selected image for better OCR
+        const croppedImage = await cropIDCard(result.assets[0].uri);
+        setPhoto(croppedImage);
+        
+        // Check network and process with user guidance
+        await checkNetworkAndProcess(croppedImage);
+      } else {
+        // User canceled - clear loading and allow manual input
+        setIsProcessing(false);
+        Alert.alert(
+          'No Image Selected',
+          'You can enter your information manually',
+          [{ text: 'OK' }]
+        );
+      }
+      
+    } catch (error) {
+      console.error('Error in openGallery:', error);
+      setIsProcessing(false); // Only clear on error
+      Alert.alert(
+        'Error',
+        'Unable to access gallery. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  // Auto-crop document from image for better OCR accuracy
   const cropIDCard = async (uri) => {
     try {
-      console.log('🔍 Auto-cropping ID card from image...');
+      console.log('🔍 Auto-cropping document from image...');
       
       // Get image info first
       const imageInfo = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.JPEG });
       
-      // Calculate crop area for Thai ID card (center-focused with some padding)
+      // Calculate crop area for document (center-focused with some padding)
       const { width, height } = imageInfo;
-      const aspectRatio = 85.6 / 54; // Thai ID card aspect ratio
+      const aspectRatio = 85.6 / 54; // Standard ID/passport aspect ratio (85.6mm x 54mm)
       
       let cropWidth, cropHeight, originX, originY;
       
-      // Determine the best crop dimensions while maintaining aspect ratio
+      // Determine the best crop dimensions while maintaining document aspect ratio
       if (width / height > aspectRatio) {
         // Image is wider - crop width
         cropHeight = height * 0.8; // Use 80% of height with padding
@@ -287,7 +462,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       originX = Math.max(0, Math.min(originX, width - cropWidth));
       originY = Math.max(0, Math.min(originY, height - cropHeight));
       
-      // Perform the crop and enhance for OCR
+      // Perform the crop and enhance for OCR - optimized for documents
       const croppedImage = await ImageManipulator.manipulateAsync(
         uri,
         [
@@ -299,93 +474,231 @@ const IDCardCameraScreen = ({ navigation }) => {
               height: Math.round(cropHeight),
             },
           },
-          { resize: { width: 1200 } }, // Resize to optimal OCR width
+          { resize: { width: 1200 } }, // Optimized resolution for document text recognition
         ],
         {
-          compress: 0.9,
+          compress: 0.95, // Higher quality for better text OCR
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
       
-      console.log('✅ ID card cropped successfully');
+      console.log('✅ Document cropped successfully');
       return croppedImage.uri;
       
     } catch (error) {
-      console.error('❌ Auto-crop failed, using original image:', error);
+      console.error('❌ Document auto-crop failed, using original image:', error);
       return uri; // Return original if cropping fails
     }
   };
 
-  // OCR function using OCR.space exclusively for real Thai ID card scanning
+  // OCR function using OCR.space for real document scanning
   const recognizeText = async (uri) => {
-    setIsProcessing(true);
-    
     try {
-      console.log('🔍 Starting OCR.space processing for cropped Thai ID card:', uri);
+      console.log('🔍 Starting optimized OCR.space processing for document:', uri);
+      setOcrProgress('Processing document...');
       
-      // Additional image enhancement for OCR (image is already cropped)
+      // Pre-check original image size to prevent oversized uploads
+      const originalInfo = await FileSystem.getInfoAsync(uri);
+      if (originalInfo.size && originalInfo.size > 5000000) { // 5MB limit
+        console.log('⚠️ Original image too large, applying aggressive compression');
+        setOcrProgress('Optimizing large image...');
+      }
+      
+      // Optimized image enhancement for faster OCR with maintained quality
       const processedImage = await ImageManipulator.manipulateAsync(
         uri,
         [
-          { resize: { width: 1000 } }, // Ensure optimal OCR width
+          { resize: { width: documentType === 'ID Card' ? 600 : 550 } }, // Further reduced resolution for speed
         ],
         { 
-          compress: 0.85, // Slightly higher compression since image is cropped
+          compress: originalInfo.size > 5000000 ? 0.95 : 0.9, // Higher compression for large files
           format: ImageManipulator.SaveFormat.JPEG 
         }
       );
+
+      console.log('📷 Document image optimized for speed, starting OCR...');
+      setOcrProgress('Converting file...');
 
       // Convert image to base64 for API calls
       const base64Image = await FileSystem.readAsStringAsync(processedImage.uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Use OCR.space for real OCR processing
-      const ocrResult = await tryOCRSpace(base64Image);
+      const imageSizeKB = Math.round(base64Image.length / 1024);
+      console.log(`📤 Base64 conversion complete, image size: ${imageSizeKB}KB`);
+      
+      // Check if image is too large for optimal processing
+      if (imageSizeKB > 1000) {
+        console.log('⚠️ Large image detected, may cause slower processing');
+        setOcrProgress('Large file - processing may take longer...');
+        Alert.alert(
+          'Large Image Detected',
+          'The image is quite large and may take longer to process. Consider retaking with better lighting for faster results.',
+          [{ text: 'Continue', style: 'default' }]
+        );
+      } else {
+        setOcrProgress('Reading data from document...');
+      }
+
+      // Use OCR.space for real document processing with retry mechanism and multiple engines
+      let ocrResult = null;
+      let retryCount = 0;
+      const maxRetries = 3; // Fast to thorough approach
+      const ocrEngines = [1, 1, 2]; // Engine 1 (fast) twice, then Engine 2 (thorough) as last resort
+
+      while (retryCount <= maxRetries && !ocrResult) {
+        try {
+          const currentEngine = ocrEngines[retryCount] || 1; // Default to Engine 1 for speed
+          
+          if (retryCount > 0) {
+            console.log(`🔄 Document OCR retry attempt ${retryCount}/${maxRetries} with Engine ${currentEngine}...`);
+            setOcrProgress(currentEngine === 1 ? 
+              `Quick scan attempt (${retryCount}/${maxRetries})...` : 
+              `Thorough scan attempt (${retryCount}/${maxRetries})...`);
+          }
+          
+          ocrResult = await tryOCRSpace(base64Image, currentEngine, documentType);
+          
+          if (ocrResult && ocrResult.trim().length > 0) {
+            break; // Success, exit retry loop
+          } else {
+            throw new Error('No text detected from document');
+          }
+        } catch (error) {
+          retryCount++;
+          console.log(`❌ Document OCR attempt ${retryCount} failed:`, error.message);
+          
+          if (retryCount <= maxRetries) {
+            // Shorter delay for faster attempts
+            const delayTime = retryCount <= 2 ? 1500 : 3000; // 1.5s for fast attempts, 3s for thorough
+            console.log(`⏳ Waiting ${delayTime/1000}s before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delayTime));
+          } else {
+            // All retries failed
+            throw error;
+          }
+        }
+      }
       
       if (ocrResult && ocrResult.trim().length > 0) {
-        console.log('✅ OCR.space succeeded - Real data extracted from cropped card');
+        console.log('✅ OCR.space succeeded - Real document data extracted');
+        setOcrProgress('Analyzing document data...');
         setOcrText(ocrResult);
         parseIDText(ocrResult);
         
+        // Clear progress after successful OCR
+        setOcrProgress('');
         Alert.alert(
-          'สแกนบัตรสำเร็จ! 🎉',
-          'ระบบได้ตัดและอ่านข้อมูลจากบัตรประชาชนของคุณเรียบร้อยแล้ว\nกรุณาตรวจสอบความถูกต้องของข้อมูล',
-          [{ text: 'ตกลง' }]
+          'Document Scanned Successfully! 🎉',
+          'The system has successfully scanned and extracted data from your document.\nPlease verify the information for accuracy.',
+          [{ text: 'OK' }]
         );
       } else {
-        throw new Error('No text detected from cropped ID card');
+        throw new Error('No text detected from document');
       }
       
     } catch (error) {
-      console.error('❌ OCR.space failed on cropped image:', error.message);
+      console.error('❌ Document OCR processing failed:', error.message);
       
+      // Handle different types of errors with more specific guidance for documents
+      let errorTitle = 'Unable to Scan Document 📷';
+      let errorMessage = 'Your document photo was captured but we couldn\'t automatically scan the data.\n\nTips for better document scanning:\n• Use good lighting\n• Hold document flat and steady\n• Ensure all text is visible\n• Try cleaning the document surface\n• Make sure the entire document is in frame\n\nYou can also enter your information manually.';
+      
+      if (error.message.includes('timeout') || error.message.includes('network') || error.message.includes('fetch')) {
+        errorTitle = 'Slow Connection Detected ⏱️';
+        errorMessage = 'Document scanning is taking longer than usual due to slow internet.\n\n🚀 Quick fixes:\n• Check WiFi/4G signal strength\n• Move closer to WiFi router\n• Restart your internet connection\n• Try a smaller/clearer photo\n\n💡 Meanwhile, you can enter your details manually!';
+      } else if (error.message.includes('API error') || error.message.includes('OCR.space')) {
+        errorTitle = 'Scanner Service Busy 🛠️';
+        errorMessage = 'The document scanning service is currently busy.\n\n⏰ Please try:\n• Wait 30 seconds and try again\n• Check your internet connection\n• Take a clearer photo with better lighting\n• Or enter your information manually';
+      } else if (error.message.includes('No text detected')) {
+        errorTitle = 'Document Not Clear Enough 🔍';
+        errorMessage = 'We couldn\'t read the text from your document photo.\n\n📸 For better results:\n• Use bright, even lighting\n• Hold phone steady\n• Ensure document is flat\n• Make sure all text is visible\n• Avoid shadows and glare\n\n✍️ You can also enter details manually.';
+      }
+      
+      // Show message when document OCR fails - offer options to retake or enter manually
       Alert.alert(
-        'ไม่สามารถอ่านบัตรได้',
-        'ไม่สามารถสแกนข้อมูลจากบัตรประชาชนได้\n\nเหตุผลที่เป็นไปได้:\n📸 บัตรไม่อยู่ในกรอบ\n💡 แสงไม่เพียงพอ\n� ตัวอักษรไม่ชัดเจน\n\nกรุณา:',
+        errorTitle,
+        errorMessage,
         [
-          { text: 'ถ่ายใหม่', onPress: () => pickImage() },
-          { text: 'กรอกข้อมูลเอง', style: 'default' }
+          { text: 'Retake Photo', onPress: () => pickImage() },
+          { text: 'Enter Manually', style: 'default' }
         ]
       );
+    } finally {
+      // Always ensure processing is stopped and progress is cleared - CRITICAL for preventing stuck loading
+      console.log('🔄 Document OCR processing completed - clearing all loading states');
+      setIsProcessing(false);
+      setOcrProgress('');
     }
-    
-    setIsProcessing(false);
   };
 
-  // OCR.space API for real Thai ID card text recognition (FREE: 25,000 requests/month)
-  const tryOCRSpace = async (base64Image) => {
+  // Network quality check before OCR processing
+  const checkNetworkAndProcess = async (imageUri) => {
+    try {
+      // Simple network test with timeout
+      const startTime = Date.now();
+      const testResponse = await Promise.race([
+        fetch('https://api.ocr.space', { method: 'HEAD' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Network test timeout')), 5000))
+      ]);
+      const networkLatency = Date.now() - startTime;
+      
+      console.log(`📡 Network latency: ${networkLatency}ms`);
+      
+      if (networkLatency > 3000) {
+        Alert.alert(
+          'Slow Network Detected 🐌',
+          'Your internet connection seems slow. Document scanning may take longer than usual.\n\n💡 For faster results:\n• Try moving closer to WiFi\n• Use 4G if WiFi is slow\n• Or enter details manually',
+          [
+            { text: 'Continue Anyway', onPress: () => recognizeText(imageUri) },
+            { text: 'Enter Manually', style: 'cancel' }
+          ]
+        );
+      } else {
+        await recognizeText(imageUri);
+      }
+    } catch (error) {
+      console.log('⚠️ Network test failed, proceeding with OCR anyway');
+      await recognizeText(imageUri);
+    }
+  };
+
+  // OCR.space API for real document text recognition (FREE: 25,000 requests/month)
+  const tryOCRSpace = async (base64Image, engineNumber = 1, selectedDocumentType = 'ID Card') => {
     const OCR_SPACE_API_KEY = 'K87899142388957'; // Free API key
+    
+    console.log(`🌐 Preparing optimized document OCR request with Engine ${engineNumber}...`);
+    
+    // Calculate approximate base64 size for timeout optimization
+    const base64SizeKB = Math.round((base64Image.length * 3) / 4 / 1024);
+    console.log(`📏 Base64 image size: ${base64SizeKB}KB`);
     
     const formData = new FormData();
     formData.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
-    formData.append('language', 'tha'); // Thai language support
-    formData.append('isOverlayRequired', 'false');
-    formData.append('OCREngine', '2'); // Engine 2 is optimized for Asian languages
-    formData.append('isTable', 'true'); // Better structure detection
-    formData.append('scale', 'true'); // Auto-scaling for better accuracy
+    // Use supported language codes for OCR.space API
+    // For Thai documents, we'll use 'eng' as OCR.space handles mixed Thai-English text well with English setting
+    // Alternative: could try 'ara' (Arabic) which sometimes works better for non-Latin scripts
+    formData.append('language', selectedDocumentType === 'ID Card' ? 'eng' : 'eng'); 
+    formData.append('isOverlayRequired', 'false'); // Disabled for speed
+    formData.append('OCREngine', engineNumber.toString()); // Engine 1 for speed, 2 for accuracy
+    formData.append('isTable', 'false'); // Disabled for speed
+    // Enable scale and orientation for better Thai text recognition
+    formData.append('scale', selectedDocumentType === 'ID Card' ? 'true' : 'false'); // Enable for Thai ID cards
+    formData.append('detectOrientation', selectedDocumentType === 'ID Card' ? 'true' : 'false'); // Enable for Thai ID cards
 
-    const response = await fetch('https://api.ocr.space/parse/image', {
+    console.log('📡 Sending optimized document request to OCR.space...');
+    console.log(`🔧 OCR Settings: Engine ${engineNumber}, Language: ${selectedDocumentType === 'ID Card' ? 'eng (Thai ID)' : 'eng (Passport)'}`);
+    
+    // Create adaptive timeout based on image size and engine type
+    const baseTimeout = engineNumber === 1 ? 30000 : 45000; // Engine 1 faster, Engine 2 more thorough
+    const adaptiveTimeout = Math.max(baseTimeout, Math.min(60000, base64SizeKB * 80));
+    console.log(`⏱️ Using adaptive timeout: ${adaptiveTimeout/1000}s for Engine ${engineNumber}`);
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('OCR request timeout - network too slow')), adaptiveTimeout)
+    );
+    
+    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       headers: {
         'apikey': OCR_SPACE_API_KEY,
@@ -393,211 +706,428 @@ const IDCardCameraScreen = ({ navigation }) => {
       body: formData,
     });
 
+    // Race between fetch and timeout
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+    console.log('📨 OCR.space response received, status:', response.status);
+
     if (!response.ok) {
       throw new Error(`OCR.space API error: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log('🔍 OCR.space result:', result);
+    
+    // Check for API errors first
+    if (result.OCRExitCode !== 1) {
+      console.error('❌ OCR processing failed:', result.ErrorMessage);
+      const errorDetails = Array.isArray(result.ErrorMessage) ? result.ErrorMessage.join(', ') : result.ErrorMessage;
+      throw new Error(`OCR processing failed: ${errorDetails || 'Unknown error'}`);
+    }
     
     if (result.ParsedResults && result.ParsedResults[0] && result.ParsedResults[0].ParsedText) {
+      console.log('✅ Text extracted successfully');
       return result.ParsedResults[0].ParsedText;
     }
     
-    if (result.OCRExitCode !== 1) {
-      throw new Error(`OCR processing failed: ${result.ErrorMessage || 'Unknown error'}`);
-    }
-    
-    throw new Error('No text detected from image');
+    throw new Error('No text detected from document image');
   };
 
   // Enhanced text parsing specifically for Thai ID cards with OCR.space results
   const parseIDText = (text) => {
     const lines = text.split('\n').filter(line => line.trim());
     
-    console.log('🔍 OCR.space Text:', text);
+    console.log('🔍 OCR.space Document Text:', text);
     console.log('📝 Lines:', lines);
+    console.log('📄 Document Type:', documentType);
 
     // Reset previous values for fresh parsing
-    let foundName = '';
-    let foundSurname = '';
     let foundId = '';
 
-    // Enhanced Thai ID Card parsing logic for ML Kit results
+    // Enhanced document parsing logic for both ID cards and passports - Only extract document number
     lines.forEach((line, index) => {
       const cleanLine = line.trim();
       
-      // Parse Thai ID number (13 digits) - More flexible patterns
-      const idPatterns = [
-        /\b(\d{1}[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d{1})\b/, // Thai ID with separators
+      // Parse document number - Enhanced patterns for both Thai ID and passport numbers
+      const documentPatterns = [
+        // Thai ID patterns (13 digits) - Enhanced for better detection
+        /เลขประจำตัว[\s:]*(\d{1}[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d{1})/i, // Thai ID with label
+        /บัตรประจำตัว[\s\S]*?(\d{1}[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d{1})/i, // After card label
+        /(\d{1}[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d{1})\b/, // Thai ID with separators
         /\b(\d{13})\b/, // Plain 13 digits
-        /(\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d[\s-]*\d)/ // Spaced digits
+        // More flexible Thai ID patterns
+        /(\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d)/, // Spaced 13 digits
+        /(\d-\d{4}-\d{5}-\d{2}-\d)/, // Standard Thai ID format
+        // Passport patterns (various formats)
+        /[Pp]assport[\s:]*([A-Z]{1,2}\d{6,8})/i, // Passport with label
+        /\b([A-Z]{1,2}\d{6,8})\b/, // Common passport format (e.g., A1234567, AA1234567)
+        /\b([A-Z]\d{7,8})\b/, // Single letter + digits
+        /\b([A-Z]{2}\d{6,7})\b/, // Two letters + digits
       ];
       
-      for (const pattern of idPatterns) {
+      for (const pattern of documentPatterns) {
         const idMatch = cleanLine.match(pattern);
         if (idMatch && !foundId) {
+          console.log('🔍 Potential ID match:', idMatch[1], 'from line:', cleanLine);
           foundId = idMatch[1].replace(/[\s-]/g, ''); // Remove spaces and dashes
-          if (foundId.length === 13) {
+          
+          // Validate document number based on type and length
+          const isValidThaiId = foundId.length === 13 && /^\d{13}$/.test(foundId) && foundId !== '0000000000000';
+          const isValidPassport = foundId.length >= 6 && foundId.length <= 9 && /^[A-Z0-9]+$/i.test(foundId);
+          
+          console.log('🧪 Validation:', foundId, 'Length:', foundId.length, 'Thai ID valid:', isValidThaiId, 'Passport valid:', isValidPassport);
+          
+          if (isValidThaiId || isValidPassport) {
             setIdNumber(foundId);
-            console.log('✅ Found ID Number:', foundId);
+            console.log('✅ Found Document Number:', foundId, isValidThaiId ? '(Thai ID)' : '(Passport)');
             break;
           }
         }
       }
 
-      // Enhanced Name parsing - Multiple patterns for ML Kit
-      if (!foundName) {
-        const namePatterns = [
-          /ชื่อ[:\s]*(.+?)(?:\s*นาม|\s*$)/i,
-          /Name[:\s]*(.+?)(?:\s*Surname|\s*$)/i,
-          /Mr\.?\s*([A-Za-z\u0E00-\u0E7F]+)/i,
-          /Mrs\.?\s*([A-Za-z\u0E00-\u0E7F]+)/i,
-          /Miss\.?\s*([A-Za-z\u0E00-\u0E7F]+)/i,
-          /นาย\s*([^\s]+)/i,
-          /นาง\s*([^\s]+)/i,
-          /นางสาว\s*([^\s]+)/i
-        ];
-
-        for (const pattern of namePatterns) {
-          const nameMatch = cleanLine.match(pattern);
-          if (nameMatch) {
-            foundName = nameMatch[1].trim().replace(/นาย|นาง|นางสาว|Mr\.?|Mrs\.?|Miss\.?/gi, '').trim();
-            if (foundName && foundName.length > 1 && foundName.length < 30) {
-              setFirstName(foundName);
-              console.log('✅ Found Name:', foundName);
-              break;
-            }
-          }
-        }
-      }
-
-      // Enhanced Surname parsing
-      if (!foundSurname) {
-        const surnamePatterns = [
-          /นาม(?:สกุล)?[:\s]*(.+?)(?:\s|$)/i,
-          /Surname[:\s]*(.+?)(?:\s|$)/i,
-          /Last\s*Name[:\s]*(.+?)(?:\s|$)/i
-        ];
-
-        for (const pattern of surnamePatterns) {
-          const surnameMatch = cleanLine.match(pattern);
-          if (surnameMatch) {
-            foundSurname = surnameMatch[1].trim();
-            if (foundSurname && foundSurname.length > 1 && foundSurname.length < 30) {
-              setLastName(foundSurname);
-              console.log('✅ Found Surname:', foundSurname);
-              break;
-            }
-          }
-        }
-      }
-
-      // Alternative: Sequential name detection for unclear text
-      if (!foundName && !foundSurname && !cleanLine.match(/\d/)) {
-        const skipWords = [
-          'บัตรประจำตัว', 'ประชาชน', 'เลขประจำตัว', 'เกิด', 'ที่อยู่', 'วันที่', 
-          'ออกบัตร', 'วันหมดอายุ', 'กรุงเทพ', 'จังหวัด', 'Identity', 'Card', 
-          'National', 'Date', 'Birth', 'Address', 'Issue', 'Expire'
-        ];
-        
-        const isSkipLine = skipWords.some(word => cleanLine.toLowerCase().includes(word.toLowerCase()));
-        
-        if (!isSkipLine && cleanLine.length > 2 && cleanLine.length < 25) {
-          // Check if line contains Thai or English characters
-          const hasValidChars = /[\u0E00-\u0E7F]/.test(cleanLine) || /^[A-Za-z\s]+$/.test(cleanLine);
-          
-          if (hasValidChars && index < lines.length / 2) {
-            const possibleName = cleanLine
-              .replace(/[^\u0E00-\u0E7F\sA-Za-z]/g, '')
-              .replace(/นาย|นาง|นางสาว|Mr\.?|Mrs\.?|Miss\.?/gi, '')
-              .trim();
-            
-            if (possibleName.length > 1) {
-              const nameParts = possibleName.split(/\s+/);
-              
-              // Handle "FirstName LastName" format
-              if (nameParts.length === 2 && !foundName && !foundSurname) {
-                foundName = nameParts[0];
-                foundSurname = nameParts[1];
-                setFirstName(foundName);
-                setLastName(foundSurname);
-                console.log('✅ Found Name & Surname (paired):', foundName, foundSurname);
-              }
-              // Handle single name
-              else if (nameParts.length === 1) {
-                if (!foundName) {
-                  foundName = possibleName;
-                  setFirstName(foundName);
-                  console.log('🔍 Possible Name:', foundName);
-                } else if (!foundSurname) {
-                  foundSurname = possibleName;
-                  setLastName(foundSurname);
-                  console.log('🔍 Possible Surname:', foundSurname);
-                }
-              }
-            }
-          }
-        }
-      }
+      // Skip name and surname parsing - only extract document number
+      // Names will be manually entered by user or loaded from existing customer data
+      // This ensures faster processing and prevents incorrect name extraction
     });
 
-    // Show comprehensive results
-    const foundData = [];
-    if (foundName) foundData.push(`ชื่อ: ${foundName}`);
-    if (foundSurname) foundData.push(`นามสกุล: ${foundSurname}`);
-    if (foundId) foundData.push(`เลขบัตร: ${foundId}`);
-
-    if (foundData.length > 0) {
+    // Show results for document - only document number
+    if (foundId) {
       Alert.alert(
-        '🎉 สแกนข้อมูลสำเร็จ!',
-        `ข้อมูลที่พบ:\n${foundData.join('\n')}\n\n✅ กรุณาตรวจสอบความถูกต้อง\n📝 สามารถแก้ไขข้อมูลได้`,
-        [{ text: 'ตกลง', style: 'default' }]
+        '🎉 Document Scan Successful!',
+        `${documentType} Number found: ${foundId}\n\n✅ Please verify the document number is correct\n📝 You can edit the number if needed\n\n💡 Note: Name and surname will be taken from your profile or entered manually`,
+        [{ text: 'OK', style: 'default' }]
       );
     } else {
       Alert.alert(
-        '⚠️ ไม่พบข้อมูล',
-        'ไม่สามารถสแกนข้อมูลได้ กรุณา:\n\n📸 ถ่ายรูปใหม่ให้ชัดเจน\n💡 ใช้แสงสว่างเพียงพอ\n✏️ หรือกรอกข้อมูลด้วยตนเอง',
+        '⚠️ No Document Number Found',
+        'Unable to scan document number from the image. Please:\n\n📸 Take a clearer photo\n💡 Use adequate lighting\n📏 Ensure entire document is in frame\n✏️ Or enter the number manually',
         [
-          { text: 'ถ่ายใหม่', onPress: () => pickImage() },
-          { text: 'กรอกเอง', style: 'default' }
+          { text: 'Retake Photo', onPress: () => pickImage() },
+          { text: 'Manual Entry', style: 'default' }
         ]
       );
     }
   };
 
-  // Premium save function
+  // Premium save function - Update only document number
   const handleSave = async () => {
-    if (!firstName || !lastName || !idNumber) {
-      Alert.alert('Missing Information', 'Please fill in all required fields.');
+    if (!idNumber) {
+      Alert.alert('Missing Information', `Please enter your ${documentType} number.`);
       return;
     }
 
     if (!photo) {
-      Alert.alert('Missing Document', 'Please upload your ID card or passport photo.');
+      Alert.alert('Missing Document', `Please upload your ${documentType.toLowerCase()} photo.`);
       return;
     }
 
-    // Simulate API call
+    if (!token) {
+      Alert.alert('Authentication Error', 'Please login again.');
+      return;
+    }
+
     setIsProcessing(true);
     
-    setTimeout(() => {
-      setIsProcessing(false);
-      Alert.alert(
-        'Success!', 
-        'Your ID verification has been submitted successfully.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack()
+    try {
+      console.log(`🚀 Starting ${documentType} upload process...`);
+      console.log('📋 Data to upload:', { document_number: idNumber, photo: photo ? 'Available' : 'Missing', token: token ? 'Available' : 'Missing' });
+      
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      
+      // Add only document number to form data (no name/surname)
+      formData.append('passport_number', idNumber);
+      
+      // Prepare image file for upload
+      const imageUri = photo;
+      const filename = `${documentType.toLowerCase().replace(' ', '_')}_${Date.now()}.jpg`;
+      
+      // Check if photo is a local file or remote URL
+      if (imageUri.startsWith('file://') || imageUri.startsWith('content://')) {
+        // Local file - append as blob (only document number will be updated)
+        formData.append('passport_document', {
+          uri: imageUri,
+          type: 'image/jpeg',
+          name: filename,
+        });
+      } else if (imageUri.startsWith('http')) {
+        // Remote file - for existing photos, just update the document number
+        console.log('📸 Using existing photo from server:', imageUri);
+        
+        // For existing photos, we'll update the document number only
+        Alert.alert(
+          `Update ${documentType} Number`,
+          `Your ${documentType.toLowerCase()} document is already uploaded. Do you want to update just the ${documentType.toLowerCase()} number?\n\nNote: To upload a completely new document, please take a new photo.`,
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => setIsProcessing(false)
+            },
+            {
+              text: 'Update ID Number Only',
+              onPress: async () => {
+                try {
+                  console.log('� Updating passport number for existing document...');
+                  
+                  // Since this is an existing remote document, we'll create a minimal update
+                  // The backend should handle this case where we're updating just the number
+                  const updateFormData = new FormData();
+                  updateFormData.append('passport_number', idNumber.trim());
+                  updateFormData.append('update_existing', 'true'); // Flag to indicate this is an update
+                  updateFormData.append('document_exists', 'true'); // Flag to indicate document already exists
+
+                  console.log('📤 Sending Thai ID number update...');
+
+                  // Try to update with just the passport number
+                  const updateResponse = await fetch(`${ipAddress}/upload-passport`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                    body: updateFormData,
+                  });
+
+                  console.log('📨 Update response status:', updateResponse.status);
+                  const responseText = await updateResponse.text();
+                  console.log('📨 Update response:', responseText);
+
+                  // Handle the response
+                  if (updateResponse.ok) {
+                    try {
+                      const updateResult = JSON.parse(responseText);
+                      console.log('✅ Update successful:', updateResult);
+                      
+                      setIsProcessing(false);
+                      Alert.alert(
+                        'Success! 🎉', 
+                        'Your Thai ID number has been updated successfully.',
+                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                      );
+                    } catch (parseError) {
+                      // If response is not JSON but request was successful
+                      setIsProcessing(false);
+                      Alert.alert(
+                        'Success! 🎉', 
+                        'Your Thai ID number has been updated successfully.',
+                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                      );
+                    }
+                  } else {
+                    // If the backend doesn't support updating existing documents
+                    setIsProcessing(false);
+                    Alert.alert(
+                      'Update Not Supported',
+                      'The server requires a new Thai ID document upload to update information.\n\nPlease take a new photo to update your Thai ID number.',
+                      [
+                        {
+                          text: 'Take New Photo',
+                          onPress: () => pickImage()
+                        },
+                        {
+                          text: 'Cancel',
+                          style: 'cancel'
+                        }
+                      ]
+                    );
+                  }
+                } catch (error) {
+                  console.error('❌ Update failed:', error);
+                  setIsProcessing(false);
+                  Alert.alert(
+                    'Update Failed', 
+                    'Unable to update Thai ID number for existing document.\n\nPlease take a new photo to update your information.',
+                    [
+                      {
+                        text: 'Take New Photo',
+                        onPress: () => pickImage()
+                      },
+                      {
+                        text: 'Cancel',
+                        style: 'cancel'
+                      }
+                    ]
+                  );
+                }
+              }
+            }
+          ]
+        );
+        return;
+      } else {
+        throw new Error('Invalid image format');
+      }
+
+      console.log('📤 Uploading passport data to API...');
+
+      // Upload to the new passport upload endpoint
+      const uploadResponse = await fetch(`${ipAddress}/upload-passport`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Remove Content-Type header - let the browser set it automatically for multipart/form-data
+        },
+        body: formData,
+      });
+
+      console.log('📨 API Response Status:', uploadResponse.status);
+
+      let result;
+      const responseText = await uploadResponse.text();
+      console.log('📨 Raw API Response:', responseText);
+
+      // Try to parse JSON, handle non-JSON responses
+      try {
+        result = JSON.parse(responseText);
+        console.log('📨 Parsed API Response:', result);
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError);
+        
+        // Handle non-JSON responses (HTML error pages, etc.)
+        if (responseText.includes('<html') || responseText.includes('<!DOCTYPE')) {
+          if (uploadResponse.status === 500) {
+            throw new Error('Server error occurred. The server is experiencing technical difficulties. Please try again later.');
+          } else if (uploadResponse.status === 404) {
+            throw new Error('Upload endpoint not found. Please contact support.');
+          } else if (uploadResponse.status === 401 || uploadResponse.status === 403) {
+            throw new Error('Authentication failed. Please login again.');
+          } else {
+            throw new Error(`Server error (${uploadResponse.status}). Please check your internet connection and try again.`);
           }
+        } else if (responseText.includes('401') || responseText.includes('Unauthorized')) {
+          throw new Error('Authentication failed. Please login again.');
+        } else if (responseText.includes('404')) {
+          throw new Error('API endpoint not found. Please contact support.');
+        } else if (responseText.includes('500')) {
+          throw new Error('Server error. Please try again later.');
+        } else {
+          throw new Error(`Server response error: ${responseText.substring(0, 100)}...`);
+        }
+      }
+
+      if (uploadResponse.ok && result && result.status === 'success') {
+        setIsProcessing(false);
+        Alert.alert(
+          'Success! 🎉', 
+          'Your Thai ID verification has been submitted successfully.\n\nDocument uploaded and saved to your profile.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+      } else {
+        throw new Error(result?.message || `Upload failed with status: ${uploadResponse.status}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Error uploading passport:', error);
+      setIsProcessing(false);
+      
+      let errorMessage = 'Unable to save your information. Please try again.';
+      
+      if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message.includes('authentication') || error.message.includes('token')) {
+        errorMessage = 'Authentication error. Please login again.';
+      } else if (error.message.includes('Only .png, .jpg, .jpeg format allowed!')) {
+        errorMessage = 'Invalid file format. Please use JPG, JPEG, or PNG images only.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert(
+        'Upload Failed',
+        errorMessage,
+        [
+          { text: 'Try Again', onPress: () => handleSave() },
+          { text: 'Cancel', style: 'cancel' }
         ]
       );
-    }, 2000);
+    }
   };
 
+  // Function to fetch Thai ID card information from API
+  const fetchPassportInfo = async () => {
+    const storedToken = await SecureStore.getItemAsync('userToken');
+    if (!storedToken) {
+      console.log('No token found');
+      return;
+    }
+    
+    setToken(storedToken);
+    setIsLoadingPassport(true);
+    
+    try {
+      const response = await fetch(`${ipAddress}/passport-info`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch passport info');
+      }
+
+      const data = await response.json();
+      console.log('📨 Thai ID API Response:', data);
+      
+      if (data.status === 'success' && data.data) {
+        const passportInfo = data.data;
+        console.log('👤 Thai ID Info Data:', passportInfo);
+        
+        setExistingPassportInfo({
+          passport_number: passportInfo.passport_number || '', // Thai ID number
+          document_path: passportInfo.document_path || '',
+          has_passport: passportInfo.has_passport || false, // has_thai_id
+          has_document: passportInfo.has_document || false,
+          last_updated: passportInfo.last_updated || null
+        });
+        
+        // Auto-fill Thai ID number if available
+        if (passportInfo.passport_number) {
+          console.log('🆔 Setting Thai ID number:', passportInfo.passport_number);
+          setIdNumber(passportInfo.passport_number);
+        }
+        
+        // Set existing Thai ID photo if available
+        if (passportInfo.document_path) {
+          // Handle different URL formats
+          let photoUrl = passportInfo.document_path;
+          
+          // If it's not already a full URL, construct the full URL
+          if (!photoUrl.startsWith('http')) {
+            // Remove leading slash if present to avoid double slashes
+            photoUrl = photoUrl.startsWith('/') ? photoUrl.substring(1) : photoUrl;
+            photoUrl = `https://thetrago.com/${photoUrl}`;
+          }
+          
+          console.log('📷 Loading existing Thai ID document:', photoUrl);
+          setPhoto(photoUrl);
+        } else {
+          console.log('📷 No existing Thai ID document found');
+        }
+        
+        console.log('✅ Thai ID info loaded successfully');
+      } else {
+        console.log('⚠️ No Thai ID data found or invalid response structure');
+        console.error('Error in Thai ID response:', data.message || 'Invalid data structure');
+      }
+    } catch (error) {
+      console.error('Error fetching Thai ID info:', error);
+    } finally {
+      setIsLoadingPassport(false);
+    }
+  };
 
   useEffect(() => {
-    if (photo) console.log("📷 Photo captured:", photo);
+    if (photo) {
+      console.log("📷 Photo captured:", photo);
+      setImageLoadError(false); // Reset image error when new photo is set
+    }
   }, [photo]);
 
   // Update fields when customer data changes
@@ -609,6 +1139,24 @@ const IDCardCameraScreen = ({ navigation }) => {
       setLastName(customerData.Lastname);
     }
   }, [customerData]);
+
+  // Fetch Thai ID info on component mount
+  useEffect(() => {
+    fetchPassportInfo();
+  }, []);
+
+  // Ensure token is available
+  useEffect(() => {
+    const getToken = async () => {
+      if (!token) {
+        const storedToken = await SecureStore.getItemAsync('userToken');
+        if (storedToken) {
+          setToken(storedToken);
+        }
+      }
+    };
+    getToken();
+  }, [token]);
 
   return (
     <SafeAreaView style={styles.containerPremium}>
@@ -660,8 +1208,8 @@ const IDCardCameraScreen = ({ navigation }) => {
             </TouchableOpacity>
             
             <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Smart ID Scanner</Text>
-              <Text style={styles.headerSubtitle}>Auto-crop + Real OCR</Text>
+              <Text style={styles.headerTitle}>Document Scanner</Text>
+              <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
             </View>
             
             {/* Empty view for layout balance */}
@@ -714,13 +1262,19 @@ const IDCardCameraScreen = ({ navigation }) => {
               <Text style={styles.sectionTitlePremium}>Personal Information</Text>
             </View>
             
+            {/* Info note about name fields being read-only */}
+            <View style={styles.infoNotePremium}>
+              <MaterialCommunityIcons name="information" size={16} color="#3B82F6" />
+              <Text style={styles.infoNoteText}>Name and surname are loaded from your profile and cannot be changed here.</Text>
+            </View>
+            
             <View style={styles.inputWrapperPremium}>
               <Text style={styles.inputLabelPremium}>Name*</Text>
               <TextInput 
-                style={styles.inputPremium} 
-                placeholder="Enter your first name" 
+                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]} 
+                placeholder="Loaded from your profile" 
                 value={firstName}
-                onChangeText={setFirstName}
+                editable={false}
                 placeholderTextColor="#9CA3AF"
               />
             </View>
@@ -728,27 +1282,35 @@ const IDCardCameraScreen = ({ navigation }) => {
             <View style={styles.inputWrapperPremium}>
               <Text style={styles.inputLabelPremium}>Surname*</Text>
               <TextInput 
-                style={styles.inputPremium} 
-                placeholder="Enter your surname" 
+                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]} 
+                placeholder="Loaded from your profile" 
                 value={lastName}
-                onChangeText={setLastName}
+                editable={false}
                 placeholderTextColor="#9CA3AF"
               />
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>ID Card/Passport Number*</Text>
+              <Text style={styles.inputLabelPremium}>{documentType} Number*</Text>
               <TextInput 
                 style={styles.inputPremium} 
-                placeholder="Enter your ID number" 
+                placeholder={`Enter your ${documentType.toLowerCase()} number`} 
                 value={idNumber}
                 onChangeText={setIdNumber}
                 placeholderTextColor="#9CA3AF"
+                maxLength={documentType === 'ID Card' ? 13 : 20}
+                keyboardType={documentType === 'ID Card' ? 'numeric' : 'default'}
               />
+              {existingPassportInfo.has_passport && (
+                <View style={styles.existingDataBadge}>
+                  <MaterialCommunityIcons name="check-circle" size={16} color="#22C55E" />
+                  <Text style={styles.existingDataText}>Previously saved data loaded</Text>
+                </View>
+              )}
             </View>
           </Animated.View>
 
-          {/* Upload Document Card */}
+          {/* Document Type Selector Card */}
           <Animated.View
             style={[
               styles.formCardPremium,
@@ -762,13 +1324,92 @@ const IDCardCameraScreen = ({ navigation }) => {
             ]}
           >
             <View style={styles.sectionHeaderPremium}>
+              <MaterialCommunityIcons name="card-multiple" size={24} color="#FD501E" />
+              <Text style={styles.sectionTitlePremium}>Document Type</Text>
+            </View>
+            
+            <View style={styles.documentTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.documentTypeButton,
+                  documentType === 'ID Card' && styles.documentTypeButtonActive
+                ]}
+                onPress={() => setDocumentType('ID Card')}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons 
+                  name="card-account-details" 
+                  size={20} 
+                  color={documentType === 'ID Card' ? '#FFFFFF' : '#FD501E'} 
+                />
+                <Text style={[
+                  styles.documentTypeText,
+                  documentType === 'ID Card' && styles.documentTypeTextActive
+                ]}>
+                  ID Card
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.documentTypeButton,
+                  documentType === 'Passport' && styles.documentTypeButtonActive
+                ]}
+                onPress={() => setDocumentType('Passport')}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons 
+                  name="passport" 
+                  size={20} 
+                  color={documentType === 'Passport' ? '#FFFFFF' : '#FD501E'} 
+                />
+                <Text style={[
+                  styles.documentTypeText,
+                  documentType === 'Passport' && styles.documentTypeTextActive
+                ]}>
+                  Passport
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Upload Document Card */}
+          <Animated.View
+            style={[
+              styles.formCardPremium,
+              {
+                opacity: cardAnims[2]?.opacity || 1,
+                transform: [
+                  { translateY: cardAnims[2]?.translateY || 0 },
+                  { scale: cardAnims[2]?.scale || 1 },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="camera-plus" size={24} color="#FD501E" />
-              <Text style={styles.sectionTitlePremium}>Upload your ID Card/Passport*</Text>
+              <Text style={styles.sectionTitlePremium}>Upload your {documentType}*</Text>
               <View style={styles.realOcrBadge}>
                 <MaterialCommunityIcons name="check-circle" size={12} color="#22C55E" />
                 <Text style={styles.realOcrText}>REAL OCR</Text>
               </View>
             </View>
+            
+            {/* Display existing document info if available */}
+            {existingPassportInfo.has_document && existingPassportInfo.last_updated && (
+              <View style={styles.existingDocumentInfo}>
+                <View style={styles.existingDocumentHeader}>
+                  <MaterialCommunityIcons name="file-document" size={20} color="#22C55E" />
+                  <Text style={styles.existingDocumentTitle}>Previously Uploaded Document</Text>
+                </View>
+                <Text style={styles.existingDocumentDate}>
+                  Last updated: {new Date(existingPassportInfo.last_updated).toLocaleDateString('en-US')}
+                </Text>
+                <Text style={styles.existingDocumentNote}>
+                  You can upload a new document to replace the existing one
+                </Text>
+              </View>
+            )}
             
             <TouchableOpacity 
               style={styles.uploadButtonPremium} 
@@ -782,10 +1423,16 @@ const IDCardCameraScreen = ({ navigation }) => {
               >
                 {isProcessing ? (
                   <>
-                    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                      <MaterialCommunityIcons name="loading" size={24} color="#FD501E" />
+                    <Animated.View style={{ 
+                      transform: [
+                        { rotate: uploadLoadingSpin }
+                      ] 
+                    }}>
+                      <MaterialCommunityIcons name="loading" size={24} color="#FFFFFF" />
                     </Animated.View>
-                    <Text style={styles.uploadTextProcessing}>Processing...</Text>
+                    <Text style={styles.uploadTextProcessing}>
+                      {ocrProgress || 'Processing...'}
+                    </Text>
                   </>
                 ) : photo ? (
                   <>
@@ -795,8 +1442,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                 ) : (
                   <>
                     <MaterialCommunityIcons name="camera" size={24} color="#FD501E" />
-                    <Text style={styles.uploadText}>Scan Thai ID Card</Text>
-                    <Text style={styles.uploadSubtext}>Auto-crop + Real OCR</Text>
+                    <Text style={styles.uploadText}>Upload {documentType}</Text>
                   </>
                 )}
               </LinearGradient>
@@ -817,18 +1463,60 @@ const IDCardCameraScreen = ({ navigation }) => {
                 ]}
               >
                 <View style={styles.documentContainer}>
-                  <Image source={{ uri: photo }} style={styles.documentImage} />
+                  {imageLoadError ? (
+                    <View style={styles.imageErrorContainer}>
+                      <MaterialCommunityIcons name="image-broken-variant" size={48} color="#9CA3AF" />
+                      <Text style={styles.imageErrorText}>Image failed to load</Text>
+                      <Text style={styles.imageErrorSubtext}>The document image could not be displayed</Text>
+                    </View>
+                  ) : (
+                    <Image 
+                      source={{ uri: photo }} 
+                      style={styles.documentImage}
+                      onError={(error) => {
+                        console.error('❌ Image loading error:', error);
+                        console.log('🔍 Failed photo URL:', photo);
+                        setImageLoadError(true);
+                      }}
+                      onLoadStart={() => {
+                        console.log('📷 Starting to load image:', photo);
+                        setImageLoadError(false);
+                      }}
+                      onLoad={() => {
+                        console.log('✅ Image loaded successfully');
+                        setImageLoadError(false);
+                      }}
+                    />
+                  )}
                   <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.3)']}
                     style={styles.documentOverlay}
                   >
                     <View style={styles.documentInfo}>
                       <MaterialCommunityIcons name="shield-check" size={16} color="#22C55E" />
-                      <Text style={styles.documentStatus}>Verified Document</Text>
+                      <Text style={styles.documentStatus}>
+                        {existingPassportInfo.has_document && photo.includes('thetrago.com') 
+                          ? 'Previously Uploaded Document' 
+                          : 'Verified Document'}
+                      </Text>
                     </View>
                   </LinearGradient>
                 </View>
               </Animated.View>
+            )}
+
+            {/* Loading state for passport info */}
+            {isLoadingPassport && (
+              <View style={styles.loadingContainer}>
+                <Animated.View style={{ 
+                  transform: [
+                    { rotate: loadingSpin }
+                  ] 
+                }}>
+                  <MaterialCommunityIcons name="loading" size={20} color="#FD501E" />
+                </Animated.View>
+                <Text style={styles.loadingText}>Loading existing data...</Text>
+              </View>
             )}
           </Animated.View>
 
@@ -849,7 +1537,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               style={styles.saveButtonPremiumFull} 
               onPress={handleSave}
               activeOpacity={0.8}
-              disabled={isProcessing || !firstName || !lastName || !idNumber || !photo}
+              disabled={isProcessing || !idNumber || !photo}
             >
               <LinearGradient
                 colors={['#FD501E', '#FF6B40']}
@@ -859,7 +1547,11 @@ const IDCardCameraScreen = ({ navigation }) => {
               >
                 {isProcessing ? (
                   <>
-                    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                    <Animated.View style={{ 
+                      transform: [
+                        { rotate: saveLoadingSpin }
+                      ] 
+                    }}>
                       <MaterialCommunityIcons name="loading" size={20} color="#FFFFFF" />
                     </Animated.View>
                     <Text style={styles.saveButtonTextPremium}>Processing...</Text>
@@ -1005,6 +1697,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 25,
   },
+  infoNotePremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 20,
+    gap: 8,
+  },
+  infoNoteText: {
+    fontSize: 13,
+    color: '#3B82F6',
+    fontWeight: '500',
+    flex: 1,
+  },
   sectionTitlePremium: {
     fontSize: 18,
     fontWeight: '800',
@@ -1060,6 +1768,22 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     borderColor: 'rgba(229, 231, 235, 0.8)',
   },
+  existingDataBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 6,
+  },
+  existingDataText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#22C55E',
+    letterSpacing: 0.2,
+  },
 
   // Upload Button Premium
   uploadButtonPremium: {
@@ -1099,7 +1823,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   uploadTextProcessing: {
-    color: '#FD501E',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.3,
@@ -1152,7 +1876,7 @@ const styles = StyleSheet.create({
 
   // Save Button Premium (Full Width)
   saveButtonPremiumFull: {
-    borderRadius: 18,
+       borderRadius: 18,
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
@@ -1173,6 +1897,111 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+
+  // Existing Document Info
+  existingDocumentInfo: {
+    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  existingDocumentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  existingDocumentTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22C55E',
+    letterSpacing: 0.2,
+  },
+  existingDocumentDate: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  existingDocumentNote: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+  },
+
+  // Loading State
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    backgroundColor: 'rgba(253, 80, 30, 0.05)',
+    borderRadius: 12,
+    marginTop: 10,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#FD501E',
+    fontWeight: '500',
+  },
+
+  // Image Error Container
+  imageErrorContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  imageErrorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  imageErrorSubtext: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
+  // Document Type Selector
+  documentTypeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 15,
+  },
+  documentTypeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#FD501E',
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  documentTypeButtonActive: {
+    backgroundColor: '#FD501E',
+    borderColor: '#FD501E',
+  },
+  documentTypeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FD501E',
+  },
+  documentTypeTextActive: {
+    color: '#FFFFFF',
   },
 });
 

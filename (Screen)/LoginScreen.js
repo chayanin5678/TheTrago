@@ -88,7 +88,7 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
       console.log('Error:', error);  // Log the error for debugging
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'Email or password is incorrect');
     }
   };
   
