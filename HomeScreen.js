@@ -547,6 +547,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
 
     const fetchData = async () => {
+      console.log('fetchData called with token:', token ? 'Present' : 'Missing');
       try {
         const response = await fetch(`${ipAddress}/profile`, {
           method: 'GET',
@@ -557,7 +558,10 @@ const HomeScreen = ({ navigation }) => {
         });
 
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          console.error(`Profile fetch failed (useEffect 1): ${response.status} ${response.statusText}`);
+          console.error(`Request URL: ${ipAddress}/profile`);
+          console.error(`Token: ${token ? 'Present' : 'Missing'}`);
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -566,54 +570,6 @@ const HomeScreen = ({ navigation }) => {
           setUser(data.data);
           updateCustomerData({
             Firstname: data.data[0].md_member_fname,
-            Lastname: data.data[0].md_member_lname,
-            email: data.data[0].md_member_email,
-          });
-          console.log('name:' + customerData.Firstname);
-        } else {
-          console.error('Data is not an array', data);
-          setUser([]);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
-      }
-    };
-    if (token) {
-      fetchData();
-    }
-
-  }, [token]);
-
-
-
-
-  useEffect(() => {
-
-    const fetchData = async () => {
-      const storedToken = await SecureStore.getItemAsync('userToken');
-      try {
-        const response = await fetch(`${ipAddress}/profile`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${storedToken}`, // ส่ง Token ใน Authorization header
-            'Content-Type': 'application/json', // ระบุประเภทของข้อมูลที่ส่ง (ถ้าจำเป็น)
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-
-        if (data && Array.isArray(data.data)) {
-
-          // setUser(data.data);
-          updateCustomerData({
-            Firstname: data.data[0].md_member_fname,
-
             Lastname: data.data[0].md_member_lname,
             email: data.data[0].md_member_email,
             tel: data.data[0].md_member_phone
@@ -626,24 +582,30 @@ const HomeScreen = ({ navigation }) => {
           }
           if (data.data[0].md_member_code) {
             getCountryByCode(data.data[0].md_member_code);
-
           }
-          //  console.log('name:'+customerData.Firstname);
-
+          console.log('Profile data fetched successfully');
         } else {
           console.error('Data is not an array', data);
+          setUser([]);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching profile data:', error);
+      } finally {
+        setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       }
     };
+    
+    if (token) {
+      fetchData();
+    } else {
+      console.log('No token available, skipping profile fetch');
+      setIsLoading(false);
+    }
+
+  }, [token]);
 
 
-    fetchData();
 
-
-
-  }, []);
 
   const getCountryByCode = async (code) => {
     try {
@@ -779,7 +741,7 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={premiumStyles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Premium Background with Elegant Gradient */}
+      {/* Background with Elegant Gradient */}
       <View style={premiumStyles.backgroundContainer}>
         <LinearGradient
           colors={['#FD501E', '#FF6B35', '#FF8956', '#FFA072']}
@@ -865,7 +827,7 @@ const HomeScreen = ({ navigation }) => {
                   <MaterialIcons name="directions-boat" size={wp('10%')} color="#fff" />
                 </LinearGradient>
               </Animated.View>
-              <Text style={premiumStyles.loadingText}>Processing Payment...</Text>
+              <Text style={premiumStyles.loadingText}>Loading...</Text>
               <Text style={premiumStyles.loadingSubtext}>Please wait a moment</Text>
             </View>
           </BlurView>
@@ -910,7 +872,7 @@ const HomeScreen = ({ navigation }) => {
                       style={premiumStyles.badgeGradient}
                     >
                       <MaterialIcons name="star" size={wp('2.5%')} color="#fff" />
-                      <Text style={premiumStyles.badgeText}>Premium</Text>
+                      <Text style={premiumStyles.badgeText}>Elite</Text>
                     </LinearGradient>
                   </Animated.View>
                 </View>
@@ -1057,6 +1019,11 @@ const HomeScreen = ({ navigation }) => {
                                 endPointId: '0',
                                 endpoint_name: 'Destination',
                               });
+                            }
+                            if (item.id === '2') {
+                              // Flights button - navigation disabled
+                              alert('Coming soon...');
+                              return;
                             }
                             if (item.navigate) {
                               navigation.navigate(item.navigate);
@@ -1659,7 +1626,7 @@ const HomeScreen = ({ navigation }) => {
 
 
         <View style={{
-          paddingBottom: hp('6%'),
+          paddingBottom: hp('2%'),
         }}>
        
 
@@ -2332,20 +2299,29 @@ const HomeScreen = ({ navigation }) => {
         
         {/* Premium Show More Button */}
         {poppularAttraction.length > visibleAttraction && (
-          <View style={premiumStyles.showMoreContainer}>
+          <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('0.5%') }}>
             <TouchableOpacity 
-              style={premiumStyles.showMoreButton}
               onPress={() => setvisibleAttraction(prev => prev + 6)}
+              style={{
+                backgroundColor: '#FD501E',
+                paddingHorizontal: wp('6%'),
+                paddingVertical: hp('1%'),
+                borderRadius: wp('6%'),
+                elevation: 2,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+              }}
             >
-              <BlurView intensity={30} tint="light" style={premiumStyles.showMoreBlur}>
-                <LinearGradient
-                  colors={['rgba(253,80,30,0.9)', 'rgba(255,107,53,0.8)']}
-                  style={premiumStyles.showMoreGradient}
-                >
-                  <MaterialIcons name="expand-more" size={wp('5%')} color="#fff" />
-                  <Text style={premiumStyles.showMoreText}>Show More Attractions</Text>
-                </LinearGradient>
-              </BlurView>
+              <Text style={{ 
+                color: 'white', 
+                fontWeight: 'bold', 
+                fontSize: wp('3.5%'),
+                textAlign: 'center'
+              }}>
+                Load More
+              </Text>
             </TouchableOpacity>
           </View>
         )}

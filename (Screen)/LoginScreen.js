@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -8,12 +8,14 @@ import ipAddress from "../ipconfig";
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
+import { useAuth } from '../AuthContext';
 
 
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
+  const { login } = useAuth();
   const [email, setEmail] = useState(customerData.email || '');
   const [password, setPassword] = useState(customerData.password || '');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,6 +60,7 @@ export default function LoginScreen({ navigation }) {
     }
     
     console.log(email, password);
+    setIsLoading(true);
     
     try {
       const loginResponse = await axios.post(`${ipAddress}/login`, {
@@ -68,8 +71,10 @@ export default function LoginScreen({ navigation }) {
       console.log(loginResponse.data); // แสดงข้อมูลที่ได้รับจาก API
   
       if (loginResponse.data.token) {
-        await SecureStore.setItemAsync('userToken', loginResponse.data.token);
-  
+        // Use AuthContext login method
+        await login(loginResponse.data.token);
+        console.log('AuthContext: Login successful, token saved via AuthContext');
+
         // Use a different variable name to avoid overwriting `loginResponse`
         const tokenResponse = await axios.post(`${ipAddress}/Token`, {
           email: email,  // ใช้ค่า email จาก state
@@ -78,9 +83,9 @@ export default function LoginScreen({ navigation }) {
   
         console.log(tokenResponse.data); // Log the token update response
   
-        // ไปที่หน้า AccountScreen
-        setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
-        navigation.replace('AccountScreen');
+        // AuthContext จะจัดการการ navigate อัตโนมัติ
+        setIsLoading(false);
+        console.log('Login successful. AuthContext will handle navigation automatically.');
       } else {
         setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
         Alert.alert('Error', 'Invalid credentials');
@@ -96,6 +101,8 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
       {/* Premium Background */}
       <LinearGradient
         colors={['#ffffff', '#fefefe', '#fff9f4', '#fef5ed', '#fff2e8', '#ffffff']}
@@ -104,18 +111,17 @@ export default function LoginScreen({ navigation }) {
         end={{ x: 1, y: 1 }}
       />
       
+      <SafeAreaView style={styles.safeArea}>
+        {isLoading && (
+          <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#FD501E" />
+              <Text style={styles.loadingText}>Signing you in...</Text>
+            </View>
+          </BlurView>
+        )}
 
-
-      {isLoading && (
-        <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color="#FD501E" />
-            <Text style={styles.loadingText}>Signing you in...</Text>
-          </View>
-        </BlurView>
-      )}
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <Animated.View 
           style={[
@@ -281,6 +287,7 @@ export default function LoginScreen({ navigation }) {
           </BlurView>
         </Animated.View>
       </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -289,6 +296,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  safeArea: {
+    flex: 1,
   },
   loadingContainer: {
     position: 'absolute',
@@ -323,12 +333,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    paddingTop: 70,
+    paddingTop: 5,
+    paddingBottom: 100,
     zIndex: 2,
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: 45,
+    marginBottom: 20,
   },
   welcomeText: {
     fontSize: 32,

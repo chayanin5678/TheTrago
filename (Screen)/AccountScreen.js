@@ -9,11 +9,13 @@ import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../AuthContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AccountScreen = ({ navigation }) => {
+  const { logout } = useAuth();
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState([]);
@@ -252,16 +254,16 @@ const AccountScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
-      await SecureStore.deleteItemAsync('userToken');
+      // Use AuthContext logout method
+      await logout();
       updateCustomerData({
         Firstname: '',
         Lastname: '',
         email: '',
       });
       
-      // Navigate to login screen after logout
-      navigation.navigate('LoginScreen');
-      console.log('User logged out, navigating to login screen');
+      // AuthContext จะจัดการการ navigate อัตโนมัติ
+      console.log('AuthContext: User logged out, app will automatically navigate to login screen');
     } catch (error) {
       console.error('Error during logout:', error);
       Alert.alert('Error', 'Failed to logout. Please try again.');
@@ -459,7 +461,51 @@ const AccountScreen = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      {/* Premium Header with Gradient - Full Screen */}
+      <Animated.View
+        style={[
+          styles.headerContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView style={styles.safeAreaHeader}>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>My Account</Text>
+              <Text style={styles.headerSubtitle}>Manage your profile and preferences</Text>
+              
+              {/* Floating decorative elements */}
+              <Animated.View 
+                style={[
+                  styles.floatingDecor,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="shimmer" size={20} color="rgba(255,255,255,0.3)" />
+              </Animated.View>
+              
+              <Animated.View 
+                style={[
+                  styles.floatingDecor2,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
+              </Animated.View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+      </Animated.View>
+
       {/* Floating Particles Background */}
       <View style={styles.particlesContainer}>
         {floatingAnims.map((anim, index) => (
@@ -480,52 +526,11 @@ const AccountScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Premium Header with Gradient */}
-      <Animated.View
-        style={[
-          styles.headerContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={['#FD501E', '#FF6B40', '#FD501E']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>My Account</Text>
-            <Text style={styles.headerSubtitle}>Manage your profile and preferences</Text>
-            
-            {/* Floating decorative elements */}
-            <Animated.View 
-              style={[
-                styles.floatingDecor,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="shimmer" size={20} color="rgba(255,255,255,0.3)" />
-            </Animated.View>
-            
-            <Animated.View 
-              style={[
-                styles.floatingDecor2,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
-            </Animated.View>
-          </View>
-        </LinearGradient>
-      </Animated.View>
-
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}
+        style={styles.scrollView}
       >
 
         {/* Premium Profile Card */}
@@ -777,7 +782,7 @@ const AccountScreen = ({ navigation }) => {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -808,10 +813,14 @@ const styles = StyleSheet.create({
 
   // Premium Header
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 2,
   },
   headerGradient: {
-    paddingTop: 50,
+    paddingTop: 0,
     paddingBottom: 40,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 35,
@@ -823,6 +832,9 @@ const styles = StyleSheet.create({
     elevation: 15,
     position: 'relative',
     overflow: 'hidden',
+  },
+  safeAreaHeader: {
+    paddingTop: 0,
   },
   headerContent: {
     alignItems: 'center',
@@ -859,6 +871,9 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   
+  scrollView: {
+    marginTop: 160, // เพิ่ม margin top เพื่อไม่ให้ทับกับ header
+  },
   scrollContent: {
     paddingBottom: 140,
     zIndex: 1,

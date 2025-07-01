@@ -661,28 +661,40 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Premium Gradient Background */}
       <LinearGradient
-        colors={["#fff", "#fff"]} // Changed to white to orange for more contrast with the logo
-        style={[
-          headStyles.headerBg,
-          {
-            width: '100%',
-            marginLeft: '0%',
-            marginTop: -20,
-            borderBottomLeftRadius: 50,
-            borderBottomRightRadius: 50,
-            paddingBottom: 0,
-            shadowColor: '#FD501E',
-            shadowOpacity: 0.18,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 6 },
-            elevation: 6,
-            padding: 10,
-            minHeight: hp('0%'), // Adjusted to ensure enough space for the header
-          },
-        ]}
+        colors={['#001233', '#002A5C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.2 }}
+        style={{ flex: 1 }}
       >
+        {/* Enhanced Premium Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              paddingBottom: 8,
+              shadowColor: '#001233',
+              shadowOpacity: 0.15,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 18,
+              padding: 10,
+              minHeight: hp('12%'),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
+              // Ultra premium glass morphism
+              backdropFilter: 'blur(30px)',
+            },
+          ]}
+        >
         <View
           style={[
             headStyles.headerRow,
@@ -703,13 +715,20 @@ const SearchFerry = ({ navigation, route }) => {
             style={{
               position: 'absolute',
               left: 16,
-              backgroundColor: '#FFF3ED',
-              borderRadius: 20,
-              padding: 6,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: 25,
+              padding: 8,
               zIndex: 2,
+              shadowColor: '#FD501E',
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(253, 80, 30, 0.1)',
             }}
           >
-            <AntDesign name="arrowleft" size={26} color="#FD501E" />
+            <AntDesign name="arrowleft" size={24} color="#FD501E" />
           </TouchableOpacity>
 
           {/* Logo - Center */}
@@ -723,16 +742,24 @@ const SearchFerry = ({ navigation, route }) => {
             style={{
               position: 'absolute',
               right: 16,
-              backgroundColor: '#FFF3ED',
-              padding: 8,
-              borderRadius: 12,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              padding: 10,
+              borderRadius: 18,
               flexDirection: 'row',
               alignItems: 'center',
               zIndex: 2,
+              shadowColor: '#FD501E',
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(253, 80, 30, 0.1)',
+              minWidth: 70,
             }}
           >
-            <Icon name="cash-outline" size={20} color="#FD501E" style={{ marginRight: 6 }} />
-            <Text style={{ fontWeight: 'bold', color: '#FD501E' }}>{selectedCurrency}</Text>
+            <Icon name="cash-outline" size={18} color="#FD501E" style={{ marginRight: 8 }} />
+            <Text style={{ fontWeight: 'bold', color: '#FD501E', fontSize: 14, letterSpacing: 0.5 }}>{selectedCurrency}</Text>
           </TouchableOpacity>
 
           {/* Currency Modal */}
@@ -832,95 +859,288 @@ const SearchFerry = ({ navigation, route }) => {
         </View>
 
       </LinearGradient>
-      {/* Title and Show Filters in one row */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginHorizontal: 20, marginBottom: 20 }}>
-        <Text style={[headStyles.headerTitle, { color: '#FD501E', fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5, textAlign: 'left', marginLeft: 0 }]}>Search Ferry</Text>
+      {/* Enhanced Ultra Premium Title and Filters Section */}
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        marginTop: hp('2%'), 
+        marginHorizontal: wp('6%'), 
+        marginBottom: hp('2%'),
+        paddingHorizontal: wp('2%'),
+        paddingVertical: hp('1.5%'),
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: wp('4%'),
+        backdropFilter: 'blur(10px)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+      }}>
+        <View style={{ flex: 1 }}>
+          <Text style={[
+            headStyles.headerTitle, 
+            { 
+              color: '#FFFFFF', 
+              fontSize: wp('7%'), 
+              fontWeight: '800', 
+              letterSpacing: -0.5, 
+              textAlign: 'left', 
+              marginLeft: 0,
+              lineHeight: wp('8%'),
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowRadius: 4,
+              textShadowOffset: { width: 1, height: 1 },
+            }
+          ]}>
+            Search Ferry
+          </Text>
+          <Text style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: wp('3.5%'),
+            fontWeight: '500',
+            marginTop: hp('0.5%'),
+            letterSpacing: 0.3,
+            textShadowColor: 'rgba(0,0,0,0.2)',
+            textShadowRadius: 2,
+          }}>
+            Find your perfect journey
+          </Text>
+        </View>
         <TouchableOpacity
           style={{
-            backgroundColor: '#FD501E',
-            paddingVertical: 10,
-            paddingHorizontal: 20,
-            borderRadius: 10,
-            alignSelf: 'auto',
-            marginVertical: 0,
-            marginRight: 0,
+            backgroundColor: 'rgba(255,255,255,0.25)',
+            paddingVertical: hp('1.5%'),
+            paddingHorizontal: wp('5%'),
+            borderRadius: wp('4%'),
+            shadowColor: '#FFFFFF',
+            shadowOpacity: 0.2,
+            shadowRadius: wp('3%'),
+            shadowOffset: { width: 0, height: hp('0.5%') },
+            elevation: 8,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(15px)',
           }}
           onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+          activeOpacity={0.8}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Show filters</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Icon name="options-outline" size={wp('4.5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+            <Text style={{ 
+              color: '#FFFFFF', 
+              fontWeight: '700', 
+              fontSize: wp('3.8%'), 
+              letterSpacing: 0.5,
+              textShadowColor: 'rgba(0,0,0,0.2)',
+              textShadowRadius: 2,
+            }}>Filters</Text>
+          </View>
         </TouchableOpacity>
       </View>
-      {/* End row */}
 
       <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'white', width: '90%', borderRadius: 15, padding: 20 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Ferry Operator</Text>
+        <View style={{ 
+          flex: 1, 
+          backgroundColor: 'rgba(0,18,51,0.7)', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          paddingHorizontal: wp('5%') 
+        }}>
+          <View style={{ 
+            backgroundColor: 'rgba(255,255,255,0.98)', 
+            width: '100%', 
+            maxWidth: wp('92%'),
+            borderRadius: wp('6%'), 
+            padding: wp('6%'),
+            shadowColor: '#001233',
+            shadowOpacity: 0.15,
+            shadowRadius: wp('6%'),
+            shadowOffset: { width: 0, height: hp('1%') },
+            elevation: 20,
+            borderWidth: 1,
+            borderColor: 'rgba(0, 18, 51, 0.08)',
+            backdropFilter: 'blur(25px)',
+          }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              marginBottom: hp('3%')
+            }}>
+              <Text style={{ 
+                fontWeight: '800', 
+                fontSize: wp('5.5%'), 
+                color: '#1E293B',
+                letterSpacing: -0.3
+              }}>
+                Ferry Operators
+              </Text>
+              <TouchableOpacity
+                onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+                style={{
+                  backgroundColor: 'rgba(248,250,252,0.8)',
+                  padding: wp('2.5%'),
+                  borderRadius: wp('4%'),
+                  shadowColor: '#64748B',
+                  shadowOpacity: 0.1,
+                  shadowRadius: wp('2%'),
+                  elevation: 4,
+                }}
+                activeOpacity={0.7}
+              >
+                <AntDesign name="close" size={wp('5%')} color="#64748B" />
+              </TouchableOpacity>
+            </View>
 
-            {/* ✅ ปุ่ม Select All / Clear All */}
-
+            {/* Enhanced Select All / Clear All Button */}
             <TouchableOpacity
               onPress={tripTypeSearchResult === 'Depart Trip' ? toggleSelectAllDepart : toggleSelectAllReturn}
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
+              style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                marginBottom: hp('2%'),
+                padding: wp('4%'),
+                backgroundColor: 'rgba(248,250,252,0.6)',
+                borderRadius: wp('4%'),
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.08)',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.05,
+                shadowRadius: wp('2%'),
+                elevation: 2,
+              }}
+              activeOpacity={0.8}
             >
-
               <Icon
                 name={tripTypeSearchResult === 'Depart Trip' ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
-                size={20}
+                size={wp('6%')}
                 color="#FD501E"
-                style={{ marginRight: 8 }}
+                style={{ marginRight: wp('3%') }}
               />
-              <Text>Select all</Text>
+              <Text style={{ 
+                fontSize: wp('4%'), 
+                fontWeight: '600', 
+                color: '#1E293B',
+                letterSpacing: 0.2
+              }}>
+                Select all operators
+              </Text>
             </TouchableOpacity>
 
-            {/* ✅ List บริษัท */}
-            {tripTypeSearchResult === 'Depart Trip'
-              ? availableCompaniesDepart.map((company) => (
-                <TouchableOpacity
-                  key={company}
-                  onPress={() => toggleCompanyDepart(company)}
-                  style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
-                >
-                  <Icon
-                    name={selectedCompaniesDepart.includes(company) ? 'checkbox' : 'square-outline'}
-                    size={20}
-                    color="#FD501E"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text>{company}</Text>
-                </TouchableOpacity>
-              ))
-              : availableCompaniesReturn.map((company) => (
-                <TouchableOpacity
-                  key={company}
-                  onPress={() => toggleCompanyReturn(company)}
-                  style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}
-                >
-                  <Icon
-                    name={selectedCompaniesReturn.includes(company) ? 'checkbox' : 'square-outline'}
-                    size={20}
-                    color="#FD501E"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text>{company}</Text>
-                </TouchableOpacity>
-              ))
-            }
+            {/* Enhanced Ultra Premium Company List */}
+            <View style={{ maxHeight: hp('40%'), marginBottom: hp('2.5%') }}>
+              {tripTypeSearchResult === 'Depart Trip'
+                ? availableCompaniesDepart.map((company, index) => (
+                  <TouchableOpacity
+                    key={company}
+                    onPress={() => toggleCompanyDepart(company)}
+                    style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'center', 
+                      marginBottom: hp('1.5%'),
+                      padding: wp('4%'),
+                      backgroundColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
+                      borderRadius: wp('4%'),
+                      borderWidth: 1,
+                      borderColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
+                      shadowColor: selectedCompaniesDepart.includes(company) ? '#FD501E' : '#64748B',
+                      shadowOpacity: selectedCompaniesDepart.includes(company) ? 0.1 : 0.05,
+                      shadowRadius: wp('2%'),
+                      shadowOffset: { width: 0, height: hp('0.2%') },
+                      elevation: selectedCompaniesDepart.includes(company) ? 4 : 2,
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon
+                      name={selectedCompaniesDepart.includes(company) ? 'checkbox' : 'square-outline'}
+                      size={wp('5.5%')}
+                      color="#FD501E"
+                      style={{ marginRight: wp('3.5%') }}
+                    />
+                    <Text style={{
+                      fontSize: wp('3.8%'),
+                      fontWeight: selectedCompaniesDepart.includes(company) ? '600' : '500',
+                      color: selectedCompaniesDepart.includes(company) ? '#FD501E' : '#1E293B',
+                      letterSpacing: 0.2,
+                      flex: 1
+                    }}>
+                      {company}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+                : availableCompaniesReturn.map((company, index) => (
+                  <TouchableOpacity
+                    key={company}
+                    onPress={() => toggleCompanyReturn(company)}
+                    style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'center', 
+                      marginBottom: hp('1.5%'),
+                      padding: wp('4%'),
+                      backgroundColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
+                      borderRadius: wp('4%'),
+                      borderWidth: 1,
+                      borderColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
+                      shadowColor: selectedCompaniesReturn.includes(company) ? '#FD501E' : '#64748B',
+                      shadowOpacity: selectedCompaniesReturn.includes(company) ? 0.1 : 0.05,
+                      shadowRadius: wp('2%'),
+                      shadowOffset: { width: 0, height: hp('0.2%') },
+                      elevation: selectedCompaniesReturn.includes(company) ? 4 : 2,
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Icon
+                      name={selectedCompaniesReturn.includes(company) ? 'checkbox' : 'square-outline'}
+                      size={wp('5.5%')}
+                      color="#FD501E"
+                      style={{ marginRight: wp('3.5%') }}
+                    />
+                    <Text style={{
+                      fontSize: wp('3.8%'),
+                      fontWeight: selectedCompaniesReturn.includes(company) ? '600' : '500',
+                      color: selectedCompaniesReturn.includes(company) ? '#FD501E' : '#1E293B',
+                      letterSpacing: 0.2,
+                      flex: 1
+                    }}>
+                      {company}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              }
+            </View>
 
-
-
-            {/* ✅ ปุ่มปิด */}
+            {/* Enhanced Ultra Premium Apply Button */}
             <TouchableOpacity
               onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
               style={{
-                marginTop: 20,
                 backgroundColor: '#FD501E',
-                padding: 12,
-                borderRadius: 8,
-                alignItems: 'center'
+                padding: hp('2.2%'),
+                borderRadius: wp('5%'),
+                alignItems: 'center',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.3,
+                shadowRadius: wp('4%'),
+                shadowOffset: { width: 0, height: hp('0.8%') },
+                elevation: 15,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+                // Premium gradient effect
+                background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
               }}
+              activeOpacity={0.85}
             >
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>Apply Filters</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialIcons name="check" size={wp('5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+                <Text style={{ 
+                  color: '#FFFFFF', 
+                  fontWeight: '800', 
+                  fontSize: wp('4.2%'),
+                  letterSpacing: 0.5,
+                  textShadowColor: 'rgba(0,0,0,0.2)',
+                  textShadowRadius: 2,
+                }}>
+                  Apply Filters
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -940,28 +1160,85 @@ const SearchFerry = ({ navigation, route }) => {
           />
           <Image source={require('./assets/BTN1.png')} />
         </View> */}
-      <ScrollView contentContainerStyle={styles.containerSearch}>
-        <View style={styles.bookingSection}>
-          <View style={styles.tripTypeContainer}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.containerSearch,
+          {
+            backgroundColor: 'transparent',
+            paddingHorizontal: 24,
+            paddingTop: 8,
+            flexGrow: 1,
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+      >
+        {/* Enhanced Premium Booking Section - Optimized Size */}
+        <View style={[styles.bookingSection, {
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          borderRadius: wp('4%'),
+          padding: wp('4%'),
+          marginBottom: hp('2%'),
+          // Reduced shadows for smaller appearance
+          shadowColor: '#001233',
+          shadowOffset: { width: 0, height: hp('0.6%') },
+          shadowOpacity: 0.08,
+          shadowRadius: wp('3%'),
+          elevation: 8,
+          borderWidth: wp('0.2%'),
+          borderColor: 'rgba(0, 18, 51, 0.06)',
+          backdropFilter: 'blur(20px)',
+          // Reduced margins for compact design
+          marginHorizontal: wp('1%'),
+        }]}>
+          {/* Enhanced Premium Trip Type Selection - Compact */}
+          <View style={[styles.tripTypeContainer, {
+            backgroundColor: 'rgba(248,250,252,0.8)',
+            borderRadius: wp('3%'),
+            padding: wp('0.8%'),
+            marginBottom: hp('2%'),
+            shadowColor: '#001233',
+            shadowOpacity: 0.06,
+            shadowRadius: wp('2%'),
+            elevation: 4,
+            borderWidth: 0.5,
+            borderColor: 'rgba(0, 18, 51, 0.04)',
+          }]}>
             <TouchableOpacity
               style={[
                 styles.tripTypeOneWayButton,
-                tripType === "One Way Trip" && styles.activeButton,
+                {
+                  backgroundColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
+                  borderRadius: wp('2.5%'),
+                  paddingVertical: hp('1.2%'),
+                  paddingHorizontal: wp('4%'),
+                  shadowColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
+                  shadowOpacity: tripType === "One Way Trip" ? 0.2 : 0,
+                  shadowRadius: wp('2%'),
+                  shadowOffset: { width: 0, height: hp('0.3%') },
+                  elevation: tripType === "One Way Trip" ? 6 : 0,
+                  borderWidth: 0.5,
+                  borderColor: tripType === "One Way Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                }
               ]}
               onPress={() => {
                 setTripType("One Way Trip");
                 updateCustomerData({
                   roud: 1
                 })
-
-
               }}
             >
               <Text
                 style={[
                   styles.tripTypeText,
-                  tripType === "One Way Trip" && styles.activeText,
-
+                  {
+                    color: tripType === "One Way Trip" ? '#FFFFFF' : '#64748B',
+                    fontWeight: tripType === "One Way Trip" ? '700' : '600',
+                    fontSize: wp('3.5%'),
+                    letterSpacing: 0.2,
+                    textShadowColor: tripType === "One Way Trip" ? 'rgba(0,0,0,0.1)' : 'transparent',
+                    textShadowRadius: 1,
+                  }
                 ]}
               >
                 One Way Trip
@@ -970,7 +1247,19 @@ const SearchFerry = ({ navigation, route }) => {
             <TouchableOpacity
               style={[
                 styles.tripTypeRoundButton,
-                tripType === "Return Trip" && styles.activeButton,
+                {
+                  backgroundColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
+                  borderRadius: wp('2.5%'),
+                  paddingVertical: hp('1.2%'),
+                  paddingHorizontal: wp('4%'),
+                  shadowColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
+                  shadowOpacity: tripType === "Return Trip" ? 0.2 : 0,
+                  shadowRadius: wp('2%'),
+                  shadowOffset: { width: 0, height: hp('0.3%') },
+                  elevation: tripType === "Return Trip" ? 6 : 0,
+                  borderWidth: 0.5,
+                  borderColor: tripType === "Return Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                }
               ]}
               onPress={() => {
                 setTripType("Return Trip");
@@ -982,8 +1271,14 @@ const SearchFerry = ({ navigation, route }) => {
               <Text
                 style={[
                   styles.tripTypeText,
-                  tripType === "Return Trip" && styles.activeText,
-
+                  {
+                    color: tripType === "Return Trip" ? '#FFFFFF' : '#64748B',
+                    fontWeight: tripType === "Return Trip" ? '700' : '600',
+                    fontSize: wp('3.5%'),
+                    letterSpacing: 0.2,
+                    textShadowColor: tripType === "Return Trip" ? 'rgba(0,0,0,0.1)' : 'transparent',
+                    textShadowRadius: 1,
+                  }
                 ]}
               >
                 Round Trip
@@ -991,18 +1286,59 @@ const SearchFerry = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
 
-          {/* --- Premium passenger selection row and modal from SearchFerryDemo --- */}
-          <View style={styles.inputRow}>
+          {/* --- Enhanced Premium passenger selection row - Compact --- */}
+          <View style={[styles.inputRow, { marginBottom: hp('1.5%') }]}>
             <TouchableOpacity
-              style={[styles.inputBoxSearch]}
+              style={[styles.inputBoxSearch, { 
+                maxWidth: '100%', 
+                flex: 1,
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                borderRadius: wp('3%'),
+                padding: wp('3%'),
+                shadowColor: '#001233',
+                shadowOpacity: 0.06,
+                shadowRadius: wp('2%'),
+                elevation: 4,
+                borderWidth: 0.5,
+                borderColor: 'rgba(0, 18, 51, 0.05)',
+                backdropFilter: 'blur(10px)',
+              }]}
               onPress={() => setPassengerModalVisible(true)}
             >
-              <View style={[headStyles.suggestionIconBox, { alignSelf: 'center', width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
-                <MaterialIcons name="groups" size={wp('6%')} color="#FD501E" />
+              <View style={[headStyles.suggestionIconBox, { 
+                alignSelf: 'center', 
+                width: wp('8%'), 
+                height: wp('8%'), 
+                borderRadius: wp('8%') / 2, 
+                minWidth: 28, 
+                minHeight: 28,
+                backgroundColor: 'rgba(253, 80, 30, 0.1)',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.1,
+                shadowRadius: wp('1%'),
+                elevation: 2,
+              }]}>
+                <MaterialIcons name="groups" size={wp('5%')} color="#FD501E" />
               </View>
-              <View style={styles.inputBoxCol}>
-                <Text style={styles.inputLabel}>Passengers</Text>
-                <Text style={[styles.inputText, { color: '#333', fontSize: 15 }]}>{adults} Adult, {children} Child, {infant} Infant</Text>
+              <View style={[styles.inputBoxCol, { flex: 1, marginLeft: wp('2%') }]}>
+                <Text style={[styles.inputLabel, {
+                  color: '#64748B',
+                  fontSize: wp('3%'),
+                  fontWeight: '600',
+                  letterSpacing: 0.2,
+                  marginBottom: 2,
+                }]}>Passengers</Text>
+                <Text 
+                  style={[styles.inputText, { 
+                    color: '#1E293B', 
+                    fontSize: wp('3.5%'),
+                    fontWeight: '700',
+                    letterSpacing: -0.1,
+                    flexShrink: 1,
+                  }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >{adults} Adult, {children} Child, {infant} Infant</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -1012,191 +1348,730 @@ const SearchFerry = ({ navigation, route }) => {
             animationType="slide"
             onRequestClose={() => setPassengerModalVisible(false)}
           >
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-              <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 28, width: '88%', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 22, color: '#FD501E', textAlign: 'center', letterSpacing: 0.5 }}>Select Passengers</Text>
-                <View style={{ marginBottom: 18, gap: 18 }}>
-                  {/* Adults Row */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginBottom: 8, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Adults</Text>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
+              <View style={{ 
+                backgroundColor: '#fff', 
+                borderRadius: 32, 
+                padding: 32, 
+                width: '100%', 
+                maxWidth: 420,
+                shadowColor: '#000', 
+                shadowOpacity: 0.25, 
+                shadowRadius: 20, 
+                shadowOffset: { width: 0, height: 10 }, 
+                elevation: 15,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)'
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 28
+                }}>
+                  <Text style={{ 
+                    fontWeight: '800', 
+                    fontSize: 24, 
+                    color: '#1E293B', 
+                    letterSpacing: -0.5 
+                  }}>
+                    Select Passengers
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setPassengerModalVisible(false)}
+                    style={{
+                      backgroundColor: '#F1F5F9',
+                      padding: 8,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <AntDesign name="close" size={20} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ marginBottom: 24, gap: 20 }}>
+                  {/* Ultra Premium Adults Row */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    backgroundColor: 'rgba(253, 80, 30, 0.05)', 
+                    borderRadius: 20, 
+                    paddingVertical: 16, 
+                    paddingHorizontal: 20, 
+                    marginBottom: 12, 
+                    shadowColor: '#FD501E', 
+                    shadowOpacity: 0.08, 
+                    shadowRadius: 8, 
+                    elevation: 3,
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.1)'
+                  }}>
+                    <Text style={{ 
+                      color: '#FD501E', 
+                      fontWeight: '800', 
+                      fontSize: 18, 
+                      minWidth: 90,
+                      letterSpacing: -0.3
+                    }}>
+                      Adults
+                    </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <TouchableOpacity onPress={() => setAdults(Math.max(1, adults - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: adults > 1 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="remove-circle" size={28} color={adults > 1 ? '#FD501E' : '#BDBDBD'} />
+                      <TouchableOpacity 
+                        onPress={() => setAdults(Math.max(1, adults - 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: adults > 1 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: adults > 1 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: adults > 1 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="remove-circle" size={32} color={adults > 1 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
-                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{adults}</Text>
-                      <TouchableOpacity onPress={() => setAdults(Math.min(10, adults + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: adults < 10 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="add-circle" size={28} color={adults < 10 ? '#FD501E' : '#BDBDBD'} />
+                      <Text style={{ 
+                        fontSize: 24, 
+                        fontWeight: '800', 
+                        marginHorizontal: 24, 
+                        minWidth: 36, 
+                        textAlign: 'center', 
+                        color: '#1E293B',
+                        letterSpacing: -0.5
+                      }}>
+                        {adults}
+                      </Text>
+                      <TouchableOpacity 
+                        onPress={() => setAdults(Math.min(10, adults + 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: adults < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: adults < 10 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: adults < 10 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="add-circle" size={32} color={adults < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {/* Children Row */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginBottom: 8, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Children</Text>
+                  {/* Ultra Premium Children Row */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    backgroundColor: 'rgba(253, 80, 30, 0.05)', 
+                    borderRadius: 20, 
+                    paddingVertical: 16, 
+                    paddingHorizontal: 20, 
+                    marginBottom: 12, 
+                    shadowColor: '#FD501E', 
+                    shadowOpacity: 0.08, 
+                    shadowRadius: 8, 
+                    elevation: 3,
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.1)'
+                  }}>
+                    <Text style={{ 
+                      color: '#FD501E', 
+                      fontWeight: '800', 
+                      fontSize: 18, 
+                      minWidth: 90,
+                      letterSpacing: -0.3
+                    }}>
+                      Children
+                    </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <TouchableOpacity onPress={() => setChildren(Math.max(0, children - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: children > 0 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="remove-circle" size={28} color={children > 0 ? '#FD501E' : '#BDBDBD'} />
+                      <TouchableOpacity 
+                        onPress={() => setChildren(Math.max(0, children - 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: children > 0 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: children > 0 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: children > 0 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="remove-circle" size={32} color={children > 0 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
-                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{children}</Text>
-                      <TouchableOpacity onPress={() => setChildren(Math.min(10, children + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: children < 10 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="add-circle" size={28} color={children < 10 ? '#FD501E' : '#BDBDBD'} />
+                      <Text style={{ 
+                        fontSize: 24, 
+                        fontWeight: '800', 
+                        marginHorizontal: 24, 
+                        minWidth: 36, 
+                        textAlign: 'center', 
+                        color: '#1E293B',
+                        letterSpacing: -0.5
+                      }}>
+                        {children}
+                      </Text>
+                      <TouchableOpacity 
+                        onPress={() => setChildren(Math.min(10, children + 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: children < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: children < 10 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: children < 10 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="add-circle" size={32} color={children < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {/* Infants Row */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, shadowColor: '#FD501E', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold', fontSize: 16, minWidth: 80 }}>Infants</Text>
+                  {/* Ultra Premium Infants Row */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    backgroundColor: 'rgba(253, 80, 30, 0.05)', 
+                    borderRadius: 20, 
+                    paddingVertical: 16, 
+                    paddingHorizontal: 20, 
+                    shadowColor: '#FD501E', 
+                    shadowOpacity: 0.08, 
+                    shadowRadius: 8, 
+                    elevation: 3,
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.1)'
+                  }}>
+                    <Text style={{ 
+                      color: '#FD501E', 
+                      fontWeight: '800', 
+                      fontSize: 18, 
+                      minWidth: 90,
+                      letterSpacing: -0.3
+                    }}>
+                      Infants
+                    </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <TouchableOpacity onPress={() => setInfant(Math.max(0, infant - 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: infant > 0 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="remove-circle" size={28} color={infant > 0 ? '#FD501E' : '#BDBDBD'} />
+                      <TouchableOpacity 
+                        onPress={() => setInfant(Math.max(0, infant - 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: infant > 0 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: infant > 0 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: infant > 0 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="remove-circle" size={32} color={infant > 0 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
-                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginHorizontal: 18, minWidth: 28, textAlign: 'center', color: '#333' }}>{infant}</Text>
-                      <TouchableOpacity onPress={() => setInfant(Math.min(10, infant + 1))} style={{ padding: 6, borderRadius: 20, backgroundColor: infant < 10 ? '#FFE1D3' : '#FFF3ED' }}>
-                        <Icon name="add-circle" size={28} color={infant < 10 ? '#FD501E' : '#BDBDBD'} />
+                      <Text style={{ 
+                        fontSize: 24, 
+                        fontWeight: '800', 
+                        marginHorizontal: 24, 
+                        minWidth: 36, 
+                        textAlign: 'center', 
+                        color: '#1E293B',
+                        letterSpacing: -0.5
+                      }}>
+                        {infant}
+                      </Text>
+                      <TouchableOpacity 
+                        onPress={() => setInfant(Math.min(10, infant + 1))} 
+                        style={{ 
+                          padding: 8, 
+                          borderRadius: 24, 
+                          backgroundColor: infant < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
+                          shadowColor: infant < 10 ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: infant < 10 ? 2 : 0
+                        }}
+                      >
+                        <Icon name="add-circle" size={32} color={infant < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => setPassengerModalVisible(false)} style={{ backgroundColor: '#FD501E', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8, shadowColor: '#FD501E', shadowOpacity: 0.12, shadowRadius: 6, elevation: 2 }}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16, letterSpacing: 0.5 }}>Confirm</Text>
+                <TouchableOpacity 
+                  onPress={() => setPassengerModalVisible(false)} 
+                  style={{ 
+                    backgroundColor: '#FD501E', 
+                    borderRadius: 20, 
+                    padding: 18, 
+                    alignItems: 'center', 
+                    marginTop: 16, 
+                    shadowColor: '#FD501E', 
+                    shadowOpacity: 0.3, 
+                    shadowRadius: 16, 
+                    shadowOffset: { width: 0, height: 6 },
+                    elevation: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.2)'
+                  }}
+                >
+                  <Text style={{ 
+                    color: '#fff', 
+                    fontWeight: 'bold', 
+                    fontSize: 18, 
+                    letterSpacing: 0.5 
+                  }}>
+                    Confirm Selection
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Modal>
 
-          <View style={styles.inputRow}>
+          {/* Enhanced Premium From/To Selection Row - Compact */}
+          <View style={[styles.inputRow, { marginBottom: hp('1.5%') }]}>
             <TouchableOpacity
               onPress={() => navigation.navigate('StartingPointScreen', { setStartingPoint })}
-              style={styles.inputBoxSearch}
+              style={[styles.inputBoxSearch, {
+                width: '42%',
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                borderRadius: wp('3%'),
+                padding: wp('2.5%'),
+                shadowColor: '#001233',
+                shadowOpacity: 0.06,
+                shadowRadius: wp('2%'),
+                elevation: 4,
+                borderWidth: 0.5,
+                borderColor: 'rgba(0, 18, 51, 0.05)',
+                backdropFilter: 'blur(10px)',
+              }]}
             >
-              <View style={[headStyles.suggestionIconBox, { alignSelf: 'center', width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
-                <MaterialIcons name="directions-boat" size={wp('6%')} color="#FD501E" />
+              <View style={[headStyles.suggestionIconBox, { 
+                alignSelf: 'center', 
+                width: wp('7%'), 
+                height: wp('7%'), 
+                borderRadius: wp('7%') / 2, 
+                minWidth: 24, 
+                minHeight: 24,
+                backgroundColor: 'rgba(253, 80, 30, 0.1)',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.1,
+                shadowRadius: wp('1%'),
+                elevation: 2,
+              }]}>
+                <MaterialIcons name="directions-boat" size={wp('4.5%')} color="#FD501E" />
               </View>
-              <View>
+              <View style={{ flex: 1, marginLeft: wp('1.5%') }}>
                 <View style={styles.inputBoxCol}>
-                  <Text style={styles.inputLabel}>From</Text>
-                  <Text style={styles.inputText}> {truncateText(startingPoint.name)}</Text>
+                  <Text style={[styles.inputLabel, {
+                    color: '#64748B',
+                    fontSize: wp('3%'),
+                    fontWeight: '600',
+                    letterSpacing: 0.2,
+                    marginBottom: 2,
+                  }]}>From</Text>
+                  <Text 
+                    style={[styles.inputText, {
+                      color: '#1E293B',
+                      fontSize: wp('3.2%'),
+                      fontWeight: '700',
+                      letterSpacing: -0.1,
+                    }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  > {truncateText(startingPoint.name, 12)}</Text>
                 </View>
               </View>
             </TouchableOpacity>
 
-            {/* Swap icon */}
+            {/* Enhanced Premium Swap icon - Compact */}
             <TouchableOpacity onPress={swapPoints}>
               <View style={{
-                backgroundColor: '#FFF',
-                borderRadius: wp('8%'),
-                marginHorizontal: wp('3%'),
-                marginLeft: wp('1.5%'),
-                marginRight: 0,
+                backgroundColor: '#FD501E',
+                borderRadius: wp('4%'),
+                marginHorizontal: wp('2%'),
+                marginLeft: wp('1%'),
+                marginRight: wp('1%'),
                 width: wp('8%'),
                 height: wp('8%'),
                 alignItems: 'center',
                 justifyContent: 'center',
                 minWidth: 28,
-                minHeight: 28
+                minHeight: 28,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.25,
+                shadowRadius: wp('2%'),
+                shadowOffset: { width: 0, height: hp('0.3%') },
+                elevation: 6,
+                borderWidth: 0.5,
+                borderColor: 'rgba(255, 255, 255, 0.2)',
               }}>
-                <MaterialIcons name="swap-horiz" size={wp('6%')} color="#FD501E" />
+                <MaterialIcons name="swap-horiz" size={wp('5%')} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => navigation.navigate('EndPointScreen', { setEndPoint, startingPointId: startingPoint.id, })}
-              style={styles.inputBoxSearch}
+              style={[styles.inputBoxSearch, {
+                width: '42%',
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                borderRadius: wp('3%'),
+                padding: wp('2.5%'),
+                shadowColor: '#001233',
+                shadowOpacity: 0.06,
+                shadowRadius: wp('2%'),
+                elevation: 4,
+                borderWidth: 0.5,
+                borderColor: 'rgba(0, 18, 51, 0.05)',
+                backdropFilter: 'blur(10px)',
+              }]}
             >
-              <View style={[headStyles.suggestionIconBox, { width: wp('8%'), height: wp('8%'), borderRadius: wp('8%') / 2, minWidth: 28, minHeight: 28 }]}>
-                <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
+              <View style={[headStyles.suggestionIconBox, { 
+                width: wp('7%'), 
+                height: wp('7%'), 
+                borderRadius: wp('7%') / 2, 
+                minWidth: 24, 
+                minHeight: 24,
+                backgroundColor: 'rgba(253, 80, 30, 0.1)',
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.1,
+                shadowRadius: wp('1%'),
+                elevation: 2,
+              }]}>
+                <MaterialIcons name="location-on" size={wp('4.5%')} color="#FD501E" />
               </View>
-              <View style={styles.inputBoxCol}>
-                <Text style={styles.inputLabel}>To</Text>
-                <Text style={styles.inputText} numberOfLines={1} ellipsizeMode="tail"> {truncateText(endPoint.name)}</Text>
+              <View style={[styles.inputBoxCol, { flex: 1, marginLeft: wp('1.5%') }]}>
+                <Text style={[styles.inputLabel, {
+                  color: '#64748B',
+                  fontSize: wp('3%'),
+                  fontWeight: '600',
+                  letterSpacing: 0.2,
+                  marginBottom: 2,
+                }]}>To</Text>
+                <Text 
+                  style={[styles.inputText, {
+                    color: '#1E293B',
+                    fontSize: wp('3.2%'),
+                    fontWeight: '700',
+                    letterSpacing: -0.1,
+                  }]} 
+                  numberOfLines={1} 
+                  ellipsizeMode="tail"
+                > {truncateText(endPoint.name, 12)}</Text>
               </View>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputRow}>
-
-            <View style={styles.inputBoxSearch}>
+          {/* Enhanced Premium Date Selection Row - Compact */}
+          <View style={[styles.inputRow, { marginBottom: hp('1.5%') }]}>
+            <View style={[styles.inputBoxSearch, { 
+              maxWidth: '100%', 
+              flex: 1,
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              borderRadius: wp('3%'),
+              padding: wp('3%'),
+              shadowColor: '#001233',
+              shadowOpacity: 0.06,
+              shadowRadius: wp('2%'),
+              elevation: 4,
+              borderWidth: 0.5,
+              borderColor: 'rgba(0, 18, 51, 0.05)',
+              backdropFilter: 'blur(10px)',
+            }]}>
               <TouchableOpacity
                 onPress={() => {
                   setShowModal(true);  // Show the date picker
-
                 }}
                 style={[
                   styles.rowdepart,
-                  { width: tripType === "One Way Trip" ? wp('100%') : 'auto' } // Apply 100% width conditionally
+                  { 
+                    width: tripType === "One Way Trip" ? wp('100%') : 'auto',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: hp('0.5%'),
+                  }
                 ]}
               >
-
-
-                <View style={headStyles.suggestionIconBox}>
-                  <MaterialIcons name="event" size={24} color="#FD501E" />
+                <View style={[headStyles.suggestionIconBox, {
+                  width: wp('8%'),
+                  height: wp('8%'),
+                  borderRadius: wp('8%') / 2,
+                  minWidth: 28,
+                  minHeight: 28,
+                  backgroundColor: 'rgba(253, 80, 30, 0.1)',
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.1,
+                  shadowRadius: wp('1%'),
+                  elevation: 2,
+                  marginRight: wp('2%'),
+                }]}>
+                  <MaterialIcons name="event" size={wp('5%')} color="#FD501E" />
                 </View>
-                <View style={styles.inputBoxCol}>
-                  <Text style={styles.inputLabel}>Departure date</Text>
-                  <Text style={styles.inputText}>{calendarStartDate ? formatDateInput(calendarStartDate.toString()) : "Select Date"}</Text>
+                <View style={[styles.inputBoxCol, { flex: 1 }]}>
+                  <Text style={[styles.inputLabel, {
+                    color: '#64748B',
+                    fontSize: wp('3%'),
+                    fontWeight: '600',
+                    letterSpacing: 0.2,
+                    marginBottom: 2,
+                  }]}>Departure date</Text>
+                  <Text 
+                    style={[styles.inputText, {
+                      color: '#1E293B',
+                      fontSize: wp('3.5%'),
+                      fontWeight: '700',
+                      letterSpacing: -0.1,
+                    }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >{calendarStartDate ? formatDateInput(calendarStartDate.toString()) : "Select Date"}</Text>
                 </View>
               </TouchableOpacity>
 
               {tripType === "Return Trip" && (
                 <>
-                  <Image
-                    source={require('./assets/Line 2.png')}
-                    style={styles.logoLine}
-                    resizeMode="contain"
-                  />
-                  <TouchableOpacity onPress={() => setShowModal(true)} disabled={!departureDate}
-                    style={styles.rowdepart}>
-                    {/* Use a yellow icon with a light yellow background for the return date icon */}
-                    <View style={[headStyles.suggestionIconBox, { backgroundColor: '#FFF9E1' }]}>
-                      <MaterialIcons name="event" size={24} color="#FFD600" />
+                  <View style={{
+                    height: 0.5,
+                    backgroundColor: 'rgba(0, 18, 51, 0.08)',
+                    marginVertical: hp('1%'),
+                    marginHorizontal: wp('1%'),
+                  }} />
+                  <TouchableOpacity 
+                    onPress={() => setShowModal(true)} 
+                    disabled={!departureDate}
+                    style={[styles.rowdepart, {
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: hp('0.5%'),
+                      opacity: !departureDate ? 0.6 : 1,
+                    }]}
+                  >
+                    {/* Enhanced Return Date Icon - Compact */}
+                    <View style={[headStyles.suggestionIconBox, { 
+                      backgroundColor: 'rgba(255, 214, 0, 0.12)',
+                      width: wp('8%'),
+                      height: wp('8%'),
+                      borderRadius: wp('8%') / 2,
+                      minWidth: 28,
+                      minHeight: 28,
+                      shadowColor: '#FFD600',
+                      shadowOpacity: 0.1,
+                      shadowRadius: wp('1%'),
+                      elevation: 2,
+                      marginRight: wp('2%'),
+                    }]}>
+                      <MaterialIcons name="event" size={wp('5%')} color="#FFD600" />
                     </View>
-                    <View style={styles.inputBoxCol}>
-                      <Text style={styles.inputLabel}>Return date</Text>
-                      <Text style={styles.inputText}>{calendarEndDate ? formatDateInput(calendarEndDate.toString()) : "No Date Available"}</Text>
+                    <View style={[styles.inputBoxCol, { flex: 1 }]}>
+                      <Text style={[styles.inputLabel, {
+                        color: '#64748B',
+                        fontSize: wp('3%'),
+                        fontWeight: '600',
+                        letterSpacing: 0.2,
+                        marginBottom: 2,
+                      }]}>Return date</Text>
+                      <Text 
+                        style={[styles.inputText, {
+                          color: '#1E293B',
+                          fontSize: wp('3.5%'),
+                          fontWeight: '700',
+                          letterSpacing: -0.1,
+                        }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >{calendarEndDate ? formatDateInput(calendarEndDate.toString()) : "No Date Available"}</Text>
                     </View>
                   </TouchableOpacity>
                 </>
               )}
             </View>
 
-            {/* Modals for date, passenger */}
+            {/* Enhanced Ultra Premium Calendar Modal */}
             <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-                <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '90%' }}>
-                  <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Select Date</Text>
-                  <Text style={{ color: '#FD501E', marginBottom: 8 }}>Departure Date</Text>
-                  <Calendar
-                    current={calendarStartDate}
-                    minDate={new Date().toISOString().split('T')[0]}
-                    onDayPress={day => {
-                      setCalendarStartDate(day.dateString);
-                      setCalendarEndDate(day.dateString); // Reset return date when departure date changes
-                      if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
+              <View style={{ 
+                flex: 1, 
+                backgroundColor: 'rgba(0,18,51,0.75)', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                paddingHorizontal: wp('5%')
+              }}>
+                <View style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.98)', 
+                  borderRadius: wp('6%'), 
+                  padding: wp('6%'), 
+                  width: '100%',
+                  maxWidth: wp('92%'),
+                  shadowColor: '#001233',
+                  shadowOpacity: 0.25,
+                  shadowRadius: wp('8%'),
+                  shadowOffset: { width: 0, height: hp('1.5%') },
+                  elevation: 25,
+                  borderWidth: 1,
+                  borderColor: 'rgba(253, 80, 30, 0.08)',
+                  backdropFilter: 'blur(30px)',
+                }}>
+                  {/* Enhanced Header */}
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: hp('3%'),
+                  }}>
+                    <Text style={{ 
+                      fontWeight: '800', 
+                      fontSize: wp('5.5%'), 
+                      color: '#1E293B',
+                      letterSpacing: -0.3
+                    }}>Select Travel Dates</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowModal(false)}
+                      style={{
+                        backgroundColor: 'rgba(248,250,252,0.8)',
+                        padding: wp('2.5%'),
+                        borderRadius: wp('4%'),
+                        shadowColor: '#64748B',
+                        shadowOpacity: 0.1,
+                        shadowRadius: wp('2%'),
+                        elevation: 4,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <AntDesign name="close" size={wp('5%')} color="#64748B" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Enhanced Departure Date Section */}
+                  <View style={{
+                    backgroundColor: 'rgba(253, 80, 30, 0.06)',
+                    borderRadius: wp('4%'),
+                    padding: wp('4%'),
+                    marginBottom: hp('2%'),
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.1)',
+                  }}>
+                    <Text style={{ 
+                      color: '#FD501E', 
+                      marginBottom: hp('1%'),
+                      fontSize: wp('4.2%'),
+                      fontWeight: '700',
+                      letterSpacing: 0.2
+                    }}>Departure Date</Text>
+                    <Calendar
+                      current={calendarStartDate}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      onDayPress={day => {
+                        setCalendarStartDate(day.dateString);
                         setCalendarEndDate(day.dateString);
-                      }
-                      // Do NOT close the modal here
-                    }}
-                    markedDates={{
-                      [calendarStartDate]: { selected: true, selectedColor: '#FD501E' }
-                    }}
-                  />
+                        if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
+                          setCalendarEndDate(day.dateString);
+                        }
+                      }}
+                      markedDates={{
+                        [calendarStartDate]: { 
+                          selected: true, 
+                          selectedColor: '#FD501E',
+                          selectedTextColor: '#FFFFFF'
+                        }
+                      }}
+                      theme={{
+                        backgroundColor: 'transparent',
+                        calendarBackground: 'transparent',
+                        textSectionTitleColor: '#1E293B',
+                        selectedDayBackgroundColor: '#FD501E',
+                        selectedDayTextColor: '#FFFFFF',
+                        todayTextColor: '#FD501E',
+                        dayTextColor: '#1E293B',
+                        textDisabledColor: '#94A3B8',
+                        arrowColor: '#FD501E',
+                        monthTextColor: '#1E293B',
+                        textDayFontWeight: '600',
+                        textMonthFontWeight: '700',
+                        textDayHeaderFontWeight: '600',
+                        textDayFontSize: wp('3.8%'),
+                        textMonthFontSize: wp('4.5%'),
+                        textDayHeaderFontSize: wp('3.2%'),
+                      }}
+                    />
+                  </View>
+
                   {tripType === 'Return Trip' && (
-                    <>
-                      <Text style={{ color: '#FD501E', marginVertical: 8 }}>Return Date</Text>
+                    <View style={{
+                      backgroundColor: 'rgba(255, 214, 0, 0.06)',
+                      borderRadius: wp('4%'),
+                      padding: wp('4%'),
+                      marginBottom: hp('2%'),
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 214, 0, 0.15)',
+                    }}>
+                      <Text style={{ 
+                        color: '#B8860B', 
+                        marginBottom: hp('1%'),
+                        fontSize: wp('4.2%'),
+                        fontWeight: '700',
+                        letterSpacing: 0.2
+                      }}>Return Date</Text>
                       <Calendar
                         current={calendarEndDate}
                         minDate={calendarStartDate}
                         onDayPress={day => {
                           setCalendarEndDate(day.dateString);
-                          // Do NOT close the modal here
                         }}
                         markedDates={{
-                          [calendarEndDate]: { selected: true, selectedColor: '#FD501E' }
+                          [calendarEndDate]: { 
+                            selected: true, 
+                            selectedColor: '#FFD600',
+                            selectedTextColor: '#1E293B'
+                          }
+                        }}
+                        theme={{
+                          backgroundColor: 'transparent',
+                          calendarBackground: 'transparent',
+                          textSectionTitleColor: '#1E293B',
+                          selectedDayBackgroundColor: '#FFD600',
+                          selectedDayTextColor: '#1E293B',
+                          todayTextColor: '#B8860B',
+                          dayTextColor: '#1E293B',
+                          textDisabledColor: '#94A3B8',
+                          arrowColor: '#B8860B',
+                          monthTextColor: '#1E293B',
+                          textDayFontWeight: '600',
+                          textMonthFontWeight: '700',
+                          textDayHeaderFontWeight: '600',
+                          textDayFontSize: wp('3.8%'),
+                          textMonthFontSize: wp('4.5%'),
+                          textDayHeaderFontSize: wp('3.2%'),
                         }}
                       />
-                    </>
+                    </View>
                   )}
-                  <TouchableOpacity onPress={() => setShowModal(false)} style={{ backgroundColor: '#FD501E', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 16 }}>
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>OK</Text>
+
+                  {/* Enhanced Confirm Button */}
+                  <TouchableOpacity 
+                    onPress={() => setShowModal(false)} 
+                    style={{ 
+                      backgroundColor: '#FD501E',
+                      borderRadius: wp('5%'),
+                      padding: hp('2.2%'),
+                      alignItems: 'center',
+                      marginTop: hp('1%'),
+                      shadowColor: '#FD501E',
+                      shadowOpacity: 0.3,
+                      shadowRadius: wp('4%'),
+                      shadowOffset: { width: 0, height: hp('0.8%') },
+                      elevation: 15,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.25)',
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <MaterialIcons name="check" size={wp('5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+                      <Text style={{ 
+                        color: '#FFFFFF', 
+                        fontWeight: '800', 
+                        fontSize: wp('4.2%'),
+                        letterSpacing: 0.5,
+                        textShadowColor: 'rgba(0,0,0,0.2)',
+                        textShadowRadius: 2,
+                      }}>
+                        Confirm Dates
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1219,132 +2094,417 @@ const SearchFerry = ({ navigation, route }) => {
           <Text style={styles.searchButtonText}>Search</Text>
         </TouchableOpacity> */}
 
-        {/* แสดงรายการแต่ละหน้า */}
+        {/* Enhanced Ultra Premium Loading Skeleton */}
         {loading && (
-          <>
-            {/* Skeleton shimmer for booking section */}
-            <View style={{ width: '100%', marginTop: 20, marginBottom: 10 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
-                <View style={{ width: '48%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
-                  <Animated.View style={{ width: 120, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
-                    <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+          <View style={{ paddingHorizontal: wp('2%') }}>
+            {/* Enhanced Booking Section Skeleton */}
+            <View style={{ 
+              width: '100%', 
+              marginTop: hp('2%'), 
+              marginBottom: hp('2%'),
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              borderRadius: wp('4%'),
+              padding: wp('4%'),
+              shadowColor: '#001233',
+              shadowOpacity: 0.08,
+              shadowRadius: wp('3%'),
+              elevation: 8,
+              borderWidth: wp('0.2%'),
+              borderColor: 'rgba(0, 18, 51, 0.06)',
+              overflow: 'hidden',
+            }}>
+              {/* Trip Type Buttons Skeleton */}
+              <View style={{ 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                marginBottom: hp('2%'),
+                backgroundColor: 'rgba(248,250,252,0.8)',
+                borderRadius: wp('3%'),
+                padding: wp('0.8%'),
+              }}>
+                <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                  <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                    <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
                   </Animated.View>
                 </View>
-                <View style={{ width: '48%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden' }}>
-                  <Animated.View style={{ width: 120, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
-                    <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                  <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                    <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
                   </Animated.View>
                 </View>
               </View>
-              <View style={{ width: '100%', height: 40, borderRadius: 10, backgroundColor: '#eee', overflow: 'hidden', marginBottom: 10 }}>
-                <Animated.View style={{ width: 200, height: '100%', transform: [{ translateX: shimmerAnim }] }}>
-                  <LinearGradient colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+              
+              {/* Passenger Selection Skeleton */}
+              <View style={{ 
+                width: '100%', 
+                height: hp('7%'), 
+                borderRadius: wp('3%'), 
+                backgroundColor: '#f0f0f0', 
+                overflow: 'hidden', 
+                marginBottom: hp('1.5%'),
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: wp('3%'),
+              }}>
+                <View style={{ 
+                  width: wp('8%'), 
+                  height: wp('8%'), 
+                  borderRadius: wp('4%'), 
+                  backgroundColor: '#e5e5e5', 
+                  marginRight: wp('3%') 
+                }} />
+                <View style={{ flex: 1 }}>
+                  <View style={{ 
+                    width: '40%', 
+                    height: hp('1.5%'), 
+                    backgroundColor: '#e5e5e5', 
+                    borderRadius: hp('0.75%'), 
+                    marginBottom: hp('0.5%') 
+                  }} />
+                  <View style={{ 
+                    width: '60%', 
+                    height: hp('2%'), 
+                    backgroundColor: '#e0e0e0', 
+                    borderRadius: hp('1%') 
+                  }} />
+                </View>
+                <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                  <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                </Animated.View>
+              </View>
+
+              {/* Location Selection Skeleton */}
+              <View style={{ 
+                width: '100%', 
+                height: hp('12%'), 
+                borderRadius: wp('3%'), 
+                backgroundColor: '#f0f0f0', 
+                overflow: 'hidden', 
+                marginBottom: hp('1.5%'),
+                padding: wp('3%'),
+              }}>
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  marginBottom: hp('1%') 
+                }}>
+                  <View style={{ 
+                    width: wp('8%'), 
+                    height: wp('8%'), 
+                    borderRadius: wp('4%'), 
+                    backgroundColor: '#e5e5e5', 
+                    marginRight: wp('3%') 
+                  }} />
+                  <View style={{ flex: 1 }}>
+                    <View style={{ 
+                      width: '30%', 
+                      height: hp('1.5%'), 
+                      backgroundColor: '#e5e5e5', 
+                      borderRadius: hp('0.75%'), 
+                      marginBottom: hp('0.5%') 
+                    }} />
+                    <View style={{ 
+                      width: '50%', 
+                      height: hp('2%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: hp('1%') 
+                    }} />
+                  </View>
+                </View>
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center' 
+                }}>
+                  <View style={{ 
+                    width: wp('8%'), 
+                    height: wp('8%'), 
+                    borderRadius: wp('4%'), 
+                    backgroundColor: '#e5e5e5', 
+                    marginRight: wp('3%') 
+                  }} />
+                  <View style={{ flex: 1 }}>
+                    <View style={{ 
+                      width: '30%', 
+                      height: hp('1.5%'), 
+                      backgroundColor: '#e5e5e5', 
+                      borderRadius: hp('0.75%'), 
+                      marginBottom: hp('0.5%') 
+                    }} />
+                    <View style={{ 
+                      width: '50%', 
+                      height: hp('2%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: hp('1%') 
+                    }} />
+                  </View>
+                </View>
+                <Animated.View style={{ width: wp('50%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                  <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                </Animated.View>
+              </View>
+
+              {/* Date Selection Skeleton */}
+              <View style={{ 
+                width: '100%', 
+                height: hp('7%'), 
+                borderRadius: wp('3%'), 
+                backgroundColor: '#f0f0f0', 
+                overflow: 'hidden',
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: wp('3%'),
+              }}>
+                <View style={{ 
+                  width: wp('8%'), 
+                  height: wp('8%'), 
+                  borderRadius: wp('4%'), 
+                  backgroundColor: '#e5e5e5', 
+                  marginRight: wp('3%') 
+                }} />
+                <View style={{ flex: 1 }}>
+                  <View style={{ 
+                    width: '40%', 
+                    height: hp('1.5%'), 
+                    backgroundColor: '#e5e5e5', 
+                    borderRadius: hp('0.75%'), 
+                    marginBottom: hp('0.5%') 
+                  }} />
+                  <View style={{ 
+                    width: '60%', 
+                    height: hp('2%'), 
+                    backgroundColor: '#e0e0e0', 
+                    borderRadius: hp('1%') 
+                  }} />
+                </View>
+                <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                  <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
                 </Animated.View>
               </View>
             </View>
-            {/* Skeleton shimmer for ferry cards */}
+
+            {/* Enhanced Ferry Cards Skeleton */}
             {Array(3).fill(0).map((_, idx) => (
-              <View key={idx} style={[styles.cardContainer, { marginTop: 20, minHeight: 180, backgroundColor: '#eee', borderRadius: 20, overflow: 'hidden', width: '100%' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                  <View style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 10, backgroundColor: '#e0e0e0', overflow: 'hidden', marginRight: 16 }}>
-                    <Animated.View
-                      style={{
-                        width: 60,
-                        height: '100%',
-                        transform: [{ translateX: shimmerAnim }],
-                      }}
-                    >
-                      <LinearGradient
-                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                        start={[0, 0]}
-                        end={[1, 0]}
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    </Animated.View>
+              <View key={idx} style={{ 
+                marginTop: hp('2%'), 
+                minHeight: hp('20%'), 
+                backgroundColor: 'rgba(255,255,255,0.95)', 
+                borderRadius: wp('4%'), 
+                overflow: 'hidden', 
+                width: '100%',
+                borderWidth: wp('0.2%'),
+                borderColor: 'rgba(0,35,72,0.05)',
+                shadowColor: '#001233',
+                shadowOpacity: 0.08,
+                shadowRadius: wp('3%'),
+                elevation: 6,
+              }}>
+                {/* Card Header Skeleton */}
+                <View style={{
+                  backgroundColor: '#f0f0f0',
+                  paddingVertical: hp('1.8%'),
+                  paddingHorizontal: wp('4.5%'),
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  overflow: 'hidden',
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ 
+                      width: wp('10.6%'), 
+                      height: hp('5%'), 
+                      borderRadius: wp('3%'), 
+                      backgroundColor: '#e5e5e5', 
+                      marginRight: wp('2.5%') 
+                    }} />
+                    <View style={{ 
+                      width: wp('25%'), 
+                      height: hp('2.5%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: hp('1.25%') 
+                    }} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ width: '100%', height: 16, borderRadius: 8, backgroundColor: '#e0e0e0', marginBottom: 8, overflow: 'hidden' }}>
-                      <Animated.View
-                        style={{
-                          width: 80,
-                          height: '100%',
-                          transform: [{ translateX: shimmerAnim }],
-                        }}
-                      >
-                        <LinearGradient
-                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                          start={[0, 0]}
-                          end={[1, 0]}
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      </Animated.View>
-                    </View>
-                    <View style={{ width: '70%', height: 12, borderRadius: 6, backgroundColor: '#e0e0e0', marginBottom: 4, overflow: 'hidden' }}>
-                      <Animated.View
-                        style={{
-                          width: 60,
-                          height: '100%',
-                          transform: [{ translateX: shimmerAnim }],
-                        }}
-                      >
-                        <LinearGradient
-                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                          start={[0, 0]}
-                          end={[1, 0]}
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      </Animated.View>
-                    </View>
+                  <View style={{ flexDirection: 'row', gap: wp('1.5%') }}>
+                    <View style={{ 
+                      width: wp('12%'), 
+                      height: hp('2.5%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: hp('1.25%') 
+                    }} />
+                    <View style={{ 
+                      width: wp('15%'), 
+                      height: hp('2.5%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: hp('1.25%') 
+                    }} />
                   </View>
-                </View>
-                <View style={{ width: '100%', height: 20, borderRadius: 8, backgroundColor: '#e0e0e0', marginLeft: 16, marginBottom: 8, overflow: 'hidden' }}>
-                  <Animated.View
-                    style={{
-                      width: 120,
-                      height: '100%',
-                      transform: [{ translateX: shimmerAnim }],
-                    }}
-                  >
-                    <LinearGradient
-                      colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                      start={[0, 0]}
-                      end={[1, 0]}
-                      style={{ width: '100%', height: '100%' }}
-                    />
+                  <Animated.View style={{ width: wp('60%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                    <LinearGradient colors={['#f0f0f000', '#d5d5d5aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
                   </Animated.View>
                 </View>
-                <View style={{ width: '60%', height: 14, borderRadius: 6, backgroundColor: '#e0e0e0', marginLeft: 16, marginBottom: 8, overflow: 'hidden' }}>
-                  <Animated.View
-                    style={{
-                      width: 80,
-                      height: '100%',
-                      transform: [{ translateX: shimmerAnim }],
-                    }}
-                  >
-                    <LinearGradient
-                      colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                      start={[0, 0]}
-                      end={[1, 0]}
-                      style={{ width: '100%', height: '100%' }}
+
+                {/* Card Body Skeleton */}
+                <View style={{ padding: wp('5.5%') }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: hp('2%') }}>
+                    {/* From Location */}
+                    <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                      <View style={{ 
+                        width: wp('15%'), 
+                        height: hp('2%'), 
+                        backgroundColor: '#e5e5e5', 
+                        borderRadius: hp('1%'), 
+                        marginBottom: hp('0.5%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('12%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: hp('0.75%'), 
+                        marginBottom: hp('0.5%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('10%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: hp('0.75%') 
+                      }} />
+                    </View>
+
+                    {/* Middle Section */}
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <View style={{ 
+                        width: wp('20%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e5e5e5', 
+                        borderRadius: hp('0.75%'), 
+                        marginBottom: hp('1%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('8%'), 
+                        height: wp('8%'), 
+                        borderRadius: wp('4%'), 
+                        backgroundColor: '#e0e0e0', 
+                        marginVertical: hp('0.5%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('15%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e5e5e5', 
+                        borderRadius: hp('0.75%') 
+                      }} />
+                    </View>
+
+                    {/* To Location */}
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                      <View style={{ 
+                        width: wp('15%'), 
+                        height: hp('2%'), 
+                        backgroundColor: '#e5e5e5', 
+                        borderRadius: hp('1%'), 
+                        marginBottom: hp('0.5%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('12%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: hp('0.75%'), 
+                        marginBottom: hp('0.5%') 
+                      }} />
+                      <View style={{ 
+                        width: wp('10%'), 
+                        height: hp('1.5%'), 
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: hp('0.75%') 
+                      }} />
+                    </View>
+                  </View>
+
+                  {/* Price and Book Button Skeleton */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View>
+                      <View style={{ 
+                        width: wp('25%'), 
+                        height: hp('2.5%'), 
+                        backgroundColor: '#e5e5e5', 
+                        borderRadius: hp('1.25%') 
+                      }} />
+                    </View>
+                    <View style={{ 
+                      width: wp('25%'), 
+                      height: hp('5%'), 
+                      backgroundColor: '#e0e0e0', 
+                      borderRadius: wp('4%') 
+                    }} />
+                  </View>
+
+                  {/* Shimmer Animation Overlay */}
+                  <Animated.View style={{ 
+                    width: wp('70%'), 
+                    height: '100%', 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    transform: [{ translateX: shimmerAnim }] 
+                  }}>
+                    <LinearGradient 
+                      colors={['#f5f5f500', '#e0e0e0aa', '#f5f5f500']} 
+                      start={[0, 0]} 
+                      end={[1, 0]} 
+                      style={{ width: '100%', height: '100%' }} 
                     />
                   </Animated.View>
                 </View>
               </View>
             ))}
-          </>
+          </View>
         )}
         {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 320, width: '100%' }}>
+          <View style={{ 
+            flex: 1, 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            minHeight: 360, 
+            width: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: 24,
+            padding: 32,
+            shadowColor: '#FD501E',
+            shadowOpacity: 0.1,
+            shadowRadius: 20,
+            shadowOffset: { width: 0, height: 8 },
+            elevation: 8,
+            borderWidth: 1,
+            borderColor: 'rgba(253, 80, 30, 0.08)',
+            marginVertical: 20
+          }}>
             <LottieView
               source={require('./assets/animations/ferry-animation.json')}
               autoPlay
               loop
               style={{
-                width: 200,
-                height: 200,
+                width: 240,
+                height: 240,
               }}
             />
-            <Text style={{ marginTop: 24, color: '#FD501E', fontWeight: 'bold', fontSize: 18, letterSpacing: 0.5 }}>Searching for ferries...</Text>
+            <Text style={{ 
+              marginTop: 32, 
+              color: '#1E293B', 
+              fontWeight: '800', 
+              fontSize: 22, 
+              letterSpacing: -0.3,
+              textAlign: 'center'
+            }}>
+              Searching for ferries...
+            </Text>
+            <Text style={{ 
+              marginTop: 8, 
+              color: '#64748B', 
+              fontWeight: '500', 
+              fontSize: 16, 
+              letterSpacing: 0.2,
+              textAlign: 'center'
+            }}>
+              Finding the best routes for you
+            </Text>
           </View>
         )}
         {!loading && pagedDataDepart && pagedDataReturn && (
@@ -1363,46 +2523,60 @@ const SearchFerry = ({ navigation, route }) => {
                     <View style={[
                       styles.cardContainer,
                       {
-                        marginTop: 24,
+                        marginTop: 20,
                         backgroundColor: 'rgba(255,255,255,0.97)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(253,80,30,0.13)',
-                        shadowColor: '#FD501E',
-                        shadowOpacity: 0.13,
-                        shadowRadius: 16,
-                        shadowOffset: { width: 0, height: 8 },
-                        elevation: 7,
-                        overflow: 'visible',
+                        borderWidth: 0.5,
+                        borderColor: 'rgba(0,35,72,0.08)',
+                        shadowColor: '#001233',
+                        shadowOpacity: 0.12,
+                        shadowRadius: 15,
+                        shadowOffset: { width: 0, height: 4 },
+                        elevation: 8,
+                        overflow: 'hidden',
                         padding: 0,
-                        borderRadius: 32,
+                        borderRadius: 16,
                         position: 'relative',
+                        minHeight: 160,
+                        // Premium gradient effect
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
                       },
                     ]}>
-                      {/* หัวตั๋ว */}
+                      {/* Premium Ferry Header */}
                       <View style={{
                         backgroundColor: '#FD501E',
-                        borderTopLeftRadius: 32,
-                        borderTopRightRadius: 32,
-                        paddingVertical: 18,
-                        paddingHorizontal: 22,
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                        paddingVertical: 14,
+                        paddingHorizontal: 18,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         position: 'relative',
+                        // Premium header gradient
+                        background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
                       }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Image
                             source={{ uri: `${item.md_timetable_companypic}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                            style={{ 
+                              width: wp('10%'), 
+                              height: hp('4.5%'), 
+                              borderRadius: 10, 
+                              backgroundColor: '#fff', 
+                              borderWidth: 1, 
+                              borderColor: 'rgba(255,255,255,0.3)', 
+                              marginRight: 12 
+                            }}
                             resizeMode="cover"
                           />
                           <Text
                             style={{
                               color: '#fff',
-                              fontWeight: 'bold',
-                              fontSize: 18,
-                              maxWidth: wp('19%'),
+                              fontWeight: '800',
+                              fontSize: 16,
+                              maxWidth: wp('22%'),
                               overflow: 'hidden',
+                              letterSpacing: -0.3,
                             }}
                             numberOfLines={1}
                             ellipsizeMode="tail"
@@ -1410,13 +2584,35 @@ const SearchFerry = ({ navigation, route }) => {
                             {item.md_timetable_companyname}
                           </Text>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 6 }}>
-                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_timetable_seatid}</Text>
-                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <Text style={[styles.tag, { 
+                            backgroundColor: 'rgba(255,255,255,0.95)', 
+                            color: '#FD501E', 
+                            fontWeight: '700', 
+                            fontSize: 12,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 12,
+                            overflow: 'hidden'
+                          }]}>
+                            {item.md_timetable_seatid}
+                          </Text>
+                          <Text style={[styles.tag, { 
+                            backgroundColor: 'rgba(255,255,255,0.95)', 
+                            color: '#FD501E', 
+                            fontWeight: '700', 
+                            fontSize: 12,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 12,
+                            overflow: 'hidden'
+                          }]}>
+                            {tripTypeSearch}
+                          </Text>
                         </View>
                       </View>
-                      {/* เนื้อหาตั๋ว */}
-                      <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
+                      {/* Premium Card Body */}
+                      <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
                         <View style={styles.detailsRow}>
                           <View style={styles.locationContainer}>
                             <Text style={styles.location}>{item.md_timetable_startid}</Text>
@@ -1443,8 +2639,8 @@ const SearchFerry = ({ navigation, route }) => {
                             <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
                           </View>
                         </View>
-                        {/* ราคาและปุ่ม */}
-                        <View style={[styles.footerRow, { marginTop: 18 }]}>
+                        {/* Premium Price & Book Section */}
+                        <View style={[styles.footerRow, { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(148,163,184,0.1)' }]}>
                           <Text style={styles.price}>{selectedCurrency} <Text style={styles.pricebig}>{formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
                             {item.md_timetable_discount > 0 && (
                               <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
@@ -1510,23 +2706,93 @@ const SearchFerry = ({ navigation, route }) => {
                         </View>
 
                       </View>
-                      {/* Animated detail section */}
-
+                      {/* Enhanced Ultra Premium Animated Detail Section */}
                       <Animated.View
                         style={{
                           maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                           overflow: 'hidden',
-                          padding: 16,
-                          backgroundColor: '#fff',
-                          borderBottomLeftRadius: 32,
-                          borderBottomRightRadius: 32,
+                          backgroundColor: 'rgba(248,251,255,0.95)',
+                          borderBottomLeftRadius: wp('4%'),
+                          borderBottomRightRadius: wp('4%'),
+                          borderTopWidth: 1,
+                          borderTopColor: 'rgba(253, 80, 30, 0.1)',
                         }}
                       >
-                        <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                        <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                          style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                        />
+                        <View style={{
+                          padding: wp('5%'),
+                          backgroundColor: 'linear-gradient(135deg, rgba(248,251,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+                        }}>
+                          {/* Premium Detail Header */}
+                          <View style={{
+                            backgroundColor: 'rgba(253, 80, 30, 0.08)',
+                            borderRadius: wp('3%'),
+                            padding: wp('3%'),
+                            marginBottom: hp('2%'),
+                            borderLeftWidth: wp('1%'),
+                            borderLeftColor: '#FD501E',
+                            shadowColor: '#FD501E',
+                            shadowOpacity: 0.08,
+                            shadowRadius: wp('2%'),
+                            elevation: 2,
+                          }}>
+                            <Text style={{
+                              color: '#FD501E',
+                              fontWeight: '700',
+                              fontSize: wp('4%'),
+                              letterSpacing: 0.3,
+                              marginBottom: hp('0.5%'),
+                            }}>Trip Details</Text>
+                            <Text style={{
+                              color: '#64748B',
+                              fontWeight: '500',
+                              fontSize: wp('3.2%'),
+                              letterSpacing: 0.2,
+                              lineHeight: wp('5%'),
+                            }}>
+                              {removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                            </Text>
+                          </View>
+
+                          {/* Premium Image Container */}
+                          <View style={{
+                            borderRadius: wp('5%'),
+                            overflow: 'hidden',
+                            shadowColor: '#001233',
+                            shadowOpacity: 0.15,
+                            shadowRadius: wp('4%'),
+                            shadowOffset: { width: 0, height: hp('0.5%') },
+                            elevation: 10,
+                            borderWidth: 1,
+                            borderColor: 'rgba(255,255,255,0.8)',
+                          }}>
+                            <Image
+                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
+                              style={{ 
+                                width: '100%', 
+                                height: hp('20%'), 
+                                resizeMode: 'cover'
+                              }}
+                            />
+                            <View style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: hp('8%'),
+                              background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%)',
+                              justifyContent: 'flex-end',
+                              padding: wp('3%'),
+                            }}>
+                              <Text style={{
+                                color: '#FFFFFF',
+                                fontWeight: '600',
+                                fontSize: wp('3.5%'),
+                                textShadowColor: 'rgba(0,0,0,0.5)',
+                                textShadowRadius: 2,
+                              }}>Ferry Experience</Text>
+                            </View>
+                          </View>
+                        </View>
                       </Animated.View>
 
                     </View>
@@ -1587,26 +2853,29 @@ const SearchFerry = ({ navigation, route }) => {
                       <View style={[
                         styles.cardContainer,
                         {
-                          marginTop: 24,
+                          marginTop: 20,
                           backgroundColor: 'rgba(255,255,255,0.97)',
-                          borderWidth: 1.5,
-                          borderColor: 'rgba(253,80,30,0.13)',
-                          shadowColor: '#FD501E',
-                          shadowOpacity: 0.13,
-                          shadowRadius: 16,
-                          shadowOffset: { width: 0, height: 8 },
-                          elevation: 7,
-                          overflow: 'visible',
+                          borderWidth: 0.5,
+                          borderColor: 'rgba(0,35,72,0.08)',
+                          shadowColor: '#001233',
+                          shadowOpacity: 0.12,
+                          shadowRadius: 15,
+                          shadowOffset: { width: 0, height: 4 },
+                          elevation: 8,
+                          overflow: 'hidden',
                           padding: 0,
-                          borderRadius: 32,
+                          borderRadius: 16,
                           position: 'relative',
+                          minHeight: 160,
+                          // Premium gradient effect
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
                         },
                       ]}>
                         {/* หัวตั๋ว */}
                         <View style={{
                           backgroundColor: '#FD501E',
-                          borderTopLeftRadius: 32,
-                          borderTopRightRadius: 32,
+                          borderTopLeftRadius: 16,
+                          borderTopRightRadius: 16,
                           paddingVertical: 18,
                           paddingHorizontal: 22,
                           flexDirection: 'row',
@@ -1783,32 +3052,37 @@ const SearchFerry = ({ navigation, route }) => {
                       <View style={[
                         styles.cardContainer,
                         {
-                          marginTop: 24,
+                          marginTop: 20,
                           backgroundColor: 'rgba(255,255,255,0.97)',
-                          borderWidth: 1.5,
-                          borderColor: 'rgba(253,80,30,0.13)',
-                          shadowColor: '#FD501E',
-                          shadowOpacity: 0.13,
-                          shadowRadius: 16,
-                          shadowOffset: { width: 0, height: 8 },
-                          elevation: 7,
-                          overflow: 'visible',
+                          borderWidth: 0.5,
+                          borderColor: 'rgba(0,35,72,0.08)',
+                          shadowColor: '#001233',
+                          shadowOpacity: 0.12,
+                          shadowRadius: 15,
+                          shadowOffset: { width: 0, height: 4 },
+                          elevation: 8,
+                          overflow: 'hidden',
                           padding: 0,
-                          borderRadius: 32,
+                          borderRadius: 16,
                           position: 'relative',
+                          minHeight: 160,
+                          // Premium gradient effect
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
                         },
                       ]}>
                         {/* หัวตั๋ว */}
                         <View style={{
                           backgroundColor: '#FD501E',
-                          borderTopLeftRadius: 32,
-                          borderTopRightRadius: 32,
-                          paddingVertical: 18,
-                          paddingHorizontal: 22,
+                          borderTopLeftRadius: 16,
+                          borderTopRightRadius: 16,
+                          paddingVertical: 14,
+                          paddingHorizontal: 18,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           position: 'relative',
+                          // Premium header gradient
+                          background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
                         }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Image
@@ -1945,188 +3219,279 @@ const SearchFerry = ({ navigation, route }) => {
               </>)}
           </>
         )}
-        {/* ปุ่มสำหรับการเปลี่ยนหน้า */}
+        {/* Enhanced Ultra Premium Pagination - Depart Trip */}
         {
           tripTypeSearchResult === 'Depart Trip' && filteredDepartData != null && departTrips.length > 0 && (
-            <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginVertical: 28 }}>
+            <View style={{ 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '100%', 
+              marginVertical: hp('3.5%'),
+              paddingHorizontal: wp('5%')
+            }}>
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#FFF3ED',
-                borderRadius: 32,
-                paddingVertical: 10,
-                paddingHorizontal: 24,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.10,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 3,
-                minWidth: 180,
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderRadius: wp('8%'),
+                paddingVertical: hp('1.5%'),
+                paddingHorizontal: wp('6%'),
+                shadowColor: '#001233',
+                shadowOpacity: 0.12,
+                shadowRadius: wp('4%'),
+                shadowOffset: { width: 0, height: hp('0.5%') },
+                elevation: 15,
+                minWidth: wp('50%'),
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.08)',
+                backdropFilter: 'blur(20px)',
               }}>
+                {/* Previous Button */}
                 <TouchableOpacity
                   onPress={goToPreviousPageDepart}
                   disabled={currentPageDepart === 1}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: currentPageDepart === 1 ? '#f5c6b3' : '#FD501E',
+                    width: wp('12%'),
+                    height: wp('12%'),
+                    borderRadius: wp('6%'),
+                    backgroundColor: currentPageDepart === 1 ? 'rgba(148, 163, 184, 0.2)' : '#FD501E',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginRight: 18,
-                    shadowColor: '#FD501E',
-                    shadowOpacity: 0.13,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 2,
-                    opacity: currentPageDepart === 1 ? 0.6 : 1,
+                    marginRight: wp('4.5%'),
+                    shadowColor: currentPageDepart === 1 ? 'transparent' : '#FD501E',
+                    shadowOpacity: 0.25,
+                    shadowRadius: wp('2%'),
+                    shadowOffset: { width: 0, height: hp('0.3%') },
+                    elevation: currentPageDepart === 1 ? 0 : 8,
+                    opacity: currentPageDepart === 1 ? 0.5 : 1,
+                    borderWidth: currentPageDepart === 1 ? 1 : 0,
+                    borderColor: currentPageDepart === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
                   }}
+                  activeOpacity={currentPageDepart === 1 ? 1 : 0.8}
                 >
                   <Icon
                     name="chevron-back"
-                    size={26}
-                    color={'#fff'}
+                    size={wp('6%')}
+                    color={currentPageDepart === 1 ? '#94A3B8' : '#FFFFFF'}
                   />
                 </TouchableOpacity>
-                <Text style={{
-                  fontSize: 22,
-                  fontWeight: 'bold',
-                  color: '#FD501E',
-                  backgroundColor: '#fff',
-                  borderRadius: 16,
-                  paddingHorizontal: 22,
-                  paddingVertical: 8,
-                  marginHorizontal: 2,
-                  minWidth: 44,
-                  textAlign: 'center',
+
+                {/* Page Number Display */}
+                <View style={{
+                  backgroundColor: 'rgba(253, 80, 30, 0.08)',
+                  borderRadius: wp('4%'),
+                  paddingHorizontal: wp('5%'),
+                  paddingVertical: hp('1.2%'),
+                  marginHorizontal: wp('1%'),
+                  minWidth: wp('12%'),
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: 'rgba(253, 80, 30, 0.15)',
                   shadowColor: '#FD501E',
                   shadowOpacity: 0.08,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}>{currentPageDepart}</Text>
+                  shadowRadius: wp('1%'),
+                  elevation: 2,
+                }}>
+                  <Text style={{
+                    fontSize: wp('5.5%'),
+                    fontWeight: '800',
+                    color: '#FD501E',
+                    textAlign: 'center',
+                    letterSpacing: -0.2,
+                    textShadowColor: 'rgba(253, 80, 30, 0.1)',
+                    textShadowRadius: 1,
+                  }}>
+                    {currentPageDepart}
+                  </Text>
+                </View>
+
+                {/* Next Button */}
                 <TouchableOpacity
                   onPress={goToNextPageDepart}
                   disabled={currentPageDepart * itemsPerPage >= filteredDepartData.length}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? '#f5c6b3' : '#FD501E',
+                    width: wp('12%'),
+                    height: wp('12%'),
+                    borderRadius: wp('6%'),
+                    backgroundColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'rgba(148, 163, 184, 0.2)' : '#FD501E',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginLeft: 18,
-                    shadowColor: '#FD501E',
-                    shadowOpacity: 0.13,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 2,
-                    opacity: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0.6 : 1,
+                    marginLeft: wp('4.5%'),
+                    shadowColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'transparent' : '#FD501E',
+                    shadowOpacity: 0.25,
+                    shadowRadius: wp('2%'),
+                    shadowOffset: { width: 0, height: hp('0.3%') },
+                    elevation: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0 : 8,
+                    opacity: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0.5 : 1,
+                    borderWidth: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 1 : 0,
+                    borderColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
                   }}
+                  activeOpacity={(currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 1 : 0.8}
                 >
                   <Icon
                     name="chevron-forward"
-                    size={26}
-                    color={'#fff'}
+                    size={wp('6%')}
+                    color={(currentPageDepart * itemsPerPage >= filteredDepartData.length) ? '#94A3B8' : '#FFFFFF'}
                   />
                 </TouchableOpacity>
               </View>
+              
+              {/* Page Info */}
+              <Text style={{
+                marginTop: hp('1.5%'),
+                color: 'rgba(255,255,255,0.8)',
+                fontSize: wp('3.2%'),
+                fontWeight: '600',
+                letterSpacing: 0.3,
+                textAlign: 'center',
+                textShadowColor: 'rgba(0,0,0,0.3)',
+                textShadowRadius: 2,
+              }}>
+                Page {currentPageDepart} of {Math.ceil(filteredDepartData.length / itemsPerPage)}
+              </Text>
             </View>
           )
         }
 
-        {/* ปุ่มสำหรับการเปลี่ยนหน้า Return Trip */}
+        {/* Enhanced Ultra Premium Pagination - Return Trip */}
         {
           tripTypeSearchResult === 'Return Trip' && filteredReturnData != null && returnTrips.length > 0 && (
-            <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginVertical: 28 }}>
+            <View style={{ 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '100%', 
+              marginVertical: hp('3.5%'),
+              paddingHorizontal: wp('5%')
+            }}>
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#FFF3ED',
-                borderRadius: 32,
-                paddingVertical: 10,
-                paddingHorizontal: 24,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.10,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 3,
-                minWidth: 180,
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderRadius: wp('8%'),
+                paddingVertical: hp('1.5%'),
+                paddingHorizontal: wp('6%'),
+                shadowColor: '#001233',
+                shadowOpacity: 0.12,
+                shadowRadius: wp('4%'),
+                shadowOffset: { width: 0, height: hp('0.5%') },
+                elevation: 15,
+                minWidth: wp('50%'),
+                borderWidth: 1,
+                borderColor: 'rgba(255, 214, 0, 0.12)',
+                backdropFilter: 'blur(20px)',
               }}>
+                {/* Previous Button */}
                 <TouchableOpacity
                   onPress={goToPreviousPageReturn}
                   disabled={currentPageReturn === 1}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: currentPageReturn === 1 ? '#f5c6b3' : '#FD501E',
+                    width: wp('12%'),
+                    height: wp('12%'),
+                    borderRadius: wp('6%'),
+                    backgroundColor: currentPageReturn === 1 ? 'rgba(148, 163, 184, 0.2)' : '#FFD600',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginRight: 18,
-                    shadowColor: '#FD501E',
-                    shadowOpacity: 0.13,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 2,
-                    opacity: currentPageReturn === 1 ? 0.6 : 1,
+                    marginRight: wp('4.5%'),
+                    shadowColor: currentPageReturn === 1 ? 'transparent' : '#FFD600',
+                    shadowOpacity: 0.25,
+                    shadowRadius: wp('2%'),
+                    shadowOffset: { width: 0, height: hp('0.3%') },
+                    elevation: currentPageReturn === 1 ? 0 : 8,
+                    opacity: currentPageReturn === 1 ? 0.5 : 1,
+                    borderWidth: currentPageReturn === 1 ? 1 : 0,
+                    borderColor: currentPageReturn === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
                   }}
+                  activeOpacity={currentPageReturn === 1 ? 1 : 0.8}
                 >
                   <Icon
                     name="chevron-back"
-                    size={26}
-                    color={'#fff'}
+                    size={wp('6%')}
+                    color={currentPageReturn === 1 ? '#94A3B8' : '#1E293B'}
                   />
                 </TouchableOpacity>
-                <Text style={{
-                  fontSize: 22,
-                  fontWeight: 'bold',
-                  color: '#FD501E',
-                  backgroundColor: '#fff',
-                  borderRadius: 16,
-                  paddingHorizontal: 22,
-                  paddingVertical: 8,
-                  marginHorizontal: 2,
-                  minWidth: 44,
-                  textAlign: 'center',
-                  shadowColor: '#FD501E',
+
+                {/* Page Number Display */}
+                <View style={{
+                  backgroundColor: 'rgba(255, 214, 0, 0.12)',
+                  borderRadius: wp('4%'),
+                  paddingHorizontal: wp('5%'),
+                  paddingVertical: hp('1.2%'),
+                  marginHorizontal: wp('1%'),
+                  minWidth: wp('12%'),
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 214, 0, 0.2)',
+                  shadowColor: '#FFD600',
                   shadowOpacity: 0.08,
-                  shadowRadius: 4,
-                  elevation: 1,
-                }}>{currentPageReturn}</Text>
+                  shadowRadius: wp('1%'),
+                  elevation: 2,
+                }}>
+                  <Text style={{
+                    fontSize: wp('5.5%'),
+                    fontWeight: '800',
+                    color: '#B8860B',
+                    textAlign: 'center',
+                    letterSpacing: -0.2,
+                    textShadowColor: 'rgba(255, 214, 0, 0.1)',
+                    textShadowRadius: 1,
+                  }}>
+                    {currentPageReturn}
+                  </Text>
+                </View>
+
+                {/* Next Button */}
                 <TouchableOpacity
                   onPress={goToNextPageReturn}
                   disabled={currentPageReturn * itemsPerPage >= filteredReturnData.length}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? '#f5c6b3' : '#FD501E',
+                    width: wp('12%'),
+                    height: wp('12%'),
+                    borderRadius: wp('6%'),
+                    backgroundColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'rgba(148, 163, 184, 0.2)' : '#FFD600',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginLeft: 18,
-                    shadowColor: '#FD501E',
-                    shadowOpacity: 0.13,
-                    shadowRadius: 6,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 2,
-                    opacity: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0.6 : 1,
+                    marginLeft: wp('4.5%'),
+                    shadowColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'transparent' : '#FFD600',
+                    shadowOpacity: 0.25,
+                    shadowRadius: wp('2%'),
+                    shadowOffset: { width: 0, height: hp('0.3%') },
+                    elevation: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0 : 8,
+                    opacity: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0.5 : 1,
+                    borderWidth: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 1 : 0,
+                    borderColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
                   }}
+                  activeOpacity={(currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 1 : 0.8}
                 >
                   <Icon
                     name="chevron-forward"
-                    size={26}
-                    color={'#fff'}
+                    size={wp('6%')}
+                    color={(currentPageReturn * itemsPerPage >= filteredReturnData.length) ? '#94A3B8' : '#1E293B'}
                   />
                 </TouchableOpacity>
               </View>
+              
+              {/* Page Info */}
+              <Text style={{
+                marginTop: hp('1.5%'),
+                color: 'rgba(255,255,255,0.8)',
+                fontSize: wp('3.2%'),
+                fontWeight: '600',
+                letterSpacing: 0.3,
+                textAlign: 'center',
+                textShadowColor: 'rgba(0,0,0,0.3)',
+                textShadowRadius: 2,
+              }}>
+                Page {currentPageReturn} of {Math.ceil(filteredReturnData.length / itemsPerPage)}
+              </Text>
             </View>
           )
         }
 
 
-      </ScrollView >
+      </ScrollView>
+    </LinearGradient>
     </SafeAreaView>
   );
 };

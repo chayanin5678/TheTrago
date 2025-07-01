@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const styles = StyleSheet.create({
@@ -29,39 +29,97 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bookingSection: {
-    backgroundColor: '#F6F6F6',
-    borderRadius: 30,
-    padding: wp('3.5%'),
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('8%'),
+    padding: wp('4.5%'),
     width: '100%',
-    marginBottom: 0,
-    paddingBottom: 0,
-    // shadowColor: '#F6F6F6',
-    // shadowOffset: { width: 0, height: 15 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 5,
-    // elevation: 3,
+    marginBottom: hp('2%'),
+    paddingBottom: hp('3%'),
+    // Ultra premium glass morphism with enhanced shadows
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('1%') },
+    shadowOpacity: 0.2,
+    shadowRadius: wp('4%'),
+    elevation: 12,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.1)',
+    backdropFilter: 'blur(20px)',
+    // Premium gradient border effect
+    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))',
+    // Responsive sizing - smaller and more balanced
+    minHeight: hp('28%'),
+    maxWidth: wp('94%'),
+    alignSelf: 'center',
+    // Premium layered shadows
+    overflow: 'visible',
+    position: 'relative',
+    // Secondary shadow for depth
+    ...(Platform.OS === 'ios' && {
+      shadowColor: 'rgba(30, 41, 59, 0.08)',
+      shadowOffset: { width: 0, height: hp('1.2%') },
+      shadowOpacity: 0.12,
+      shadowRadius: wp('5%'),
+    }),
+    // Responsive breakpoints
+    ...(Dimensions.get('window').width > 768 && {
+      maxWidth: wp('85%'),
+      padding: wp('4%'),
+      borderRadius: wp('6%'),
+      minHeight: hp('26%'),
+    }),
+    ...(Dimensions.get('window').width <= 480 && {
+      padding: wp('4%'),
+      minHeight: hp('30%'),
+      borderRadius: wp('7%'),
+    }),
   },
 
   inputBox: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    padding: wp('4%'),
+    borderRadius: wp('5%'),
+    shadowColor: 'rgba(253, 80, 30, 0.2)',
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    shadowOpacity: 0.15,
+    shadowRadius: wp('3%'),
+    elevation: 8,
+    marginHorizontal: wp('1%'),
     flex: 1,
-    justifyContent: 'center', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(253, 80, 30, 0.08)',
+    minHeight: hp('7%'),
+    // Premium glass effect
+    backdropFilter: 'blur(10px)',
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 480 && {
+      padding: wp('3.5%'),
+      borderRadius: wp('4%'),
+    }),
+    ...(Dimensions.get('window').width > 768 && {
+      padding: wp('3%'),
+      minHeight: hp('6%'),
+    }),
   },
 
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',  // จัดตำแหน่งให้ห่างกันอย่างเหมาะสม
-    marginBottom: 15,
+    justifyContent: 'space-between',
+    marginBottom: hp('2%'),
+    width: '100%',
+    // Responsive flex wrap for smaller screens
+    ...(Dimensions.get('window').width <= 480 && {
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      marginBottom: hp('2.2%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      marginBottom: hp('2.5%'),
+      paddingHorizontal: wp('2%'),
+    }),
   },
   inputBoxCol: {
     flexDirection: 'column',
@@ -289,9 +347,28 @@ const styles = StyleSheet.create({
 
   containerSearch: {
     flexGrow: 1,
-    alignItems: 'flex-start', // Align content to the left
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    alignItems: 'flex-start',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('2%'),
+    minHeight: '100%',
+    // Ultra premium gradient background
+    backgroundImage: 'linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 50%, #E2E8F0 100%)',
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 380 && {
+      paddingHorizontal: wp('3%'),
+      paddingVertical: hp('1.5%'),
+    }),
+    ...(Dimensions.get('window').width <= 480 && {
+      paddingHorizontal: wp('3.5%'),
+      paddingVertical: hp('1.8%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      paddingHorizontal: wp('8%'),
+      paddingVertical: hp('3%'),
+      alignItems: 'center',
+    }),
   },
   logoContainer: {
     marginTop: 20,
@@ -371,17 +448,55 @@ const styles = StyleSheet.create({
   },
   inputBoxSearch: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 10,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 3,
-    // elevation: 2,
-    marginHorizontal: 5,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    padding: hp('1.8%'),
+    borderRadius: wp('6%'),
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('0.6%') },
+    shadowOpacity: 0.18,
+    shadowRadius: wp('3%'),
+    elevation: 8,
+    marginHorizontal: wp('1%'),
     flex: 1,
-    justifyContent: 'flex-start', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
+    justifyContent: 'flex-start',
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    // Ultra premium glass effect with enhanced blur
+    backdropFilter: 'blur(15px)',
+    minHeight: hp('7%'),
+    alignItems: 'center',
+    // Premium gradient overlay
+    overflow: 'hidden',
+    position: 'relative',
+    // Responsive sizing
+    maxWidth: '48%',
+    // Additional premium effects
+    ...(Platform.OS === 'ios' && {
+      shadowColor: 'rgba(30, 41, 59, 0.08)',
+      shadowOffset: { width: 0, height: hp('0.8%') },
+      shadowOpacity: 0.1,
+      shadowRadius: wp('4%'),
+    }),
+    // For very small screens
+    ...(Dimensions.get('window').width <= 380 && {
+      maxWidth: '100%',
+      marginHorizontal: wp('0.5%'),
+      marginBottom: hp('1.5%'),
+      padding: hp('1.5%'),
+      minHeight: hp('7%'),
+    }),
+    // For medium screens
+    ...(Dimensions.get('window').width <= 480 && {
+      maxWidth: '47%',
+      marginHorizontal: wp('1.5%'),
+    }),
+    // For larger screens/tablets
+    ...(Dimensions.get('window').width > 768 && {
+      padding: hp('2.2%'),
+      borderRadius: wp('4%'),
+      minHeight: hp('8%'),
+      maxWidth: '48%',
+    }),
   },
   inputBoxDrop: {
     flexDirection: 'row',
@@ -399,6 +514,12 @@ const styles = StyleSheet.create({
   },
   rowdepart: {
     flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 480 && {
+      paddingVertical: hp('0.5%'),
+    }),
   },
   rowDrop: {
     flexDirection: 'row',
@@ -420,22 +541,64 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   inputLabel: {
-    fontSize: wp('3%'),
-    color: '#666',
+    fontSize: wp('3.4%'),
+    color: '#64748B',
+    fontWeight: '700',
+    marginBottom: hp('0.4%'),
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    // Responsive text sizing
+    ...(Dimensions.get('window').width <= 380 && {
+      fontSize: wp('3.2%'),
+    }),
+    ...(Dimensions.get('window').width <= 480 && {
+      fontSize: wp('3.3%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      fontSize: wp('2.9%'),
+    }),
   },
   inputText: {
-    fontSize: wp('3.5%'),
-    color: '#333',
-    fontWeight: 'bold',
+    fontSize: wp('4%'),
+    color: '#1E293B',
+    fontWeight: '800',
+    lineHeight: wp('4.8%'),
+    letterSpacing: -0.2,
+    // Responsive text sizing
+    ...(Dimensions.get('window').width <= 380 && {
+      fontSize: wp('3.7%'),
+      lineHeight: wp('4.5%'),
+    }),
+    ...(Dimensions.get('window').width <= 480 && {
+      fontSize: wp('3.8%'),
+      lineHeight: wp('4.6%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      fontSize: wp('3.2%'),
+      lineHeight: wp('4%'),
+    }),
   },
   searchButton: {
     backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
+    paddingVertical: hp('2.2%'),
+    borderRadius: wp('5%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('2%'),
     width: '100%',
-    marginBottom: 20,
+    marginBottom: hp('3%'),
+    // Ultra premium responsive button styling
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('1%') },
+    elevation: 10,
+    borderWidth: wp('0.5%'),
+    borderColor: 'rgba(255,255,255,0.4)',
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: hp('7%'),
   },
   PxploreButton: {
     backgroundColor: '#FD501E',
@@ -447,9 +610,12 @@ const styles = StyleSheet.create({
   },
   searchButtonText: {
     color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-
+    fontWeight: '900',
+    fontSize: wp('4.5%'),
+    letterSpacing: wp('0.25%'),
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.5%'),
   },
   screen: {
     flex: 1,
@@ -484,63 +650,130 @@ const styles = StyleSheet.create({
   tripTypeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 15,
-    marginTop: 15,
+    marginBottom: hp('2%'),
+    marginTop: hp('1.5%'),
+    width: '100%',
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 480 && {
+      marginBottom: hp('2.2%'),
+      marginTop: hp('1.2%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      marginBottom: hp('2.5%'),
+      marginTop: hp('2%'),
+      paddingHorizontal: wp('2%'),
+    }),
   },
   tripTypeOneWayButton: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 15,
-    borderBottomRightRadius: 0,
-    borderTopRightRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    padding: hp('1.8%'),
+    borderRadius: wp('6%'),
+    borderBottomRightRadius: wp('1%'),
+    borderTopRightRadius: wp('1%'),
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('0.5%') },
     shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-    marginHorizontal: 5,
+    shadowRadius: wp('2%'),
+    elevation: 6,
+    marginHorizontal: wp('0.5%'),
     flex: 1,
     justifyContent: 'center',
-    marginRight: 0,
+    marginRight: wp('0.5%'),
     width: '100%',
-    height: 50,
+    minHeight: hp('6.5%'),
     alignItems: 'center',
-
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 480 && {
+      padding: hp('1.6%'),
+      minHeight: hp('6%'),
+      borderRadius: wp('7%'),
+      borderBottomRightRadius: wp('2%'),
+      borderTopRightRadius: wp('2%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      padding: hp('2%'),
+      minHeight: hp('7%'),
+      borderRadius: wp('4%'),
+      borderBottomRightRadius: wp('1%'),
+      borderTopRightRadius: wp('1%'),
+    }),
   },
   tripTypeRoundButton: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 10,
-    borderRadius: 15,
-    borderBottomLeftRadius: 0,
-    borderTopLeftRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    padding: hp('2%'),
+    borderRadius: wp('6%'),
+    borderBottomLeftRadius: wp('1%'),
+    borderTopLeftRadius: wp('1%'),
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('0.5%') },
     shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-    marginHorizontal: 5,
+    shadowRadius: wp('2%'),
+    elevation: 6,
+    marginHorizontal: wp('0.5%'),
     flex: 1,
     justifyContent: 'center',
-    marginLeft: 0,
-    marginRight: 5,
+    marginLeft: wp('0.5%'),
+    marginRight: wp('0.5%'),
     width: '100%',
-    height: 50,
+    minHeight: hp('6.5%'),
     alignItems: 'center',
-
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    // Responsive adjustments
+    ...(Dimensions.get('window').width <= 480 && {
+      padding: hp('1.6%'),
+      minHeight: hp('6%'),
+      borderRadius: wp('7%'),
+      borderBottomLeftRadius: wp('2%'),
+      borderTopLeftRadius: wp('2%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      padding: hp('2%'),
+      minHeight: hp('7%'),
+      borderRadius: wp('4%'),
+      borderBottomLeftRadius: wp('1%'),
+      borderTopLeftRadius: wp('1%'),
+    }),
   },
   activeButton: {
     backgroundColor: "#FD501E",
-
+    shadowOpacity: 0.3,
+    shadowRadius: wp('3%'),
+    elevation: 10,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   tripTypeText: {
-    fontSize: 16,
+    fontSize: wp('4.2%'),
     color: "#333",
-    fontWeight: 'bold'
+    fontWeight: '800',
+    letterSpacing: wp('0.1%'),
+    textAlign: 'center',
+    // Responsive text sizing
+    ...(Dimensions.get('window').width <= 380 && {
+      fontSize: wp('3.8%'),
+      letterSpacing: wp('0.05%'),
+    }),
+    ...(Dimensions.get('window').width <= 480 && {
+      fontSize: wp('4%'),
+    }),
+    // Tablet adjustments
+    ...(Dimensions.get('window').width > 768 && {
+      fontSize: wp('3.5%'),
+      letterSpacing: wp('0.12%'),
+    }),
   },
   activeText: {
     color: "#FFF",
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.5%'),
   },
   dropdownIcon: {
     color: '#FD501E', // Orange color for the icon
@@ -588,50 +821,93 @@ const styles = StyleSheet.create({
 
   },
   cardContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 18,
-    marginVertical: 12,
-    marginHorizontal: 8,
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.13,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 7,
-    borderWidth: 1,
-    borderColor: 'rgba(253,80,30,0.08)',
-    // Modern glass effect
-    // If you want more glassmorphism, add:
-    // backgroundColor: 'rgba(255,255,255,0.85)',
-    // backdropFilter: 'blur(8px)', // Only works on web
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: wp('4%'),
+    padding: 0,
+    marginVertical: hp('1.2%'),
+    marginHorizontal: wp('3%'),
+    // Ultra premium shadow system
+    shadowColor: '#001233',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('6%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 6,
+    // Subtle border for premium look
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(0, 35, 72, 0.05)',
+    // Premium glass morphism effect
+    backdropFilter: 'blur(25px)',
+    // Perfectly balanced sizing
+    minHeight: hp('18%'),
+    maxWidth: wp('94%'),
+    alignSelf: 'center',
+    // Smooth curvature and premium spacing
+    overflow: 'hidden',
+    position: 'relative',
+    // Premium transform ready
+    transform: [{ scale: 1 }],
+    // Enhanced gradient background
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.95) 100%)',
+    // Responsive design for perfect balance
+    ...(Dimensions.get('window').width <= 480 && {
+      marginHorizontal: wp('2%'),
+      marginVertical: hp('1%'),
+      borderRadius: wp('3.5%'),
+      minHeight: hp('19%'),
+      maxWidth: wp('96%'),
+    }),
+    ...(Dimensions.get('window').width > 768 && {
+      maxWidth: wp('90%'),
+      marginHorizontal: wp('5%'),
+      borderRadius: wp('3%'),
+      minHeight: hp('16%'),
+      shadowRadius: wp('8%'),
+    }),
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: hp('2.5%'),
+    paddingHorizontal: wp('1%'),
   },
   shipName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: wp('4.8%'),
+    fontWeight: '900',
+    color: '#1a1a1a',
     flexWrap: 'wrap',
-    maxWidth: wp('30%'),
+    maxWidth: wp('38%'),
+    letterSpacing: wp('0.1%'),
+    textShadowColor: 'rgba(0,0,0,0.05)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.5%'),
+    lineHeight: wp('5.5%'),
   },
   tagContainer: {
     flexDirection: 'row',
 
   },
   tag: {
-    backgroundColor: 'rgba(253, 80, 30, 0.1)',
-    opacity: 50,
+    backgroundColor: 'rgba(253, 80, 30, 0.15)',
     color: '#FD501E',
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 30,
-    marginLeft: 8,
+    fontSize: wp('3.2%'),
+    fontWeight: '800',
+    paddingVertical: hp('0.8%'),
+    paddingHorizontal: wp('3%'),
+    borderRadius: wp('5%'),
+    marginLeft: wp('1.5%'),
+    overflow: 'hidden',
+    // Ultra premium glass effect for tags with responsive design
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.25)',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.12,
+    shadowRadius: wp('1%'),
+    shadowOffset: { width: 0, height: hp('0.2%') },
+    elevation: 4,
+    // Responsive minimum size
+    minWidth: wp('15%'),
+    textAlign: 'center',
   },
   detailsRow: {
     flexDirection: 'row',
@@ -643,29 +919,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   location: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: wp('4.2%'),
+    fontWeight: '800',
+    color: '#1a1a1a',
     flexWrap: 'wrap',
-    maxWidth: 100,
+    maxWidth: wp('25%'),
+    letterSpacing: wp('0.07%'),
+    marginBottom: hp('0.3%'),
+    lineHeight: wp('5%'),
   },
   subtext: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: wp('3.3%'),
+    color: '#666',
     flexWrap: 'wrap',
-    maxWidth: 100,
-
+    maxWidth: wp('25%'),
+    fontWeight: '600',
+    opacity: 0.85,
+    lineHeight: wp('4%'),
   },
   time: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 4,
+    fontSize: wp('4.5%'),
+    fontWeight: '900',
+    color: '#FD501E',
+    marginTop: hp('0.8%'),
+    letterSpacing: wp('0.05%'),
+    textShadowColor: 'rgba(253, 80, 30, 0.2)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.3%'),
   },
   middleContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 100,
+    width: wp('32%'),
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('3%'),
+    // Ultra premium responsive glass container with enhanced effects
+    backgroundColor: 'rgba(253, 80, 30, 0.08)',
+    borderRadius: wp('8%'),
+    borderWidth: wp('0.4%'),
+    borderColor: 'rgba(253, 80, 30, 0.18)',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.15,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 6,
+    minHeight: hp('16%'),
+    position: 'relative',
+    overflow: 'hidden',
   },
   iconLineContainer: {
     flexDirection: 'row',
@@ -695,9 +995,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   duration: {
-    fontSize: 12,
+    fontSize: wp('3.3%'),
     color: '#555',
-    marginRight: 15
+    marginRight: wp('4%'),
+    fontWeight: '700',
+    letterSpacing: wp('0.05%'),
+    lineHeight: wp('4%'),
   },
   footerRow: {
     flexDirection: 'row',
@@ -710,31 +1013,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    fontSize: wp('3%'),
-    fontWeight: 'bold',
+    fontSize: wp('3.5%'),
+    fontWeight: '700',
     color: '#333',
+    letterSpacing: wp('0.05%'),
+    lineHeight: wp('4.5%'),
   },
   pricebig: {
-    fontSize: wp('4%'),
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: wp('5.5%'),
+    fontWeight: '900',
+    color: '#1a1a1a',
+    letterSpacing: wp('0.08%'),
+    textShadowColor: 'rgba(0,0,0,0.05)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.3%'),
   },
   discount: {
     color: '#FD501E',
   },
   bookNowButton: {
     backgroundColor: '#FD501E',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 30,
+    paddingVertical: hp('1.8%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('7%'),
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 20,
+    marginLeft: wp('4%'),
+    // Ultra premium responsive button styling
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 12,
+    // Responsive gradient effect simulation with border
+    borderWidth: wp('0.5%'),
+    borderColor: 'rgba(255,255,255,0.4)',
+    // Responsive minimum size
+    minWidth: wp('25%'),
+    minHeight: hp('6%'),
+    // Inner shadow effect
+    position: 'relative',
+    overflow: 'hidden',
   },
   bookNowText: {
     color: '#fff',
-    fontWeight: 'bold',
-
+    fontWeight: '900',
+    fontSize: wp('4%'),
+    letterSpacing: wp('0.2%'),
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: hp('0.1%') },
+    textShadowRadius: wp('0.5%'),
+    textAlign: 'center',
   },
   pointsText: {
     color: '#fff',
@@ -865,29 +1194,186 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   remarkContainer: {
-    backgroundColor: '#E0F7FA',  // สีฟ้าอ่อน
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
-    borderLeftWidth: 5,
-    borderLeftColor: '#00ACC1', // ขีดข้างสีเข้มกว่า
+    backgroundColor: 'rgba(224, 247, 250, 0.7)',  // สีฟ้าอ่อนแบบ glass
+    padding: 14,
+    borderRadius: 16,
+    marginVertical: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#00ACC1',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 172, 193, 0.15)',
+    // Premium glass effect
+    shadowColor: '#00ACC1',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   remarkText: {
     fontSize: 14,
     color: '#004D40',
+    lineHeight: 20,
+    fontWeight: '500',
   },
   remarkLabel: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#004D40',
+    letterSpacing: 0.3,
   },
   gradientBackground: {
     width: '120%',
     padding: 40,
     marginBottom: -20,
-  }, coltrip: {
+  }, 
+  coltrip: {
     flexDirection: 'column',
     width: '50%',
-  }
+  },
+  // Ultra Premium Responsive Styles
+  premiumCardHeader: {
+    background: 'linear-gradient(135deg, #FD501E 0%, #FF6B35 100%)',
+    borderTopLeftRadius: wp('8%'),
+    borderTopRightRadius: wp('8%'),
+    paddingVertical: hp('2.5%'),
+    paddingHorizontal: wp('6%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: hp('12%'),
+    // Advanced shadow effects
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
+  },
+  premiumCompanyLogo: {
+    width: wp('14%'),
+    height: hp('7%'),
+    borderRadius: wp('4%'),
+    backgroundColor: '#fff',
+    borderWidth: wp('0.5%'),
+    borderColor: 'rgba(255,255,255,0.4)',
+    marginRight: wp('3%'),
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: wp('1%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 4,
+    maxWidth: wp('16%'),
+    maxHeight: hp('8%'),
+  },
+  premiumCardBody: {
+    paddingHorizontal: wp('6%'),
+    paddingVertical: hp('2.8%'),
+    backgroundColor: 'rgba(255,255,255,0.99)',
+    minHeight: hp('20%'),
+  },
+  premiumLocationDot: {
+    width: wp('3%'),
+    height: wp('3%'),
+    backgroundColor: '#FD501E',
+    borderRadius: wp('1.5%'),
+    borderWidth: wp('0.5%'),
+    borderColor: '#fff',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.6,
+    shadowRadius: wp('1.2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 6,
+    minWidth: wp('3%'),
+    minHeight: wp('3%'),
+  },
+  premiumDashedLine: {
+    flex: 1,
+    height: wp('0.6%'),
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.5)',
+    borderStyle: 'dashed',
+    marginHorizontal: wp('2%'),
+    minHeight: wp('0.6%'),
+  },
+  premiumBoatIcon: {
+    backgroundColor: 'rgba(253, 80, 30, 0.2)',
+    borderRadius: wp('6%'),
+    padding: wp('2.5%'),
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.35)',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('1.5%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 5,
+    minWidth: wp('12%'),
+    minHeight: wp('12%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Responsive breakpoints
+  responsiveContainer: {
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('2%'),
+  },
+  responsiveText: {
+    fontSize: wp('4%'),
+    lineHeight: wp('5%'),
+  },
+  responsiveButton: {
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('5%'),
+    borderRadius: wp('6%'),
+    minHeight: hp('6%'),
+  },
+  // Device-specific adjustments
+  tabletStyles: {
+    // For tablets (wider screens)
+    cardContainer: {
+      maxWidth: wp('85%'),
+      marginHorizontal: wp('7.5%'),
+    },
+    fontSize: {
+      small: wp('3%'),
+      medium: wp('3.5%'),
+      large: wp('4.5%'),
+      xlarge: wp('5.5%'),
+    },
+  },
+  phoneStyles: {
+    // For phones (smaller screens)
+    cardContainer: {
+      maxWidth: wp('94%'),
+      marginHorizontal: wp('3%'),
+    },
+    fontSize: {
+      small: wp('3.2%'),
+      medium: wp('3.8%'),
+      large: wp('4.8%'),
+      xlarge: wp('6%'),
+    },
+  },
+  glassContainer: {
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    backdropFilter: 'blur(10px)',
+  },
+  premiumGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(253,80,30,0.1) 0%, rgba(255,107,53,0.05) 100%)',
+    borderRadius: 32,
+  },
 });
 
 export default styles;

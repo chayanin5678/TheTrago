@@ -10,6 +10,7 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from './navigationRef';
+import { AuthProvider, useAuth } from './AuthContext';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -176,46 +177,45 @@ const AppNavigator = () => (
 );
 
 
-// Smart Login Navigator - เช็ค login status และนำทางไปหน้าที่เหมาะสม
-const Loginnavigator = () => {
-  const [initialRoute, setInitialRoute] = React.useState(null);
+// Smart Account Tab Component - ใช้ AuthContext เพื่อจัดการ login state
+const AccountTabNavigator = () => {
+  const { isLoggedIn, isLoading } = useAuth();
   
-  React.useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const storedToken = await SecureStore.getItemAsync('userToken');
-        // ถ้ามี token = login แล้ว → ไปหน้า AccountScreen
-        // ถ้าไม่มี token = ยังไม่ login → ไปหน้า LoginScreen
-        setInitialRoute(storedToken ? 'AccountScreen' : 'LoginScreen');
-      } catch (error) {
-        console.warn('Error checking login status:', error);
-        setInitialRoute('LoginScreen'); // fallback to login screen
-      }
-    };
-    
-    checkLoginStatus();
-  }, []);
-
-  if (initialRoute === null) {
-    // Loading state while checking login status
+  if (isLoading) {
+    console.log('AccountTabNavigator is loading...');
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <Text style={{ fontSize: 16, color: '#6B7280' }}>Loading...</Text>
       </View>
     );
   }
 
+  console.log('Rendering AccountTabNavigator with login status:', isLoggedIn ? 'Logged in' : 'Not logged in');
+
   return (
-    <Stack.Navigator initialRouteName={initialRoute}>
-      <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AccountScreen" component={AccountScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
-      <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+    <Stack.Navigator 
+      key={isLoggedIn ? 'logged-in' : 'logged-out'} // Force re-render when login status changes
+      initialRouteName={isLoggedIn ? 'AccountScreen' : 'LoginScreen'}
+      screenOptions={{ headerShown: false }}
+    >
+      {!isLoggedIn ? (
+        <>
+          <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+          <Stack.Screen name="TermsScreen" component={TermsScreen} />
+          <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="AccountScreen" component={AccountScreen} />
+          <Stack.Screen name="Dashboard" component={Dashboard} />
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+          <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} />
+          <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} />
+          <Stack.Screen name="TermsScreen" component={TermsScreen} />
+          <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 };
@@ -450,6 +450,8 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 const MainNavigator = () => {
+  const { isLoggedIn } = useAuth();
+  
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -478,9 +480,9 @@ const MainNavigator = () => {
       />
       <Tab.Screen 
         name="Login" 
-        component={Loginnavigator} 
+        component={AccountTabNavigator} 
         options={{ 
-          title: 'Account',
+          title: isLoggedIn ? 'Account' : 'Login',
         }} 
       />
     </Tab.Navigator>
@@ -544,17 +546,19 @@ export default function App() {
   };
 
   return (
-    <PromotionProvider>
-      {!isReady ? (
-        <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
-      ) : (
-        <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
-          <CustomerProvider>
-            <MainNavigator />
-          </CustomerProvider>
-        </NavigationContainer>
-      )}
-    </PromotionProvider>
+    <AuthProvider>
+      <PromotionProvider>
+        {!isReady ? (
+          <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
+        ) : (
+          <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
+            <CustomerProvider>
+              <MainNavigator />
+            </CustomerProvider>
+          </NavigationContainer>
+        )}
+      </PromotionProvider>
+    </AuthProvider>
   );
 }
 

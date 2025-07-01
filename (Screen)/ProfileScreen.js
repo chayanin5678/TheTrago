@@ -608,7 +608,7 @@ const ProfileScreen = ({ navigation }) => {
   if (isLoading) {
     // Premium Skeleton Loader UI
     return (
-      <SafeAreaView style={styles.containerPremium}>
+      <View style={styles.containerPremium}>
         <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
         
         {/* Floating Particles Background */}
@@ -631,36 +631,43 @@ const ProfileScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Premium Header */}
-        <LinearGradient
-          colors={['#FD501E', '#FF6B40', '#FD501E']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Profile Settings</Text>
-            <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
-            
-            {/* Floating decorative elements */}
-            <Animated.View 
-              style={[
-                styles.floatingDecor,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
-            </Animated.View>
-          </View>
-        </LinearGradient>
+        {/* Premium Header - Full Screen */}
+        <View style={styles.headerContainer}>
+          <LinearGradient
+            colors={['#FD501E', '#FF6B40', '#FD501E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <SafeAreaView style={styles.safeAreaHeader}>
+              <View style={styles.headerTopRow}>
+                <TouchableOpacity 
+                  style={styles.backButton}
+                  onPress={() => navigation.goBack()}
+                >
+                  <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.headerContent}>
+                <Text style={styles.headerTitle}>Profile Settings</Text>
+                <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+                
+                {/* Floating decorative elements */}
+                <Animated.View 
+                  style={[
+                    styles.floatingDecor,
+                    { transform: [{ rotate: spin }] }
+                  ]}
+                >
+                  <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
+                </Animated.View>
+              </View>
+            </SafeAreaView>
+          </LinearGradient>
+        </View>
 
-        <ScrollView style={styles.scrollViewPremium}>
+        <ScrollView style={[styles.scrollViewPremium, styles.scrollViewWithMargin]}>
           <View style={styles.contentContainer}>
             {/* Skeleton for Progress Card */}
             <Animated.View style={[styles.progressCardPremium, { opacity: 0.7 }]}>  
@@ -686,12 +693,12 @@ const ProfileScreen = ({ navigation }) => {
             ))}
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.containerPremium}>
+    <View style={styles.containerPremium}>
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
       
       {/* Floating Particles Background */}
@@ -714,7 +721,7 @@ const ProfileScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Premium Header */}
+      {/* Premium Header - Full Screen */}
       <Animated.View
         style={[
           styles.headerContainer,
@@ -730,36 +737,41 @@ const ProfileScreen = ({ navigation }) => {
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
         >
-          <View style={styles.headerContent}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Profile Settings</Text>
-            <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+          <SafeAreaView style={styles.safeAreaHeader}>
+            <View style={styles.headerTopRow}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
             
-            {/* Floating decorative elements */}
-            <Animated.View 
-              style={[
-                styles.floatingDecor,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
-            </Animated.View>
-            
-            <Animated.View 
-              style={[
-                styles.floatingDecor2,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
-            </Animated.View>
-          </View>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Profile Settings</Text>
+              <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+              
+              {/* Floating decorative elements */}
+              <Animated.View 
+                style={[
+                  styles.floatingDecor,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
+              </Animated.View>
+              
+              <Animated.View 
+                style={[
+                  styles.floatingDecor2,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
+              </Animated.View>
+            </View>
+          </SafeAreaView>
         </LinearGradient>
       </Animated.View>
 
@@ -768,7 +780,7 @@ const ProfileScreen = ({ navigation }) => {
         style={{ flex: 1 }}
       >
         <ScrollView 
-          style={styles.scrollViewPremium}
+          style={[styles.scrollViewPremium, styles.scrollViewWithMargin]}
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
@@ -1176,7 +1188,7 @@ const ProfileScreen = ({ navigation }) => {
           </Animated.View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 const styles = StyleSheet.create({
@@ -1207,11 +1219,15 @@ const styles = StyleSheet.create({
 
   // Premium Header
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 2,
   },
   headerGradient: {
-    paddingTop: 50,
-    paddingBottom: 30,
+    paddingTop: 0,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -1222,6 +1238,9 @@ const styles = StyleSheet.create({
     elevation: 15,
     position: 'relative',
     overflow: 'hidden',
+  },
+  safeAreaHeader: {
+    paddingTop: 0,
   },
   headerContent: {
     alignItems: 'center',
@@ -1274,6 +1293,9 @@ const styles = StyleSheet.create({
   scrollViewPremium: {
     flex: 1,
     zIndex: 1,
+  },
+  scrollViewWithMargin: {
+    marginTop: 140, // เพิ่มระยะห่างเพื่อไม่ให้ทับกับ header
   },
   contentContainer: {
     padding: 20,

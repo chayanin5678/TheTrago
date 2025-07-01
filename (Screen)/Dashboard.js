@@ -80,41 +80,54 @@ const Dashboard = ({ navigation }) => {
 
  
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Ultra Premium Header with Gradient */}
-      <LinearGradient
-        colors={['#FD501E', '#FF6B40', '#FD501E']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
+    <View style={styles.container}>
+      {/* Ultra Premium Header with Gradient - Full Screen */}
+      <Animated.View
+        style={[
+          styles.headerContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
       >
-        {/* Floating particles effect */}
-        <Animated.View style={[styles.particle1, { transform: [{ rotate: spin }] }]} />
-        <Animated.View style={[styles.particle2, { transform: [{ rotate: spin }] }]} />
-        <Animated.View style={[styles.particle3, { transform: [{ rotate: spin }] }]} />
-        
-        <Animated.View 
-          style={[
-            styles.headerContent,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
         >
-          <View style={styles.titleContainer}>
-            <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
-            <Text style={styles.headerTitle}>Dashboard</Text>
-          </View>
-          <Text style={styles.headerSubtitle}>Ultra Premium Analytics</Text>
-          <View style={styles.headerDivider} />
-        </Animated.View>
-      </LinearGradient>
+          <SafeAreaView style={styles.safeAreaHeader}>
+            {/* Floating particles effect */}
+            <Animated.View style={[styles.particle1, { transform: [{ rotate: spin }] }]} />
+            <Animated.View style={[styles.particle2, { transform: [{ rotate: spin }] }]} />
+            <Animated.View style={[styles.particle3, { transform: [{ rotate: spin }] }]} />
+            
+            <Animated.View 
+              style={[
+                styles.headerContent,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
+            >
+              <View style={styles.titleContainer}>
+                <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
+                <Text style={styles.headerTitle}>Dashboard</Text>
+              </View>
+              <Text style={styles.headerSubtitle}>Ultra Premium Analytics</Text>
+              <View style={styles.headerDivider} />
+            </Animated.View>
+          </SafeAreaView>
+        </LinearGradient>
+      </Animated.View>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}
+        style={styles.scrollView}
       >
         {/* Ultra Premium Bookings Section */}
         <Animated.View 
@@ -307,7 +320,7 @@ const Dashboard = ({ navigation }) => {
         </Animated.View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -317,9 +330,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   // Ultra Premium Header Styles
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
   headerGradient: {
-    paddingTop: 60,
-    paddingBottom: 50,
+    paddingTop: 0,
+    paddingBottom: 25,
     paddingHorizontal: 25,
     borderBottomLeftRadius: 35,
     borderBottomRightRadius: 35,
@@ -329,6 +349,9 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 15,
     position: 'relative',
+  },
+  safeAreaHeader: {
+    paddingTop: 0,
   },
   headerContent: {
     alignItems: 'center',
@@ -389,6 +412,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  scrollView: {
+    marginTop: 150, // ลด margin top ตาม padding bottom ที่ลดลง
   },
   scrollContent: {
     paddingBottom: 140,

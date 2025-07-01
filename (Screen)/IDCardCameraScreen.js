@@ -1159,7 +1159,7 @@ const IDCardCameraScreen = ({ navigation }) => {
   }, [token]);
 
   return (
-    <SafeAreaView style={styles.containerPremium}>
+    <View style={styles.containerPremium}>
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
       
       {/* Floating Particles Background */}
@@ -1198,7 +1198,8 @@ const IDCardCameraScreen = ({ navigation }) => {
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
         >
-          <View style={styles.headerContent}>
+          <SafeAreaView style={styles.safeAreaHeader}>
+            <View style={styles.headerContent}>
             <TouchableOpacity 
               style={styles.backButton}
               onPress={() => navigation.goBack()}
@@ -1234,6 +1235,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
             </Animated.View>
           </View>
+          </SafeAreaView>
         </LinearGradient>
       </Animated.View>
 
@@ -1568,7 +1570,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -1600,11 +1602,15 @@ const styles = StyleSheet.create({
 
   // Premium Header
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 2,
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 20,
+    paddingTop: 0,
+    paddingBottom: 15,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -1615,6 +1621,9 @@ const styles = StyleSheet.create({
     elevation: 15,
     position: 'relative',
     overflow: 'hidden',
+  },
+  safeAreaHeader: {
+    paddingTop: 0,
   },
   headerContent: {
     flexDirection: 'row',
@@ -1671,6 +1680,7 @@ const styles = StyleSheet.create({
   scrollViewPremium: {
     flex: 1,
     zIndex: 1,
+    marginTop: 120,
   },
   contentContainer: {
     padding: 20,
