@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Platform, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import moment from 'moment';
 import { useCustomer } from './(Screen)/CustomerContext';
 import axios from 'axios';
+import headStyles from './(CSS)/StartingPointScreenStyles';
 const TripDetail = ({ navigation, route }) => {
 
   const [tripType, setTripType] = useState("One Way Trip");
@@ -921,26 +923,26 @@ const TripDetail = ({ navigation, route }) => {
     }
 
     updateCustomerData({
-      totaladultDepart: parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
-      totalchildDepart: parseFloat(item.totalDepart.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
-      totalinfantDepart: parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
-      discountDepart: parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
-      subtotalDepart: parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
-      pickupPriceDepart: parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
-      dropoffPriceDepart: parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
-      total: parseFloat(item.total.replace(/,/g, "")).toFixed(2), //ราคารวมทั้งหมด
+      totaladultDepart: parseFloat(item.totalDepart.priceadult).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
+      totalchildDepart: parseFloat(item.totalDepart.pricechild).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
+      totalinfantDepart: parseFloat(item.totalDepart.priceinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
+      discountDepart: parseFloat(item.totalDepart.discount).toFixed(2), //ส่วนลด
+      subtotalDepart: parseFloat(item.totalDepart.showtotal).toFixed(2), //ราคารวม
+      pickupPriceDepart: parseFloat(item.totalDepart.pricepickupdepart).toFixed(2), //ราคารวมรับ
+      dropoffPriceDepart: parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2), //ราคารวมส่ง
+      total: parseFloat(item.total).toFixed(2), //ราคารวมทั้งหมด
 
     });
 
     if (customerData.roud === 2) {
       updateCustomerData({
-        totaladultReturn: parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
-        totalchildReturn: parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
-        totalinfantReturn: parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
-        discountReturn: parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2), //ส่วนลด
-        subtotalReturn: parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2), //ราคารวม
-        pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2), //ราคารวมรับ
-        dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2), //ราคารวมส่ง
+        totaladultReturn: parseFloat(item.totalReturn.priceadult).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
+        totalchildReturn: parseFloat(item.totalReturn.pricechild).toFixed(2) * customerData.child, //รวมราคาจำนวนเด็ก
+        totalinfantReturn: parseFloat(item.totalReturn.priceinfant).toFixed(2) * customerData.infant, //รวมราคาจำนวนเด็ก
+        discountReturn: parseFloat(item.totalReturn.discount).toFixed(2), //ส่วนลด
+        subtotalReturn: parseFloat(item.totalReturn.showtotal).toFixed(2), //ราคารวม
+        pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart).toFixed(2), //ราคารวมรับ
+        dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2), //ราคารวมส่ง
       });
     }
 
@@ -977,22 +979,145 @@ const TripDetail = ({ navigation, route }) => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={{ position: 'relative', alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Premium Gradient Background */}
+      <LinearGradient
+        colors={['#001233', '#002A5C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.2 }}
+        style={{ flex: 1 }}
+      >
+        {/* Enhanced Premium Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              paddingBottom: 8,
+              shadowColor: '#001233',
+              shadowOpacity: 0.15,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 18,
+              padding: 10,
+              minHeight: hp('12%'),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
+              backdropFilter: 'blur(30px)',
+            },
+          ]}
         >
-          <AntDesign name="arrowleft" size={26} color="#FD501E" />
-        </TouchableOpacity>
-        <LogoTheTrago style={{ marginBottom: 0, marginTop: 0 }} />
-        <Step logoUri={1} style={{ marginTop: 0, marginBottom: 0 }} />
-      </View>
-      <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Shuttle Transfer</Text>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ImageBackground
-          source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-          style={styles.background}
+          <View
+            style={[
+              headStyles.headerRow,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: -10,
+                height: 56,
+              },
+            ]}
+          >
+            {/* Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                position: 'absolute',
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 25,
+                padding: 8,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+            </TouchableOpacity>
+
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Step Component */}
+        <View style={{
+          alignItems: 'center',
+          marginTop: hp('1%'),
+          marginBottom: hp('1%'),
+        }}>
+          <Step logoUri={1} />
+        </View>
+
+        {/* Enhanced Title Section */}
+        <View style={{
+          marginTop: hp('1%'),
+          marginHorizontal: wp('6%'),
+          marginBottom: hp('2%'),
+          paddingHorizontal: wp('4%'),
+          paddingVertical: hp('1.5%'),
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          borderRadius: wp('4%'),
+          backdropFilter: 'blur(10px)',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.2)',
+        }}>
+          <Text style={{
+            color: '#FFFFFF',
+            fontSize: wp('7%'),
+            fontWeight: '800',
+            letterSpacing: -0.5,
+            textAlign: 'center',
+            lineHeight: wp('8%'),
+            textShadowColor: 'rgba(0,0,0,0.3)',
+            textShadowRadius: 4,
+            textShadowOffset: { width: 1, height: 1 },
+          }}>
+            Shuttle Transfer
+          </Text>
+          <Text style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: wp('3.5%'),
+            fontWeight: '500',
+            textAlign: 'center',
+            marginTop: hp('0.5%'),
+            letterSpacing: 0.3,
+            textShadowColor: 'rgba(0,0,0,0.2)',
+            textShadowRadius: 2,
+          }}>
+            Complete your trip details
+          </Text>
+        </View>
+
+        <ScrollView 
+          contentContainerStyle={[
+            styles.container,
+            {
+              backgroundColor: 'transparent',
+              paddingHorizontal: 24,
+              paddingTop: 8,
+              paddingBottom: hp('12%'),
+              flexGrow: 1,
+            }
+          ]}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+          contentInsetAdjustmentBehavior="automatic"
         >
           {loading && (
             <View style={styles.loaderContainer}>
@@ -1986,7 +2111,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Icon name="information-circle-outline" size={20} color="red" />
                       </TouchableOpacity>
                     </View>
-                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
+                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2) * customerData.adult)} </Text>
                     {/* Modal (tooltip) */}
                     <Modal
                       visible={modaladultVisibleDepart}
@@ -1999,7 +2124,7 @@ const TripDetail = ({ navigation, route }) => {
                           {/* This area will close the modal when tapped */}
                           <TouchableWithoutFeedback>
                             <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(parseFloat(item.totalDepart.saleadult.replace(/,/g, "")).toFixed(2))}/persons</Text>
+                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}/persons</Text>
                             </View>
                           </TouchableWithoutFeedback>
                         </View>
@@ -2018,9 +2143,9 @@ const TripDetail = ({ navigation, route }) => {
                           <Icon name="information-circle-outline" size={20} color="red" />
                         </TouchableOpacity>
                       </View>
-                      {parseFloat(item.totalDepart.salechild.replace(/,/g, "")) !== 0 ? (
+                      {parseFloat(item.totalDepart.pricechild) !== 0 ? (
                         <Text>
-                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")) * customerData.child)}
+                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild) * customerData.child)}
                         </Text>
                       ) : (
                         <Text>
@@ -2040,7 +2165,7 @@ const TripDetail = ({ navigation, route }) => {
                             {/* This area will close the modal when tapped */}
                             <TouchableWithoutFeedback>
                               <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(parseFloat(item.totalDepart.salechild.replace(/,/g, "")).toFixed(2))}/persons</Text>
+                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}/persons</Text>
                               </View>
                             </TouchableWithoutFeedback>
                           </View>
@@ -2058,9 +2183,9 @@ const TripDetail = ({ navigation, route }) => {
                           <Icon name="information-circle-outline" size={20} color="red" />
                         </TouchableOpacity>
                       </View>
-                      {parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) !== 0 ? (
+                      {parseFloat(item.totalDepart.priceinfant) !== 0 ? (
                         <Text>
-                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")) * customerData.infant)}
+                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant) * customerData.infant)}
                         </Text>
                       ) : (
                         <Text>
@@ -2080,7 +2205,7 @@ const TripDetail = ({ navigation, route }) => {
                             {/* This area will close the modal when tapped */}
                             <TouchableWithoutFeedback>
                               <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalDepart.saleinfant.replace(/,/g, "")))}/persons</Text>
+                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant))}/persons</Text>
                               </View>
                             </TouchableWithoutFeedback>
                           </View>
@@ -2093,8 +2218,8 @@ const TripDetail = ({ navigation, route }) => {
                       <Text>
                         Pick up
                       </Text>
-                      {parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")) != 0 ? (
-                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart.replace(/,/g, "")))} </Text>
+                      {parseFloat(item.totalDepart.pricepickupdepart) != 0 ? (
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart))} </Text>
                       ) : (
                         <Text>Free</Text>
                       )}
@@ -2105,8 +2230,8 @@ const TripDetail = ({ navigation, route }) => {
                       <Text>
                         Drop off
                       </Text>
-                      {parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
-                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart.replace(/,/g, "")))} </Text>
+                      {parseFloat(item.totalDepart.pricedropoffdepart) != 0 ? (
+                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart))} </Text>
                       ) : (
                         <Text>Free</Text>
                       )}
@@ -2118,7 +2243,7 @@ const TripDetail = ({ navigation, route }) => {
                         Discount
                       </Text>
                       <Text style={styles.redText}>
-                        - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount.replace(/,/g, "")).toFixed(2))} </Text>
+                        - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))} </Text>
 
                     </View>
                   )}
@@ -2126,7 +2251,7 @@ const TripDetail = ({ navigation, route }) => {
                     <Text>
                       Subtotal
                     </Text>
-                    <Text style={{ fontWeight: 'bold' }}>  {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
+                    <Text style={{ fontWeight: 'bold' }}>  {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))} </Text>
                   </View>
                   <View style={styles.divider} />
 
@@ -2148,7 +2273,7 @@ const TripDetail = ({ navigation, route }) => {
                             <Icon name="information-circle-outline" size={20} color="red" />
                           </TouchableOpacity>
                         </View>
-                        <Text>{customerData.symbol}  {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2) * customerData.adult)} </Text>
+                        <Text>{customerData.symbol}  {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2) * customerData.adult)} </Text>
                         {/* Modal (tooltip) */}
                         <Modal
                           visible={modaladultVisibleReturn}
@@ -2161,7 +2286,7 @@ const TripDetail = ({ navigation, route }) => {
                               {/* This area will close the modal when tapped */}
                               <TouchableWithoutFeedback>
                                 <View style={styles.tooltip}>
-                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(parseFloat(item.totalReturn.saleadult.replace(/,/g, "")).toFixed(2))}/persons</Text>
+                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}/persons</Text>
                                 </View>
                               </TouchableWithoutFeedback>
                             </View>
@@ -2180,8 +2305,8 @@ const TripDetail = ({ navigation, route }) => {
                               <Icon name="information-circle-outline" size={20} color="red" />
                             </TouchableOpacity>
                           </View>
-                          {parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) !== 0 ? (
-                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2) * customerData.child)} </Text>
+                          {parseFloat(item.totalReturn.pricechild).toFixed(2) !== 0 ? (
+                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2) * customerData.child)} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2197,7 +2322,7 @@ const TripDetail = ({ navigation, route }) => {
                                 {/* This area will close the modal when tapped */}
                                 <TouchableWithoutFeedback>
                                   <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(parseFloat(item.totalReturn.salechild.replace(/,/g, "")).toFixed(2))}/persons</Text>
+                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}/persons</Text>
                                   </View>
                                 </TouchableWithoutFeedback>
                               </View>
@@ -2215,8 +2340,8 @@ const TripDetail = ({ navigation, route }) => {
                               <Icon name="information-circle-outline" size={20} color="red" />
                             </TouchableOpacity>
                           </View>
-                          {parseFloat(item.totalReturn.saleinfant) !== 0 ? (
-                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2) * customerData.infant)} </Text>
+                          {parseFloat(item.totalReturn.priceinfant) !== 0 ? (
+                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2) * customerData.infant)} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2232,7 +2357,7 @@ const TripDetail = ({ navigation, route }) => {
                                 {/* This area will close the modal when tapped */}
                                 <TouchableWithoutFeedback>
                                   <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalReturn.saleinfant).toFixed(2))}/persons</Text>
+                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}/persons</Text>
                                   </View>
                                 </TouchableWithoutFeedback>
                               </View>
@@ -2245,8 +2370,8 @@ const TripDetail = ({ navigation, route }) => {
                           <Text>
                             Pick up
                           </Text>
-                          {parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")) != 0 ? (
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                          {parseFloat(item.totalReturn.pricepickupdepart) != 0 ? (
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2257,8 +2382,8 @@ const TripDetail = ({ navigation, route }) => {
                           <Text>
                             Drop off
                           </Text>
-                          {parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")) != 0 ? (
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart.replace(/,/g, "")).toFixed(2))} </Text>
+                          {parseFloat(item.totalReturn.pricedropoffdepart) != 0 ? (
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))} </Text>
                           ) : (
                             <Text>Free</Text>
                           )}
@@ -2270,7 +2395,7 @@ const TripDetail = ({ navigation, route }) => {
                             Discount
                           </Text>
                           <Text style={styles.redText}>
-                            - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount.replace(/,/g, "")).toFixed(2))} </Text>
+                            - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))} </Text>
 
                         </View>
                       )}
@@ -2278,7 +2403,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Text>
                           Subtotal
                         </Text>
-                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal.replace(/,/g, "")).toFixed(2))} </Text>
+                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))} </Text>
                       </View>
                       <View style={styles.divider} />
                     </>
@@ -2286,7 +2411,7 @@ const TripDetail = ({ navigation, route }) => {
 
                   <View style={styles.rowpromo}>
                     <Text style={styles.totaltext}>Total</Text>
-                    <Text style={styles.totaltext}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total.replace(/,/g, "")).toFixed(2))}</Text>
+                    <Text style={styles.totaltext}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
                   </View>
                 </View>
 
@@ -2306,8 +2431,8 @@ const TripDetail = ({ navigation, route }) => {
                 </View>
               ))}
 
-        </ImageBackground>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
 
   );
@@ -2317,9 +2442,11 @@ const TripDetail = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingHorizontal: wp('2%'),
+    paddingTop: hp('1%'),
+    paddingBottom: hp('3%'),
   },
   logoContainer: {
     marginTop: 20,
@@ -2352,13 +2479,16 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'left', // Ensure left alignment
-    color: '#002348',
-    marginBottom: 20,
-    marginTop: 20,
-    marginLeft: 0, // Optional: ensure no margin if not needed
+    fontSize: wp('6%'),
+    fontWeight: '800',
+    textAlign: 'center',
+    color: '#FFFFFF',
+    marginBottom: hp('2%'),
+    marginTop: hp('2%'),
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 4,
+    textShadowOffset: { width: 1, height: 1 },
   },
 
 
@@ -2420,9 +2550,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   inputLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 10,
+    fontSize: wp('3.5%'),
+    color: '#64748B',
+    marginTop: hp('1%'),
+    marginBottom: hp('0.5%'),
+    marginLeft: wp('3%'),
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   inputText: {
     fontSize: 16,
@@ -2535,28 +2669,57 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',  // ให้ Modal อยู่ด้านล่าง
+    backgroundColor: 'rgba(0, 18, 51, 0.85)',
+    justifyContent: 'center',
     alignItems: 'center',
-
+    paddingHorizontal: wp('5%'),
+    backdropFilter: 'blur(15px)',
   },
   modalContent: {
-    backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
-    height: '40%',  // จำกัดขนาดความสูง
-    borderRadius: 10,
-    padding: 15,
-    elevation: 5,
-
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    width: '90%',
+    maxWidth: wp('85%'),
+    borderRadius: wp('8%'),
+    padding: wp('6%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('2%') },
+    elevation: 25,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.15)',
+    backdropFilter: 'blur(30px)',
+    maxHeight: hp('70%'),
+    position: 'relative',
+    overflow: 'hidden',
+    // Premium glass effect
+    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95), rgba(241,245,249,0.92))',
+    // Multiple shadow layers for ultra premium look
+    ...(Platform.OS === 'ios' && {
+      shadowColor: 'rgba(253, 80, 30, 0.2)',
+      shadowOffset: { width: 0, height: hp('1.5%') },
+      shadowOpacity: 0.3,
+      shadowRadius: wp('6%'),
+    }),
   },
   modalOption: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
+    paddingVertical: hp('1.8%'),
+    paddingHorizontal: wp('4%'),
+    borderBottomWidth: wp('0.1%'),
+    borderBottomColor: 'rgba(148, 163, 184, 0.2)',
+    marginHorizontal: wp('1%'),
+    borderRadius: wp('2%'),
+    marginVertical: hp('0.3%'),
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.2s ease-in-out',
   },
   modalOptionText: {
-    fontSize: 18,
-    color: '#333',
+    fontSize: wp('4.2%'),
+    color: '#1E293B',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   button: {
     justifyContent: 'space-between',
@@ -2568,34 +2731,53 @@ const styles = StyleSheet.create({
 
   },
   cardContainer: {
-
-    backgroundColor: 'rgba(255,255,255,0.96)',
-    borderRadius: 36,
-    padding: 32,
-    marginHorizontal: 12,
-    marginTop: 28,
-    marginBottom: 36,
-    shadowColor: '#FD501E', // orange shadow
-    shadowOpacity: 0.13,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 7,
-    borderWidth: 2,
-    borderColor: 'rgba(253,80,30,0.15)', // light orange border
-    // overflow: 'hidden', // สำหรับ blur/gradient
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('8%'),
+    padding: 0,
+    marginHorizontal: wp('4%'),
+    marginTop: hp('2%'),
+    marginBottom: hp('2%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.15,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('1%') },
+    elevation: 12,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.1)',
+    backdropFilter: 'blur(20px)',
+    overflow: 'visible',
+    position: 'relative',
+    // Premium gradient border effect
+    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))',
+    // Responsive sizing
+    minHeight: hp('35%'),
+    maxWidth: wp('92%'),
+    alignSelf: 'center',
+    // Premium layered shadows
+    ...(Platform.OS === 'ios' && {
+      shadowColor: 'rgba(253, 80, 30, 0.08)',
+      shadowOffset: { width: 0, height: hp('1.2%') },
+      shadowOpacity: 0.15,
+      shadowRadius: wp('5%'),
+    }),
   },
   promo: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('5%'),
     width: '100%',
-    padding: 16,
-    margin: 16,
-    marginLeft: -3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    padding: wp('4%'),
+    marginVertical: hp('1%'),
+    marginHorizontal: wp('1%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.12,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.6%') },
+    elevation: 8,
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.08)',
+    backdropFilter: 'blur(10px)',
+    // Premium glass effect
+    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))',
   },
   headerRow: {
     flexDirection: 'row',
@@ -2761,15 +2943,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'white'
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ced4da",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    marginBottom: 15,
-    paddingVertical: 10,
-    margin: 10,
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: wp('4%'),
+    padding: wp('3.5%'),
+    fontSize: wp('4%'),
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    marginBottom: hp('1.5%'),
+    marginHorizontal: wp('2.5%'),
+    paddingVertical: hp('1.5%'),
+    shadowColor: '#64748B',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 4,
+    color: '#1E293B',
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   timetable: {
     fontSize: 12,
@@ -2863,36 +3053,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   BackButton: {
-    backgroundColor: '#EAEAEA',
-    paddingVertical: 15,
-    borderRadius: 10,
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('1%'),
     width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
+    marginBottom: hp('2%'),
+    justifyContent: 'center',
+    shadowColor: '#64748B',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 4,
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(148, 163, 184, 0.2)',
   },
   BackButtonText: {
-    color: '#666666',
-    fontWeight: 'bold',
-    fontSize: 16,
-
+    color: '#64748B',
+    fontWeight: '700',
+    fontSize: wp('4%'),
+    letterSpacing: 0.3,
   },
   ActionButton: {
     backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('1%'),
     width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
+    marginBottom: hp('4%'),
+    justifyContent: 'center',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.3,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.6%') },
+    elevation: 12,
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   searchButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: wp('4%'),
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowRadius: 2,
   },
   errorInput: {
     borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด
@@ -2903,12 +3109,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', // จัดตำแหน่งแนวนอนให้อยู่ตรงกลาง
   },
   modalContentPre: {
-    backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
-    borderRadius: 10,
-    padding: 15,
-    elevation: 5,
-
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    width: '85%',
+    borderRadius: wp('6%'),
+    padding: wp('5%'),
+    elevation: 20,
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.2,
+    shadowRadius: wp('6%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    backdropFilter: 'blur(25px)',
+    position: 'relative',
+    overflow: 'hidden',
+    // Premium glass effect
+    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))',
   },
   icon: {
     marginLeft: 10,
@@ -2916,26 +3132,45 @@ const styles = StyleSheet.create({
   buttonSelect: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 8,
-    width: '93%',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('4%'),
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: wp('4%'),
+    width: '95%',
     justifyContent: 'space-between',
-    margin: 10,
-
+    marginHorizontal: wp('2.5%'),
+    marginVertical: hp('0.5%'),
+    shadowColor: '#64748B',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 4,
+    backdropFilter: 'blur(10px)',
   },
   optionItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('4%'),
+    borderBottomWidth: wp('0.1%'),
+    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
+    marginHorizontal: wp('1%'),
+    borderRadius: wp('2.5%'),
+    marginVertical: hp('0.2%'),
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    backdropFilter: 'blur(8px)',
+    shadowColor: '#64748B',
+    shadowOpacity: 0.05,
+    shadowRadius: wp('1%'),
+    shadowOffset: { width: 0, height: hp('0.2%') },
+    elevation: 2,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: wp('4%'),
+    color: '#334155',
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
   orangeCircleIcon: {
     backgroundColor: '#FD501E',

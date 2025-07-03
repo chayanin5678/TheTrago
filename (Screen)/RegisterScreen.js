@@ -404,7 +404,7 @@ const RegisterScreen = ({ navigation }) => {
                 </TouchableOpacity>
 
                 {/* Social Login Section */}
-                <View style={styles.dividerContainer}>
+                {/* <View style={styles.dividerContainer}>
                   <View style={styles.divider} />
                   <Text style={styles.orText}>Or register with</Text>
                   <View style={styles.divider} />
@@ -434,7 +434,7 @@ const RegisterScreen = ({ navigation }) => {
                       </LinearGradient>
                     </BlurView>
                   </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {/* Policy Text */}
                 <Text style={styles.policyText}>

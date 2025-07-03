@@ -675,9 +675,9 @@ const AccountScreen = ({ navigation }) => {
           <View style={styles.menuGrid}>
             {[
               { title: 'Dashboard', subtitle: 'View analytics', icon: 'space-dashboard', nav: 'Dashboard' },
-              { title: 'My Booking', subtitle: 'Manage bookings', icon: 'ticket', nav: 'MyBookings', isFA6: true },
+            //  { title: 'My Booking', subtitle: 'Manage bookings', icon: 'ticket', nav: 'MyBookings', isFA6: true },
               { title: 'Profile', subtitle: 'Edit details', icon: 'person', nav: 'ProfileScreen', isIonicons: true },
-              { title: 'Affiliate', subtitle: 'Earn rewards', icon: 'groups', nav: 'Affiliate' }
+          //    { title: 'Affiliate', subtitle: 'Earn rewards', icon: 'groups', nav: 'Affiliate' }
             ].map((item, index) => (
               <Animated.View
                 key={index}
@@ -713,7 +713,7 @@ const AccountScreen = ({ navigation }) => {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Account Management</Text>
+          {/* <Text style={styles.sectionTitle}>Account Management</Text>
           
           <View style={styles.listSection}>
             {[
@@ -752,7 +752,7 @@ const AccountScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </Animated.View>
             ))}
-          </View>
+          </View> */}
 
           {/* Premium Logout Button */}
           <Animated.View

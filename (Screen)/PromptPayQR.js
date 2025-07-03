@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { View, SafeAreaView, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import axios from "axios";
 import ipAddress from "../ipconfig";
 import { useCustomer } from './CustomerContext';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import moment from "moment-timezone";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import LogoTheTrago from "./../(component)/Logo";
+import headStyles from './../(CSS)/StartingPointScreenStyles';
 
 export default function PromptPayScreen({ route, navigation }) {
   const { Paymenttotal ,selectedOption} = route.params;
@@ -299,161 +302,388 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   
 
   return (
-       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-              <View style={{ position: 'relative', alignItems: 'center', paddingTop: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                  style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
-                >
-                  <AntDesign name="arrowleft" size={26} color="#FD501E" />
-                </TouchableOpacity>
-                <LogoTheTrago style={{ marginTop: 0, marginBottom: 0, alignSelf: 'flex-start', marginLeft: 0 }} />
-                <Text style={[styles.title,{marginTop:20}]}>Prompt Pay QR</Text>
-              </View>
-             
-    <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Ultra Premium Gradient Background */}
+      <LinearGradient
+        colors={['#001233', '#002A5C', '#003A7C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.5 }}
+        style={{ flex: 1 }}
+      >
+        {/* Ultra Premium Glass-Morphism Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.96)", "rgba(241,245,249,0.94)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 45,
+              borderBottomRightRadius: 45,
+              paddingBottom: 12,
+              shadowColor: '#001233',
+              shadowOpacity: 0.18,
+              shadowRadius: 30,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 22,
+              padding: 12,
+              minHeight: hp('13%'),
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 18, 51, 0.1)',
+              backdropFilter: 'blur(40px)',
+            },
+          ]}
+        >
+          <View
+            style={[
+              headStyles.headerRow,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: -10,
+                height: 56,
+              },
+            ]}
+          >
+            {/* Ultra Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                position: 'absolute',
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: 28,
+                padding: 10,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.25,
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 12,
+                borderWidth: 1.5,
+                borderColor: 'rgba(253, 80, 30, 0.12)',
+                backdropFilter: 'blur(20px)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+            </TouchableOpacity>
+
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Ultra Premium Title Section */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginTop: hp('1.5%'), 
+          marginHorizontal: wp('5%'), 
+          marginBottom: hp('2.5%'),
+          paddingHorizontal: wp('4%'),
+          paddingVertical: hp('2%'),
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          borderRadius: wp('5%'),
+          backdropFilter: 'blur(15px)',
+          borderWidth: 1.5,
+          borderColor: 'rgba(255,255,255,0.25)',
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: wp('3%'),
+          shadowOffset: { width: 0, height: hp('0.5%') },
+          elevation: 6,
+        }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[
+              headStyles.headerTitle, 
+              { 
+                color: '#FFFFFF', 
+                fontSize: wp('7.5%'), 
+                fontWeight: '900', 
+                letterSpacing: -0.8, 
+                textAlign: 'left', 
+                marginLeft: 0,
+                lineHeight: wp('8.5%'),
+                textShadowColor: 'rgba(0,0,0,0.4)',
+                textShadowRadius: 6,
+                textShadowOffset: { width: 2, height: 2 },
+              }
+            ]}>
+              PromptPay QR
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: wp('3.8%'),
+              fontWeight: '600',
+              marginTop: hp('0.8%'),
+              letterSpacing: 0.5,
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowRadius: 3,
+              textShadowOffset: { width: 1, height: 1 },
+            }}>
+              Scan to complete your payment
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView 
+          contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
+          showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior="automatic"
+          bounces={false}
+        >
       
       {loading ? (
         <>
-          <View style={styles.skeletonContainer}>
-            <View style={styles.skeletonQR} />
-            <View style={styles.skeletonAmount} />
-          </View>
-          <View style={styles.skeletonButtonRow}>
-            <View style={styles.skeletonButton} />
-            <View style={styles.skeletonButton} />
+          {/* Premium Loading Section */}
+          <View style={styles.loadingCard}>
+            <View style={styles.skeletonContainer}>
+              <View style={styles.skeletonQR} />
+              <View style={styles.skeletonAmount} />
+            </View>
+            <View style={styles.skeletonButtonRow}>
+              <View style={styles.skeletonButton} />
+              <View style={styles.skeletonButton} />
+            </View>
           </View>
         </>
       ) : (
         <>
-          {qrUri && (
-            <>
-              <Image
-                source={{ uri: qrUri }}
-                style={styles.qr}
-                resizeMode="contain"
-              />
-              <Text style={[styles.text, {marginTop: 20}]}>{customerData.symbol} {Paymenttotal}</Text>
-            </>
-          )}
-          <View style={styles.rowButton}>
+          {/* Premium QR Code Section */}
+          <View style={styles.qrCard}>
+            {qrUri && (
+              <>
+                <View style={styles.qrContainer}>
+                  <Image
+                    source={{ uri: qrUri }}
+                    style={styles.qr}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={styles.amountContainer}>
+                  <Text style={styles.amountLabel}>Total Amount</Text>
+                  <Text style={styles.amountValue}>{customerData.symbol} {Paymenttotal}</Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Premium Action Buttons */}
+          <View style={styles.actionSection}>
             <TouchableOpacity
-              style={styles.BackButton}
+              style={styles.saveButton}
               onPress={saveQRToFile}
+              activeOpacity={0.8}
             >
-              <Text style={styles.BackButtonText}>Save QR</Text>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.9)', 'rgba(248,250,252,0.95)']}
+                style={styles.saveButtonGradient}
+              >
+                <Ionicons name="download-outline" size={20} color="#6B7280" style={{ marginRight: 8 }} />
+                <Text style={styles.saveButtonText}>Save QR</Text>
+              </LinearGradient>
             </TouchableOpacity>
+            
             <TouchableOpacity
-              style={styles.ActionButton}
+              style={styles.cancelButton}
               onPress={handlePress}
+              activeOpacity={0.8}
             >
-              <Text style={styles.searchButtonText}>Cancel</Text>
+              <LinearGradient
+                colors={['#FD501E', '#FF6B35']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.cancelButtonGradient}
+              >
+                <Ionicons name="close-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </>
       )}
-    </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
+    flexGrow: 1,
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('2%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingCard: {
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('7%'),
+    padding: wp('8%'),
+    marginBottom: hp('2.5%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    elevation: 20,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    backdropFilter: 'blur(30px)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  qrCard: {
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('7%'),
+    padding: wp('8%'),
+    marginBottom: hp('4%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    elevation: 20,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    backdropFilter: 'blur(30px)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  qrContainer: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: wp('5%'),
+    padding: wp('4%'),
+    marginBottom: hp('3%'),
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
   },
   qr: {
-    width: '100%',
-    height: '100%',
-    marginTop: -90,
-    marginBottom: -80,
+    width: wp('60%'),
+    height: wp('60%'),
   },
-  rowButton: {
-    width: '100%',
+  amountContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexDirection: 'row'
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('6%'),
+    backgroundColor: 'rgba(253, 80, 30, 0.05)',
+    borderRadius: wp('4%'),
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.1)',
   },
-  BackButton: {
-    backgroundColor: '#EAEAEA',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-    width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
+  amountLabel: {
+    fontSize: wp('4%'),
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: hp('0.5%'),
+    letterSpacing: 0.3,
   },
-  BackButtonText: {
-    color: '#666666',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  ActionButton: {
-    backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-    width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
-  },
-  searchButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'left', // Ensure left alignment
-    color: '#002348',
-    marginBottom: 20,
-    marginTop: 50,
-    marginLeft: 0, // Optional: ensure no margin if not needed
-  },
-  text: {
-    fontSize: 16,
+  amountValue: {
+    fontSize: wp('6%'),
     color: '#FD501E',
-    marginBottom: 20,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(253, 80, 30, 0.2)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 1, height: 1 },
   },
-  // Skeleton loader styles
+  actionSection: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: wp('2%'),
+  },
+  saveButton: {
+    flex: 1,
+    marginRight: wp('2%'),
+    borderRadius: wp('4%'),
+    shadowColor: '#64748B',
+    shadowOpacity: 0.3,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 12,
+  },
+  saveButtonGradient: {
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('4%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(107, 114, 128, 0.2)',
+  },
+  saveButtonText: {
+    color: '#6B7280',
+    fontSize: wp('4.2%'),
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: wp('2%'),
+    borderRadius: wp('4%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 12,
+  },
+  cancelButtonGradient: {
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('4%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: wp('4.2%'),
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowRadius: 2,
+  },
+  // Premium Skeleton Loader Styles
   skeletonContainer: {
     width: '100%',
     alignItems: 'center',
-    marginTop: 50,
-    marginBottom: 30,
-    justifyContent: 'flex-start',
+    marginBottom: hp('4%'),
   },
   skeletonQR: {
-    width: 300,
-    height: 300,
-    backgroundColor: '#eee',
-    borderRadius: 24,
-    marginBottom: 32,
+    width: wp('60%'),
+    height: wp('60%'),
+    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+    borderRadius: wp('5%'),
+    marginBottom: hp('3%'),
   },
   skeletonAmount: {
-    width: 140,
-    height: 32,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 12,
-    marginBottom: 40,
+    width: wp('40%'),
+    height: hp('4%'),
+    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+    borderRadius: wp('2%'),
   },
   skeletonButtonRow: {
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
-    marginTop: 20,
-    paddingHorizontal: 0,
+    paddingHorizontal: wp('2%'),
   },
   skeletonButton: {
-    width: '48%',
-    height: 60,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 12,
+    flex: 1,
+    height: hp('6%'),
+    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+    borderRadius: wp('4%'),
+    marginHorizontal: wp('1%'),
   },
 });

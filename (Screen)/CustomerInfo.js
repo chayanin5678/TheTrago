@@ -10,6 +10,8 @@ import { useCustomer } from './CustomerContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import headStyles from './../(CSS)/StartingPointScreenStyles';
 
 const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.', 'Master'];
 
@@ -570,47 +572,168 @@ const CustomerInfo = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={{ position: 'relative', alignItems: 'center', paddingTop: 6, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
-        >
-          <AntDesign name="arrowleft" size={26} color="#FD501E" />
-        </TouchableOpacity>
-        <LogoTheTrago style={{ marginBottom: 0, marginTop: 0 }} />
-        <Step logoUri={2} style={{ marginTop: 0, marginBottom: 0 }} />
-
-      </View>
-      <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Customer Information</Text>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Premium Gradient Background */}
+      <LinearGradient
+        colors={['#001233', '#002A5C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.container}>
-          <ImageBackground
-            source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-            style={styles.background}>
+        {/* Enhanced Premium Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              paddingBottom: 8,
+              shadowColor: '#001233',
+              shadowOpacity: 0.15,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 18,
+              padding: 10,
+              minHeight: hp('12%'),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
+              // Ultra premium glass morphism
+              backdropFilter: 'blur(30px)',
+            },
+          ]}
+        >
+        <View
+          style={[
+            headStyles.headerRow,
+            {
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 0,
+              paddingTop: 0,
+              position: 'relative',
+              marginTop: -10,
+              height: 56,
+            },
+          ]}
+        >
+          {/* Back Button - Left */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              position: 'absolute',
+              left: 16,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: 25,
+              padding: 8,
+              zIndex: 2,
+              shadowColor: '#FD501E',
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(253, 80, 30, 0.1)',
+            }}
+          >
+            <AntDesign name="arrowleft" size={24} color="#FD501E" />
+          </TouchableOpacity>
 
+          {/* Logo - Center */}
+          <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+            <LogoTheTrago />
+          </View>
+        </View>
+        </LinearGradient>
 
+        {/* Step Component */}
+        <View style={{
+          alignItems: 'center',
+          marginTop: hp('1%'),
+          marginBottom: hp('1%'),
+        }}>
+          <Step logoUri={2} />
+        </View>
 
+        {/* Enhanced Ultra Premium Title Section */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginTop: hp('1%'), 
+          marginHorizontal: wp('6%'), 
+          marginBottom: hp('2%'),
+          paddingHorizontal: wp('2%'),
+          paddingVertical: hp('1.5%'),
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          borderRadius: wp('4%'),
+          backdropFilter: 'blur(10px)',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.2)',
+        }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[
+              headStyles.headerTitle, 
+              { 
+                color: '#FFFFFF', 
+                fontSize: wp('7%'), 
+                fontWeight: '800', 
+                letterSpacing: -0.5, 
+                textAlign: 'left', 
+                marginLeft: 0,
+                lineHeight: wp('8%'),
+                textShadowColor: 'rgba(0,0,0,0.3)',
+                textShadowRadius: 4,
+                textShadowOffset: { width: 1, height: 1 },
+              }
+            ]}>
+              Customer Information
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: wp('3.5%'),
+              fontWeight: '500',
+              marginTop: hp('0.5%'),
+              letterSpacing: 0.3,
+              textShadowColor: 'rgba(0,0,0,0.2)',
+              textShadowRadius: 2,
+            }}>
+              Find your perfect journey
+            </Text>
+          </View>
+        </View>
 
-            {/* เงื่อนไขแสดงฟอร์มตาม international */}
-            {Number(customerData.international) === 0 ? (
-              <View style={styles.promo}>
-                <Text style={styles.TextInput}>Passenger Details</Text>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-                {/* คำนำหน้า */}
-                <Text style={styles.textHead}>Title</Text>
-                <TouchableOpacity
-                
-                  style={[styles.button, errors.selectedTitle && styles.errorInput]}
-                  onPress={toggleModal}>
-                  <Text style={styles.buttonText}>{selectedTitle}</Text>
-                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <ScrollView 
+            contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
+            contentInsetAdjustmentBehavior="automatic"
+          >
+            {/* Content Container */}
+            <View style={styles.contentContainer}>
+              {/* เงื่อนไขแสดงฟอร์มตาม international */}
+              {Number(customerData.international) === 0 ? (
+                <View style={styles.promo}>
+                  <Text style={styles.TextInput}>Passenger Details</Text>
+
+                  {/* คำนำหน้า */}
+                  <Text style={styles.textHead}>Title</Text>
+                  <TouchableOpacity
+                  
+                    style={[styles.button, errors.selectedTitle && styles.errorInput]}
+                    onPress={toggleModal}>
+                    <Text style={styles.buttonText}>{selectedTitle}</Text>
+                    <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                  </TouchableOpacity>
 
                 {/* Modal for title selection */}
                 <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
@@ -708,7 +831,7 @@ const CustomerInfo = ({ navigation }) => {
                   }}
                   style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                 />
-                <Text style={styles.title}>Where should we send your booking confirmation?</Text>
+                <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
                 <Text style={styles.textHead}>Email</Text>
                 <TextInput
                   placeholder="Enter Your Email"
@@ -818,7 +941,7 @@ const CustomerInfo = ({ navigation }) => {
                     </TouchableOpacity>
                     <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Whatsapp</Text>
                   </View>
-                  <Text style={styles.title}>Where should we send your booking confirmation?</Text>
+                  <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
                   <Text style={styles.textHead}>Email</Text>
                   <TextInput
                     placeholder="Enter Your Email"
@@ -864,47 +987,47 @@ const CustomerInfo = ({ navigation }) => {
             ))} */}
 
             <View style={styles.promo}>
-              <Text style={styles.title}>Booking Summary</Text>
+              <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>Booking Summary</Text>
               <View style={styles.divider} />
               {timetableDepart.map((item, index) => (
                 <View key={index}>
-                  <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+                  <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
 
                   <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#666666' }}>Company </Text>
-                    <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company </Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {item.md_company_nameeng}</Text>
                   </View>
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#666666' }}>Seat</Text>
-                    <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_seat_nameeng}</Text>
                   </View>
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#666666' }}>Boat </Text>
-                    <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat </Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_boattype_nameeng}</Text>
                   </View>
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#666666' }}>Departure Data</Text>
-                    <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Data</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
                   </View>
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                    <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time : </Text>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                   </View>
-                  <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                    <Text>Adult x {customerData.adult}</Text>
-                    <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+                  <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                    <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                    <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
                   </View>
                   {customerData.child !== 0 && (
                     <View style={styles.rowpromo}>
-                      <Text>Child x {customerData.child}</Text>
-                      <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
                     </View>
                   )}
                   {customerData.infant !== 0 && (
                     <View style={styles.rowpromo}>
-                      <Text>infant x {customerData.infant}</Text>
-                      <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>infant x {customerData.infant}</Text>
+                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
                     </View>
                   )}
                   {customerData.pickupPriceDepart != 0 && (
@@ -1034,18 +1157,20 @@ const CustomerInfo = ({ navigation }) => {
               </View>
             </View>
             <View style={styles.rowButton}>
-
               <TouchableOpacity
-                style={[styles.ActionButton, { width: '100%' }]} // Use an array if you want to combine styles
+                style={[styles.ActionButton, { width: '100%' }]}
                 onPress={() => {
                   handleNext();
-                }}>
+                }}
+                activeOpacity={0.8}
+              >
                 <Text style={styles.searchButtonText}>Next</Text>
               </TouchableOpacity>
             </View>
-          </ImageBackground>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -1053,211 +1178,273 @@ const CustomerInfo = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('2%'),
+  },
+  contentContainer: {
+    flex: 1,
+    paddingTop: hp('1%'),
   },
   title: {
-    fontSize: 18,
+    fontSize: wp('4.5%'),
     fontWeight: 'bold',
     textAlign: 'left',
-    color: '#002348',
-    marginBottom: 20,
+    color: '#FFFFFF',
+    marginBottom: hp('2%'),
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 2,
   },
   promo: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: wp('5%'),
     width: '100%',
-    padding: 16,
-    marginVertical: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    padding: wp('4%'),
+    marginVertical: hp('1%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.15,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 18, 51, 0.08)',
+    backdropFilter: 'blur(20px)',
   },
   TextInput: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: wp('4.5%'),
+    fontWeight: '800',
+    marginBottom: hp('1%'),
+    color: '#1E293B',
+    letterSpacing: -0.3,
   },
   textHead: {
-    fontSize: 16,
-    paddingVertical: 10,
-    marginLeft: 10
+    fontSize: wp('4%'),
+    fontWeight: '600',
+    paddingVertical: hp('1%'),
+    marginLeft: wp('2%'),
+    color: '#374151',
+    letterSpacing: 0.2,
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('4%'),
     borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 8,
-    // width: wp('78%'),
+    borderColor: '#E5E7EB',
+    borderRadius: wp('3%'),
     justifyContent: 'space-between',
-    margin: 10,
-
+    marginHorizontal: wp('2%'),
+    marginBottom: hp('1%'),
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   buttonText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: wp('4%'),
+    color: '#374151',
+    fontWeight: '500',
   },
   icon: {
-    marginLeft: 10,
+    marginLeft: wp('2%'),
   },
-
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',  // ให้ Modal อยู่ด้านล่าง
+    backgroundColor: 'rgba(0, 18, 51, 0.7)',
+    justifyContent: 'center',
     alignItems: 'center',
-
   },
   modalContentPre: {
-    backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
-    borderRadius: 10,
-    padding: 15,
-    elevation: 5,
-
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    width: '80%',
+    maxHeight: '50%',
+    borderRadius: wp('4%'),
+    padding: wp('4%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.2,
+    shadowRadius: wp('5%'),
+    shadowOffset: { width: 0, height: hp('1%') },
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 18, 51, 0.08)',
   },
   modalContent: {
-    backgroundColor: '#FFF',
-    width: '80%',   // กำหนดให้ Modal กว้าง 80% ของจอ
-    height: '40%',  // จำกัดขนาดความสูง
-    borderRadius: 10,
-    padding: 15,
-    elevation: 5,
-
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    width: '80%',
+    height: '40%',
+    borderRadius: wp('4%'),
+    padding: wp('4%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.2,
+    shadowRadius: wp('5%'),
+    shadowOffset: { width: 0, height: hp('1%') },
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 18, 51, 0.08)',
   },
   optionItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('3%'),
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-
+    borderBottomColor: '#F3F4F6',
+    borderRadius: wp('2%'),
+    marginBottom: hp('0.5%'),
   },
   optionText: {
-    fontSize: 16,
+    fontSize: wp('4%'),
+    color: '#374151',
+    fontWeight: '500',
   },
   divider: {
-    height: 1, // ความหนาของเส้น
-    width: '100%', // ทำให้ยาวเต็มจอ
-    backgroundColor: '#CCCCCC', // สีของเส้น
-    marginVertical: 10, // ระยะห่างระหว่าง element
+    height: 1,
+    width: '100%',
+    backgroundColor: '#E5E7EB',
+    marginVertical: hp('1.5%'),
   },
   rowpromo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: hp('0.5%'),
   },
   redText: {
-    color: 'red'
+    color: '#EF4444',
+    fontWeight: '600',
   },
   promoLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
+    fontSize: wp('4.5%'),
+    fontWeight: '800',
+    marginBottom: hp('1%'),
+    color: '#1E293B',
+    letterSpacing: -0.3,
   },
   inputWrapper: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    overflow: "hidden",
-    alignItems: "center",
+    borderColor: '#E5E7EB',
+    borderRadius: wp('3%'),
+    overflow: 'hidden',
+    alignItems: 'center',
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   promoInput: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    backgroundColor: "#FFF",
+    paddingVertical: hp('1.5%'),
+    paddingHorizontal: wp('4%'),
+    fontSize: wp('4%'),
+    backgroundColor: '#FFFFFF',
+    color: '#374151',
   },
   applyButton: {
-    backgroundColor: "#FD501E",
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    height: 50,
+    backgroundColor: '#FD501E',
+    paddingHorizontal: wp('5%'),
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: hp('6%'),
+    borderTopRightRadius: wp('3%'),
+    borderBottomRightRadius: wp('3%'),
   },
   applyText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  background: {
-    width: '100%',
+    color: '#FFFFFF',
+    fontSize: wp('4%'),
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ced4da",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    marginBottom: 15,
-    paddingVertical: 10,
-    marginLeft: 10,
-    marginRight: 10,
+    borderColor: '#E5E7EB',
+    borderRadius: wp('3%'),
+    padding: wp('3%'),
+    fontSize: wp('4%'),
+    backgroundColor: '#FFFFFF',
+    marginBottom: hp('1%'),
+    paddingVertical: hp('1.5%'),
+    marginHorizontal: wp('2%'),
+    color: '#374151',
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   errorInput: {
-    borderColor: 'red',
-
+    borderColor: '#EF4444',
+    borderWidth: 2,
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.2,
   },
-
   rowButton: {
     width: '100%',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexDirection: 'row'
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginTop: hp('2%'),
+    paddingHorizontal: wp('2%'),
   },
   BackButton: {
-    backgroundColor: '#EAEAEA',
-    paddingVertical: 15,
-    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('1%'),
     width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
+    marginBottom: hp('2%'),
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 4,
   },
   BackButtonText: {
-    color: '#666666',
-    fontWeight: 'bold',
-    fontSize: 16,
-
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: wp('4%'),
+    letterSpacing: 0.5,
   },
   ActionButton: {
     backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('1%'),
     width: '45%',
-    marginBottom: 20,
-    justifyContent: 'flex-end',
+    marginBottom: hp('4%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   searchButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: wp('4.5%'),
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowRadius: 1,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    padding: 8,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-    color: '#222', // เพิ่มสีตัวอักษร
-    fontSize: 16, // เพิ่มขนาดตัวอักษร
+    borderColor: '#E5E7EB',
+    borderRadius: wp('2%'),
+    padding: wp('2%'),
+    backgroundColor: '#FFFFFF',
+    marginBottom: hp('1%'),
+    color: '#374151',
+    fontSize: wp('4%'),
   },
   disabledInput: {
-    backgroundColor: '#f0f0f0', // สีเทาเมื่อ email มีข้อมูล
+    backgroundColor: '#F9FAFB',
+    color: '#6B7280',
   },
-
 });
 export default CustomerInfo;

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView, StatusBar } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { AntDesign } from '@expo/vector-icons';
+import LogoTheTrago from './../(component)/Logo';
+import headStyles from './../(CSS)/StartingPointScreenStyles';
 
 const AddCardScreen = ({ navigation, route }) => {
   const { onAddCard, nextCardId } = route.params || {};
@@ -27,226 +32,429 @@ const AddCardScreen = ({ navigation, route }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View style={styles.container}>
-          <Text style={styles.title}>Add New Card</Text>
-          <View style={styles.cardBox}>
-            {/* Card visual */}
-            <View style={styles.cardVisual}>
-              <View style={styles.chip} />
-              <Text style={styles.cardNumberText}>
-                {cardNumber ? cardNumber.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim() : '•••• •••• •••• ••••'}
-              </Text>
-              <View style={styles.cardRow}>
-                <Text style={styles.cardLabel}>Name</Text>
-                <Text style={styles.cardLabel}>Expiry</Text>
-              </View>
-              <View style={styles.cardRow}>
-                <Text style={styles.cardValue}>{name || 'CARDHOLDER'}</Text>
-                <Text style={styles.cardValue}>{expiry || 'MM/YY'}</Text>
-              </View>
-            </View>
-            {/* Input fields */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Cardholder Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Cardholder Name"
-                value={name}
-                onChangeText={setName}
-                placeholderTextColor="#aaa"
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Card Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Card Number"
-                keyboardType="numeric"
-                value={cardNumber}
-                onChangeText={text => {
-                  // Auto-insert space every 4 digits
-                  let formatted = text.replace(/[^0-9]/g, '');
-                  formatted = formatted.replace(/(.{4})/g, '$1 ').trim();
-                  setCardNumber(formatted);
-                }}
-                maxLength={19}
-                placeholderTextColor="#aaa"
-              />
-            </View>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 4 }]}>
-                <Text style={styles.inputLabel}>Expiry</Text>
-                <TextInput
-                  style={[styles.input, styles.inputHalf]}
-                  placeholder="MM/YY"
-                  value={expiry}
-                  onChangeText={text => {
-                    // Auto-insert slash after MM
-                    let formatted = text.replace(/[^0-9]/g, '');
-                    if (formatted.length > 2) {
-                      formatted = formatted.slice(0,2) + '/' + formatted.slice(2,4);
-                    }
-                    setExpiry(formatted);
-                  }}
-                  maxLength={5}
-                  placeholderTextColor="#aaa"
-                  keyboardType="numeric"
-                  returnKeyType="done"
-                  blurOnSubmit={true}
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 4 }]}>
-                <Text style={styles.inputLabel}>CVV</Text>
-                <TextInput
-                  style={[styles.input, styles.inputHalf]}
-                  placeholder="CVV"
-                  keyboardType="numeric"
-                  value={cvv}
-                  onChangeText={setCvv}
-                  maxLength={4}
-                  secureTextEntry
-                  placeholderTextColor="#aaa"
-                  returnKeyType="done"
-                  blurOnSubmit={true}
-                />
-              </View>
-            </View>
-            <TouchableOpacity style={styles.button} onPress={handleAddCard}>
-              <Text style={styles.buttonText}>Add Card</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Ultra Gradient Background */}
+      <LinearGradient
+        colors={['#001233', '#002A5C', '#003A7C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.5 }}
+        style={{ flex: 1 }}
+      >
+        {/* Ultra Glass-Morphism Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.96)", "rgba(241,245,249,0.94)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 45,
+              borderBottomRightRadius: 45,
+              paddingBottom: 12,
+              shadowColor: '#001233',
+              shadowOpacity: 0.18,
+              shadowRadius: 30,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 22,
+              padding: 12,
+              minHeight: hp('13%'),
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 18, 51, 0.1)',
+              backdropFilter: 'blur(40px)',
+            },
+          ]}
+        >
+          <View
+            style={[
+              headStyles.headerRow,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: -10,
+                height: 56,
+              },
+            ]}
+          >
+            {/* Ultra Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                position: 'absolute',
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: 28,
+                padding: 10,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.25,
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 12,
+                borderWidth: 1.5,
+                borderColor: 'rgba(253, 80, 30, 0.12)',
+                backdropFilter: 'blur(20px)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
             </TouchableOpacity>
-            <View style={styles.spacer} />
+
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Ultra Title Section with Glass Effect */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginTop: hp('1.5%'), 
+          marginHorizontal: wp('5%'), 
+          marginBottom: hp('2.5%'),
+          paddingHorizontal: wp('4%'),
+          paddingVertical: hp('2%'),
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          borderRadius: wp('5%'),
+          backdropFilter: 'blur(15px)',
+          borderWidth: 1.5,
+          borderColor: 'rgba(255,255,255,0.25)',
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: wp('3%'),
+          shadowOffset: { width: 0, height: hp('0.5%') },
+          elevation: 6,
+        }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[
+              headStyles.headerTitle, 
+              { 
+                color: '#FFFFFF', 
+                fontSize: wp('7.5%'), 
+                fontWeight: '900', 
+                letterSpacing: -0.8, 
+                textAlign: 'left', 
+                marginLeft: 0,
+                lineHeight: wp('8.5%'),
+                textShadowColor: 'rgba(0,0,0,0.4)',
+                textShadowRadius: 6,
+                textShadowOffset: { width: 2, height: 2 },
+              }
+            ]}>
+              Add New Card
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: wp('3.8%'),
+              fontWeight: '600',
+              marginTop: hp('0.8%'),
+              letterSpacing: 0.5,
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowRadius: 3,
+              textShadowOffset: { width: 1, height: 1 },
+            }}>
+              Secure your payment method
+            </Text>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        >
+          <ScrollView 
+            contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentInsetAdjustmentBehavior="automatic"
+            bounces={false}
+          >
+            {/* Ultra Card Container */}
+            <View style={styles.cardContainer}>
+              {/* Ultra 3D Card Visual */}
+              <LinearGradient
+                colors={['#001233', '#002A5C', '#003A7C', '#1E293B']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1.2 }}
+                style={styles.cardVisual}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)', 'rgba(255,214,0,0.05)']}
+                  style={styles.cardGlassOverlay}
+                >
+                  <View style={styles.chip} />
+                  <View style={styles.cardNumberContainer}>
+                    <Text style={styles.cardNumberText}>
+                      {cardNumber ? cardNumber.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim() : '•••• •••• •••• ••••'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardRow}>
+                    <Text style={styles.cardLabel}>Cardholder</Text>
+                    <Text style={styles.cardLabel}>Valid Thru</Text>
+                  </View>
+                  <View style={styles.cardRow}>
+                    <Text style={styles.cardValue}>{name || 'MEMBER'}</Text>
+                    <Text style={styles.cardValue}>{expiry || 'MM/YY'}</Text>
+                  </View>
+                </LinearGradient>
+              </LinearGradient>
+
+              {/* Input Fields */}
+              <View style={styles.inputSection}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Cardholder Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter cardholder name"
+                    value={name}
+                    onChangeText={setName}
+                    placeholderTextColor="rgba(107, 114, 128, 0.6)"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Card Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="1234 5678 9012 3456"
+                    keyboardType="numeric"
+                    value={cardNumber}
+                    onChangeText={text => {
+                      let formatted = text.replace(/[^0-9]/g, '');
+                      formatted = formatted.replace(/(.{4})/g, '$1 ').trim();
+                      setCardNumber(formatted);
+                    }}
+                    maxLength={19}
+                    placeholderTextColor="rgba(107, 114, 128, 0.6)"
+                  />
+                </View>
+
+                <View style={styles.row}>
+                  <View style={[styles.inputGroup, { flex: 1, marginRight: wp('2%') }]}>
+                    <Text style={styles.inputLabel}>Expiry Date</Text>
+                    <TextInput
+                      style={[styles.input, styles.inputHalf]}
+                      placeholder="MM/YY"
+                      value={expiry}
+                      onChangeText={text => {
+                        let formatted = text.replace(/[^0-9]/g, '');
+                        if (formatted.length > 2) {
+                          formatted = formatted.slice(0,2) + '/' + formatted.slice(2,4);
+                        }
+                        setExpiry(formatted);
+                      }}
+                      maxLength={5}
+                      placeholderTextColor="rgba(107, 114, 128, 0.6)"
+                      keyboardType="numeric"
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                    />
+                  </View>
+                  <View style={[styles.inputGroup, { flex: 1, marginLeft: wp('2%') }]}>
+                    <Text style={styles.inputLabel}>CVV</Text>
+                    <TextInput
+                      style={[styles.input, styles.inputHalf]}
+                      placeholder="123"
+                      keyboardType="numeric"
+                      value={cvv}
+                      onChangeText={setCvv}
+                      maxLength={4}
+                      secureTextEntry
+                      placeholderTextColor="rgba(107, 114, 128, 0.6)"
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                    />
+                  </View>
+                </View>
+
+                {/* Ultra Add Card Button */}
+                <TouchableOpacity style={styles.addButton} onPress={handleAddCard} activeOpacity={0.85}>
+                  <LinearGradient
+                    colors={['#FD501E', '#FF6B35', '#FF8C66']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0.8 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Text style={styles.buttonText}>Add Card</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#f7f7fa',
-    justifyContent: 'center',
+    flexGrow: 1,
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('2%'),
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 32,
-    textAlign: 'center',
-    color: '#002348',
-    letterSpacing: 1,
-  },
-  cardBox: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-    marginBottom: 18,
+  cardContainer: {
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('7%'),
+    padding: wp('6%'),
+    marginBottom: hp('2.5%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    elevation: 20,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    backdropFilter: 'blur(30px)',
   },
   cardVisual: {
-    backgroundColor: '#002348',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 28,
-    minHeight: 120,
-    justifyContent: 'center',
-    shadowColor: '#002348',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    borderRadius: wp('5%'),
+    marginBottom: hp('3.5%'),
+    minHeight: hp('27%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.35,
+    shadowRadius: wp('6%'),
+    shadowOffset: { width: 0, height: hp('1.2%') },
+    elevation: 16,
+    overflow: 'hidden',
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(255, 214, 0, 0.2)',
+  },
+  cardGlassOverlay: {
+    flex: 1,
+    padding: wp('6%'),
+    justifyContent: 'space-between',
+    borderRadius: wp('5%'),
   },
   chip: {
-    width: 38,
-    height: 26,
-    borderRadius: 6,
-    backgroundColor: '#e0c36e',
-    marginBottom: 12,
+    width: wp('12%'),
+    height: hp('4%'),
+    borderRadius: wp('2.5%'),
+    backgroundColor: 'rgba(255, 214, 0, 0.95)',
+    marginBottom: hp('2.5%'),
+    shadowColor: '#FFD600',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 8,
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  cardNumberContainer: {
+    marginBottom: hp('2.5%'),
+    width: '100%',
   },
   cardNumberText: {
-    color: '#fff',
-    fontSize: 20,
-    letterSpacing: 2,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#FFFFFF',
+    fontSize: wp('5.5%'),
+    letterSpacing: wp('0.8%'),
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowRadius: 4,
+    textShadowOffset: { width: 2, height: 2 },
+    flexWrap: 'wrap',
+    lineHeight: wp('7%'),
   },
   cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: hp('0.5%'),
   },
   cardLabel: {
-    color: '#b0b8c1',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: wp('3.2%'),
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 2,
   },
   cardValue: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: wp('4.2%'),
+    fontWeight: '800',
     letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 1, height: 1 },
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 18,
-    fontSize: 17,
-    backgroundColor: '#f9f9fb',
-    color: '#222',
+  inputSection: {
+    marginTop: hp('1.5%'),
   },
   inputGroup: {
-    marginBottom: 10,
+    marginBottom: hp('2%'),
   },
   inputLabel: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 6,
-    marginLeft: 2,
-    fontWeight: '500',
+    fontSize: wp('3.8%'),
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: hp('0.8%'),
+    marginLeft: wp('1.5%'),
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowRadius: 1,
+  },
+  input: {
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+    borderRadius: wp('3%'),
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1.5%'),
+    fontSize: wp('4%'),
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    color: '#1E293B',
+    fontWeight: '600',
+    shadowColor: '#64748B',
+    shadowOpacity: 0.12,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 6,
+    letterSpacing: 0.8,
+    minHeight: hp('5.5%'),
   },
   inputHalf: {
     flex: 1,
-    marginBottom: 0,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    alignItems: 'flex-end',
   },
-  button: {
-    backgroundColor: '#FD501E',
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 8,
+  addButton: {
+    marginTop: hp('3%'),
+    borderRadius: wp('4%'),
     shadowColor: '#FD501E',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowOpacity: 0.5,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 16,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    paddingVertical: hp('1.8%'),
+    paddingHorizontal: wp('8%'),
+    borderRadius: wp('4%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: hp('5.5%'),
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 19,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: wp('4.5%'),
+    fontWeight: '900',
     letterSpacing: 1,
-  },
-  spacer: {
-    height: 40,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 3,
+    textShadowOffset: { width: 1, height: 2 },
+    textTransform: 'uppercase',
   },
 });
 

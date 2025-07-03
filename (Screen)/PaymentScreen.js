@@ -1,5 +1,6 @@
 import React, { useState, useEffect, use } from "react";
-import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal } from "react-native";
+import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView, Platform } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from "../ipconfig";
 import LogoTheTrago from "./../(component)/Logo";
 import Step from "../(component)/Step";
@@ -13,6 +14,7 @@ import moment from "moment-timezone";
 import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import headStyles from './../(CSS)/StartingPointScreenStyles';
 
 const brandIcons = {
   Visa: require("./../assets/visa.png"),
@@ -784,157 +786,266 @@ const PaymentScreen = ({ navigation, route }) => {
         </ScrollView>
       ) : (
         // ...existing code for ScrollView and content...
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-          <View style={{ position: 'relative', alignItems: 'center', paddingTop: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#fff' }}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={{ position: 'absolute', left: 16, top: 6, backgroundColor: '#FFF3ED', borderRadius: 20, padding: 6, zIndex: 2 }}
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Premium Gradient Background */}
+          <LinearGradient
+            colors={['#001233', '#002A5C', '#FD501E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1.2 }}
+            style={{ flex: 1 }}
+          >
+            {/* Enhanced Premium Header */}
+            <LinearGradient
+              colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+              style={[
+                headStyles.headerBg,
+                {
+                  width: '100%',
+                  marginLeft: '0%',
+                  marginTop: -20,
+                  borderBottomLeftRadius: 40,
+                  borderBottomRightRadius: 40,
+                  paddingBottom: 8,
+                  shadowColor: '#001233',
+                  shadowOpacity: 0.15,
+                  shadowRadius: 25,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 18,
+                  padding: 10,
+                  minHeight: hp('12%'),
+                  borderWidth: 1,
+                  borderColor: 'rgba(0, 18, 51, 0.08)',
+                  backdropFilter: 'blur(30px)',
+                },
+              ]}
             >
-              <AntDesign name="arrowleft" size={26} color="#FD501E" />
-            </TouchableOpacity>
-            <LogoTheTrago style={{ marginTop: 0, marginBottom: 0, alignSelf: 'flex-start', marginLeft: 0 }} />
-            <Step logoUri={3} style={{ marginTop: 0, marginBottom: 0 }} />
-          </View>
-          <Text style={[styles.title, { marginLeft: 30, marginTop: 5, marginBottom: 10 }]}>Payment</Text>
-          <ScrollView contentContainerStyle={styles.container}>
-            <ImageBackground
-              source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-              style={styles.background}>
-              <View style={styles.card}>
-                <View style={styles.row}>
-                  <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
-                  <Text style={styles.header}>Payment Options</Text>
-                </View>
+              <View
+                style={[
+                  headStyles.headerRow,
+                  {
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 0,
+                    paddingTop: 0,
+                    position: 'relative',
+                    marginTop: -10,
+                    height: 56,
+                  },
+                ]}
+              >
+                {/* Back Button - Left */}
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{
+                    position: 'absolute',
+                    left: 16,
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: 25,
+                    padding: 8,
+                    zIndex: 2,
+                    shadowColor: '#FD501E',
+                    shadowOpacity: 0.2,
+                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 4 },
+                    elevation: 8,
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.1)',
+                  }}
+                >
+                  <AntDesign name="arrowleft" size={24} color="#FD501E" />
+                </TouchableOpacity>
 
-                {/* Radio Button 1 */}
-                <View style={styles.radioContian}>
-                  <TouchableOpacity
-                    style={styles.optionContainer}
-                    onPress={() => handleSelection("7")}
-                  >
-                    <View
-                      style={[
-                        styles.radioButton,
-                        selectedOption === "7" && styles.selectedRadio,
-                      ]}
-                    />
-                    <View style={styles.logodown}>
-                      <Text style={styles.labelHead}>Credit and Debit Card</Text>
+                {/* Logo - Center */}
+                <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+                  <LogoTheTrago />
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Step Component */}
+            <View style={{
+              alignItems: 'center',
+              marginTop: hp('1%'),
+              marginBottom: hp('1%'),
+            }}>
+              <Step logoUri={3} />
+            </View>
+
+            {/* Enhanced Ultra Premium Title Section */}
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginTop: hp('1%'), 
+              marginHorizontal: wp('6%'), 
+              marginBottom: hp('2%'),
+              paddingHorizontal: wp('2%'),
+              paddingVertical: hp('1.5%'),
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderRadius: wp('4%'),
+              backdropFilter: 'blur(10px)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.2)',
+            }}>
+              <View style={{ flex: 1 }}>
+                <Text style={[
+                  headStyles.headerTitle, 
+                  { 
+                    color: '#FFFFFF', 
+                    fontSize: wp('7%'), 
+                    fontWeight: '800', 
+                    letterSpacing: -0.5, 
+                    textAlign: 'left', 
+                    marginLeft: 0,
+                    lineHeight: wp('8%'),
+                    textShadowColor: 'rgba(0,0,0,0.3)',
+                    textShadowRadius: 4,
+                    textShadowOffset: { width: 1, height: 1 },
+                  }
+                ]}>
+                  Payment
+                </Text>
+                <Text style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: wp('3.5%'),
+                  fontWeight: '500',
+                  marginTop: hp('0.5%'),
+                  letterSpacing: 0.3,
+                  textShadowColor: 'rgba(0,0,0,0.2)',
+                  textShadowRadius: 2,
+                }}>
+                  Complete your booking payment
+                </Text>
+              </View>
+            </View>
+
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ flex: 1 }}
+            >
+              <ScrollView 
+                contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
+                showsVerticalScrollIndicator={false}
+                style={{ flex: 1 }}
+                contentInsetAdjustmentBehavior="automatic"
+              >
+                {/* Content Container */}
+                <View style={styles.contentContainer}>
+                  <View style={styles.card}>
+                    <View style={styles.row}>
+                      <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
+                      <Text style={styles.header}>Payment Options</Text>
                     </View>
-                    <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                  </TouchableOpacity>
-                  {selectedOption === "7" && (
-                    <View style={{ marginTop: 10 }}>
-                      {/* Card List */}
-                      {savedCards.length > 0 ? (
-                        savedCards.map(card => (
-                          <TouchableOpacity
-                            key={card.id}
-                            style={[styles.savedCardItem, selectedCardId === card.id && styles.selectedCard]}
-                            onPress={() => {
-                              setSelectedCardId(card.id);
-                              // setSelectedCard(card); // ไม่ต้อง set ตรงนี้แล้ว ให้ useEffect ข้างบนจัดการ
-                              console.log('Selected Card:', card);
-                            }}
-                            activeOpacity={0.8}
-                          >
-                            <View style={styles.cardInfoRow}>
-                              <Image source={brandIcons[card.brand] || brandIcons.Unknown} style={styles.savedCardIcon} />
-                              <View style={{ flex: 1 }}>
-                                <Text style={styles.savedCardNumber}>{'**** **** **** ' + card.cardNumber.slice(-4)}</Text>
-                                <Text style={styles.savedCardName}>{card.cardName}  |  {card.expiry}</Text>
-                              </View>
-                              {selectedCardId === card.id && (
-                                <AntDesign name="checkcircle" size={22} color="#FD501E" style={{ marginLeft: 8 }} />
-                              )}
-                              {/* Remove button */}
-                              <TouchableOpacity
-                                onPress={() => handleRemoveCard(card.id)}
-                                style={{ marginLeft: 10, padding: 4 }}
-                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                              >
-                                <AntDesign name="delete" size={20} color="#FD501E" />
-                              </TouchableOpacity>
-                            </View>
-                          </TouchableOpacity>
-                        ))
-                      ) : (
-                        <Text style={{ color: '#888', marginBottom: 12 }}>No cards saved yet.</Text>
-                      )}
-                      {/* Add Card Button */}
+
+                    {/* Radio Button 1 */}
+                    <View style={styles.radioContian}>
                       <TouchableOpacity
-                        style={styles.addCardButton}
-                        onPress={() => {
-                          navigation.navigate('AddCardScreen', {
-                            onAddCard: (newCard) => {
-                              // Pass new card back via navigation params
-                              navigation.setParams({ newCard });
-                            },
-                            nextCardId: (savedCards.length + 1).toString(),
-                          });
-                        }}
+                        style={styles.optionContainer}
+                        onPress={() => handleSelection("7")}
                       >
-                        <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
-                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add Card</Text>
+                        <View
+                          style={[
+                            styles.radioButton,
+                            selectedOption === "7" && styles.selectedRadio,
+                          ]}
+                        />
+                        <View style={styles.logodown}>
+                          <Text style={styles.labelHead}>Credit and Debit Card</Text>
+                        </View>
+                        <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                      </TouchableOpacity>
+                      {selectedOption === "7" && (
+                        <View style={{ marginTop: 10 }}>
+                          {/* Card List */}
+                          {savedCards.length > 0 ? (
+                            savedCards.map(card => (
+                              <TouchableOpacity
+                                key={card.id}
+                                style={[styles.savedCardItem, selectedCardId === card.id && styles.selectedCard]}
+                                onPress={() => {
+                                  setSelectedCardId(card.id);
+                                  console.log('Selected Card:', card);
+                                }}
+                                activeOpacity={0.8}
+                              >
+                                <View style={styles.cardInfoRow}>
+                                  <Image source={brandIcons[card.brand] || brandIcons.Unknown} style={styles.savedCardIcon} />
+                                  <View style={{ flex: 1 }}>
+                                    <Text style={styles.savedCardNumber}>{'**** **** **** ' + card.cardNumber.slice(-4)}</Text>
+                                    <Text style={styles.savedCardName}>{card.cardName}  |  {card.expiry}</Text>
+                                  </View>
+                                  {selectedCardId === card.id && (
+                                    <AntDesign name="checkcircle" size={22} color="#FD501E" style={{ marginLeft: 8 }} />
+                                  )}
+                                  <TouchableOpacity
+                                    onPress={() => handleRemoveCard(card.id)}
+                                    style={{ marginLeft: 10, padding: 4 }}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                  >
+                                    <AntDesign name="delete" size={20} color="#FD501E" />
+                                  </TouchableOpacity>
+                                </View>
+                              </TouchableOpacity>
+                            ))
+                          ) : (
+                            <Text style={{ color: '#888', marginBottom: 12 }}>No cards saved yet.</Text>
+                          )}
+                          <TouchableOpacity
+                            style={styles.addCardButton}
+                            onPress={() => {
+                              navigation.navigate('AddCardScreen', {
+                                onAddCard: (newCard) => {
+                                  navigation.setParams({ newCard });
+                                },
+                                nextCardId: (savedCards.length + 1).toString(),
+                              });
+                            }}
+                          >
+                            <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add Card</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Radio Button 2 */}
+                    <View style={styles.radioContian}>
+                      <TouchableOpacity
+                        style={styles.optionContainer}
+                        onPress={() => handleSelection("2")}
+                      >
+                        <View
+                          style={[
+                            styles.radioButton,
+                            selectedOption === "2" && styles.selectedRadio,
+                          ]}
+                        />
+                        <View style={styles.logodown}>
+                          <Text style={styles.labelHead}>PromptPay</Text>
+                        </View>
+                        <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                       </TouchableOpacity>
                     </View>
-                  )}
 
-                </View>
-                {/* Radio Button 2 */}
-                <View style={styles.radioContian}>
-                  <TouchableOpacity
-                    style={styles.optionContainer}
-                    onPress={() => handleSelection("2")}
-                  >
-                    <View
-                      style={[
-                        styles.radioButton,
-                        selectedOption === "2" && styles.selectedRadio,
-                      ]}
-                    />
-                    <View style={styles.logodown}>
-                      <Text style={styles.labelHead}>PromptPay</Text>
+                    <View style={styles.row}>
+                      <View style={styles.checkboxContainer}>
+                        <TouchableOpacity onPress={() => setPickup(!pickup)}>
+                          <MaterialIcons name={pickup ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" style={{ marginRight: 8, marginTop: -5 }} />
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.textContainer}>
+                        <Text style={styles.label}>
+                          I understand and agree with the{' '}
+                          <Text style={styles.textcolor} onPress={() => setTermsModalVisible(true)}>
+                            Terms of Services
+                          </Text>
+                          {' '}and <Text style={styles.textcolor} onPress={() => setPrivacyModalVisible(true)}>Policy</Text>
+                        </Text>
+                      </View>
                     </View>
-                    <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-
-
-                  </TouchableOpacity>
-                </View>
-                {/* Radio Button 3 */}
-                {/* <View style={styles.radioContian}>
-                <TouchableOpacity
-                  style={styles.optionContainer}
-                  onPress={() => handleSelection("Option 3")}
-                >
-                  <View
-                    style={[
-                      styles.radioButton,
-                      selectedOption === "Option 3" && styles.selectedRadio,
-                    ]}
-                  />
-                  <View style={styles.logodown}>
-                    <Text style={styles.labelHead}>eWallet</Text>
                   </View>
-                  <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                </TouchableOpacity>
-              </View> */}
-                <View style={styles.row}>
-                  <View style={styles.checkboxContainer}>
-                    <TouchableOpacity onPress={() => setPickup(!pickup)}>
-                      <MaterialIcons name={pickup ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" style={{ marginRight: 8, marginTop: -5 }} />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.textContainer}>
-                    <Text style={styles.label}>
-                      I understand and agree with the{' '}
-                      <Text style={styles.textcolor} onPress={() => setTermsModalVisible(true)}>
-                        Terms of Services
-                      </Text>
-                      {' '}and <Text style={styles.textcolor} onPress={() => setPrivacyModalVisible(true)}>Policy</Text>
-                    </Text>
-                  </View>
-                </View>
                 {/* Terms and Conditions Modal */}
                 <Modal
                   visible={termsModalVisible}
@@ -1166,8 +1277,9 @@ const PaymentScreen = ({ navigation, route }) => {
                 }}>
                 <Text style={styles.BackButtonText}>Payment {customerData.symbol} {formatNumberWithComma(totalPayment)}</Text>
               </TouchableOpacity>
-            </ImageBackground>
-          </ScrollView>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </LinearGradient>
         </SafeAreaView>
       )}
     </View>
@@ -1178,160 +1290,156 @@ const PaymentScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('2%'),
   },
-  header: {
-    fontSize: 18,
+  contentContainer: {
+    flex: 1,
+    paddingTop: hp('1%'),
+  },
+  title: {
+    fontSize: wp('4.5%'),
     fontWeight: 'bold',
     textAlign: 'left',
-    color: '#002348',
-    marginBottom: 20,
+    color: '#1E293B',
+    marginBottom: hp('2%'),
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 2,
+  },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: wp('5%'),
+    width: '100%',
+    padding: wp('4%'),
+    marginVertical: hp('1%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.15,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 18, 51, 0.08)',
+    backdropFilter: 'blur(20px)',
+  },
+  header: {
+    fontSize: wp('4.5%'),
+    fontWeight: '800',
+    marginBottom: hp('1%'),
+    color: '#1E293B',
+    letterSpacing: -0.3,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 5,
-
+    fontSize: wp('4%'),
+    marginBottom: hp('0.5%'),
+    color: '#374151',
+    fontWeight: '500',
   },
   labelHead: {
-    fontSize: 16,
-    marginBottom: 5,
-    fontWeight: 'bold'
+    fontSize: wp('4%'),
+    marginBottom: hp('0.5%'),
+    color: '#374151',
+    fontWeight: '600',
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ced4da",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    marginBottom: 15,
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: wp('3%'),
+    padding: wp('3%'),
+    fontSize: wp('4%'),
+    backgroundColor: '#FFFFFF',
+    marginBottom: hp('1%'),
+    color: '#374151',
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   row: {
-    flexDirection: "row",
-    justifyContent: 'space-between'
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: hp('0.5%'),
   },
   inputContainer: {
-    width: "48%",
-    marginRight: 10,
+    marginBottom: hp('1%'),
   },
   buttonContainer: {
     backgroundColor: '#FD501E',
-    paddingVertical: 15,
-    borderRadius: 10,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: hp('2%'),
     width: '100%',
-    marginBottom: 20,
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    width: '100%',
-    padding: 16,
-    marginVertical: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    marginBottom: hp('4%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   optionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp('1.5%'),
   },
   radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: wp('5%'),
+    height: wp('5%'),
+    borderRadius: wp('2.5%'),
     borderWidth: 2,
-    borderColor: "#FD501E",
-    marginRight: 10,
+    borderColor: '#E5E7EB',
+    marginRight: wp('3%'),
   },
   selectedRadio: {
-    borderWidth: 5,
+    backgroundColor: '#FD501E',
+    borderColor: '#FD501E',
   },
   optionText: {
-    fontSize: 16,
+    fontSize: wp('4%'),
+    color: '#374151',
   },
   payment: {
-    marginLeft: 30,
+    marginTop: hp('2%'),
   },
   logodown: {
-    justifyContent: 'space-between',
-    width: '85%'
+    flex: 1,
   },
   radioContian: {
-    backgroundColor: '#F6F6F6',
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
-    paddingBottom: 10,
-    shadowColor: '#F6F6F6',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#d0d5d8"
+    borderColor: 'rgba(148, 163, 184, 0.2)',
+    borderRadius: wp('3%'),
+    padding: wp('3%'),
+    marginBottom: hp('1%'),
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   checkboxContainer: {
-    flexDirection: 'col',
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '10%',
-    marginTop: 5
+    marginTop: hp('1%'),
+    marginBottom: hp('1%'),
   },
   textContainer: {
-    flexDirection: 'col',
-    alignItems: 'center',
-    width: '90%'
+    flex: 1,
+    marginLeft: wp('2%'),
   },
   textcolor: {
-    color: '#FD501E'
+    color: '#FD501E',
+    fontWeight: '600',
   },
   divider: {
-    height: 1, // ความหนาของเส้น
-    width: '100%', // ทำให้ยาวเต็มจอ
-    backgroundColor: '#CCCCCC', // สีของเส้น
-    marginVertical: 10, // ระยะห่างระหว่าง element
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'left',
-    color: '#002348',
-    marginBottom: 20,
-  },
-  qrCodeContainer: {
-    marginTop: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chargeInfo: {
-    marginTop: 20,
-    textAlign: 'center',
-  },
-  redText: {
-    color: 'red'
-  },
-  greenText: {
-    color: 'green'
-  },
-  BackButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  errorInput: {
-    borderColor: 'red',
-  },
-  background: {
+    height: 1,
     width: '100%',
+    backgroundColor: '#E5E7EB',
+    marginVertical: hp('1.5%'),
   },
+  // ...existing code...
   loadingContainer: {
     position: "absolute",
     top: 0,
@@ -1369,25 +1477,42 @@ const styles = StyleSheet.create({
     width: 45,
     height: 35,
   },
-  // เพิ่มสไตล์สำหรับ card list
+  BackButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: wp('4.5%'),
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowRadius: 1,
+  },
+  greenText: {
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  // ...existing code...
   savedCardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: wp('3%'),
+    padding: wp('3.5%'),
+    marginBottom: hp('1%'),
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    shadowColor: '#6B7280',
+    shadowOpacity: 0.08,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 3,
   },
   selectedCard: {
     borderColor: '#FD501E',
-    backgroundColor: '#fff7f3',
+    backgroundColor: 'rgba(253, 80, 30, 0.05)',
     shadowColor: '#FD501E',
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowOpacity: 0.15,
+    shadowRadius: wp('3%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    elevation: 6,
   },
   cardInfoRow: {
     flexDirection: 'row',
@@ -1414,11 +1539,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FD501E',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: wp('4%'),
+    paddingVertical: hp('1.2%'),
+    borderRadius: wp('2%'),
     alignSelf: 'flex-end',
-    marginTop: 6,
+    marginTop: hp('1%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.3,
+    shadowRadius: wp('2%'),
+    shadowOffset: { width: 0, height: hp('0.3%') },
+    elevation: 6,
   },
   skeletonCard: {
     backgroundColor: '#ececec',

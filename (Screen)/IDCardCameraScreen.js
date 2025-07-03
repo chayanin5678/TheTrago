@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
   TextInput,
   ScrollView,
   SafeAreaView,
@@ -36,7 +36,7 @@ const IDCardCameraScreen = ({ navigation }) => {
   const [idNumber, setIdNumber] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [documentType, setDocumentType] = useState('ID Card'); // ID Card or Passport
-  
+
   // New states for ID card/passport data from API
   const [existingPassportInfo, setExistingPassportInfo] = useState({
     passport_number: '', // Used for ID number or passport number
@@ -56,16 +56,16 @@ const IDCardCameraScreen = ({ navigation }) => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  
+
   // Loading icon animation - separate refs for different contexts
   const loadingRotateAnim = useRef(new Animated.Value(0)).current;
   const uploadLoadingRotateAnim = useRef(new Animated.Value(0)).current;
   const saveLoadingRotateAnim = useRef(new Animated.Value(0)).current;
-  
+
   // Floating particles animation
   const floatingAnims = useRef(
     [...Array(6)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2),
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
       y: new Animated.Value(Math.random() * screenHeight * 0.8),
       opacity: new Animated.Value(0.1),
       scale: new Animated.Value(1),
@@ -84,7 +84,7 @@ const IDCardCameraScreen = ({ navigation }) => {
   // Safety timeout to prevent stuck loading states - optimized for faster processing
   useEffect(() => {
     let loadingTimeout;
-    
+
     if (isProcessing) {
       // Shorter timeout since we've optimized for speed
       loadingTimeout = setTimeout(() => {
@@ -101,7 +101,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         );
       }, 120000); // 2 minute safety timeout (optimized for speed)
     }
-    
+
     return () => {
       if (loadingTimeout) {
         clearTimeout(loadingTimeout);
@@ -184,7 +184,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           ])
         ).start();
       };
-      
+
       setTimeout(() => animateParticle(), index * 500);
     });
 
@@ -294,7 +294,7 @@ const IDCardCameraScreen = ({ navigation }) => {
   });
   // Enhanced image picker with options for camera or gallery
   const pickImage = async () => {
-      // Show action sheet with options and helpful tips
+    // Show action sheet with options and helpful tips
     Alert.alert(
       "Select ID Card/Passport Image",
       "For best results:\n• Use good lighting\n• Keep document flat and stable\n• Ensure all text is clearly visible\n• Make sure the entire document is in frame\n\nChoose how you'd like to upload your document:",
@@ -322,7 +322,8 @@ const IDCardCameraScreen = ({ navigation }) => {
   const openCamera = async () => {
     try {
       let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      if (permissionResult.granted === false) {        Alert.alert(
+      if (permissionResult.granted === false) {
+        Alert.alert(
           "Camera Permission Required",
           "Permission to access camera is required to scan your ID card or passport!",
           [
@@ -334,7 +335,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       }
 
       setIsProcessing(true);
-      
+
       // Open camera with optimized settings for documents and OCR
       let result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
@@ -348,7 +349,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         // Auto-crop and process the captured image for better OCR
         const croppedImage = await cropIDCard(result.assets[0].uri);
         setPhoto(croppedImage);
-        
+
         // Check network and process with user guidance
         await checkNetworkAndProcess(croppedImage);
       } else {
@@ -360,7 +361,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           [{ text: 'OK' }]
         );
       }
-      
+
     } catch (error) {
       console.error('Error in openCamera:', error);
       setIsProcessing(false); // Only clear on error
@@ -379,7 +380,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permissionResult.granted === false) {
         Alert.alert(
-          "Gallery Permission Required", 
+          "Gallery Permission Required",
           "Permission to access photo library is required to select images!",
           [
             { text: "Cancel", style: "cancel" },
@@ -403,7 +404,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         // Auto-crop and process the selected image for better OCR
         const croppedImage = await cropIDCard(result.assets[0].uri);
         setPhoto(croppedImage);
-        
+
         // Check network and process with user guidance
         await checkNetworkAndProcess(croppedImage);
       } else {
@@ -415,7 +416,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           [{ text: 'OK' }]
         );
       }
-      
+
     } catch (error) {
       console.error('Error in openGallery:', error);
       setIsProcessing(false); // Only clear on error
@@ -431,16 +432,16 @@ const IDCardCameraScreen = ({ navigation }) => {
   const cropIDCard = async (uri) => {
     try {
       console.log('🔍 Auto-cropping document from image...');
-      
+
       // Get image info first
       const imageInfo = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.JPEG });
-      
+
       // Calculate crop area for document (center-focused with some padding)
       const { width, height } = imageInfo;
       const aspectRatio = 85.6 / 54; // Standard ID/passport aspect ratio (85.6mm x 54mm)
-      
+
       let cropWidth, cropHeight, originX, originY;
-      
+
       // Determine the best crop dimensions while maintaining document aspect ratio
       if (width / height > aspectRatio) {
         // Image is wider - crop width
@@ -455,13 +456,13 @@ const IDCardCameraScreen = ({ navigation }) => {
         originX = width * 0.05; // Start 5% from left
         originY = (height - cropHeight) / 2;
       }
-      
+
       // Ensure crop dimensions don't exceed image bounds
       cropWidth = Math.min(cropWidth, width * 0.95);
       cropHeight = Math.min(cropHeight, height * 0.95);
       originX = Math.max(0, Math.min(originX, width - cropWidth));
       originY = Math.max(0, Math.min(originY, height - cropHeight));
-      
+
       // Perform the crop and enhance for OCR - optimized for documents
       const croppedImage = await ImageManipulator.manipulateAsync(
         uri,
@@ -481,10 +482,10 @@ const IDCardCameraScreen = ({ navigation }) => {
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
-      
+
       console.log('✅ Document cropped successfully');
       return croppedImage.uri;
-      
+
     } catch (error) {
       console.error('❌ Document auto-crop failed, using original image:', error);
       return uri; // Return original if cropping fails
@@ -496,23 +497,23 @@ const IDCardCameraScreen = ({ navigation }) => {
     try {
       console.log('🔍 Starting optimized OCR.space processing for document:', uri);
       setOcrProgress('Processing document...');
-      
+
       // Pre-check original image size to prevent oversized uploads
       const originalInfo = await FileSystem.getInfoAsync(uri);
       if (originalInfo.size && originalInfo.size > 5000000) { // 5MB limit
         console.log('⚠️ Original image too large, applying aggressive compression');
         setOcrProgress('Optimizing large image...');
       }
-      
+
       // Optimized image enhancement for faster OCR with maintained quality
       const processedImage = await ImageManipulator.manipulateAsync(
         uri,
         [
           { resize: { width: documentType === 'ID Card' ? 600 : 550 } }, // Further reduced resolution for speed
         ],
-        { 
+        {
           compress: originalInfo.size > 5000000 ? 0.95 : 0.9, // Higher compression for large files
-          format: ImageManipulator.SaveFormat.JPEG 
+          format: ImageManipulator.SaveFormat.JPEG
         }
       );
 
@@ -526,7 +527,7 @@ const IDCardCameraScreen = ({ navigation }) => {
 
       const imageSizeKB = Math.round(base64Image.length / 1024);
       console.log(`📤 Base64 conversion complete, image size: ${imageSizeKB}KB`);
-      
+
       // Check if image is too large for optimal processing
       if (imageSizeKB > 1000) {
         console.log('⚠️ Large image detected, may cause slower processing');
@@ -549,16 +550,16 @@ const IDCardCameraScreen = ({ navigation }) => {
       while (retryCount <= maxRetries && !ocrResult) {
         try {
           const currentEngine = ocrEngines[retryCount] || 1; // Default to Engine 1 for speed
-          
+
           if (retryCount > 0) {
             console.log(`🔄 Document OCR retry attempt ${retryCount}/${maxRetries} with Engine ${currentEngine}...`);
-            setOcrProgress(currentEngine === 1 ? 
-              `Quick scan attempt (${retryCount}/${maxRetries})...` : 
+            setOcrProgress(currentEngine === 1 ?
+              `Quick scan attempt (${retryCount}/${maxRetries})...` :
               `Thorough scan attempt (${retryCount}/${maxRetries})...`);
           }
-          
+
           ocrResult = await tryOCRSpace(base64Image, currentEngine, documentType);
-          
+
           if (ocrResult && ocrResult.trim().length > 0) {
             break; // Success, exit retry loop
           } else {
@@ -567,11 +568,11 @@ const IDCardCameraScreen = ({ navigation }) => {
         } catch (error) {
           retryCount++;
           console.log(`❌ Document OCR attempt ${retryCount} failed:`, error.message);
-          
+
           if (retryCount <= maxRetries) {
             // Shorter delay for faster attempts
             const delayTime = retryCount <= 2 ? 1500 : 3000; // 1.5s for fast attempts, 3s for thorough
-            console.log(`⏳ Waiting ${delayTime/1000}s before retry...`);
+            console.log(`⏳ Waiting ${delayTime / 1000}s before retry...`);
             await new Promise(resolve => setTimeout(resolve, delayTime));
           } else {
             // All retries failed
@@ -579,13 +580,13 @@ const IDCardCameraScreen = ({ navigation }) => {
           }
         }
       }
-      
+
       if (ocrResult && ocrResult.trim().length > 0) {
         console.log('✅ OCR.space succeeded - Real document data extracted');
         setOcrProgress('Analyzing document data...');
         setOcrText(ocrResult);
         parseIDText(ocrResult);
-        
+
         // Clear progress after successful OCR
         setOcrProgress('');
         Alert.alert(
@@ -596,14 +597,14 @@ const IDCardCameraScreen = ({ navigation }) => {
       } else {
         throw new Error('No text detected from document');
       }
-      
+
     } catch (error) {
       console.error('❌ Document OCR processing failed:', error.message);
-      
+
       // Handle different types of errors with more specific guidance for documents
       let errorTitle = 'Unable to Scan Document 📷';
       let errorMessage = 'Your document photo was captured but we couldn\'t automatically scan the data.\n\nTips for better document scanning:\n• Use good lighting\n• Hold document flat and steady\n• Ensure all text is visible\n• Try cleaning the document surface\n• Make sure the entire document is in frame\n\nYou can also enter your information manually.';
-      
+
       if (error.message.includes('timeout') || error.message.includes('network') || error.message.includes('fetch')) {
         errorTitle = 'Slow Connection Detected ⏱️';
         errorMessage = 'Document scanning is taking longer than usual due to slow internet.\n\n🚀 Quick fixes:\n• Check WiFi/4G signal strength\n• Move closer to WiFi router\n• Restart your internet connection\n• Try a smaller/clearer photo\n\n💡 Meanwhile, you can enter your details manually!';
@@ -614,7 +615,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         errorTitle = 'Document Not Clear Enough 🔍';
         errorMessage = 'We couldn\'t read the text from your document photo.\n\n📸 For better results:\n• Use bright, even lighting\n• Hold phone steady\n• Ensure document is flat\n• Make sure all text is visible\n• Avoid shadows and glare\n\n✍️ You can also enter details manually.';
       }
-      
+
       // Show message when document OCR fails - offer options to retake or enter manually
       Alert.alert(
         errorTitle,
@@ -642,9 +643,9 @@ const IDCardCameraScreen = ({ navigation }) => {
         new Promise((_, reject) => setTimeout(() => reject(new Error('Network test timeout')), 5000))
       ]);
       const networkLatency = Date.now() - startTime;
-      
+
       console.log(`📡 Network latency: ${networkLatency}ms`);
-      
+
       if (networkLatency > 3000) {
         Alert.alert(
           'Slow Network Detected 🐌',
@@ -666,19 +667,19 @@ const IDCardCameraScreen = ({ navigation }) => {
   // OCR.space API for real document text recognition (FREE: 25,000 requests/month)
   const tryOCRSpace = async (base64Image, engineNumber = 1, selectedDocumentType = 'ID Card') => {
     const OCR_SPACE_API_KEY = 'K87899142388957'; // Free API key
-    
+
     console.log(`🌐 Preparing optimized document OCR request with Engine ${engineNumber}...`);
-    
+
     // Calculate approximate base64 size for timeout optimization
     const base64SizeKB = Math.round((base64Image.length * 3) / 4 / 1024);
     console.log(`📏 Base64 image size: ${base64SizeKB}KB`);
-    
+
     const formData = new FormData();
     formData.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
     // Use supported language codes for OCR.space API
     // For Thai documents, we'll use 'eng' as OCR.space handles mixed Thai-English text well with English setting
     // Alternative: could try 'ara' (Arabic) which sometimes works better for non-Latin scripts
-    formData.append('language', selectedDocumentType === 'ID Card' ? 'eng' : 'eng'); 
+    formData.append('language', selectedDocumentType === 'ID Card' ? 'eng' : 'eng');
     formData.append('isOverlayRequired', 'false'); // Disabled for speed
     formData.append('OCREngine', engineNumber.toString()); // Engine 1 for speed, 2 for accuracy
     formData.append('isTable', 'false'); // Disabled for speed
@@ -688,16 +689,16 @@ const IDCardCameraScreen = ({ navigation }) => {
 
     console.log('📡 Sending optimized document request to OCR.space...');
     console.log(`🔧 OCR Settings: Engine ${engineNumber}, Language: ${selectedDocumentType === 'ID Card' ? 'eng (Thai ID)' : 'eng (Passport)'}`);
-    
+
     // Create adaptive timeout based on image size and engine type
     const baseTimeout = engineNumber === 1 ? 30000 : 45000; // Engine 1 faster, Engine 2 more thorough
     const adaptiveTimeout = Math.max(baseTimeout, Math.min(60000, base64SizeKB * 80));
-    console.log(`⏱️ Using adaptive timeout: ${adaptiveTimeout/1000}s for Engine ${engineNumber}`);
-    
-    const timeoutPromise = new Promise((_, reject) => 
+    console.log(`⏱️ Using adaptive timeout: ${adaptiveTimeout / 1000}s for Engine ${engineNumber}`);
+
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('OCR request timeout - network too slow')), adaptiveTimeout)
     );
-    
+
     const fetchPromise = fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       headers: {
@@ -717,26 +718,26 @@ const IDCardCameraScreen = ({ navigation }) => {
 
     const result = await response.json();
     console.log('🔍 OCR.space result:', result);
-    
+
     // Check for API errors first
     if (result.OCRExitCode !== 1) {
       console.error('❌ OCR processing failed:', result.ErrorMessage);
       const errorDetails = Array.isArray(result.ErrorMessage) ? result.ErrorMessage.join(', ') : result.ErrorMessage;
       throw new Error(`OCR processing failed: ${errorDetails || 'Unknown error'}`);
     }
-    
+
     if (result.ParsedResults && result.ParsedResults[0] && result.ParsedResults[0].ParsedText) {
       console.log('✅ Text extracted successfully');
       return result.ParsedResults[0].ParsedText;
     }
-    
+
     throw new Error('No text detected from document image');
   };
 
   // Enhanced text parsing specifically for Thai ID cards with OCR.space results
   const parseIDText = (text) => {
     const lines = text.split('\n').filter(line => line.trim());
-    
+
     console.log('🔍 OCR.space Document Text:', text);
     console.log('📝 Lines:', lines);
     console.log('📄 Document Type:', documentType);
@@ -747,7 +748,7 @@ const IDCardCameraScreen = ({ navigation }) => {
     // Enhanced document parsing logic for both ID cards and passports - Only extract document number
     lines.forEach((line, index) => {
       const cleanLine = line.trim();
-      
+
       // Parse document number - Enhanced patterns for both Thai ID and passport numbers
       const documentPatterns = [
         // Thai ID patterns (13 digits) - Enhanced for better detection
@@ -764,19 +765,19 @@ const IDCardCameraScreen = ({ navigation }) => {
         /\b([A-Z]\d{7,8})\b/, // Single letter + digits
         /\b([A-Z]{2}\d{6,7})\b/, // Two letters + digits
       ];
-      
+
       for (const pattern of documentPatterns) {
         const idMatch = cleanLine.match(pattern);
         if (idMatch && !foundId) {
           console.log('🔍 Potential ID match:', idMatch[1], 'from line:', cleanLine);
           foundId = idMatch[1].replace(/[\s-]/g, ''); // Remove spaces and dashes
-          
+
           // Validate document number based on type and length
           const isValidThaiId = foundId.length === 13 && /^\d{13}$/.test(foundId) && foundId !== '0000000000000';
           const isValidPassport = foundId.length >= 6 && foundId.length <= 9 && /^[A-Z0-9]+$/i.test(foundId);
-          
+
           console.log('🧪 Validation:', foundId, 'Length:', foundId.length, 'Thai ID valid:', isValidThaiId, 'Passport valid:', isValidPassport);
-          
+
           if (isValidThaiId || isValidPassport) {
             setIdNumber(foundId);
             console.log('✅ Found Document Number:', foundId, isValidThaiId ? '(Thai ID)' : '(Passport)');
@@ -827,21 +828,21 @@ const IDCardCameraScreen = ({ navigation }) => {
     }
 
     setIsProcessing(true);
-    
+
     try {
       console.log(`🚀 Starting ${documentType} upload process...`);
       console.log('📋 Data to upload:', { document_number: idNumber, photo: photo ? 'Available' : 'Missing', token: token ? 'Available' : 'Missing' });
-      
+
       // Create FormData for multipart upload
       const formData = new FormData();
-      
+
       // Add only document number to form data (no name/surname)
       formData.append('passport_number', idNumber);
-      
+
       // Prepare image file for upload
       const imageUri = photo;
       const filename = `${documentType.toLowerCase().replace(' ', '_')}_${Date.now()}.jpg`;
-      
+
       // Check if photo is a local file or remote URL
       if (imageUri.startsWith('file://') || imageUri.startsWith('content://')) {
         // Local file - append as blob (only document number will be updated)
@@ -853,7 +854,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       } else if (imageUri.startsWith('http')) {
         // Remote file - for existing photos, just update the document number
         console.log('📸 Using existing photo from server:', imageUri);
-        
+
         // For existing photos, we'll update the document number only
         Alert.alert(
           `Update ${documentType} Number`,
@@ -869,7 +870,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               onPress: async () => {
                 try {
                   console.log('� Updating passport number for existing document...');
-                  
+
                   // Since this is an existing remote document, we'll create a minimal update
                   // The backend should handle this case where we're updating just the number
                   const updateFormData = new FormData();
@@ -897,20 +898,20 @@ const IDCardCameraScreen = ({ navigation }) => {
                     try {
                       const updateResult = JSON.parse(responseText);
                       console.log('✅ Update successful:', updateResult);
-                      
+
                       setIsProcessing(false);
                       Alert.alert(
-                        'Success! 🎉', 
+                        'Success! 🎉',
                         'Your Thai ID number has been updated successfully.',
-                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                        [{ text: 'OK', onPress: () => navigation.navigate('ProfileScreen') }]
                       );
                     } catch (parseError) {
                       // If response is not JSON but request was successful
                       setIsProcessing(false);
                       Alert.alert(
-                        'Success! 🎉', 
+                        'Success! 🎉',
                         'Your Thai ID number has been updated successfully.',
-                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                        [{ text: 'OK', onPress: () => navigation.navigate('ProfileScreen') }]
                       );
                     }
                   } else {
@@ -935,7 +936,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                   console.error('❌ Update failed:', error);
                   setIsProcessing(false);
                   Alert.alert(
-                    'Update Failed', 
+                    'Update Failed',
                     'Unable to update Thai ID number for existing document.\n\nPlease take a new photo to update your information.',
                     [
                       {
@@ -982,7 +983,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         console.log('📨 Parsed API Response:', result);
       } catch (parseError) {
         console.error('❌ JSON Parse Error:', parseError);
-        
+
         // Handle non-JSON responses (HTML error pages, etc.)
         if (responseText.includes('<html') || responseText.includes('<!DOCTYPE')) {
           if (uploadResponse.status === 500) {
@@ -1008,7 +1009,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       if (uploadResponse.ok && result && result.status === 'success') {
         setIsProcessing(false);
         Alert.alert(
-          'Success! 🎉', 
+          'Success! 🎉',
           'Your Thai ID verification has been submitted successfully.\n\nDocument uploaded and saved to your profile.',
           [
             {
@@ -1024,9 +1025,9 @@ const IDCardCameraScreen = ({ navigation }) => {
     } catch (error) {
       console.error('❌ Error uploading passport:', error);
       setIsProcessing(false);
-      
+
       let errorMessage = 'Unable to save your information. Please try again.';
-      
+
       if (error.message.includes('network') || error.message.includes('fetch')) {
         errorMessage = 'Network error. Please check your internet connection and try again.';
       } else if (error.message.includes('authentication') || error.message.includes('token')) {
@@ -1036,7 +1037,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert(
         'Upload Failed',
         errorMessage,
@@ -1055,10 +1056,10 @@ const IDCardCameraScreen = ({ navigation }) => {
       console.log('No token found');
       return;
     }
-    
+
     setToken(storedToken);
     setIsLoadingPassport(true);
-    
+
     try {
       const response = await fetch(`${ipAddress}/passport-info`, {
         method: 'GET',
@@ -1074,11 +1075,11 @@ const IDCardCameraScreen = ({ navigation }) => {
 
       const data = await response.json();
       console.log('📨 Thai ID API Response:', data);
-      
+
       if (data.status === 'success' && data.data) {
         const passportInfo = data.data;
         console.log('👤 Thai ID Info Data:', passportInfo);
-        
+
         setExistingPassportInfo({
           passport_number: passportInfo.passport_number || '', // Thai ID number
           document_path: passportInfo.document_path || '',
@@ -1086,31 +1087,31 @@ const IDCardCameraScreen = ({ navigation }) => {
           has_document: passportInfo.has_document || false,
           last_updated: passportInfo.last_updated || null
         });
-        
+
         // Auto-fill Thai ID number if available
         if (passportInfo.passport_number) {
           console.log('🆔 Setting Thai ID number:', passportInfo.passport_number);
           setIdNumber(passportInfo.passport_number);
         }
-        
+
         // Set existing Thai ID photo if available
         if (passportInfo.document_path) {
           // Handle different URL formats
           let photoUrl = passportInfo.document_path;
-          
+
           // If it's not already a full URL, construct the full URL
           if (!photoUrl.startsWith('http')) {
             // Remove leading slash if present to avoid double slashes
             photoUrl = photoUrl.startsWith('/') ? photoUrl.substring(1) : photoUrl;
             photoUrl = `https://thetrago.com/${photoUrl}`;
           }
-          
+
           console.log('📷 Loading existing Thai ID document:', photoUrl);
           setPhoto(photoUrl);
         } else {
           console.log('📷 No existing Thai ID document found');
         }
-        
+
         console.log('✅ Thai ID info loaded successfully');
       } else {
         console.log('⚠️ No Thai ID data found or invalid response structure');
@@ -1161,7 +1162,7 @@ const IDCardCameraScreen = ({ navigation }) => {
   return (
     <View style={styles.containerPremium}>
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
-      
+
       {/* Floating Particles Background */}
       <View style={styles.particlesContainer}>
         {floatingAnims.map((anim, index) => (
@@ -1200,52 +1201,52 @@ const IDCardCameraScreen = ({ navigation }) => {
         >
           <SafeAreaView style={styles.safeAreaHeader}>
             <View style={styles.headerContent}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Document Scanner</Text>
-              <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerTitle}>Document Scanner</Text>
+                <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
+              </View>
+
+              {/* Empty view for layout balance */}
+              <View style={{ width: 40 }} />
+
+              {/* Floating decorative elements */}
+              <Animated.View
+                style={[
+                  styles.floatingDecor,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="shield-check" size={20} color="rgba(255,255,255,0.3)" />
+              </Animated.View>
+
+              <Animated.View
+                style={[
+                  styles.floatingDecor2,
+                  { transform: [{ rotate: spin }] }
+                ]}
+              >
+                <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
+              </Animated.View>
             </View>
-            
-            {/* Empty view for layout balance */}
-            <View style={{ width: 40 }} />
-            
-            {/* Floating decorative elements */}
-            <Animated.View 
-              style={[
-                styles.floatingDecor,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="shield-check" size={20} color="rgba(255,255,255,0.3)" />
-            </Animated.View>
-            
-            <Animated.View 
-              style={[
-                styles.floatingDecor2,
-                { transform: [{ rotate: spin }] }
-              ]}
-            >
-              <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
-            </Animated.View>
-          </View>
           </SafeAreaView>
         </LinearGradient>
       </Animated.View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollViewPremium}
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
         <View style={styles.contentContainer}>
-          
+
           {/* Premium Form Card */}
           <Animated.View
             style={[
@@ -1263,18 +1264,18 @@ const IDCardCameraScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="card-account-details" size={24} color="#FD501E" />
               <Text style={styles.sectionTitlePremium}>Personal Information</Text>
             </View>
-            
+
             {/* Info note about name fields being read-only */}
             <View style={styles.infoNotePremium}>
               <MaterialCommunityIcons name="information" size={16} color="#3B82F6" />
               <Text style={styles.infoNoteText}>Name and surname are loaded from your profile and cannot be changed here.</Text>
             </View>
-            
+
             <View style={styles.inputWrapperPremium}>
               <Text style={styles.inputLabelPremium}>Name*</Text>
-              <TextInput 
-                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]} 
-                placeholder="Loaded from your profile" 
+              <TextInput
+                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]}
+                placeholder="Loaded from your profile"
                 value={firstName}
                 editable={false}
                 placeholderTextColor="#9CA3AF"
@@ -1283,9 +1284,9 @@ const IDCardCameraScreen = ({ navigation }) => {
 
             <View style={styles.inputWrapperPremium}>
               <Text style={styles.inputLabelPremium}>Surname*</Text>
-              <TextInput 
-                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]} 
-                placeholder="Loaded from your profile" 
+              <TextInput
+                style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]}
+                placeholder="Loaded from your profile"
                 value={lastName}
                 editable={false}
                 placeholderTextColor="#9CA3AF"
@@ -1294,9 +1295,9 @@ const IDCardCameraScreen = ({ navigation }) => {
 
             <View style={styles.inputWrapperPremium}>
               <Text style={styles.inputLabelPremium}>{documentType} Number*</Text>
-              <TextInput 
-                style={styles.inputPremium} 
-                placeholder={`Enter your ${documentType.toLowerCase()} number`} 
+              <TextInput
+                style={styles.inputPremium}
+                placeholder={`Enter your ${documentType.toLowerCase()} number`}
                 value={idNumber}
                 onChangeText={setIdNumber}
                 placeholderTextColor="#9CA3AF"
@@ -1329,7 +1330,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               <MaterialCommunityIcons name="card-multiple" size={24} color="#FD501E" />
               <Text style={styles.sectionTitlePremium}>Document Type</Text>
             </View>
-            
+
             <View style={styles.documentTypeContainer}>
               <TouchableOpacity
                 style={[
@@ -1339,10 +1340,10 @@ const IDCardCameraScreen = ({ navigation }) => {
                 onPress={() => setDocumentType('ID Card')}
                 activeOpacity={0.8}
               >
-                <MaterialCommunityIcons 
-                  name="card-account-details" 
-                  size={20} 
-                  color={documentType === 'ID Card' ? '#FFFFFF' : '#FD501E'} 
+                <MaterialCommunityIcons
+                  name="card-account-details"
+                  size={20}
+                  color={documentType === 'ID Card' ? '#FFFFFF' : '#FD501E'}
                 />
                 <Text style={[
                   styles.documentTypeText,
@@ -1351,7 +1352,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                   ID Card
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.documentTypeButton,
@@ -1360,10 +1361,10 @@ const IDCardCameraScreen = ({ navigation }) => {
                 onPress={() => setDocumentType('Passport')}
                 activeOpacity={0.8}
               >
-                <MaterialCommunityIcons 
-                  name="passport" 
-                  size={20} 
-                  color={documentType === 'Passport' ? '#FFFFFF' : '#FD501E'} 
+                <MaterialCommunityIcons
+                  name="passport"
+                  size={20}
+                  color={documentType === 'Passport' ? '#FFFFFF' : '#FD501E'}
                 />
                 <Text style={[
                   styles.documentTypeText,
@@ -1396,7 +1397,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                 <Text style={styles.realOcrText}>REAL OCR</Text>
               </View>
             </View>
-            
+
             {/* Display existing document info if available */}
             {existingPassportInfo.has_document && existingPassportInfo.last_updated && (
               <View style={styles.existingDocumentInfo}>
@@ -1412,9 +1413,9 @@ const IDCardCameraScreen = ({ navigation }) => {
                 </Text>
               </View>
             )}
-            
-            <TouchableOpacity 
-              style={styles.uploadButtonPremium} 
+
+            <TouchableOpacity
+              style={styles.uploadButtonPremium}
               onPress={pickImage}
               activeOpacity={0.8}
               disabled={isProcessing}
@@ -1425,10 +1426,10 @@ const IDCardCameraScreen = ({ navigation }) => {
               >
                 {isProcessing ? (
                   <>
-                    <Animated.View style={{ 
+                    <Animated.View style={{
                       transform: [
                         { rotate: uploadLoadingSpin }
-                      ] 
+                      ]
                     }}>
                       <MaterialCommunityIcons name="loading" size={24} color="#FFFFFF" />
                     </Animated.View>
@@ -1472,8 +1473,8 @@ const IDCardCameraScreen = ({ navigation }) => {
                       <Text style={styles.imageErrorSubtext}>The document image could not be displayed</Text>
                     </View>
                   ) : (
-                    <Image 
-                      source={{ uri: photo }} 
+                    <Image
+                      source={{ uri: photo }}
                       style={styles.documentImage}
                       onError={(error) => {
                         console.error('❌ Image loading error:', error);
@@ -1497,8 +1498,8 @@ const IDCardCameraScreen = ({ navigation }) => {
                     <View style={styles.documentInfo}>
                       <MaterialCommunityIcons name="shield-check" size={16} color="#22C55E" />
                       <Text style={styles.documentStatus}>
-                        {existingPassportInfo.has_document && photo.includes('thetrago.com') 
-                          ? 'Previously Uploaded Document' 
+                        {existingPassportInfo.has_document && photo.includes('thetrago.com')
+                          ? 'Previously Uploaded Document'
                           : 'Verified Document'}
                       </Text>
                     </View>
@@ -1510,10 +1511,10 @@ const IDCardCameraScreen = ({ navigation }) => {
             {/* Loading state for passport info */}
             {isLoadingPassport && (
               <View style={styles.loadingContainer}>
-                <Animated.View style={{ 
+                <Animated.View style={{
                   transform: [
                     { rotate: loadingSpin }
-                  ] 
+                  ]
                 }}>
                   <MaterialCommunityIcons name="loading" size={20} color="#FD501E" />
                 </Animated.View>
@@ -1535,8 +1536,8 @@ const IDCardCameraScreen = ({ navigation }) => {
               },
             ]}
           >
-            <TouchableOpacity 
-              style={styles.saveButtonPremiumFull} 
+            <TouchableOpacity
+              style={styles.saveButtonPremiumFull}
               onPress={handleSave}
               activeOpacity={0.8}
               disabled={isProcessing || !idNumber || !photo}
@@ -1549,10 +1550,10 @@ const IDCardCameraScreen = ({ navigation }) => {
               >
                 {isProcessing ? (
                   <>
-                    <Animated.View style={{ 
+                    <Animated.View style={{
                       transform: [
                         { rotate: saveLoadingSpin }
-                      ] 
+                      ]
                     }}>
                       <MaterialCommunityIcons name="loading" size={20} color="#FFFFFF" />
                     </Animated.View>
@@ -1567,7 +1568,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
-          
+
         </View>
       </ScrollView>
     </View>
@@ -1886,7 +1887,7 @@ const styles = StyleSheet.create({
 
   // Save Button Premium (Full Width)
   saveButtonPremiumFull: {
-       borderRadius: 18,
+    borderRadius: 18,
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,

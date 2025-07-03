@@ -36,7 +36,6 @@ import PopularDestination from './(Screen)/populardestination';
 import LocationDetail from './(Screen)/LocationDetail';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AddCardScreen from './(Screen)/AddCardScreen';
-import SearchFerryDemo from './SearchFerryDemo';
 import ipAddress from './ipconfig';
 import { PromotionProvider } from './PromotionProvider';
 import TermsScreen from './(Screen)/TermsScreen';
@@ -171,7 +170,6 @@ const AppNavigator = () => (
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
-    <Stack.Screen name="SearchFerryDemo" component={SearchFerryDemo} options={{ headerShown: false }} />
     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );

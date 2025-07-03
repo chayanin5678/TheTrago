@@ -1888,33 +1888,33 @@ const SearchFerry = ({ navigation, route }) => {
                 backgroundColor: 'rgba(0,18,51,0.75)', 
                 justifyContent: 'center', 
                 alignItems: 'center',
-                paddingHorizontal: wp('5%')
+                paddingHorizontal: wp('8%')
               }}>
                 <View style={{ 
                   backgroundColor: 'rgba(255,255,255,0.98)', 
-                  borderRadius: wp('6%'), 
-                  padding: wp('6%'), 
+                  borderRadius: wp('5%'), 
+                  padding: wp('4%'), 
                   width: '100%',
-                  maxWidth: wp('92%'),
+                  maxWidth: wp('85%'),
                   shadowColor: '#001233',
                   shadowOpacity: 0.25,
-                  shadowRadius: wp('8%'),
-                  shadowOffset: { width: 0, height: hp('1.5%') },
-                  elevation: 25,
+                  shadowRadius: wp('6%'),
+                  shadowOffset: { width: 0, height: hp('1%') },
+                  elevation: 20,
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
-                  backdropFilter: 'blur(30px)',
+                  backdropFilter: 'blur(20px)',
                 }}>
                   {/* Enhanced Header */}
                   <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: hp('3%'),
+                    marginBottom: hp('2%'),
                   }}>
                     <Text style={{ 
                       fontWeight: '800', 
-                      fontSize: wp('5.5%'), 
+                      fontSize: wp('5%'), 
                       color: '#1E293B',
                       letterSpacing: -0.3
                     }}>Select Travel Dates</Text>
@@ -1922,8 +1922,8 @@ const SearchFerry = ({ navigation, route }) => {
                       onPress={() => setShowModal(false)}
                       style={{
                         backgroundColor: 'rgba(248,250,252,0.8)',
-                        padding: wp('2.5%'),
-                        borderRadius: wp('4%'),
+                        padding: wp('2%'),
+                        borderRadius: wp('3%'),
                         shadowColor: '#64748B',
                         shadowOpacity: 0.1,
                         shadowRadius: wp('2%'),
@@ -1931,23 +1931,23 @@ const SearchFerry = ({ navigation, route }) => {
                       }}
                       activeOpacity={0.7}
                     >
-                      <AntDesign name="close" size={wp('5%')} color="#64748B" />
+                      <AntDesign name="close" size={wp('4.5%')} color="#64748B" />
                     </TouchableOpacity>
                   </View>
 
                   {/* Enhanced Departure Date Section */}
                   <View style={{
                     backgroundColor: 'rgba(253, 80, 30, 0.06)',
-                    borderRadius: wp('4%'),
-                    padding: wp('4%'),
-                    marginBottom: hp('2%'),
+                    borderRadius: wp('3%'),
+                    padding: wp('3%'),
+                    marginBottom: hp('1.5%'),
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.1)',
                   }}>
                     <Text style={{ 
                       color: '#FD501E', 
-                      marginBottom: hp('1%'),
-                      fontSize: wp('4.2%'),
+                      marginBottom: hp('0.8%'),
+                      fontSize: wp('3.8%'),
                       fontWeight: '700',
                       letterSpacing: 0.2
                     }}>Departure Date</Text>
@@ -1982,9 +1982,9 @@ const SearchFerry = ({ navigation, route }) => {
                         textDayFontWeight: '600',
                         textMonthFontWeight: '700',
                         textDayHeaderFontWeight: '600',
-                        textDayFontSize: wp('3.8%'),
-                        textMonthFontSize: wp('4.5%'),
-                        textDayHeaderFontSize: wp('3.2%'),
+                        textDayFontSize: wp('3.3%'),
+                        textMonthFontSize: wp('4%'),
+                        textDayHeaderFontSize: wp('2.8%'),
                       }}
                     />
                   </View>
@@ -1992,16 +1992,16 @@ const SearchFerry = ({ navigation, route }) => {
                   {tripType === 'Return Trip' && (
                     <View style={{
                       backgroundColor: 'rgba(255, 214, 0, 0.06)',
-                      borderRadius: wp('4%'),
-                      padding: wp('4%'),
-                      marginBottom: hp('2%'),
+                      borderRadius: wp('3%'),
+                      padding: wp('3%'),
+                      marginBottom: hp('1.5%'),
                       borderWidth: 1,
                       borderColor: 'rgba(255, 214, 0, 0.15)',
                     }}>
                       <Text style={{ 
                         color: '#B8860B', 
-                        marginBottom: hp('1%'),
-                        fontSize: wp('4.2%'),
+                        marginBottom: hp('0.8%'),
+                        fontSize: wp('3.8%'),
                         fontWeight: '700',
                         letterSpacing: 0.2
                       }}>Return Date</Text>
@@ -2032,9 +2032,9 @@ const SearchFerry = ({ navigation, route }) => {
                           textDayFontWeight: '600',
                           textMonthFontWeight: '700',
                           textDayHeaderFontWeight: '600',
-                          textDayFontSize: wp('3.8%'),
-                          textMonthFontSize: wp('4.5%'),
-                          textDayHeaderFontSize: wp('3.2%'),
+                          textDayFontSize: wp('3.3%'),
+                          textMonthFontSize: wp('4%'),
+                          textDayHeaderFontSize: wp('2.8%'),
                         }}
                       />
                     </View>
@@ -2045,26 +2045,26 @@ const SearchFerry = ({ navigation, route }) => {
                     onPress={() => setShowModal(false)} 
                     style={{ 
                       backgroundColor: '#FD501E',
-                      borderRadius: wp('5%'),
-                      padding: hp('2.2%'),
+                      borderRadius: wp('4%'),
+                      padding: hp('1.8%'),
                       alignItems: 'center',
-                      marginTop: hp('1%'),
+                      marginTop: hp('0.5%'),
                       shadowColor: '#FD501E',
                       shadowOpacity: 0.3,
-                      shadowRadius: wp('4%'),
-                      shadowOffset: { width: 0, height: hp('0.8%') },
-                      elevation: 15,
+                      shadowRadius: wp('3%'),
+                      shadowOffset: { width: 0, height: hp('0.5%') },
+                      elevation: 12,
                       borderWidth: 1,
                       borderColor: 'rgba(255, 255, 255, 0.25)',
                     }}
                     activeOpacity={0.85}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <MaterialIcons name="check" size={wp('5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+                      <MaterialIcons name="check" size={wp('4.5%')} color="#FFFFFF" style={{ marginRight: wp('1.5%') }} />
                       <Text style={{ 
                         color: '#FFFFFF', 
                         fontWeight: '800', 
-                        fontSize: wp('4.2%'),
+                        fontSize: wp('3.8%'),
                         letterSpacing: 0.5,
                         textShadowColor: 'rgba(0,0,0,0.2)',
                         textShadowRadius: 2,
@@ -2520,177 +2520,405 @@ const SearchFerry = ({ navigation, route }) => {
                     }}
                     style={{ width: '100%' }}
                   >
-                    <View style={[
-                      styles.cardContainer,
-                      {
-                        marginTop: 20,
-                        backgroundColor: 'rgba(255,255,255,0.97)',
-                        borderWidth: 0.5,
-                        borderColor: 'rgba(0,35,72,0.08)',
-                        shadowColor: '#001233',
-                        shadowOpacity: 0.12,
-                        shadowRadius: 15,
-                        shadowOffset: { width: 0, height: 4 },
-                        elevation: 8,
-                        overflow: 'hidden',
-                        padding: 0,
-                        borderRadius: 16,
-                        position: 'relative',
-                        minHeight: 160,
-                        // Premium gradient effect
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
-                      },
-                    ]}>
-                      {/* Premium Ferry Header */}
-                      <View style={{
-                        backgroundColor: '#FD501E',
-                        borderTopLeftRadius: 16,
-                        borderTopRightRadius: 16,
-                        paddingVertical: 14,
-                        paddingHorizontal: 18,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        position: 'relative',
-                        // Premium header gradient
-                        background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
-                      }}>
+                    {/* Modern Ferry Ticket Design */}
+                    <View style={{
+                      marginTop: 20,
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      shadowColor: '#001233',
+                      shadowOpacity: 0.15,
+                      shadowRadius: 20,
+                      shadowOffset: { width: 0, height: 8 },
+                      elevation: 15,
+                      position: 'relative',
+                    }}>
+                      {/* Ticket Header with Company Info */}
+                      <LinearGradient
+                        colors={['#FD501E', '#E8461A']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                          paddingHorizontal: 20,
+                          paddingVertical: 16,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Image
                             source={{ uri: `${item.md_timetable_companypic}` }}
                             style={{ 
-                              width: wp('10%'), 
-                              height: hp('4.5%'), 
-                              borderRadius: 10, 
+                              width: 45, 
+                              height: 45, 
+                              borderRadius: 12, 
                               backgroundColor: '#fff', 
-                              borderWidth: 1, 
+                              borderWidth: 2, 
                               borderColor: 'rgba(255,255,255,0.3)', 
                               marginRight: 12 
                             }}
                             resizeMode="cover"
                           />
-                          <Text
-                            style={{
-                              color: '#fff',
-                              fontWeight: '800',
+                          <View>
+                            <Text style={{
+                              color: '#FFFFFF',
+                              fontWeight: 'bold',
                               fontSize: 16,
-                              maxWidth: wp('22%'),
-                              overflow: 'hidden',
+                              maxWidth: wp('35%'),
                               letterSpacing: -0.3,
-                            }}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                          >
-                            {item.md_timetable_companyname}
-                          </Text>
+                            }} numberOfLines={1}>
+                              {item.md_timetable_companyname}
+                            </Text>
+                            <Text style={{
+                              color: 'rgba(255,255,255,0.9)',
+                              fontSize: 12,
+                              fontWeight: '500',
+                            }}>
+                              Ferry Service
+                            </Text>
+                          </View>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <Text style={[styles.tag, { 
-                            backgroundColor: 'rgba(255,255,255,0.95)', 
-                            color: '#FD501E', 
-                            fontWeight: '700', 
-                            fontSize: 12,
-                            paddingHorizontal: 10,
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={{
+                            color: '#FFFFFF',
+                            fontWeight: 'bold',
+                            fontSize: 14,
+                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            paddingHorizontal: 8,
                             paddingVertical: 4,
-                            borderRadius: 12,
-                            overflow: 'hidden'
-                          }]}>
+                            borderRadius: 8,
+                            marginBottom: 4,
+                          }}>
                             {item.md_timetable_seatid}
                           </Text>
-                          <Text style={[styles.tag, { 
-                            backgroundColor: 'rgba(255,255,255,0.95)', 
-                            color: '#FD501E', 
-                            fontWeight: '700', 
-                            fontSize: 12,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            borderRadius: 12,
-                            overflow: 'hidden'
-                          }]}>
+                          <Text style={{
+                            color: 'rgba(255,255,255,0.9)',
+                            fontSize: 11,
+                            fontWeight: '600',
+                          }}>
                             {tripTypeSearch}
                           </Text>
                         </View>
-                      </View>
-                      {/* Premium Card Body */}
-                      <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
-                        <View style={styles.detailsRow}>
-                          <View style={styles.locationContainer}>
-                            <Text style={styles.location}>{item.md_timetable_startid}</Text>
-                            <Text style={styles.subtext}>{item.md_timetable_pierstart}</Text>
-                            <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                          </View>
-                          <View style={styles.middleContainer}>
-                            <Text style={styles.duration}>{item.md_timetable_boattypeid}</Text>
-                            <View style={styles.iconLineContainer}>
-                              <View style={styles.dashedLine} />
-                              <View style={styles.shipIcon}>
-                                <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
-                              </View>
-                              <View style={styles.dashedLine} />
-                            </View>
-                            <Text style={styles.duration}>{item.md_timetable_time}</Text>
-                            <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
-                          </View>
-                          <View style={styles.locationContainer}>
-                            <Text style={styles.location}>{item.md_timetable_endid}</Text>
-                            <Text style={styles.subtext}>{item.md_timetable_pierend}</Text>
-                            <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                            <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                          </View>
-                        </View>
-                        {/* Premium Price & Book Section */}
-                        <View style={[styles.footerRow, { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(148,163,184,0.1)' }]}>
-                          <Text style={styles.price}>{selectedCurrency} <Text style={styles.pricebig}>{formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
-                            {item.md_timetable_discount > 0 && (
-                              <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
-                            )}</Text>
-                          <TouchableOpacity style={styles.bookNowButton}
-                            onPress={() => {
-                              updateCustomerData({
-                                roud: 1,
-                                day: day,
-                                month: month,
-                                year: year,
-                                departdate: calendarStartDate,
-                                timeTableDepartId: item.md_timetable_id,
-                                startingPointId: startingPoint.id,
-                                startingpoint_name: startingPoint.name,
-                                endPointId: endPoint.id,
-                                endpoint_name: endPoint.name,
-                                companyDepartId: item.md_timetable_companyid,
-                                pierStartDepartId: item.md_timetable_pierstartid,
-                                pierEndDepartId: item.md_timetable_pierendid,
-                                netDepart: item.md_timetable_netadult,
-                                adult: adults,
-                                child: children,
-                                infant: infant,
-                                timetableReturn: item.md_timetable_id,
-                                piccompanyDepart: item.md_timetable_companypic,
-                                pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
-                                discount: item.md_timetable_discount,
-                                exchaneRate: item.md_exchange_money,
-                                international: item.md_timetable_international,
-                                currency: selectedCurrency,
-                                symbol: selectedSysmbol,
-                              });
-                              navigation.navigate('TripDetail');
-                            }} >
-                            <Text style={styles.bookNowText}>Book Now</Text>
-                          </TouchableOpacity>
-                        </View>
-                        {item.md_timetable_remark.en && (
-                          <View style={styles.remarkContainer}>
-                            <Text style={styles.remarkText}>
-                              <Text style={styles.remarkLabel}>Remark: </Text>
-                              {item.md_timetable_remark.en}
-                            </Text>
-                          </View>
-                        )}
-                        {/* Hidden measure view for animation height calculation */}
+                      </LinearGradient>
 
+                      {/* Ticket Body */}
+                      <View style={{ backgroundColor: '#FFFFFF', position: 'relative' }}>
+                        {/* Decorative Perforated Border */}
+                        <View style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 1,
+                          backgroundColor: '#E2E8F0',
+                        }} />
+                        
+                        {/* Main Journey Info */}
+                        <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                          <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 20,
+                          }}>
+                            {/* From Location */}
+                            <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                              <Text style={{
+                                color: '#1E293B',
+                                fontSize: 18,
+                                fontWeight: 'bold',
+                                marginBottom: 4,
+                              }}>
+                                {item.md_timetable_startid}
+                              </Text>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 12,
+                                fontWeight: '500',
+                                marginBottom: 8,
+                              }}>
+                                {item.md_timetable_pierstart}
+                              </Text>
+                              <View style={{
+                                backgroundColor: '#FFF3ED',
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: '#FD501E',
+                              }}>
+                                <Text style={{
+                                  color: '#FD501E',
+                                  fontSize: 16,
+                                  fontWeight: 'bold',
+                                }}>
+                                  {formatTime(item.md_timetable_departuretime)}
+                                </Text>
+                              </View>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 11,
+                                fontWeight: '500',
+                                marginTop: 4,
+                              }}>
+                                {formatDate(calendarStartDate)}
+                              </Text>
+                            </View>
+
+                            {/* Journey Info */}
+                            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 12,
+                                fontWeight: '600',
+                                marginBottom: 8,
+                              }}>
+                                {item.md_timetable_boattypeid}
+                              </Text>
+                              
+                              {/* Journey Line with Boat Icon */}
+                              <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 8,
+                              }}>
+                                <View style={{
+                                  width: 40,
+                                  height: 2,
+                                  backgroundColor: '#E2E8F0',
+                                  borderRadius: 1,
+                                }} />
+                                <View style={{
+                                  width: 30,
+                                  height: 30,
+                                  borderRadius: 15,
+                                  backgroundColor: '#FFF3ED',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  marginHorizontal: 8,
+                                  borderWidth: 2,
+                                  borderColor: '#FD501E',
+                                }}>
+                                  <Image 
+                                    source={require('./assets/boat.png')} 
+                                    style={{ width: 16, height: 16 }}
+                                    resizeMode="contain"
+                                  />
+                                </View>
+                                <View style={{
+                                  width: 40,
+                                  height: 2,
+                                  backgroundColor: '#E2E8F0',
+                                  borderRadius: 1,
+                                }} />
+                              </View>
+                              
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 12,
+                                fontWeight: '600',
+                                marginBottom: 4,
+                              }}>
+                                {item.md_timetable_time}
+                              </Text>
+                              <Text style={{
+                                color: '#FD501E',
+                                fontSize: 11,
+                                fontWeight: '600',
+                                backgroundColor: '#FFF3ED',
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                                borderRadius: 8,
+                              }}>
+                                {item.md_timetable_count} booked
+                              </Text>
+                            </View>
+
+                            {/* To Location */}
+                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                              <Text style={{
+                                color: '#1E293B',
+                                fontSize: 18,
+                                fontWeight: 'bold',
+                                marginBottom: 4,
+                              }}>
+                                {item.md_timetable_endid}
+                              </Text>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 12,
+                                fontWeight: '500',
+                                marginBottom: 8,
+                              }}>
+                                {item.md_timetable_pierend}
+                              </Text>
+                              <View style={{
+                                backgroundColor: '#F0FDF4',
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: '#16A34A',
+                              }}>
+                                <Text style={{
+                                  color: '#16A34A',
+                                  fontSize: 16,
+                                  fontWeight: 'bold',
+                                }}>
+                                  {formatTime(item.md_timetable_arrivaltime)}
+                                </Text>
+                              </View>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 11,
+                                fontWeight: '500',
+                                marginTop: 4,
+                              }}>
+                                {formatDate(calendarStartDate)}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Divider */}
+                          <View style={{
+                            height: 1,
+                            backgroundColor: '#E2E8F0',
+                            marginVertical: 16,
+                          }} />
+
+                          {/* Price and Booking Section */}
+                          <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 13,
+                                fontWeight: '500',
+                                marginBottom: 4,
+                              }}>
+                                Price per person
+                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 14,
+                                  fontWeight: '600',
+                                  marginRight: 4,
+                                }}>
+                                  {selectedCurrency}
+                                </Text>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 24,
+                                  fontWeight: 'bold',
+                                }}>
+                                 {formatNumberWithComma(parseFloat((parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(item.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2)))}
+                                </Text>
+                              </View>
+                              {item.md_timetable_discount > 0 && (
+                                <View style={{
+                                  backgroundColor: '#FEF3C7',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                  borderRadius: 6,
+                                  alignSelf: 'flex-start',
+                                  marginTop: 4,
+                                }}>
+                                  <Text style={{
+                                    color: '#D97706',
+                                    fontSize: 11,
+                                    fontWeight: 'bold',
+                                  }}>
+                                    {item.md_timetable_discount}% OFF
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+
+                            <TouchableOpacity
+                              style={{
+                                backgroundColor: '#FD501E',
+                                paddingHorizontal: 24,
+                                paddingVertical: 14,
+                                borderRadius: 16,
+                                shadowColor: '#FD501E',
+                                shadowOpacity: 0.3,
+                                shadowRadius: 8,
+                                shadowOffset: { width: 0, height: 4 },
+                                elevation: 8,
+                              }}
+                              onPress={() => {
+                                updateCustomerData({
+                                  roud: 1,
+                                  day: day,
+                                  month: month,
+                                  year: year,
+                                  departdate: calendarStartDate,
+                                  timeTableDepartId: item.md_timetable_id,
+                                  startingPointId: startingPoint.id,
+                                  startingpoint_name: startingPoint.name,
+                                  endPointId: endPoint.id,
+                                  endpoint_name: endPoint.name,
+                                  companyDepartId: item.md_timetable_companyid,
+                                  pierStartDepartId: item.md_timetable_pierstartid,
+                                  pierEndDepartId: item.md_timetable_pierendid,
+                                  netDepart: item.md_timetable_netadult,
+                                  adult: adults,
+                                  child: children,
+                                  infant: infant,
+                                  timetableReturn: item.md_timetable_id,
+                                  piccompanyDepart: item.md_timetable_companypic,
+                                  pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                  discount: item.md_timetable_discount,
+                                  exchaneRate: item.md_exchange_money,
+                                  international: item.md_timetable_international,
+                                  currency: selectedCurrency,
+                                  symbol: selectedSysmbol,
+                                });
+                                navigation.navigate('TripDetail');
+                              }}
+                            >
+                              <Text style={{
+                                color: '#FFFFFF',
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                letterSpacing: 0.5,
+                              }}>
+                                Book Now
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Remark Section */}
+                          {item.md_timetable_remark.en && (
+                            <View style={{
+                              backgroundColor: '#F8FAFC',
+                              padding: 12,
+                              borderRadius: 12,
+                              marginTop: 16,
+                              borderLeftWidth: 4,
+                              borderLeftColor: '#FD501E',
+                            }}>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 12,
+                                fontWeight: '500',
+                                lineHeight: 16,
+                              }}>
+                                <Text style={{ fontWeight: 'bold', color: '#FD501E' }}>Note: </Text>
+                                {item.md_timetable_remark.en}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Hidden measure view for animation - Updated */}
                         <View
-                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
+                          style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
                           onLayout={(e) => {
                             const h = e.nativeEvent.layout.height;
                             if (contentHeights[item.md_timetable_id] !== h) {
@@ -2698,105 +2926,121 @@ const SearchFerry = ({ navigation, route }) => {
                             }
                           }}
                         >
-                          <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                          <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                          />
+                          <View style={{ padding: 20 }}>
+                            <Text style={{
+                              color: '#FD501E',
+                              fontWeight: 'bold',
+                              fontSize: 16,
+                              marginBottom: 12,
+                            }}>
+                              Trip Details
+                            </Text>
+                            <Text style={{
+                              color: '#64748B',
+                              fontSize: 14,
+                              lineHeight: 20,
+                              marginBottom: 16,
+                            }}>
+                              {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                            </Text>
+                            {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 && (
+                              <View style={{
+                                width: '100%',
+                                height: 200,
+                                backgroundColor: '#F1F5F9',
+                                borderRadius: 16,
+                                marginBottom: 10,
+                              }} />
+                            )}
+                          </View>
                         </View>
-
                       </View>
-                      {/* Enhanced Ultra Premium Animated Detail Section */}
+
+                      {/* Expandable Detail Section - Updated */}
                       <Animated.View
                         style={{
                           maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                           overflow: 'hidden',
-                          backgroundColor: 'rgba(248,251,255,0.95)',
-                          borderBottomLeftRadius: wp('4%'),
-                          borderBottomRightRadius: wp('4%'),
-                          borderTopWidth: 1,
-                          borderTopColor: 'rgba(253, 80, 30, 0.1)',
+                          backgroundColor: '#F8FAFC',
+                          borderBottomLeftRadius: 20,
+                          borderBottomRightRadius: 20,
                         }}
                       >
-                        <View style={{
-                          padding: wp('5%'),
-                          backgroundColor: 'linear-gradient(135deg, rgba(248,251,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-                        }}>
-                          {/* Premium Detail Header */}
-                          <View style={{
-                            backgroundColor: 'rgba(253, 80, 30, 0.08)',
-                            borderRadius: wp('3%'),
-                            padding: wp('3%'),
-                            marginBottom: hp('2%'),
-                            borderLeftWidth: wp('1%'),
-                            borderLeftColor: '#FD501E',
-                            shadowColor: '#FD501E',
-                            shadowOpacity: 0.08,
-                            shadowRadius: wp('2%'),
-                            elevation: 2,
+                        <View style={{ padding: 20 }}>
+                          <Text style={{
+                            color: '#FD501E',
+                            fontWeight: 'bold',
+                            fontSize: 16,
+                            marginBottom: 12,
                           }}>
-                            <Text style={{
-                              color: '#FD501E',
-                              fontWeight: '700',
-                              fontSize: wp('4%'),
-                              letterSpacing: 0.3,
-                              marginBottom: hp('0.5%'),
-                            }}>Trip Details</Text>
-                            <Text style={{
-                              color: '#64748B',
-                              fontWeight: '500',
-                              fontSize: wp('3.2%'),
-                              letterSpacing: 0.2,
-                              lineHeight: wp('5%'),
-                            }}>
-                              {removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
-                            </Text>
-                          </View>
-
-                          {/* Premium Image Container */}
-                          <View style={{
-                            borderRadius: wp('5%'),
-                            overflow: 'hidden',
-                            shadowColor: '#001233',
-                            shadowOpacity: 0.15,
-                            shadowRadius: wp('4%'),
-                            shadowOffset: { width: 0, height: hp('0.5%') },
-                            elevation: 10,
-                            borderWidth: 1,
-                            borderColor: 'rgba(255,255,255,0.8)',
+                            Trip Details
+                          </Text>
+                          <Text style={{
+                            color: '#64748B',
+                            fontSize: 14,
+                            lineHeight: 20,
+                            marginBottom: 16,
                           }}>
-                            <Image
-                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                              style={{ 
-                                width: '100%', 
-                                height: hp('20%'), 
-                                resizeMode: 'cover'
-                              }}
-                            />
+                            {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                          </Text>
+                          
+                          {/* Ferry Image with Error Handling */}
+                          {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 ? (
                             <View style={{
-                              position: 'absolute',
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              height: hp('8%'),
-                              background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%)',
-                              justifyContent: 'flex-end',
-                              padding: wp('3%'),
+                              borderRadius: 16,
+                              overflow: 'hidden',
+                              backgroundColor: '#F1F5F9',
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.1,
+                              shadowRadius: 4,
+                              elevation: 3,
                             }}>
-                              <Text style={{
-                                color: '#FFFFFF',
-                                fontWeight: '600',
-                                fontSize: wp('3.5%'),
-                                textShadowColor: 'rgba(0,0,0,0.5)',
-                                textShadowRadius: 2,
-                              }}>Ferry Experience</Text>
+                              <Image
+                                source={{ 
+                                  uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}`,
+                                  cache: 'force-cache'
+                                }}
+                                style={{ 
+                                  width: '100%', 
+                                  height: 200, 
+                                  resizeMode: 'cover'
+                                }}
+                                onError={(error) => {
+                                  console.log('Image loading error:', error);
+                                }}
+                                onLoad={() => {
+                                  console.log('Image loaded successfully');
+                                }}
+                              />
                             </View>
-                          </View>
+                          ) : (
+                            <View style={{
+                              width: '100%',
+                              height: 200,
+                              backgroundColor: '#F1F5F9',
+                              borderRadius: 16,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              borderWidth: 2,
+                              borderColor: '#E2E8F0',
+                              borderStyle: 'dashed',
+                            }}>
+                              <Icon name="image-outline" size={48} color="#94A3B8" />
+                              <Text style={{
+                                color: '#94A3B8',
+                                fontSize: 14,
+                                fontWeight: '500',
+                                marginTop: 8,
+                              }}>
+                                No image available
+                              </Text>
+                            </View>
+                          )}
+
                         </View>
                       </Animated.View>
-
                     </View>
-
                   </TouchableOpacity>
 
                 ))}
@@ -2850,159 +3094,411 @@ const SearchFerry = ({ navigation, route }) => {
                       }}
                       style={{ width: '100%' }}
                     >
-                      <View style={[
-                        styles.cardContainer,
-                        {
-                          marginTop: 20,
-                          backgroundColor: 'rgba(255,255,255,0.97)',
-                          borderWidth: 0.5,
-                          borderColor: 'rgba(0,35,72,0.08)',
-                          shadowColor: '#001233',
-                          shadowOpacity: 0.12,
-                          shadowRadius: 15,
-                          shadowOffset: { width: 0, height: 4 },
-                          elevation: 8,
-                          overflow: 'hidden',
-                          padding: 0,
-                          borderRadius: 16,
-                          position: 'relative',
-                          minHeight: 160,
-                          // Premium gradient effect
-                          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
-                        },
-                      ]}>
-                        {/* หัวตั๋ว */}
-                        <View style={{
-                          backgroundColor: '#FD501E',
-                          borderTopLeftRadius: 16,
-                          borderTopRightRadius: 16,
-                          paddingVertical: 18,
-                          paddingHorizontal: 22,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          position: 'relative',
-                        }}>
+                      {/* Modern Ferry Ticket Design - Depart Trip */}
+                      <View style={{
+                        marginTop: 20,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 20,
+                        overflow: 'hidden',
+                        shadowColor: '#001233',
+                        shadowOpacity: 0.15,
+                        shadowRadius: 20,
+                        shadowOffset: { width: 0, height: 8 },
+                        elevation: 15,
+                        position: 'relative',
+                      }}>
+                        {/* Ticket Header with Company Info */}
+                        <LinearGradient
+                          colors={['#FD501E', '#E8461A']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={{
+                            paddingHorizontal: 20,
+                            paddingVertical: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Image
                               source={{ uri: `${item.md_timetable_companypic}` }}
-                              style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                              style={{ 
+                                width: 45, 
+                                height: 45, 
+                                borderRadius: 12, 
+                                backgroundColor: '#fff', 
+                                borderWidth: 2, 
+                                borderColor: 'rgba(255,255,255,0.3)', 
+                                marginRight: 12 
+                              }}
                               resizeMode="cover"
                             />
-                            <Text
-                              style={{
-                                color: '#fff',
+                            <View>
+                              <Text style={{
+                                color: '#FFFFFF',
                                 fontWeight: 'bold',
-                                fontSize: 18,
-                                maxWidth: wp('19%'),
-                                overflow: 'hidden',
-                              }}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {item.md_timetable_companyname}
-                            </Text>
-                          </View>
-                          <View style={{ flexDirection: 'row', gap: 6 }}>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_timetable_seatid}</Text>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
-                          </View>
-                        </View>
-                        {/* เนื้อหาตั๋ว */}
-                        <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
-                          <View style={styles.detailsRow}>
-                            <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.md_timetable_startid}</Text>
-                              <Text style={styles.subtext}>{item.md_timetable_pierstart}</Text>
-                              <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                            </View>
-                            <View style={styles.middleContainer}>
-                              <Text style={styles.duration}>{item.md_timetable_boattypeid}</Text>
-                              <View style={styles.iconLineContainer}>
-                                <View style={styles.dashedLine} />
-                                <View style={styles.shipIcon}>
-                                  <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
-                                </View>
-                                <View style={styles.dashedLine} />
-                              </View>
-                              <Text style={styles.duration}>{item.md_timetable_time}</Text>
-                              <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
-                            </View>
-                            <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.md_timetable_endid}</Text>
-                              <Text style={styles.subtext}>{item.md_timetable_pierend}</Text>
-                              <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                            </View>
-                          </View>
-                          {/* ราคาและปุ่ม */}
-                          <View style={[styles.footerRow, { marginTop: 18 }]}>
-                            <Text style={styles.price}>
-                              {selectedCurrency} <Text style={styles.pricebig}>
-                                {item.md_timetable_saleadult_round !== 0
-                                  ? formatNumberWithComma(item.md_timetable_saleadult_round)
-                                  : formatNumberWithComma(item.md_timetable_saleadult)}
-                              </Text> / person
-                            </Text>
-
-                            {item.md_timetable_discount > 0 && (
-                              <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
-                            )}
-                            <TouchableOpacity style={styles.bookNowButton}
-                              onPress={() => {
-                                // Update customer data
-                                setIsonewaystatus(true);
-                                updateCustomerData({
-                                  roud: 2,
-                                  day: day,
-                                  month: month,
-                                  year: year,
-                                  departdate: calendarStartDate,
-                                  returnDate: calendarEndDate,
-                                  timeTableDepartId: item.md_timetable_id,
-                                  startingPointId: startingPoint.id,
-                                  startingpoint_name: startingPoint.name,
-                                  endPointId: endPoint.id,
-                                  endpoint_name: endPoint.name,
-                                  companyDepartId: item.md_timetable_companyid,
-                                  pierStartDepartId: item.md_timetable_pierstartid,
-                                  pierEndDepartId: item.md_timetable_pierendid,
-                                  netDepart: item.md_timetable_netadult,
-                                  adult: adults,
-                                  child: children,
-                                  infant: infant,
-                                  piccompanyDepart: item.md_timetable_companypic,
-                                  pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
-                                  discount: item.md_timetable_discount,
-                                  exchaneRate: item.md_exchange_money,
-                                  international: item.md_timetable_international,
-                                  currency: selectedCurrency,
-                                  symbol: selectedSysmbol,
-                                });
-
-
-                                // Check if round trip status is true before navigating
-                                if (isroudstatus) {
-                                  navigation.navigate('TripDetail');
-                                } else {
-                                  settripTypeSearchResult("Return Trip");
-                                }
-                              }} >
-                              <Text style={styles.bookNowText}>Book Now</Text>
-                            </TouchableOpacity>
-                          </View>
-                          {item.md_timetable_remark.en && (
-                            <View style={styles.remarkContainer}>
-                              <Text style={styles.remarkText}>
-                                <Text style={styles.remarkLabel}>Remark: </Text>
-                                {item.md_timetable_remark.en}
+                                fontSize: 16,
+                                maxWidth: wp('35%'),
+                                letterSpacing: -0.3,
+                              }} numberOfLines={1}>
+                                {item.md_timetable_companyname}
+                              </Text>
+                              <Text style={{
+                                color: 'rgba(255,255,255,0.9)',
+                                fontSize: 12,
+                                fontWeight: '500',
+                              }}>
+                                Ferry Service
                               </Text>
                             </View>
-                          )}
-                          {/* Hidden measure view for animation height calculation */}
+                          </View>
+                          <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{
+                              color: '#FFFFFF',
+                              fontWeight: 'bold',
+                              fontSize: 14,
+                              backgroundColor: 'rgba(255,255,255,0.2)',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 8,
+                              marginBottom: 4,
+                            }}>
+                              {item.md_timetable_seatid}
+                            </Text>
+                            <Text style={{
+                              color: 'rgba(255,255,255,0.9)',
+                              fontSize: 11,
+                              fontWeight: '600',
+                            }}>
+                              {tripTypeSearch}
+                            </Text>
+                          </View>
+                        </LinearGradient>
+
+                        {/* Ticket Body */}
+                        <View style={{ backgroundColor: '#FFFFFF', position: 'relative' }}>
+                          {/* Decorative Perforated Border */}
+                          <View style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 1,
+                            backgroundColor: '#E2E8F0',
+                          }} />
+                          
+                          {/* Main Journey Info */}
+                          <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginBottom: 20,
+                            }}>
+                              {/* From Location */}
+                              <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 18,
+                                  fontWeight: 'bold',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_startid}
+                                </Text>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_pierstart}
+                                </Text>
+                                <View style={{
+                                  backgroundColor: '#FFF3ED',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 6,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#FD501E',
+                                }}>
+                                  <Text style={{
+                                    color: '#FD501E',
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                  }}>
+                                    {formatTime(item.md_timetable_departuretime)}
+                                  </Text>
+                                </View>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 11,
+                                  fontWeight: '500',
+                                  marginTop: 4,
+                                }}>
+                                  {formatDate(calendarStartDate)}
+                                </Text>
+                              </View>
+
+                              {/* Journey Info */}
+                              <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_boattypeid}
+                                </Text>
+                                
+                                {/* Journey Line with Boat Icon */}
+                                <View style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  marginBottom: 8,
+                                }}>
+                                  <View style={{
+                                    width: 40,
+                                    height: 2,
+                                    backgroundColor: '#E2E8F0',
+                                    borderRadius: 1,
+                                  }} />
+                                  <View style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 15,
+                                    backgroundColor: '#FFF3ED',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginHorizontal: 8,
+                                    borderWidth: 2,
+                                    borderColor: '#FD501E',
+                                  }}>
+                                    <Image 
+                                      source={require('./assets/boat.png')} 
+                                      style={{ width: 16, height: 16 }}
+                                      resizeMode="contain"
+                                    />
+                                  </View>
+                                  <View style={{
+                                    width: 40,
+                                    height: 2,
+                                    backgroundColor: '#E2E8F0',
+                                    borderRadius: 1,
+                                  }} />
+                                </View>
+                                
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_time}
+                                </Text>
+                                <Text style={{
+                                  color: '#FD501E',
+                                  fontSize: 11,
+                                  fontWeight: '600',
+                                  backgroundColor: '#FFF3ED',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                  borderRadius: 8,
+                                }}>
+                                  {item.md_timetable_count} booked
+                                </Text>
+                              </View>
+
+                              {/* To Location */}
+                              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 18,
+                                  fontWeight: 'bold',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_endid}
+                                </Text>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_pierend}
+                                </Text>
+                                <View style={{
+                                  backgroundColor: '#F0FDF4',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 6,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#16A34A',
+                                }}>
+                                  <Text style={{
+                                    color: '#16A34A',
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                  }}>
+                                    {formatTime(item.md_timetable_arrivaltime)}
+                                  </Text>
+                                </View>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 11,
+                                  fontWeight: '500',
+                                  marginTop: 4,
+                                }}>
+                                  {formatDate(calendarStartDate)}
+                                </Text>
+                              </View>
+                            </View>
+
+                            {/* Divider */}
+                            <View style={{
+                              height: 1,
+                              backgroundColor: '#E2E8F0',
+                              marginVertical: 16,
+                            }} />
+
+                            {/* Price and Booking Section */}
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 13,
+                                  fontWeight: '500',
+                                  marginBottom: 4,
+                                }}>
+                                  Price per person
+                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                                  <Text style={{
+                                    color: '#1E293B',
+                                    fontSize: 14,
+                                    fontWeight: '600',
+                                    marginRight: 4,
+                                  }}>
+                                    {selectedCurrency}
+                                  </Text>
+                                  <Text style={{
+                                    color: '#1E293B',
+                                    fontSize: 24,
+                                    fontWeight: 'bold',
+                                  }}>
+                                   {formatNumberWithComma(parseFloat((parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(item.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2)))}
+                                  </Text>
+                                </View>
+                                {item.md_timetable_discount > 0 && (
+                                  <View style={{
+                                    backgroundColor: '#FEF3C7',
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 6,
+                                    alignSelf: 'flex-start',
+                                    marginTop: 4,
+                                  }}>
+                                    <Text style={{
+                                      color: '#D97706',
+                                      fontSize: 11,
+                                      fontWeight: 'bold',
+                                    }}>
+                                      {item.md_timetable_discount}% OFF
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: '#FD501E',
+                                  paddingHorizontal: 24,
+                                  paddingVertical: 14,
+                                  borderRadius: 16,
+                                  shadowColor: '#FD501E',
+                                  shadowOpacity: 0.3,
+                                  shadowRadius: 8,
+                                  shadowOffset: { width: 0, height: 4 },
+                                  elevation: 8,
+                                }}
+                                onPress={() => {
+                                  setIsonewaystatus(true);
+                                  updateCustomerData({
+                                    roud: 2,
+                                    day: day,
+                                    month: month,
+                                    year: year,
+                                    departdate: calendarStartDate,
+                                    returnDate: calendarEndDate,
+                                    timeTableDepartId: item.md_timetable_id,
+                                    startingPointId: startingPoint.id,
+                                    startingpoint_name: startingPoint.name,
+                                    endPointId: endPoint.id,
+                                    endpoint_name: endPoint.name,
+                                    companyDepartId: item.md_timetable_companyid,
+                                    pierStartDepartId: item.md_timetable_pierstartid,
+                                    pierEndDepartId: item.md_timetable_pierendid,
+                                    netDepart: item.md_timetable_netadult,
+                                    adult: adults,
+                                    child: children,
+                                    infant: infant,
+                                    piccompanyDepart: item.md_timetable_companypic,
+                                    pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                    discount: item.md_timetable_discount,
+                                    exchaneRate: item.md_exchange_money,
+                                    international: item.md_timetable_international,
+                                    currency: selectedCurrency,
+                                    symbol: selectedSysmbol,
+                                  });
+
+                                  if (isroudstatus) {
+                                    navigation.navigate('TripDetail');
+                                  } else {
+                                    settripTypeSearchResult("Return Trip");
+                                  }
+                                }}
+                              >
+                                <Text style={{
+                                  color: '#FFFFFF',
+                                  fontSize: 16,
+                                  fontWeight: 'bold',
+                                  letterSpacing: 0.5,
+                                }}>
+                                  Book Now
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* Remark Section */}
+                            {item.md_timetable_remark.en && (
+                              <View style={{
+                                backgroundColor: '#F8FAFC',
+                                padding: 12,
+                                borderRadius: 12,
+                                marginTop: 16,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#FD501E',
+                              }}>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  lineHeight: 16,
+                                }}>
+                                  <Text style={{ fontWeight: 'bold', color: '#FD501E' }}>Note: </Text>
+                                  {item.md_timetable_remark.en}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Hidden measure view for animation - Round Trip Depart */}
                           <View
-                            style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
+                            style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
                             onLayout={(e) => {
                               const h = e.nativeEvent.layout.height;
                               if (contentHeights[item.md_timetable_id] !== h) {
@@ -3010,29 +3506,117 @@ const SearchFerry = ({ navigation, route }) => {
                               }
                             }}
                           >
-                            <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                            <Image
-                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                              style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                            />
+                            <View style={{ padding: 20 }}>
+                              <Text style={{
+                                color: '#FD501E',
+                                fontWeight: 'bold',
+                                fontSize: 16,
+                                marginBottom: 12,
+                              }}>
+                                Trip Details
+                              </Text>
+                              <Text style={{
+                                color: '#64748B',
+                                fontSize: 14,
+                                lineHeight: 20,
+                                marginBottom: 16,
+                              }}>
+                                {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                              </Text>
+                              {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 && (
+                                <View style={{
+                                  width: '100%',
+                                  height: 200,
+                                  backgroundColor: '#F1F5F9',
+                                  borderRadius: 16,
+                                  marginBottom: 10,
+                                }} />
+                              )}
+                            </View>
                           </View>
                         </View>
-                        {/* Animated detail section */}
+
+                        {/* Expandable Detail Section - Round Trip Depart */}
                         <Animated.View
                           style={{
                             maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                             overflow: 'hidden',
-                            padding: 16,
-                            backgroundColor: '#fff',
-                            borderBottomLeftRadius: 32,
-                            borderBottomRightRadius: 32,
+                            backgroundColor: '#F8FAFC',
+                            borderBottomLeftRadius: 20,
+                            borderBottomRightRadius: 20,
                           }}
                         >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                          <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                          />
+                          <View style={{ padding: 20 }}>
+                            <Text style={{
+                              color: '#FD501E',
+                              fontWeight: 'bold',
+                              fontSize: 16,
+                              marginBottom: 12,
+                            }}>
+                              Trip Details
+                            </Text>
+                            <Text style={{
+                              color: '#64748B',
+                              fontSize: 14,
+                              lineHeight: 20,
+                              marginBottom: 16,
+                            }}>
+                              {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                            </Text>
+                            
+                            {/* Ferry Image with Error Handling */}
+                            {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 ? (
+                              <View style={{
+                                borderRadius: 16,
+                                overflow: 'hidden',
+                                backgroundColor: '#F1F5F9',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                                elevation: 3,
+                              }}>
+                                <Image
+                                  source={{ 
+                                    uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}`,
+                                    cache: 'force-cache'
+                                  }}
+                                  style={{ 
+                                    width: '100%', 
+                                    height: 200, 
+                                    resizeMode: 'cover'
+                                  }}
+                                  onError={(error) => {
+                                    console.log('Image loading error:', error);
+                                  }}
+                                />
+                              </View>
+                            ) : (
+                              <View style={{
+                                width: '100%',
+                                height: 200,
+                                backgroundColor: '#F1F5F9',
+                                borderRadius: 16,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                borderWidth: 2,
+                                borderColor: '#E2E8F0',
+                                borderStyle: 'dashed',
+                              }}>
+                                <Icon name="image-outline" size={48} color="#94A3B8" />
+                                <Text style={{
+                                  color: '#94A3B8',
+                                  fontSize: 14,
+                                  fontWeight: '500',
+                                  marginTop: 8,
+                                }}>
+                                  No image available
+                                </Text>
+                              </View>
+                            )}
+
+
+                          </View>
                         </Animated.View>
                       </View>
                     </TouchableOpacity>
@@ -3049,136 +3633,404 @@ const SearchFerry = ({ navigation, route }) => {
                       }}
                       style={{ width: '100%' }}
                     >
-                      <View style={[
-                        styles.cardContainer,
-                        {
-                          marginTop: 20,
-                          backgroundColor: 'rgba(255,255,255,0.97)',
-                          borderWidth: 0.5,
-                          borderColor: 'rgba(0,35,72,0.08)',
-                          shadowColor: '#001233',
-                          shadowOpacity: 0.12,
-                          shadowRadius: 15,
-                          shadowOffset: { width: 0, height: 4 },
-                          elevation: 8,
-                          overflow: 'hidden',
-                          padding: 0,
-                          borderRadius: 16,
-                          position: 'relative',
-                          minHeight: 160,
-                          // Premium gradient effect
-                          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.96) 100%)',
-                        },
-                      ]}>
-                        {/* หัวตั๋ว */}
-                        <View style={{
-                          backgroundColor: '#FD501E',
-                          borderTopLeftRadius: 16,
-                          borderTopRightRadius: 16,
-                          paddingVertical: 14,
-                          paddingHorizontal: 18,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          position: 'relative',
-                          // Premium header gradient
-                          background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
-                        }}>
+                      {/* Modern Ferry Ticket Design - Return Trip */}
+                      <View style={{
+                        marginTop: 20,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 20,
+                        overflow: 'hidden',
+                        shadowColor: '#B8860B',
+                        shadowOpacity: 0.15,
+                        shadowRadius: 20,
+                        shadowOffset: { width: 0, height: 8 },
+                        elevation: 15,
+                        position: 'relative',
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 214, 0, 0.2)',
+                      }}>
+                        {/* Ticket Header with Company Info - Return Trip Style */}
+                        <LinearGradient
+                          colors={['#FFD600', '#B8860B']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={{
+                            paddingHorizontal: 0,
+                            paddingVertical: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginHorizontal: -2,
+                            marginTop: -2,
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            paddingHorizontal: 22,
+                          }}
+                        >
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Image
                               source={{ uri: `${item.md_timetable_companypic}` }}
-                              style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                              style={{ 
+                                width: 45, 
+                                height: 45, 
+                                borderRadius: 12, 
+                                backgroundColor: '#fff', 
+                                borderWidth: 2, 
+                                borderColor: 'rgba(255,255,255,0.3)', 
+                                marginRight: 12 
+                              }}
                               resizeMode="cover"
                             />
-                            <Text
-                              style={{
-                                color: '#fff',
+                            <View>
+                              <Text style={{
+                                color: '#1E293B',
                                 fontWeight: 'bold',
-                                fontSize: 18,
-                                maxWidth: wp('19%'),
-                                overflow: 'hidden',
-                              }}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {item.md_timetable_companyname}
-                            </Text>
-                          </View>
-                          <View style={{ flexDirection: 'row', gap: 6 }}>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_timetable_seatid}</Text>
-                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripTypeSearch}</Text>
-                          </View>
-                        </View>
-                        {/* เนื้อหาตั๋ว */}
-                        <View style={{ paddingHorizontal: 22, paddingVertical: 18 }}>
-                          <View style={styles.detailsRow}>
-                            <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.md_timetable_startid}</Text>
-                              <Text style={styles.subtext}>{item.md_timetable_pierstart}</Text>
-                              <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                            </View>
-                            <View style={styles.middleContainer}>
-                              <Text style={styles.duration}>{item.md_timetable_boattypeid}</Text>
-                              <View style={styles.iconLineContainer}>
-                                <View style={styles.dashedLine} />
-                                <View style={styles.shipIcon}>
-                                  <Image source={require('./assets/boat.png')} style={styles.ImageBoat} />
-                                </View>
-                                <View style={styles.dashedLine} />
-                              </View>
-                              <Text style={styles.duration}>{item.md_timetable_time}</Text>
-                              <Text style={[styles.duration, { color: '#FD501E' }]}>{item.md_timetable_count} booked</Text>
-                            </View>
-                            <View style={styles.locationContainer}>
-                              <Text style={styles.location}>{item.md_timetable_endid}</Text>
-                              <Text style={styles.subtext}>{item.md_timetable_pierend}</Text>
-                              <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                              <Text style={styles.subtext}>{formatDate(calendarStartDate)}</Text>
-                            </View>
-                          </View>
-                          {/* ราคาและปุ่ม */}
-                          <View style={[styles.footerRow, { marginTop: 18 }]}>
-                            <Text style={styles.price}>{selectedCurrency} <Text style={styles.pricebig}>{item.md_timetable_saleadult_round !== 0 ? formatNumberWithComma(item.md_timetable_saleadult_round) : formatNumberWithComma(item.md_timetable_saleadult)} </Text>/ person
-                              {item.md_timetable_discount > 0 && (
-                                <Text style={styles.discount}> {item.md_timetable_discount}% Off</Text>
-                              )}</Text>
-                            <TouchableOpacity style={styles.bookNowButton}
-                              onPress={() => {
-                                setIsroudstatus(true);
-                                updateCustomerData({
-                                  returndate: calendarEndDate,
-                                  timeTableReturnId: item.md_timetable_id,
-                                  companyReturnId: item.md_timetable_companyid,
-                                  pierStartReturntId: item.md_timetable_pierstartid,
-                                  pierEndReturntId: item.md_timetable_pierendid,
-                                  piccompanyReturn: item.md_timetable_companypic,
-                                  pictimetableReturn: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
-                                  discount: item.md_timetable_discount,
-                                  exchaneRate: item.md_exchange_money
-                                });
-
-                                // Check if round trip status is true before navigating
-                                if (isonewaystatus) {
-                                  navigation.navigate('TripDetail');
-                                } else {
-                                  settripTypeSearchResult("Depart Trip");
-                                }
-                              }} >
-                              <Text style={styles.bookNowText}>Book Now</Text>
-                            </TouchableOpacity>
-                          </View>
-                          {item.md_timetable_remark.en && (
-                            <View style={styles.remarkContainer}>
-                              <Text style={styles.remarkText}>
-                                <Text style={styles.remarkLabel}>Remark: </Text>
-                                {item.md_timetable_remark.en}
+                                fontSize: 16,
+                                maxWidth: wp('35%'),
+                                letterSpacing: -0.3,
+                              }} numberOfLines={1}>
+                                {item.md_timetable_companyname}
+                              </Text>
+                              <Text style={{
+                                color: 'rgba(30, 41, 59, 0.8)',
+                                fontSize: 12,
+                                fontWeight: '500',
+                              }}>
+                                Return Ferry
                               </Text>
                             </View>
-                          )}
-                          {/* Hidden measure view for animation height calculation */}
+                          </View>
+                          <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{
+                              color: '#1E293B',
+                              fontWeight: 'bold',
+                              fontSize: 14,
+                              backgroundColor: 'rgba(255,255,255,0.9)',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 8,
+                              marginBottom: 4,
+                            }}>
+                              {item.md_timetable_seatid}
+                            </Text>
+                            <Text style={{
+                              color: 'rgba(30, 41, 59, 0.8)',
+                              fontSize: 11,
+                              fontWeight: '600',
+                            }}>
+                              {tripTypeSearch}
+                            </Text>
+                          </View>
+                        </LinearGradient>
+
+                        {/* Ticket Body */}
+                        <View style={{ backgroundColor: '#FFFFFF', position: 'relative' }}>
+                          {/* Decorative Perforated Border */}
+                          <View style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 1,
+                            backgroundColor: 'rgba(255, 214, 0, 0.3)',
+                          }} />
+                          
+                          {/* Main Journey Info */}
+                          <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginBottom: 20,
+                            }}>
+                              {/* From Location */}
+                              <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 18,
+                                  fontWeight: 'bold',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_startid}
+                                </Text>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_pierstart}
+                                </Text>
+                                <View style={{
+                                  backgroundColor: '#FEF3C7',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 6,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#D97706',
+                                }}>
+                                  <Text style={{
+                                    color: '#D97706',
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                  }}>
+                                    {formatTime(item.md_timetable_departuretime)}
+                                  </Text>
+                                </View>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 11,
+                                  fontWeight: '500',
+                                  marginTop: 4,
+                                }}>
+                                  {formatDate(calendarStartDate)}
+                                </Text>
+                              </View>
+
+                              {/* Journey Info */}
+                              <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_boattypeid}
+                                </Text>
+                                
+                                {/* Journey Line with Boat Icon */}
+                                <View style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  marginBottom: 8,
+                                }}>
+                                  <View style={{
+                                    width: 40,
+                                    height: 2,
+                                    backgroundColor: '#FDE68A',
+                                    borderRadius: 1,
+                                  }} />
+                                  <View style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 15,
+                                    backgroundColor: '#FEF3C7',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginHorizontal: 8,
+                                    borderWidth: 2,
+                                    borderColor: '#D97706',
+                                  }}>
+                                    <Image 
+                                      source={require('./assets/boat.png')} 
+                                      style={{ width: 16, height: 16 }}
+                                      resizeMode="contain"
+                                    />
+                                  </View>
+                                  <View style={{
+                                    width: 40,
+                                    height: 2,
+                                    backgroundColor: '#FDE68A',
+                                    borderRadius: 1,
+                                  }} />
+                                </View>
+                                
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_time}
+                                </Text>
+                                <Text style={{
+                                  color: '#D97706',
+                                  fontSize: 11,
+                                  fontWeight: '600',
+                                  backgroundColor: '#FEF3C7',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 2,
+                                  borderRadius: 8,
+                                }}>
+                                  {item.md_timetable_count} booked
+                                </Text>
+                              </View>
+
+                              {/* To Location */}
+                              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 18,
+                                  fontWeight: 'bold',
+                                  marginBottom: 4,
+                                }}>
+                                  {item.md_timetable_endid}
+                                </Text>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  marginBottom: 8,
+                                }}>
+                                  {item.md_timetable_pierend}
+                                </Text>
+                                <View style={{
+                                  backgroundColor: '#F0FDF4',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 6,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#16A34A',
+                                }}>
+                                  <Text style={{
+                                    color: '#16A34A',
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                  }}>
+                                    {formatTime(item.md_timetable_arrivaltime)}
+                                  </Text>
+                                </View>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 11,
+                                  fontWeight: '500',
+                                  marginTop: 4,
+                                }}>
+                                  {formatDate(calendarStartDate)}
+                                </Text>
+                              </View>
+                            </View>
+
+                            {/* Divider */}
+                            <View style={{
+                              height: 1,
+                              backgroundColor: 'rgba(255, 214, 0, 0.3)',
+                              marginVertical: 16,
+                            }} />
+
+                            {/* Price and Booking Section */}
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{
+                                  color: '#64748B',
+                                  fontSize: 13,
+                                  fontWeight: '500',
+                                  marginBottom: 4,
+                                }}>
+                                  Price per person
+                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                                  <Text style={{
+                                    color: '#1E293B',
+                                    fontSize: 14,
+                                    fontWeight: '600',
+                                    marginRight: 4,
+                                  }}>
+                                    {selectedCurrency}
+                                  </Text>
+                                  <Text style={{
+                                    color: '#1E293B',
+                                    fontSize: 24,
+                                    fontWeight: 'bold',
+                                  }}>
+                           {formatNumberWithComma(parseFloat((parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(item.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2)))}
+                                  </Text>
+                                </View>
+                                {item.md_timetable_discount > 0 && (
+                                  <View style={{
+                                    backgroundColor: '#FEF3C7',
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 6,
+                                    alignSelf: 'flex-start',
+                                    marginTop: 4,
+                                  }}>
+                                    <Text style={{
+                                      color: '#D97706',
+                                      fontSize: 11,
+                                      fontWeight: 'bold',
+                                    }}>
+                                      {item.md_timetable_discount}% OFF
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: '#FFD600',
+                                  paddingHorizontal: 24,
+                                  paddingVertical: 14,
+                                  borderRadius: 16,
+                                  shadowColor: '#B8860B',
+                                  shadowOpacity: 0.3,
+                                  shadowRadius: 8,
+                                  shadowOffset: { width: 0, height: 4 },
+                                  elevation: 8,
+                                  borderWidth: 1,
+                                  borderColor: 'rgba(184, 134, 11, 0.2)',
+                                }}
+                                onPress={() => {
+                                  setIsroudstatus(true);
+                                  updateCustomerData({
+                                    returndate: calendarEndDate,
+                                    timeTableReturnId: item.md_timetable_id,
+                                    companyReturnId: item.md_timetable_companyid,
+                                    pierStartReturntId: item.md_timetable_pierstartid,
+                                    pierEndReturntId: item.md_timetable_pierendid,
+                                    piccompanyReturn: item.md_timetable_companypic,
+                                    pictimetableReturn: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                    discount: item.md_timetable_discount,
+                                    exchaneRate: item.md_exchange_money
+                                  });
+
+                                  if (isonewaystatus) {
+                                    navigation.navigate('TripDetail');
+                                  } else {
+                                    settripTypeSearchResult("Depart Trip");
+                                  }
+                                }}
+                              >
+                                <Text style={{
+                                  color: '#1E293B',
+                                  fontSize: 16,
+                                  fontWeight: 'bold',
+                                  letterSpacing: 0.5,
+                                }}>
+                                  Book Now
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* Remark Section */}
+                            {item.md_timetable_remark.en && (
+                              <View style={{
+                                backgroundColor: '#FFFBEB',
+                                padding: 12,
+                                borderRadius: 12,
+                                marginTop: 16,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#D97706',
+                              }}>
+                                <Text style={{
+                                  color: '#92400E',
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  lineHeight: 16,
+                                }}>
+                                  <Text style={{ fontWeight: 'bold', color: '#D97706' }}>Note: </Text>
+                                  {item.md_timetable_remark.en}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Hidden measure view for animation - Return Trip */}
                           <View
-                            style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1, padding: 16 }}
+                            style={{ position: 'absolute', opacity: 0, left: 0, top: 0, right: 0, zIndex: -1 }}
                             onLayout={(e) => {
                               const h = e.nativeEvent.layout.height;
                               if (contentHeights[item.md_timetable_id] !== h) {
@@ -3186,34 +4038,121 @@ const SearchFerry = ({ navigation, route }) => {
                               }
                             }}
                           >
-                            <Text>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                            <Image
-                              source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                              style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                            />
+                            <View style={{ padding: 20 }}>
+                              <Text style={{
+                                color: '#D97706',
+                                fontWeight: 'bold',
+                                fontSize: 16,
+                                marginBottom: 12,
+                              }}>
+                                Trip Details
+                              </Text>
+                              <Text style={{
+                                color: '#92400E',
+                                fontSize: 14,
+                                lineHeight: 20,
+                                marginBottom: 16,
+                              }}>
+                                {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                              </Text>
+                              {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 && (
+                                <View style={{
+                                  width: '100%',
+                                  height: 200,
+                                  backgroundColor: '#FEF3C7',
+                                  borderRadius: 16,
+                                  marginBottom: 10,
+                                }} />
+                              )}
+                            </View>
                           </View>
                         </View>
-                        {/* Animated detail section */}
+
+                        {/* Expandable Detail Section - Return Trip */}
                         <Animated.View
                           style={{
                             maxHeight: selectedPickup === item.md_timetable_id ? getAnimatedHeight(item.md_timetable_id) : 0,
                             overflow: 'hidden',
-                            padding: 16,
-                            backgroundColor: '#fff',
-                            borderBottomLeftRadius: 32,
-                            borderBottomRightRadius: 32,
+                            backgroundColor: '#FFFBEB',
+                            borderBottomLeftRadius: 20,
+                            borderBottomRightRadius: 20,
                           }}
                         >
-                          <Text style={{ color: '#666666' }}>{removeHtmlTags(item.md_timetable_tripdetail[0].md_timetabledetail_detaileng1 || "")}</Text>
-                          <Image
-                            source={{ uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}` }}
-                            style={{ width: '100%', height: 150, resizeMode: 'cover', marginTop: 20, borderRadius: 20 }}
-                          />
+                          <View style={{ padding: 20 }}>
+                            <Text style={{
+                              color: '#D97706',
+                              fontWeight: 'bold',
+                              fontSize: 16,
+                              marginBottom: 12,
+                            }}>
+                              Trip Details
+                            </Text>
+                            <Text style={{
+                              color: '#92400E',
+                              fontSize: 14,
+                              lineHeight: 20,
+                              marginBottom: 16,
+                            }}>
+                              {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                            </Text>
+                            
+                            {/* Ferry Image with Error Handling - Return Trip */}
+                            {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 ? (
+                              <View style={{
+                                borderRadius: 16,
+                                overflow: 'hidden',
+                                backgroundColor: '#FEF3C7',
+                                shadowColor: '#D97706',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                                elevation: 3,
+                              }}>
+                                <Image
+                                  source={{ 
+                                    uri: `https://www.thetrago.com/Api/uploads/timetabledetail/${item.md_timetable_tripdetail[0].md_timetabledetail_picname1}`,
+                                    cache: 'force-cache'
+                                  }}
+                                  style={{ 
+                                    width: '100%', 
+                                    height: 200, 
+                                    resizeMode: 'cover'
+                                  }}
+                                  onError={(error) => {
+                                    console.log('Return trip image loading error:', error);
+                                  }}
+                                />
+                              </View>
+                            ) : (
+                              <View style={{
+                                width: '100%',
+                                height: 200,
+                                backgroundColor: '#FEF3C7',
+                                borderRadius: 16,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                borderWidth: 2,
+                                borderColor: '#FDE68A',
+                                borderStyle: 'dashed',
+                              }}>
+                                <Icon name="image-outline" size={48} color="#D97706" />
+                                <Text style={{
+                                  color: '#D97706',
+                                  fontSize: 14,
+                                  fontWeight: '500',
+                                  marginTop: 8,
+                                }}>
+                                  No image available
+                                </Text>
+                              </View>
+                            )}
+
+
+                          </View>
                         </Animated.View>
                       </View>
                     </TouchableOpacity>
                   ))}
-
 
                 </>)}
               </>)}

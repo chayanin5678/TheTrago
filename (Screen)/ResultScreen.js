@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ImageBackground, Alert, Platform } from "react-native";
-import LogoHeader from "./../(component)/Logo";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Alert, Platform, SafeAreaView, StatusBar } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import LogoTheTrago from './../(component)/Logo';
+import headStyles from './../(CSS)/StartingPointScreenStyles';
 import ipAddress from "../ipconfig";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from "axios";
 import { useCustomer } from './CustomerContext';
 import * as Print from 'expo-print';
@@ -474,11 +476,145 @@ const ResultScreen = ({ navigation, route }) => {
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <ImageBackground
-        source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
-        style={styles.background}>
-        <LogoHeader />
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Ultra Premium Gradient Background */}
+      <LinearGradient
+        colors={['#001233', '#002A5C', '#003A7C', '#FD501E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1.5 }}
+        style={{ flex: 1 }}
+      >
+        {/* Ultra Premium Glass-Morphism Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.96)", "rgba(241,245,249,0.94)"]}
+          style={[
+            headStyles.headerBg,
+            {
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -20,
+              borderBottomLeftRadius: 45,
+              borderBottomRightRadius: 45,
+              paddingBottom: 12,
+              shadowColor: '#001233',
+              shadowOpacity: 0.18,
+              shadowRadius: 30,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 22,
+              padding: 12,
+              minHeight: hp('13%'),
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 18, 51, 0.1)',
+              backdropFilter: 'blur(40px)',
+            },
+          ]}
+        >
+          <View
+            style={[
+              headStyles.headerRow,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: -10,
+                height: 56,
+              },
+            ]}
+          >
+            {/* Ultra Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                position: 'absolute',
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: 28,
+                padding: 10,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.25,
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 12,
+                borderWidth: 1.5,
+                borderColor: 'rgba(253, 80, 30, 0.12)',
+                backdropFilter: 'blur(20px)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+            </TouchableOpacity>
+
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Ultra Premium Title Section */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginTop: hp('1.5%'), 
+          marginHorizontal: wp('5%'), 
+          marginBottom: hp('2.5%'),
+          paddingHorizontal: wp('4%'),
+          paddingVertical: hp('2%'),
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          borderRadius: wp('5%'),
+          backdropFilter: 'blur(15px)',
+          borderWidth: 1.5,
+          borderColor: 'rgba(255,255,255,0.25)',
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: wp('3%'),
+          shadowOffset: { width: 0, height: hp('0.5%') },
+          elevation: 6,
+        }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[
+              headStyles.headerTitle, 
+              { 
+                color: '#FFFFFF', 
+                fontSize: wp('7.5%'), 
+                fontWeight: '900', 
+                letterSpacing: -0.8, 
+                textAlign: 'left', 
+                marginLeft: 0,
+                lineHeight: wp('8.5%'),
+                textShadowColor: 'rgba(0,0,0,0.4)',
+                textShadowRadius: 6,
+                textShadowOffset: { width: 2, height: 2 },
+              }
+            ]}>
+              {success ? 'Booking Confirmed' : 'Booking Failed'}
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: wp('3.8%'),
+              fontWeight: '600',
+              marginTop: hp('0.8%'),
+              letterSpacing: 0.5,
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowRadius: 3,
+              textShadowOffset: { width: 1, height: 1 },
+            }}>
+              {success ? 'Your ticket has been confirmed' : 'Please contact support'}
+            </Text>
+          </View>
+        </View>
+
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+        <ScrollView 
+          contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
+          showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior="automatic"
+          bounces={false}
+        >
         {success && (
         <View style={styles.card}>
           <View style={styles.row}>
@@ -611,102 +747,224 @@ const ResultScreen = ({ navigation, route }) => {
           </View>
           </View>
         )}
-      </ImageBackground>
-    </ScrollView>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  titel: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  statusText: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  bookingCodeText: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    fontSize: 20,
-    marginBottom: 30,
-    justifyContent: "space-between",
-  },
-  BackButton: {
-    backgroundColor: "#FD501E",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    width: "60%",
-    alignItems: "center",
-  },
-  BackButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 16,
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('2%'),
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    width: '100%',
-    padding: 16,
-    marginVertical: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('7%'),
+    padding: wp('6%'),
+    marginBottom: hp('2.5%'),
+    shadowColor: '#001233',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    elevation: 20,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
+    backdropFilter: 'blur(30px)',
   },
-  row: {
+  companyHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-
-
-  },
-  col: {
-    flexDirection: 'column',
     alignItems: 'flex-start',
-    marginLeft: '5%',
-
+    marginBottom: hp('2%'),
+  },
+  logoContainer: {
+    marginRight: wp('4%'),
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginTop: -10,
+    width: wp('20%'),
+    height: wp('20%'),
+    borderRadius: wp('2%'),
+  },
+  companyInfo: {
+    flex: 1,
+  },
+  companyName: {
+    fontSize: wp('5%'),
+    fontWeight: '800',
+    color: '#002348',
+    marginBottom: hp('1%'),
+    letterSpacing: -0.3,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('0.8%'),
+  },
+  infoText: {
+    fontSize: wp('3.8%'),
+    color: '#4B5563',
+    fontWeight: '500',
   },
   divider: {
-    height: 1, // ความหนาของเส้น
-    width: '100%', // ทำให้ยาวเต็มจอ
-    backgroundColor: '#CCCCCC', // สีของเส้น
-    marginVertical: 10, // ระยะห่างระหว่าง element
-  },
-  redText: {
-    color: 'red',
-  },
-  greenText: {
-    color: 'green',
-  },
-  background: {
+    height: 1,
     width: '100%',
-  }
-
+    backgroundColor: 'rgba(148, 163, 184, 0.3)',
+    marginVertical: hp('2%'),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp('1%'),
+  },
+  sectionTitle: {
+    fontSize: wp('5%'),
+    fontWeight: '800',
+    color: '#002348',
+    letterSpacing: -0.3,
+  },
+  dateText: {
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: hp('1%'),
+  },
+  detailLabel: {
+    fontSize: wp('4%'),
+    color: '#4B5563',
+    fontWeight: '500',
+    flex: 1,
+  },
+  detailValue: {
+    fontSize: wp('4%'),
+    color: '#1F2937',
+    fontWeight: '600',
+    textAlign: 'right',
+    flex: 1,
+  },
+  discountText: {
+    fontSize: wp('4%'),
+    color: '#EF4444',
+    fontWeight: '600',
+    textAlign: 'right',
+    flex: 1,
+  },
+  feeText: {
+    fontSize: wp('4%'),
+    color: '#10B981',
+    fontWeight: '600',
+    textAlign: 'right',
+    flex: 1,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: hp('1.5%'),
+    backgroundColor: 'rgba(253, 80, 30, 0.05)',
+    borderRadius: wp('3%'),
+    paddingHorizontal: wp('4%'),
+  },
+  totalLabel: {
+    fontSize: wp('5%'),
+    color: '#002348',
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  totalValue: {
+    fontSize: wp('5.5%'),
+    color: '#FD501E',
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  actionSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: hp('1%'),
+  },
+  bookingCodeSection: {
+    flex: 1,
+  },
+  bookingLabel: {
+    fontSize: wp('4%'),
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: hp('0.5%'),
+  },
+  bookingCode: {
+    fontSize: wp('4.5%'),
+    color: '#002348',
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  printButton: {
+    borderRadius: wp('4%'),
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.4,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 12,
+    marginLeft: wp('4%'),
+  },
+  printButtonGradient: {
+    paddingVertical: hp('1.8%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('4%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  printButtonText: {
+    color: '#FFFFFF',
+    fontSize: wp('4%'),
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  errorCard: {
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: wp('7%'),
+    padding: wp('8%'),
+    marginBottom: hp('2.5%'),
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.25,
+    shadowRadius: wp('8%'),
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    elevation: 20,
+    borderWidth: wp('0.3%'),
+    borderColor: 'rgba(239, 68, 68, 0.12)',
+    backdropFilter: 'blur(30px)',
+  },
+  errorContent: {
+    alignItems: 'center',
+  },
+  errorTitle: {
+    fontSize: wp('5.5%'),
+    fontWeight: '800',
+    color: '#DC2626',
+    textAlign: 'center',
+    marginBottom: hp('1%'),
+    letterSpacing: -0.3,
+  },
+  errorSubtitle: {
+    fontSize: wp('4.2%'),
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: hp('2%'),
+    fontWeight: '500',
+  },
+  errorContact: {
+    fontSize: wp('4%'),
+    color: '#FD501E',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
 
 export default ResultScreen;

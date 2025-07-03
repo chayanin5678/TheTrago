@@ -234,7 +234,7 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
 
               {/* Social Login Section */}
-              <View style={styles.dividerContainer}>
+              {/* <View style={styles.dividerContainer}>
                 <View style={styles.divider} />
                 <Text style={styles.orText}>Or continue with</Text>
                 <View style={styles.divider} />
@@ -264,7 +264,7 @@ export default function LoginScreen({ navigation }) {
                     </LinearGradient>
                   </BlurView>
                 </TouchableOpacity>
-              </View>
+              </View> */}
 
               {/* Fixed Policy Text */}
               <Text style={styles.policyText}>
