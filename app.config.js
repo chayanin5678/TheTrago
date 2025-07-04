@@ -1,6 +1,8 @@
-{
+const IS_DEV = process.env.APP_VARIANT === 'development';
+
+export default {
   "expo": {
-    "name": "TheTrago",
+    "name": IS_DEV ? "TheTrago (Dev)" : "TheTrago",
     "slug": "TheTrago",
     "scheme": "thetrago",
     "extra": {
@@ -34,8 +36,8 @@
       "expo-secure-store"
     ],
     "ios": {
-      "buildNumber": "2",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to scan your ID card",
@@ -45,4 +47,4 @@
     },
     "jsEngine": "jsc"
   }
-}
+};

@@ -10,6 +10,10 @@
       "android": {
         "buildType": "apk",
         "releaseChannel": "default"
+      },
+      "ios": {
+        "simulator": true,
+        "releaseChannel": "default"
       }
     },
     "preview": {
@@ -17,12 +21,18 @@
       "android": {
         "buildType": "apk",
         "releaseChannel": "default"
+      },
+      "ios": {
+        "releaseChannel": "default"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle",
+        "releaseChannel": "default"
+      },
+      "ios": {
         "releaseChannel": "default"
       }
     }
