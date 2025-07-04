@@ -1,15 +1,20 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, Platform, Dimensions } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import Toptrending from './(component)/toptrending';
 import LogoTheTrago from './(component)/Logo';
+import PlatformStatusBar from './(component)/PlatformStatusBar';
+import PlatformSafeArea from './(component)/PlatformSafeArea';
+import CrossPlatformBackground from './(component)/CrossPlatformBackground';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './(Screen)/CustomerContext';
 import { CalendarList } from 'react-native-calendars';
 import styles from './(CSS)/HomeScreenStyles';
+import { designTokens, platformStyles } from './(CSS)/PlatformStyles';
+import { CrossPlatformUtils } from './(CSS)/PlatformSpecificUtils';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from './ipconfig';
@@ -151,7 +156,7 @@ const HomeScreen = ({ navigation }) => {
     });
   }, []);
 
-  const formatDecimal = (number) => {
+  const formatDecimal = (number = 0) => {
     return Number(number).toFixed(1);
   };
 
@@ -738,19 +743,11 @@ const HomeScreen = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={premiumStyles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
-      {/* Background with Elegant Gradient */}
-      <View style={premiumStyles.backgroundContainer}>
-        <LinearGradient
-          colors={['#FD501E', '#FF6B35', '#FF8956', '#FFA072']}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
+    <CrossPlatformBackground>
+      <PlatformSafeArea style={premiumStyles.container} edges={['top', 'left', 'right']}>
+        <PlatformStatusBar style="light" backgroundColor="transparent" translucent={true} />
         
-        {/* Subtle Floating Particles */}
+        {/* Subtle Floating Particles - Outside ScrollView */}
         <View style={premiumStyles.particlesContainer}>
           {[...Array(8)].map((_, i) => (
             <Animated.View
@@ -784,8 +781,8 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Minimalist Decorative Elements */}
-        <View style={premiumStyles.geometricShapes}>
+        {/* Minimalist Decorative Elements - Outside ScrollView */}
+        <View style={[premiumStyles.geometricShapes, { pointerEvents: 'none' }]}>
           <Animated.View style={[premiumStyles.shape1, {
             transform: [{
               rotate: bounceAnim.interpolate({
@@ -808,7 +805,17 @@ const HomeScreen = ({ navigation }) => {
             <FontAwesome5 name="anchor" size={wp('4.5%')} color="rgba(255,255,255,0.12)" />
           </Animated.View>
         </View>
-      </View>
+        
+        <ScrollView 
+          contentContainerStyle={premiumStyles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
+          style={{ flex: 1 }}
+        >
+          {/* Main Content Container */}
+          <View style={premiumStyles.mainContent}>
 
       {isLoading && (
         <View style={premiumStyles.loadingContainer}>
@@ -833,12 +840,6 @@ const HomeScreen = ({ navigation }) => {
           </BlurView>
         </View>
       )}
-
-      <ScrollView 
-        contentContainerStyle={premiumStyles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-      >
 
         {/* Refined Header Section with Better Spacing */}
         <View style={premiumStyles.headerSection}>
@@ -1847,6 +1848,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
 
+          </View> {/* Close mainContent */}
 
         </View>
         {isLoadingTitle ? (
@@ -2326,7 +2328,8 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+      </PlatformSafeArea>
+    </CrossPlatformBackground>
   );
 };
 
@@ -2336,15 +2339,11 @@ export default HomeScreen;
 const premiumStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent', // ให้ CrossPlatformBackground จัดการ
   },
-  backgroundContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
+  mainContent: {
+    flex: 1,
+    paddingBottom: hp('2%'),
   },
   particlesContainer: {
     position: 'absolute',
@@ -2353,12 +2352,13 @@ const premiumStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 1,
+    pointerEvents: 'none', // ให้สามารถเลื่อนผ่านได้
   },
   particle: {
     position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: Platform.OS === 'ios' ? 6 : 5,
+    height: Platform.OS === 'ios' ? 6 : 5,
+    borderRadius: Platform.OS === 'ios' ? 3 : 2.5,
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   geometricShapes: {
@@ -2412,37 +2412,32 @@ const premiumStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    fontSize: wp('4.5%'),
-    fontWeight: 'bold',
+    fontSize: CrossPlatformUtils.getAdaptiveFontSize(wp('4.5%')),
+    fontWeight: Platform.OS === 'ios' ? '600' : 'bold',
     color: '#fff',
     marginBottom: hp('1%'),
   },
   loadingSubtext: {
-    fontSize: wp('3.5%'),
+    fontSize: CrossPlatformUtils.getAdaptiveFontSize(wp('3.5%')),
     color: 'rgba(255,255,255,0.7)',
+    fontWeight: Platform.OS === 'ios' ? '400' : 'normal',
   },
   scrollContainer: {
-    flexGrow: 1,
-    paddingBottom: hp('12.5%'),
+    paddingBottom: CrossPlatformUtils.getAdaptiveTabBarHeight(),
   },
   headerSection: {
-
-    marginTop: hp('2%'),
+    marginTop: CrossPlatformUtils.getAdaptiveSpacing(hp('2%')),
     marginHorizontal: wp('3%'),
-    borderRadius: wp('6%'),
+    borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(wp('6%')),
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
+    ...CrossPlatformUtils.getUnifiedShadow(8, 0.2),
   },
   headerBlur: {
     borderRadius: wp('6%'),
     overflow: 'hidden',
   },
   headerGradient: {
-    paddingVertical: hp('2.5%'),
+    paddingVertical: CrossPlatformUtils.getAdaptiveSpacing(hp('2.5%')),
     paddingHorizontal: wp('4%'),
     position: 'relative',
   },

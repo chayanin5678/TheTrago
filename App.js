@@ -4,13 +4,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from './navigationRef';
 import { AuthProvider, useAuth } from './AuthContext';
+import { designTokens, platformStyles } from './(CSS)/PlatformStyles';
+import { CrossPlatformUtils } from './(CSS)/PlatformSpecificUtils';
+import PlatformStatusBar from './(component)/PlatformStatusBar';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -234,18 +237,18 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   return (
     <View style={{
       position: 'absolute',
-      bottom: 25,
-      left: 20,
-      right: 20,
-      height: 70,
-      borderRadius: 35,
+      bottom: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 25 : 20),
+      left: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 20 : 16),
+      right: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 20 : 16),
+      height: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 70 : 65),
+      borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(Platform.OS === 'ios' ? 35 : 32),
       overflow: 'visible',
     }}>
       {/* Animated Background Slider */}
       <Animated.View
         style={{
           position: 'absolute',
-          top: 15,
+          top: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 15 : 12),
           left: activeAnim.interpolate({
             inputRange: [0, 1],
             outputRange: [15, '65%'],
@@ -268,14 +271,14 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
         style={{
           flexDirection: 'row',
           height: '100%',
-          borderRadius: 35,
-          paddingHorizontal: 10,
-          paddingVertical: 5,
+          borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(Platform.OS === 'ios' ? 35 : 32),
+          paddingHorizontal: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 10 : 8),
+          paddingVertical: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 5 : 4),
           alignItems: 'center',
           justifyContent: 'space-around',
-          borderWidth: 1.5,
+          borderWidth: Platform.OS === 'ios' ? 1.5 : 1,
           borderColor: 'rgba(253, 80, 30, 0.1)',
-          shadowColor: '#FD501E',
+          ...CrossPlatformUtils.getUnifiedShadow(8, 0.3),
           shadowOffset: { width: 0, height: 15 },
           shadowOpacity: 0.25,
           shadowRadius: 25,
@@ -565,37 +568,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: designTokens.colors.background,
   },
   customButtonContainer: {
-    top: -10,
+    top: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? -10 : -8),
     justifyContent: 'center',
     alignItems: 'center',
   },
   customButton: {
-    width: 65,
-    height: 65,
-    borderRadius: 32.5,
-    backgroundColor: '#FD501E',
+    width: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 65 : 60),
+    height: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 65 : 60),
+    borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(Platform.OS === 'ios' ? 32.5 : 30),
+    backgroundColor: designTokens.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...CrossPlatformUtils.getUnifiedShadow(8, 0.3),
   },
   tabBarContainer: {
-    paddingBottom: 110, // Increased padding for floating tab bar to prevent overlap
+    paddingBottom: CrossPlatformUtils.getAdaptiveSpacing(Platform.OS === 'ios' ? 110 : 100),
   },
   premiumContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
+    backgroundColor: designTokens.colors.background,
+    borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(Platform.OS === 'ios' ? 25 : 20),
     padding: 25,
     margin: 20,
     shadowColor: '#FD501E',

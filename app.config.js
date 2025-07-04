@@ -48,7 +48,7 @@ export default {
         }
       ]
     ],
-    "jsEngine": "hermes",
+    "jsEngine": "jsc",
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,

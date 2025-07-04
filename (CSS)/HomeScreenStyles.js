@@ -1,21 +1,26 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { designTokens, platformStyles, responsive, getDeviceCategory } from './PlatformStyles';
+
+const { width } = Dimensions.get('window');
+const deviceCategory = getDeviceCategory();
 
 const styles = StyleSheet.create({
   container: {
     fontFamily: 'Domestos',
     flexGrow: 1,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    backgroundColor: designTokens.colors.background,
+    padding: responsive.spacing(wp('5%')),
+    ...platformStyles.container,
   },
   title: {
-    fontSize: 20,
+    fontSize: responsive.fontSize(wp('5%')),
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#002348',
-    marginBottom: 20,
-
+    color: designTokens.colors.secondary,
+    marginBottom: responsive.spacing(wp('5%')),
+    ...designTokens.typography.h2,
   },
     itemContainer: {
     marginBottom: 15,
@@ -29,77 +34,58 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bookingSection: {
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: wp('8%'),
-    padding: wp('4.5%'),
+    backgroundColor: designTokens.colors.surface,
+    borderRadius: responsive.componentSize(designTokens.borderRadius.extraLarge),
+    padding: responsive.spacing(designTokens.spacing.md),
     width: '100%',
-    marginBottom: hp('2%'),
-    paddingBottom: hp('3%'),
-    // Ultra premium glass morphism with enhanced shadows
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('1%') },
-    shadowOpacity: 0.2,
-    shadowRadius: wp('4%'),
-    elevation: 12,
+    marginBottom: responsive.spacing(hp('2%')),
+    paddingBottom: responsive.spacing(hp('3%')),
+    // Cross-platform premium shadows
+    ...platformStyles.premiumShadow,
     borderWidth: wp('0.3%'),
     borderColor: 'rgba(253, 80, 30, 0.1)',
-    backdropFilter: 'blur(20px)',
-    // Premium gradient border effect
-    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))',
-    // Responsive sizing - smaller and more balanced
-    minHeight: hp('28%'),
-    maxWidth: wp('94%'),
+    // Responsive sizing
+    minHeight: responsive.componentSize(hp(deviceCategory === 'small' ? '30%' : '28%')),
+    maxWidth: deviceCategory === 'large' ? wp('85%') : wp('94%'),
     alignSelf: 'center',
-    // Premium layered shadows
-    overflow: 'visible',
-    position: 'relative',
-    // Secondary shadow for depth
-    ...(Platform.OS === 'ios' && {
-      shadowColor: 'rgba(30, 41, 59, 0.08)',
-      shadowOffset: { width: 0, height: hp('1.2%') },
-      shadowOpacity: 0.12,
-      shadowRadius: wp('5%'),
-    }),
-    // Responsive breakpoints
-    ...(Dimensions.get('window').width > 768 && {
-      maxWidth: wp('85%'),
-      padding: wp('4%'),
-      borderRadius: wp('6%'),
-      minHeight: hp('26%'),
-    }),
-    ...(Dimensions.get('window').width <= 480 && {
-      padding: wp('4%'),
-      minHeight: hp('30%'),
-      borderRadius: wp('7%'),
+    // Platform-specific adjustments
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(253, 80, 30, 0.2)',
+        shadowOffset: { width: 0, height: hp('1%') },
+        shadowOpacity: 0.2,
+        shadowRadius: wp('4%'),
+      },
+      android: {
+        elevation: 12,
+        shadowColor: designTokens.colors.primary,
+      },
     }),
   },
 
   inputBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    padding: wp('4%'),
-    borderRadius: wp('5%'),
-    shadowColor: 'rgba(253, 80, 30, 0.2)',
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    shadowOpacity: 0.15,
-    shadowRadius: wp('3%'),
-    elevation: 8,
-    marginHorizontal: wp('1%'),
+    backgroundColor: designTokens.colors.surface,
+    padding: responsive.spacing(designTokens.spacing.md),
+    borderRadius: responsive.componentSize(designTokens.borderRadius.medium),
+    ...platformStyles.shadow,
+    marginHorizontal: responsive.spacing(wp('1%')),
     flex: 1,
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.08)',
-    minHeight: hp('7%'),
-    // Premium glass effect
-    backdropFilter: 'blur(10px)',
-    // Responsive adjustments
-    ...(Dimensions.get('window').width <= 480 && {
-      padding: wp('3.5%'),
-      borderRadius: wp('4%'),
-    }),
-    ...(Dimensions.get('window').width > 768 && {
-      padding: wp('3%'),
-      minHeight: hp('6%'),
+    minHeight: responsive.componentSize(hp(deviceCategory === 'small' ? '6%' : '7%')),
+    // Platform-specific adjustments
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(253, 80, 30, 0.2)',
+        shadowOffset: { width: 0, height: hp('0.8%') },
+        shadowOpacity: 0.15,
+        shadowRadius: wp('3%'),
+      },
+      android: {
+        elevation: 8,
+      },
     }),
   },
 
@@ -107,16 +93,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: hp('2%'),
+    marginBottom: responsive.spacing(hp('2%')),
     width: '100%',
-    // Responsive flex wrap for smaller screens
-    ...(Dimensions.get('window').width <= 480 && {
+    // Responsive adjustments
+    ...Platform.select({
+      ios: {
+        marginBottom: hp('2%'),
+      },
+      android: {
+        marginBottom: hp('2.2%'),
+      },
+    }),
+    // Device-specific adjustments
+    ...(deviceCategory === 'small' && {
       flexWrap: 'wrap',
       justifyContent: 'center',
       marginBottom: hp('2.2%'),
     }),
-    // Tablet adjustments
-    ...(Dimensions.get('window').width > 768 && {
+    ...(deviceCategory === 'large' && {
       marginBottom: hp('2.5%'),
       paddingHorizontal: wp('2%'),
     }),

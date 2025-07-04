@@ -14,7 +14,7 @@
       }
     },
     "version": "1.0.2",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
@@ -24,24 +24,38 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
+      "versionCode": 2,
       "package": "com.chayanin5678.TheTrago",
       "permissions": [
         "CAMERA"
-      ]
+      ],
+      "enableFlexiblePageSizes": true,
+      "supportedABIs": ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "allowBackup": false
     },
     "plugins": [
-      "expo-secure-store",
-      "expo-mail-composer"
+      "expo-secure-store"
     ],
     "ios": {
+      "buildNumber": "2",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "userInterfaceStyle": "automatic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to scan your ID card",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting and uploading images.",
-        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
+        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features.",
+        "UILaunchStoryboardName": "SplashScreen",
+        "UIStatusBarStyle": "UIStatusBarStyleDefault"
       }
     },
-    "jsEngine": "hermes"
+    "jsEngine": "jsc"
   }
 }
