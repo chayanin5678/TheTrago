@@ -33,8 +33,22 @@ export default {
       ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-mail-composer",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false
+          },
+          "android": {
+            "newArchEnabled": false
+          }
+        }
+      ]
     ],
+    "jsEngine": "jsc",
+    "newArchEnabled": false,
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,
@@ -44,7 +58,6 @@ export default {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting and uploading images.",
         "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
       }
-    },
-    "jsEngine": "jsc"
+    }
   }
 };
