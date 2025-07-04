@@ -34,12 +34,13 @@ export default {
     },
     "plugins": [
       "expo-secure-store",
-      "expo-mail-composer",        [
+      "expo-mail-composer",
+      [
         "expo-build-properties",
         {
           "ios": {
             "newArchEnabled": false,
-            "deploymentTarget": "11.0"
+            "deploymentTarget": "15.1"
           },
           "android": {
             "newArchEnabled": false
@@ -48,7 +49,6 @@ export default {
       ]
     ],
     "jsEngine": "jsc",
-    "newArchEnabled": false,
     "ios": {
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,
