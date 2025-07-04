@@ -42,6 +42,6 @@
         "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
       }
     },
-    "jsEngine": "jsc"
+    "jsEngine": "hermes"
   }
 }
