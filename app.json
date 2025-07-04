@@ -24,17 +24,16 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 2,
       "package": "com.chayanin5678.TheTrago",
       "permissions": [
         "CAMERA"
       ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-mail-composer"
     ],
     "ios": {
-      "buildNumber": "2",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
