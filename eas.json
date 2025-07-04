@@ -33,7 +33,8 @@
         "releaseChannel": "default"
       },
       "ios": {
-        "releaseChannel": "default"
+        "releaseChannel": "default",
+        "buildConfiguration": "Release"
       }
     }
   },

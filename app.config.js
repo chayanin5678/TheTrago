@@ -34,12 +34,12 @@ export default {
     },
     "plugins": [
       "expo-secure-store",
-      "expo-mail-composer",
-      [
+      "expo-mail-composer",        [
         "expo-build-properties",
         {
           "ios": {
-            "newArchEnabled": false
+            "newArchEnabled": false,
+            "deploymentTarget": "11.0"
           },
           "android": {
             "newArchEnabled": false
