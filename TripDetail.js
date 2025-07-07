@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -2694,13 +2694,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     // Premium glass effect
     backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95), rgba(241,245,249,0.92))',
-    // Multiple shadow layers for ultra premium look
-    ...(Platform.OS === 'ios' && {
-      shadowColor: 'rgba(253, 80, 30, 0.2)',
-      shadowOffset: { width: 0, height: hp('1.5%') },
-      shadowOpacity: 0.3,
-      shadowRadius: wp('6%'),
-    }),
+    // Multiple shadow layers - removed Platform check for Hermes compatibility
+    shadowColor: 'rgba(253, 80, 30, 0.2)',
+    shadowOffset: { width: 0, height: hp('1.5%') },
+    shadowOpacity: 0.3,
+    shadowRadius: wp('6%'),
+    elevation: 8,
   },
   modalOption: {
     paddingVertical: hp('1.8%'),
@@ -2753,13 +2752,12 @@ const styles = StyleSheet.create({
     minHeight: hp('35%'),
     maxWidth: wp('92%'),
     alignSelf: 'center',
-    // Premium layered shadows
-    ...(Platform.OS === 'ios' && {
-      shadowColor: 'rgba(253, 80, 30, 0.08)',
-      shadowOffset: { width: 0, height: hp('1.2%') },
-      shadowOpacity: 0.15,
-      shadowRadius: wp('5%'),
-    }),
+    // Premium layered shadows - removed Platform check for Hermes compatibility
+    shadowColor: 'rgba(253, 80, 30, 0.08)',
+    shadowOffset: { width: 0, height: hp('1.2%') },
+    shadowOpacity: 0.15,
+    shadowRadius: wp('5%'),
+    elevation: 6,
   },
   promo: {
     backgroundColor: 'rgba(255,255,255,0.98)',

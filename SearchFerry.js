@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
@@ -62,7 +62,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [showReturnPicker, setShowReturnPicker] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [showModal, setShowModal] = useState(false);
+  const [showDepartModal, setShowDepartModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
   const [calendarStartDate, setCalendarStartDate] = useState(new Date().toISOString().split('T')[0]); // string
   const [calendarEndDate, setCalendarEndDate] = useState(new Date().toISOString().split('T')[0]); // string
   const [selectedCompaniesDepart, setSelectedCompaniesDepart] = useState([]);
@@ -95,23 +96,22 @@ const SearchFerry = ({ navigation, route }) => {
   const year = calendarStartDate?.substring(0, 4) || "";
   console.log("year", year);
   console.log("country", startingPoint.countryId);
-  // ฟังก์ชันสำหรับเลือกวัน
-  const onCalendarDayPress = (day) => {
-    if (!calendarStartDate || calendarEndDate) {
-      setCalendarStartDate(day.dateString);
-      setCalendarEndDate(null);
-      setCalendarMarkedDates({
-        [day.dateString]: {
-          startingDay: true,
-          color: '#FD501E',
-          textColor: 'white',
-        },
-      });
-    } else {
-      const range = getMarkedDatesRange(calendarStartDate, day.dateString);
-      setCalendarEndDate(day.dateString);
-      setCalendarMarkedDates(range);
-    }
+  // ฟังก์ชันสำหรับเลือกวันที่ไป
+  const onDepartCalendarDayPress = (day) => {
+    setCalendarStartDate(day.dateString);
+    setDepartureDate(new Date(day.dateString));
+    // เซ็ตวันที่กลับเป็นวันเดียวกันกับวันที่ไป
+    setCalendarEndDate(day.dateString);
+    setReturnDate(new Date(day.dateString));
+    console.log('Selected Departure Date:', day.dateString);
+    console.log('Auto-set Return Date:', day.dateString);
+  };
+
+  // ฟังก์ชันสำหรับเลือกวันที่กลับ
+  const onReturnCalendarDayPress = (day) => {
+    setCalendarEndDate(day.dateString);
+    setReturnDate(new Date(day.dateString));
+    console.log('Selected Return Date:', day.dateString);
   };
 
   const getMarkedDatesRange = (start, end) => {
@@ -132,18 +132,23 @@ const SearchFerry = ({ navigation, route }) => {
     return dates;
   };
 
-  // ยืนยันการเลือกวัน
-  const handleCalendarConfirm = () => {
-    if (tripType === 'One Way Trip' && calendarStartDate) {
-      console.log('Selected Departure Date:', calendarStartDate);
+  // ยืนยันการเลือกวันที่ไป
+  const handleDepartCalendarConfirm = () => {
+    if (calendarStartDate) {
       setDepartureDate(new Date(calendarStartDate));
-      setShowModal(false);
-    } else if (tripType === 'Return Trip' && calendarStartDate && calendarEndDate) {
-      setDepartureDate(new Date(calendarStartDate));
-      setReturnDate(new Date(calendarEndDate));
-      setShowModal(false);
+      setShowDepartModal(false);
     } else {
-      alert('กรุณาเลือกวันที่ให้ครบ');
+      alert('กรุณาเลือกวันที่ไป');
+    }
+  };
+
+  // ยืนยันการเลือกวันที่กลับ
+  const handleReturnCalendarConfirm = () => {
+    if (calendarEndDate) {
+      setReturnDate(new Date(calendarEndDate));
+      setShowReturnModal(false);
+    } else {
+      alert('กรุณาเลือกวันที่กลับ');
     }
   };
 
@@ -677,7 +682,7 @@ const SearchFerry = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
+              marginTop: Platform.OS === 'ios' ? 0 : -20,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -704,7 +709,7 @@ const SearchFerry = ({ navigation, route }) => {
               paddingHorizontal: 0,
               paddingTop: 0,
               position: 'relative',
-              marginTop: -10,
+              marginTop: Platform.OS === 'android' ? 70 : -10,
               height: 56,
             },
           ]}
@@ -880,12 +885,12 @@ const SearchFerry = ({ navigation, route }) => {
             headStyles.headerTitle, 
             { 
               color: '#FFFFFF', 
-              fontSize: wp('7%'), 
+              fontSize: wp('6%'), 
               fontWeight: '800', 
               letterSpacing: -0.5, 
               textAlign: 'left', 
               marginLeft: 0,
-              lineHeight: wp('8%'),
+              lineHeight: Platform.OS === 'android' ? wp('5%') : wp('6%'),
               textShadowColor: 'rgba(0,0,0,0.3)',
               textShadowRadius: 4,
               textShadowOffset: { width: 1, height: 1 },
@@ -911,11 +916,11 @@ const SearchFerry = ({ navigation, route }) => {
             paddingVertical: hp('1.5%'),
             paddingHorizontal: wp('5%'),
             borderRadius: wp('4%'),
-            shadowColor: '#FFFFFF',
-            shadowOpacity: 0.2,
-            shadowRadius: wp('3%'),
-            shadowOffset: { width: 0, height: hp('0.5%') },
-            elevation: 8,
+            shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFFFFF',
+            shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+            shadowRadius: Platform.OS === 'android' ? 0 : wp('3%'),
+            shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
+            elevation: Platform.OS === 'android' ? 0 : 8,
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0.3)',
             backdropFilter: 'blur(15px)',
@@ -930,8 +935,8 @@ const SearchFerry = ({ navigation, route }) => {
               fontWeight: '700', 
               fontSize: wp('3.8%'), 
               letterSpacing: 0.5,
-              textShadowColor: 'rgba(0,0,0,0.2)',
-              textShadowRadius: 2,
+              textShadowColor: Platform.OS === 'android' ? 'transparent' : 'rgba(0,0,0,0.2)',
+              textShadowRadius: Platform.OS === 'android' ? 0 : 2,
             }}>Filters</Text>
           </View>
         </TouchableOpacity>
@@ -951,11 +956,11 @@ const SearchFerry = ({ navigation, route }) => {
             maxWidth: wp('92%'),
             borderRadius: wp('6%'), 
             padding: wp('6%'),
-            shadowColor: '#001233',
-            shadowOpacity: 0.15,
-            shadowRadius: wp('6%'),
-            shadowOffset: { width: 0, height: hp('1%') },
-            elevation: 20,
+            shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+            shadowOpacity: Platform.OS === 'android' ? 0 : 0.15,
+            shadowRadius: Platform.OS === 'android' ? 0 : wp('6%'),
+            shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('1%') },
+            elevation: Platform.OS === 'android' ? 0 : 20,
             borderWidth: 1,
             borderColor: 'rgba(0, 18, 51, 0.08)',
             backdropFilter: 'blur(25px)',
@@ -980,10 +985,10 @@ const SearchFerry = ({ navigation, route }) => {
                   backgroundColor: 'rgba(248,250,252,0.8)',
                   padding: wp('2.5%'),
                   borderRadius: wp('4%'),
-                  shadowColor: '#64748B',
-                  shadowOpacity: 0.1,
-                  shadowRadius: wp('2%'),
-                  elevation: 4,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                  elevation: Platform.OS === 'android' ? 0 : 4,
                 }}
                 activeOpacity={0.7}
               >
@@ -1003,10 +1008,10 @@ const SearchFerry = ({ navigation, route }) => {
                 borderRadius: wp('4%'),
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.08)',
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.05,
-                shadowRadius: wp('2%'),
-                elevation: 2,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.05,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                elevation: Platform.OS === 'android' ? 0 : 2,
               }}
               activeOpacity={0.8}
             >
@@ -1042,11 +1047,11 @@ const SearchFerry = ({ navigation, route }) => {
                       borderRadius: wp('4%'),
                       borderWidth: 1,
                       borderColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                      shadowColor: selectedCompaniesDepart.includes(company) ? '#FD501E' : '#64748B',
-                      shadowOpacity: selectedCompaniesDepart.includes(company) ? 0.1 : 0.05,
-                      shadowRadius: wp('2%'),
-                      shadowOffset: { width: 0, height: hp('0.2%') },
-                      elevation: selectedCompaniesDepart.includes(company) ? 4 : 2,
+                      shadowColor: Platform.OS === 'android' ? 'transparent' : (selectedCompaniesDepart.includes(company) ? '#FD501E' : '#64748B'),
+                      shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 0.1 : 0.05),
+                      shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                      shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
+                      elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 4 : 2),
                     }}
                     activeOpacity={0.7}
                   >
@@ -1080,11 +1085,11 @@ const SearchFerry = ({ navigation, route }) => {
                       borderRadius: wp('4%'),
                       borderWidth: 1,
                       borderColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                      shadowColor: selectedCompaniesReturn.includes(company) ? '#FD501E' : '#64748B',
-                      shadowOpacity: selectedCompaniesReturn.includes(company) ? 0.1 : 0.05,
-                      shadowRadius: wp('2%'),
-                      shadowOffset: { width: 0, height: hp('0.2%') },
-                      elevation: selectedCompaniesReturn.includes(company) ? 4 : 2,
+                      shadowColor: Platform.OS === 'android' ? 'transparent' : (selectedCompaniesReturn.includes(company) ? '#FD501E' : '#64748B'),
+                      shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 0.1 : 0.05),
+                      shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                      shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
+                      elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 4 : 2),
                     }}
                     activeOpacity={0.7}
                   >
@@ -1116,11 +1121,11 @@ const SearchFerry = ({ navigation, route }) => {
                 padding: hp('2.2%'),
                 borderRadius: wp('5%'),
                 alignItems: 'center',
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.3,
-                shadowRadius: wp('4%'),
-                shadowOffset: { width: 0, height: hp('0.8%') },
-                elevation: 15,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
+                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.8%') },
+                elevation: Platform.OS === 'android' ? 0 : 15,
                 borderWidth: 1,
                 borderColor: 'rgba(255, 255, 255, 0.25)',
                 // Premium gradient effect
@@ -1167,6 +1172,7 @@ const SearchFerry = ({ navigation, route }) => {
             backgroundColor: 'transparent',
             paddingHorizontal: 24,
             paddingTop: 8,
+            paddingBottom: Platform.OS === 'android' ? hp('10%') : hp('8%'), // เพิ่ม padding bottom เพื่อไม่ให้ bottom bar บัง
             flexGrow: 1,
           }
         ]}
@@ -1197,10 +1203,10 @@ const SearchFerry = ({ navigation, route }) => {
             borderRadius: wp('3%'),
             padding: wp('0.8%'),
             marginBottom: hp('2%'),
-            shadowColor: '#001233',
-            shadowOpacity: 0.06,
-            shadowRadius: wp('2%'),
-            elevation: 4,
+            shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+            shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+            shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+            elevation: Platform.OS === 'android' ? 0 : 4,
             borderWidth: 0.5,
             borderColor: 'rgba(0, 18, 51, 0.04)',
           }]}>
@@ -1212,11 +1218,11 @@ const SearchFerry = ({ navigation, route }) => {
                   borderRadius: wp('2.5%'),
                   paddingVertical: hp('1.2%'),
                   paddingHorizontal: wp('4%'),
-                  shadowColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
-                  shadowOpacity: tripType === "One Way Trip" ? 0.2 : 0,
-                  shadowRadius: wp('2%'),
-                  shadowOffset: { width: 0, height: hp('0.3%') },
-                  elevation: tripType === "One Way Trip" ? 6 : 0,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "One Way Trip" ? '#FD501E' : 'transparent'),
+                  shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 0.2 : 0),
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                  elevation: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 6 : 0),
                   borderWidth: 0.5,
                   borderColor: tripType === "One Way Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
                 }
@@ -1252,11 +1258,11 @@ const SearchFerry = ({ navigation, route }) => {
                   borderRadius: wp('2.5%'),
                   paddingVertical: hp('1.2%'),
                   paddingHorizontal: wp('4%'),
-                  shadowColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
-                  shadowOpacity: tripType === "Return Trip" ? 0.2 : 0,
-                  shadowRadius: wp('2%'),
-                  shadowOffset: { width: 0, height: hp('0.3%') },
-                  elevation: tripType === "Return Trip" ? 6 : 0,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "Return Trip" ? '#FD501E' : 'transparent'),
+                  shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 0.2 : 0),
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                  elevation: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 6 : 0),
                   borderWidth: 0.5,
                   borderColor: tripType === "Return Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
                 }
@@ -1295,10 +1301,10 @@ const SearchFerry = ({ navigation, route }) => {
                 backgroundColor: 'rgba(255,255,255,0.9)',
                 borderRadius: wp('3%'),
                 padding: wp('3%'),
-                shadowColor: '#001233',
-                shadowOpacity: 0.06,
-                shadowRadius: wp('2%'),
-                elevation: 4,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                elevation: Platform.OS === 'android' ? 0 : 4,
                 borderWidth: 0.5,
                 borderColor: 'rgba(0, 18, 51, 0.05)',
                 backdropFilter: 'blur(10px)',
@@ -1313,10 +1319,10 @@ const SearchFerry = ({ navigation, route }) => {
                 minWidth: 28, 
                 minHeight: 28,
                 backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.1,
-                shadowRadius: wp('1%'),
-                elevation: 2,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                elevation: Platform.OS === 'android' ? 0 : 2,
               }]}>
                 <MaterialIcons name="groups" size={wp('5%')} color="#FD501E" />
               </View>
@@ -1352,14 +1358,14 @@ const SearchFerry = ({ navigation, route }) => {
               <View style={{ 
                 backgroundColor: '#fff', 
                 borderRadius: 32, 
-                padding: 32, 
+                padding: 24, 
                 width: '100%', 
                 maxWidth: 420,
-                shadowColor: '#000', 
-                shadowOpacity: 0.25, 
-                shadowRadius: 20, 
-                shadowOffset: { width: 0, height: 10 }, 
-                elevation: 15,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#000', 
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.25, 
+                shadowRadius: Platform.OS === 'android' ? 0 : 20, 
+                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 10 }, 
+                elevation: Platform.OS === 'android' ? 0 : 15,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)'
               }}>
@@ -1367,11 +1373,11 @@ const SearchFerry = ({ navigation, route }) => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 28
+                  marginBottom: 20
                 }}>
                   <Text style={{ 
                     fontWeight: '800', 
-                    fontSize: 24, 
+                    fontSize: 22, 
                     color: '#1E293B', 
                     letterSpacing: -0.5 
                   }}>
@@ -1388,7 +1394,7 @@ const SearchFerry = ({ navigation, route }) => {
                     <AntDesign name="close" size={20} color="#64748B" />
                   </TouchableOpacity>
                 </View>
-                <View style={{ marginBottom: 24, gap: 20 }}>
+                <View style={{ marginBottom: 20, gap: 16 }}>
                   {/* Ultra Premium Adults Row */}
                   <View style={{ 
                     flexDirection: 'row', 
@@ -1396,45 +1402,45 @@ const SearchFerry = ({ navigation, route }) => {
                     justifyContent: 'space-between', 
                     backgroundColor: 'rgba(253, 80, 30, 0.05)', 
                     borderRadius: 20, 
-                    paddingVertical: 16, 
-                    paddingHorizontal: 20, 
-                    marginBottom: 12, 
-                    shadowColor: '#FD501E', 
-                    shadowOpacity: 0.08, 
-                    shadowRadius: 8, 
-                    elevation: 3,
+                    paddingVertical: 12, 
+                    paddingHorizontal: 16, 
+                    marginBottom: 10, 
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E', 
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.08, 
+                    shadowRadius: Platform.OS === 'android' ? 0 : 8, 
+                    elevation: Platform.OS === 'android' ? 0 : 3,
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.1)'
                   }}>
                     <Text style={{ 
                       color: '#FD501E', 
                       fontWeight: '800', 
-                      fontSize: 18, 
-                      minWidth: 90,
+                      fontSize: 16, 
+                      flex: 1,
                       letterSpacing: -0.3
                     }}>
                       Adults
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                       <TouchableOpacity 
                         onPress={() => setAdults(Math.max(1, adults - 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: adults > 1 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: adults > 1 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: adults > 1 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (adults > 1 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (adults > 1 ? 2 : 0)
                         }}
                       >
-                        <Icon name="remove-circle" size={32} color={adults > 1 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="remove-circle" size={24} color={adults > 1 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                       <Text style={{ 
-                        fontSize: 24, 
+                        fontSize: 18, 
                         fontWeight: '800', 
-                        marginHorizontal: 24, 
-                        minWidth: 36, 
+                        marginHorizontal: 12, 
+                        minWidth: 24, 
                         textAlign: 'center', 
                         color: '#1E293B',
                         letterSpacing: -0.5
@@ -1444,16 +1450,16 @@ const SearchFerry = ({ navigation, route }) => {
                       <TouchableOpacity 
                         onPress={() => setAdults(Math.min(10, adults + 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: adults < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: adults < 10 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: adults < 10 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (adults < 10 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (adults < 10 ? 2 : 0)
                         }}
                       >
-                        <Icon name="add-circle" size={32} color={adults < 10 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="add-circle" size={24} color={adults < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1464,45 +1470,45 @@ const SearchFerry = ({ navigation, route }) => {
                     justifyContent: 'space-between', 
                     backgroundColor: 'rgba(253, 80, 30, 0.05)', 
                     borderRadius: 20, 
-                    paddingVertical: 16, 
-                    paddingHorizontal: 20, 
-                    marginBottom: 12, 
-                    shadowColor: '#FD501E', 
-                    shadowOpacity: 0.08, 
-                    shadowRadius: 8, 
-                    elevation: 3,
+                    paddingVertical: 12, 
+                    paddingHorizontal: 16, 
+                    marginBottom: 10, 
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E', 
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.08, 
+                    shadowRadius: Platform.OS === 'android' ? 0 : 8, 
+                    elevation: Platform.OS === 'android' ? 0 : 3,
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.1)'
                   }}>
                     <Text style={{ 
                       color: '#FD501E', 
                       fontWeight: '800', 
-                      fontSize: 18, 
-                      minWidth: 90,
+                      fontSize: 16, 
+                      flex: 1,
                       letterSpacing: -0.3
                     }}>
                       Children
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                       <TouchableOpacity 
                         onPress={() => setChildren(Math.max(0, children - 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: children > 0 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: children > 0 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: children > 0 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (children > 0 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (children > 0 ? 2 : 0)
                         }}
                       >
-                        <Icon name="remove-circle" size={32} color={children > 0 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="remove-circle" size={24} color={children > 0 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                       <Text style={{ 
-                        fontSize: 24, 
+                        fontSize: 18, 
                         fontWeight: '800', 
-                        marginHorizontal: 24, 
-                        minWidth: 36, 
+                        marginHorizontal: 12, 
+                        minWidth: 24, 
                         textAlign: 'center', 
                         color: '#1E293B',
                         letterSpacing: -0.5
@@ -1512,16 +1518,16 @@ const SearchFerry = ({ navigation, route }) => {
                       <TouchableOpacity 
                         onPress={() => setChildren(Math.min(10, children + 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: children < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: children < 10 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: children < 10 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (children < 10 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (children < 10 ? 2 : 0)
                         }}
                       >
-                        <Icon name="add-circle" size={32} color={children < 10 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="add-circle" size={24} color={children < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1532,44 +1538,44 @@ const SearchFerry = ({ navigation, route }) => {
                     justifyContent: 'space-between', 
                     backgroundColor: 'rgba(253, 80, 30, 0.05)', 
                     borderRadius: 20, 
-                    paddingVertical: 16, 
-                    paddingHorizontal: 20, 
-                    shadowColor: '#FD501E', 
-                    shadowOpacity: 0.08, 
-                    shadowRadius: 8, 
-                    elevation: 3,
+                    paddingVertical: 12, 
+                    paddingHorizontal: 16, 
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E', 
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.08, 
+                    shadowRadius: Platform.OS === 'android' ? 0 : 8, 
+                    elevation: Platform.OS === 'android' ? 0 : 3,
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.1)'
                   }}>
                     <Text style={{ 
                       color: '#FD501E', 
                       fontWeight: '800', 
-                      fontSize: 18, 
-                      minWidth: 90,
+                      fontSize: 16, 
+                      flex: 1,
                       letterSpacing: -0.3
                     }}>
                       Infants
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                       <TouchableOpacity 
                         onPress={() => setInfant(Math.max(0, infant - 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: infant > 0 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: infant > 0 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: infant > 0 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (infant > 0 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (infant > 0 ? 2 : 0)
                         }}
                       >
-                        <Icon name="remove-circle" size={32} color={infant > 0 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="remove-circle" size={24} color={infant > 0 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                       <Text style={{ 
-                        fontSize: 24, 
+                        fontSize: 18, 
                         fontWeight: '800', 
-                        marginHorizontal: 24, 
-                        minWidth: 36, 
+                        marginHorizontal: 12, 
+                        minWidth: 24, 
                         textAlign: 'center', 
                         color: '#1E293B',
                         letterSpacing: -0.5
@@ -1579,16 +1585,16 @@ const SearchFerry = ({ navigation, route }) => {
                       <TouchableOpacity 
                         onPress={() => setInfant(Math.min(10, infant + 1))} 
                         style={{ 
-                          padding: 8, 
-                          borderRadius: 24, 
+                          padding: 4, 
+                          borderRadius: 16, 
                           backgroundColor: infant < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                          shadowColor: infant < 10 ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          elevation: infant < 10 ? 2 : 0
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : (infant < 10 ? '#FD501E' : 'transparent'),
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 4,
+                          elevation: Platform.OS === 'android' ? 0 : (infant < 10 ? 2 : 0)
                         }}
                       >
-                        <Icon name="add-circle" size={32} color={infant < 10 ? '#FD501E' : '#94A3B8'} />
+                        <Icon name="add-circle" size={24} color={infant < 10 ? '#FD501E' : '#94A3B8'} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1598,14 +1604,14 @@ const SearchFerry = ({ navigation, route }) => {
                   style={{ 
                     backgroundColor: '#FD501E', 
                     borderRadius: 20, 
-                    padding: 18, 
+                    padding: 16, 
                     alignItems: 'center', 
-                    marginTop: 16, 
-                    shadowColor: '#FD501E', 
-                    shadowOpacity: 0.3, 
-                    shadowRadius: 16, 
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: 12,
+                    marginTop: 12, 
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E', 
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.3, 
+                    shadowRadius: Platform.OS === 'android' ? 0 : 16, 
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 6 },
+                    elevation: Platform.OS === 'android' ? 0 : 12,
                     borderWidth: 1,
                     borderColor: 'rgba(255, 255, 255, 0.2)'
                   }}
@@ -1613,7 +1619,7 @@ const SearchFerry = ({ navigation, route }) => {
                   <Text style={{ 
                     color: '#fff', 
                     fontWeight: 'bold', 
-                    fontSize: 18, 
+                    fontSize: 16, 
                     letterSpacing: 0.5 
                   }}>
                     Confirm Selection
@@ -1632,10 +1638,10 @@ const SearchFerry = ({ navigation, route }) => {
                 backgroundColor: 'rgba(255,255,255,0.9)',
                 borderRadius: wp('3%'),
                 padding: wp('2.5%'),
-                shadowColor: '#001233',
-                shadowOpacity: 0.06,
-                shadowRadius: wp('2%'),
-                elevation: 4,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                elevation: Platform.OS === 'android' ? 0 : 4,
                 borderWidth: 0.5,
                 borderColor: 'rgba(0, 18, 51, 0.05)',
                 backdropFilter: 'blur(10px)',
@@ -1649,10 +1655,10 @@ const SearchFerry = ({ navigation, route }) => {
                 minWidth: 24, 
                 minHeight: 24,
                 backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.1,
-                shadowRadius: wp('1%'),
-                elevation: 2,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                elevation: Platform.OS === 'android' ? 0 : 2,
               }]}>
                 <MaterialIcons name="directions-boat" size={wp('4.5%')} color="#FD501E" />
               </View>
@@ -1693,11 +1699,11 @@ const SearchFerry = ({ navigation, route }) => {
                 justifyContent: 'center',
                 minWidth: 28,
                 minHeight: 28,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.25,
-                shadowRadius: wp('2%'),
-                shadowOffset: { width: 0, height: hp('0.3%') },
-                elevation: 6,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                elevation: Platform.OS === 'android' ? 0 : 6,
                 borderWidth: 0.5,
                 borderColor: 'rgba(255, 255, 255, 0.2)',
               }}>
@@ -1712,10 +1718,10 @@ const SearchFerry = ({ navigation, route }) => {
                 backgroundColor: 'rgba(255,255,255,0.9)',
                 borderRadius: wp('3%'),
                 padding: wp('2.5%'),
-                shadowColor: '#001233',
-                shadowOpacity: 0.06,
-                shadowRadius: wp('2%'),
-                elevation: 4,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                elevation: Platform.OS === 'android' ? 0 : 4,
                 borderWidth: 0.5,
                 borderColor: 'rgba(0, 18, 51, 0.05)',
                 backdropFilter: 'blur(10px)',
@@ -1728,10 +1734,10 @@ const SearchFerry = ({ navigation, route }) => {
                 minWidth: 24, 
                 minHeight: 24,
                 backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.1,
-                shadowRadius: wp('1%'),
-                elevation: 2,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                elevation: Platform.OS === 'android' ? 0 : 2,
               }]}>
                 <MaterialIcons name="location-on" size={wp('4.5%')} color="#FD501E" />
               </View>
@@ -1765,17 +1771,17 @@ const SearchFerry = ({ navigation, route }) => {
               backgroundColor: 'rgba(255,255,255,0.9)',
               borderRadius: wp('3%'),
               padding: wp('3%'),
-              shadowColor: '#001233',
-              shadowOpacity: 0.06,
-              shadowRadius: wp('2%'),
-              elevation: 4,
+              shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+              shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+              shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+              elevation: Platform.OS === 'android' ? 0 : 4,
               borderWidth: 0.5,
               borderColor: 'rgba(0, 18, 51, 0.05)',
               backdropFilter: 'blur(10px)',
             }]}>
               <TouchableOpacity
                 onPress={() => {
-                  setShowModal(true);  // Show the date picker
+                  setShowDepartModal(true);  // Show the departure date picker
                 }}
                 style={[
                   styles.rowdepart,
@@ -1794,10 +1800,10 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: 28,
                   minHeight: 28,
                   backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                  shadowColor: '#FD501E',
-                  shadowOpacity: 0.1,
-                  shadowRadius: wp('1%'),
-                  elevation: 2,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                  elevation: Platform.OS === 'android' ? 0 : 2,
                   marginRight: wp('2%'),
                 }]}>
                   <MaterialIcons name="event" size={wp('5%')} color="#FD501E" />
@@ -1832,7 +1838,7 @@ const SearchFerry = ({ navigation, route }) => {
                     marginHorizontal: wp('1%'),
                   }} />
                   <TouchableOpacity 
-                    onPress={() => setShowModal(true)} 
+                    onPress={() => setShowReturnModal(true)} 
                     disabled={!departureDate}
                     style={[styles.rowdepart, {
                       flexDirection: 'row',
@@ -1849,10 +1855,10 @@ const SearchFerry = ({ navigation, route }) => {
                       borderRadius: wp('8%') / 2,
                       minWidth: 28,
                       minHeight: 28,
-                      shadowColor: '#FFD600',
-                      shadowOpacity: 0.1,
-                      shadowRadius: wp('1%'),
-                      elevation: 2,
+                      shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFD600',
+                      shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                      shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                      elevation: Platform.OS === 'android' ? 0 : 2,
                       marginRight: wp('2%'),
                     }]}>
                       <MaterialIcons name="event" size={wp('5%')} color="#FFD600" />
@@ -1881,202 +1887,327 @@ const SearchFerry = ({ navigation, route }) => {
               )}
             </View>
 
-            {/* Enhanced Ultra Premium Calendar Modal */}
-            <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
+            {/* Enhanced Departure Date Calendar Modal */}
+            <Modal visible={showDepartModal} transparent animationType="slide" onRequestClose={() => setShowDepartModal(false)}>
               <View style={{ 
                 flex: 1, 
                 backgroundColor: 'rgba(0,18,51,0.75)', 
                 justifyContent: 'center', 
                 alignItems: 'center',
-                paddingHorizontal: wp('8%')
+                paddingHorizontal: Platform.OS === 'android' ? 12 : 16,
+                paddingVertical: Platform.OS === 'android' ? 16 : 24,
+                paddingTop: Platform.OS === 'android' ? 40 : 30,
               }}>
                 <View style={{ 
                   backgroundColor: 'rgba(255,255,255,0.98)', 
-                  borderRadius: wp('5%'), 
-                  padding: wp('4%'), 
-                  width: '100%',
-                  maxWidth: wp('85%'),
-                  shadowColor: '#001233',
-                  shadowOpacity: 0.25,
-                  shadowRadius: wp('6%'),
-                  shadowOffset: { width: 0, height: hp('1%') },
-                  elevation: 20,
+                  borderRadius: Platform.OS === 'android' ? 16 : 24, 
+                  padding: Platform.OS === 'android' ? 20 : 24, 
+                  width: Platform.OS === 'android' ? '98%' : '95%',
+                  maxWidth: Platform.OS === 'android' ? 420 : 450,
+                  maxHeight: Platform.OS === 'android' ? '90%' : '85%',
+                  minHeight: Platform.OS === 'android' ? hp('70%') : hp('65%'),
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                  shadowRadius: Platform.OS === 'android' ? 0 : 20,
+                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 8 },
+                  elevation: Platform.OS === 'android' ? 8 : 20,
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
-                  backdropFilter: 'blur(20px)',
                 }}>
                   {/* Enhanced Header */}
                   <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: hp('2%'),
+                    marginBottom: Platform.OS === 'android' ? 12 : 20,
                   }}>
-                    <Text style={{ 
-                      fontWeight: '800', 
-                      fontSize: wp('5%'), 
-                      color: '#1E293B',
-                      letterSpacing: -0.3
-                    }}>Select Travel Dates</Text>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}>
+                      <MaterialIcons name="event" size={Platform.OS === 'android' ? 20 : 24} color="#FD501E" style={{ marginRight: 8 }} />
+                      <Text style={{ 
+                        fontWeight: '800', 
+                        fontSize: Platform.OS === 'android' ? 16 : 18, 
+                        color: '#1E293B',
+                        letterSpacing: -0.3,
+                        flex: 1,
+                      }} numberOfLines={1}>Select Departure Date</Text>
+                    </View>
                     <TouchableOpacity
-                      onPress={() => setShowModal(false)}
+                      onPress={() => setShowDepartModal(false)}
                       style={{
                         backgroundColor: 'rgba(248,250,252,0.8)',
-                        padding: wp('2%'),
-                        borderRadius: wp('3%'),
-                        shadowColor: '#64748B',
-                        shadowOpacity: 0.1,
-                        shadowRadius: wp('2%'),
-                        elevation: 4,
+                        padding: Platform.OS === 'android' ? 6 : 8,
+                        borderRadius: Platform.OS === 'android' ? 16 : 20,
+                        shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
+                        shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                        shadowRadius: Platform.OS === 'android' ? 0 : 8,
+                        elevation: Platform.OS === 'android' ? 2 : 4,
                       }}
                       activeOpacity={0.7}
                     >
-                      <AntDesign name="close" size={wp('4.5%')} color="#64748B" />
+                      <AntDesign name="close" size={Platform.OS === 'android' ? 16 : 20} color="#64748B" />
                     </TouchableOpacity>
                   </View>
 
-                  {/* Enhanced Departure Date Section */}
-                  <View style={{
-                    backgroundColor: 'rgba(253, 80, 30, 0.06)',
-                    borderRadius: wp('3%'),
-                    padding: wp('3%'),
-                    marginBottom: hp('1.5%'),
-                    borderWidth: 1,
-                    borderColor: 'rgba(253, 80, 30, 0.1)',
-                  }}>
-                    <Text style={{ 
-                      color: '#FD501E', 
-                      marginBottom: hp('0.8%'),
-                      fontSize: wp('3.8%'),
-                      fontWeight: '700',
-                      letterSpacing: 0.2
-                    }}>Departure Date</Text>
-                    <Calendar
-                      current={calendarStartDate}
-                      minDate={new Date().toISOString().split('T')[0]}
-                      onDayPress={day => {
-                        setCalendarStartDate(day.dateString);
-                        setCalendarEndDate(day.dateString);
-                        if (tripType === 'Return Trip' && calendarEndDate < day.dateString) {
-                          setCalendarEndDate(day.dateString);
-                        }
+                  {/* Enhanced Departure Date Calendar */}
+                  <View style={{ flex: 1, minHeight: Platform.OS === 'android' ? hp('55%') : hp('50%') }}>
+                    <ScrollView 
+                      style={{ 
+                        maxHeight: Platform.OS === 'android' ? hp('55%') : hp('50%'),
                       }}
-                      markedDates={{
-                        [calendarStartDate]: { 
-                          selected: true, 
-                          selectedColor: '#FD501E',
-                          selectedTextColor: '#FFFFFF'
-                        }
-                      }}
-                      theme={{
-                        backgroundColor: 'transparent',
-                        calendarBackground: 'transparent',
-                        textSectionTitleColor: '#1E293B',
-                        selectedDayBackgroundColor: '#FD501E',
-                        selectedDayTextColor: '#FFFFFF',
-                        todayTextColor: '#FD501E',
-                        dayTextColor: '#1E293B',
-                        textDisabledColor: '#94A3B8',
-                        arrowColor: '#FD501E',
-                        monthTextColor: '#1E293B',
-                        textDayFontWeight: '600',
-                        textMonthFontWeight: '700',
-                        textDayHeaderFontWeight: '600',
-                        textDayFontSize: wp('3.3%'),
-                        textMonthFontSize: wp('4%'),
-                        textDayHeaderFontSize: wp('2.8%'),
-                      }}
-                    />
-                  </View>
-
-                  {tripType === 'Return Trip' && (
-                    <View style={{
-                      backgroundColor: 'rgba(255, 214, 0, 0.06)',
-                      borderRadius: wp('3%'),
-                      padding: wp('3%'),
-                      marginBottom: hp('1.5%'),
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 214, 0, 0.15)',
-                    }}>
-                      <Text style={{ 
-                        color: '#B8860B', 
-                        marginBottom: hp('0.8%'),
-                        fontSize: wp('3.8%'),
-                        fontWeight: '700',
-                        letterSpacing: 0.2
-                      }}>Return Date</Text>
-                      <Calendar
-                        current={calendarEndDate}
-                        minDate={calendarStartDate}
-                        onDayPress={day => {
-                          setCalendarEndDate(day.dateString);
-                        }}
-                        markedDates={{
-                          [calendarEndDate]: { 
-                            selected: true, 
-                            selectedColor: '#FFD600',
-                            selectedTextColor: '#1E293B'
-                          }
-                        }}
-                        theme={{
-                          backgroundColor: 'transparent',
-                          calendarBackground: 'transparent',
-                          textSectionTitleColor: '#1E293B',
-                          selectedDayBackgroundColor: '#FFD600',
-                          selectedDayTextColor: '#1E293B',
-                          todayTextColor: '#B8860B',
-                          dayTextColor: '#1E293B',
-                          textDisabledColor: '#94A3B8',
-                          arrowColor: '#B8860B',
-                          monthTextColor: '#1E293B',
-                          textDayFontWeight: '600',
-                          textMonthFontWeight: '700',
-                          textDayHeaderFontWeight: '600',
-                          textDayFontSize: wp('3.3%'),
-                          textMonthFontSize: wp('4%'),
-                          textDayHeaderFontSize: wp('2.8%'),
-                        }}
-                      />
-                    </View>
-                  )}
-
-                  {/* Enhanced Confirm Button */}
-                  <TouchableOpacity 
-                    onPress={() => setShowModal(false)} 
-                    style={{ 
-                      backgroundColor: '#FD501E',
-                      borderRadius: wp('4%'),
-                      padding: hp('1.8%'),
-                      alignItems: 'center',
-                      marginTop: hp('0.5%'),
-                      shadowColor: '#FD501E',
-                      shadowOpacity: 0.3,
-                      shadowRadius: wp('3%'),
-                      shadowOffset: { width: 0, height: hp('0.5%') },
-                      elevation: 12,
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.25)',
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <MaterialIcons name="check" size={wp('4.5%')} color="#FFFFFF" style={{ marginRight: wp('1.5%') }} />
-                      <Text style={{ 
-                        color: '#FFFFFF', 
-                        fontWeight: '800', 
-                        fontSize: wp('3.8%'),
-                        letterSpacing: 0.5,
-                        textShadowColor: 'rgba(0,0,0,0.2)',
-                        textShadowRadius: 2,
+                      showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled={true}
+                    >
+                      <View style={{
+                        backgroundColor: 'rgba(253, 80, 30, 0.06)',
+                        borderRadius: Platform.OS === 'android' ? 12 : 16,
+                        padding: Platform.OS === 'android' ? 12 : 16,
+                        borderWidth: 1,
+                        borderColor: 'rgba(253, 80, 30, 0.1)',
+                        marginBottom: Platform.OS === 'android' ? 8 : 12,
+                        minHeight: Platform.OS === 'android' ? 350 : 380,
                       }}>
-                        Confirm Dates
-                      </Text>
+                        <Calendar
+                          current={calendarStartDate}
+                          minDate={new Date().toISOString().split('T')[0]}
+                          onDayPress={onDepartCalendarDayPress}
+                          markedDates={{
+                            [calendarStartDate]: { 
+                              selected: true, 
+                              selectedColor: '#FD501E',
+                              selectedTextColor: '#FFFFFF'
+                            }
+                          }}
+                          theme={{
+                            backgroundColor: 'transparent',
+                            calendarBackground: 'transparent',
+                            textSectionTitleColor: '#1E293B',
+                            selectedDayBackgroundColor: '#FD501E',
+                            selectedDayTextColor: '#FFFFFF',
+                            todayTextColor: '#FD501E',
+                            dayTextColor: '#1E293B',
+                            textDisabledColor: '#94A3B8',
+                            arrowColor: '#FD501E',
+                            monthTextColor: '#1E293B',
+                            textDayFontWeight: '600',
+                            textMonthFontWeight: '700',
+                            textDayHeaderFontWeight: '600',
+                            textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                            textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                            textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                          }}
+                          style={{
+                            minHeight: Platform.OS === 'android' ? 320 : 350,
+                            width: '100%',
+                          }}
+                        />
+                      </View>
+                    </ScrollView>
+
+                    {/* Enhanced Confirm Button - Fixed at bottom */}
+                    <View style={{ 
+                      paddingTop: Platform.OS === 'android' ? 16 : 20,
+                      paddingBottom: Platform.OS === 'android' ? 8 : 12,
+                    }}>
+                      <TouchableOpacity 
+                        onPress={handleDepartCalendarConfirm} 
+                        style={{ 
+                          backgroundColor: '#FD501E',
+                          borderRadius: Platform.OS === 'android' ? 12 : 16,
+                          padding: Platform.OS === 'android' ? 14 : 18,
+                          alignItems: 'center',
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 12,
+                          shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
+                          elevation: Platform.OS === 'android' ? 4 : 12,
+                          borderWidth: 1,
+                          borderColor: 'rgba(255, 255, 255, 0.25)',
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <MaterialIcons name="check" size={Platform.OS === 'android' ? 20 : 22} color="#FFFFFF" style={{ marginRight: 8 }} />
+                          <Text style={{ 
+                            color: '#FFFFFF', 
+                            fontWeight: '800', 
+                            fontSize: Platform.OS === 'android' ? 16 : 18,
+                            letterSpacing: 0.5,
+                            textShadowColor: 'rgba(0,0,0,0.2)',
+                            textShadowRadius: 2,
+                          }}>
+                            Confirm Departure Date
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </Modal>
 
+            {/* Enhanced Return Date Calendar Modal */}
+            <Modal visible={showReturnModal} transparent animationType="slide" onRequestClose={() => setShowReturnModal(false)}>
+              <View style={{ 
+                flex: 1, 
+                backgroundColor: 'rgba(0,18,51,0.75)', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                paddingHorizontal: Platform.OS === 'android' ? 12 : 16,
+                paddingVertical: Platform.OS === 'android' ? 16 : 24,
+                paddingTop: Platform.OS === 'android' ? 40 : 30,
+              }}>
+                <View style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.98)', 
+                  borderRadius: Platform.OS === 'android' ? 16 : 24, 
+                  padding: Platform.OS === 'android' ? 20 : 24, 
+                  width: Platform.OS === 'android' ? '98%' : '95%',
+                  maxWidth: Platform.OS === 'android' ? 420 : 450,
+                  maxHeight: Platform.OS === 'android' ? '90%' : '85%',
+                  minHeight: Platform.OS === 'android' ? hp('70%') : hp('65%'),
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                  shadowRadius: Platform.OS === 'android' ? 0 : 20,
+                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 8 },
+                  elevation: Platform.OS === 'android' ? 8 : 20,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 214, 0, 0.15)',
+                }}>
+                  {/* Enhanced Header */}
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: Platform.OS === 'android' ? 12 : 20,
+                  }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}>
+                      <MaterialIcons name="event" size={Platform.OS === 'android' ? 20 : 24} color="#B8860B" style={{ marginRight: 8 }} />
+                      <Text style={{ 
+                        fontWeight: '800', 
+                        fontSize: Platform.OS === 'android' ? 16 : 18, 
+                        color: '#1E293B',
+                        letterSpacing: -0.3,
+                        flex: 1,
+                      }} numberOfLines={1}>Select Return Date</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setShowReturnModal(false)}
+                      style={{
+                        backgroundColor: 'rgba(248,250,252,0.8)',
+                        padding: Platform.OS === 'android' ? 6 : 8,
+                        borderRadius: Platform.OS === 'android' ? 16 : 20,
+                        shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
+                        shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
+                        shadowRadius: Platform.OS === 'android' ? 0 : 8,
+                        elevation: Platform.OS === 'android' ? 2 : 4,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <AntDesign name="close" size={Platform.OS === 'android' ? 16 : 20} color="#64748B" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Enhanced Return Date Calendar */}
+                  <View style={{ flex: 1, minHeight: Platform.OS === 'android' ? hp('55%') : hp('50%') }}>
+                    <ScrollView 
+                      style={{ 
+                        maxHeight: Platform.OS === 'android' ? hp('55%') : hp('50%'),
+                      }}
+                      showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled={true}
+                    >
+                      <View style={{
+                        backgroundColor: 'rgba(255, 214, 0, 0.06)',
+                        borderRadius: Platform.OS === 'android' ? 12 : 16,
+                        padding: Platform.OS === 'android' ? 12 : 16,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 214, 0, 0.15)',
+                        marginBottom: Platform.OS === 'android' ? 8 : 12,
+                        minHeight: Platform.OS === 'android' ? 350 : 380,
+                      }}>
+                        <Calendar
+                          current={calendarEndDate}
+                          minDate={calendarStartDate}
+                          onDayPress={onReturnCalendarDayPress}
+                          markedDates={{
+                            [calendarEndDate]: { 
+                              selected: true, 
+                              selectedColor: '#FFD600',
+                              selectedTextColor: '#1E293B'
+                            }
+                          }}
+                          theme={{
+                            backgroundColor: 'transparent',
+                            calendarBackground: 'transparent',
+                            textSectionTitleColor: '#1E293B',
+                            selectedDayBackgroundColor: '#FFD600',
+                            selectedDayTextColor: '#1E293B',
+                            todayTextColor: '#B8860B',
+                            dayTextColor: '#1E293B',
+                            textDisabledColor: '#94A3B8',
+                            arrowColor: '#B8860B',
+                            monthTextColor: '#1E293B',
+                            textDayFontWeight: '600',
+                            textMonthFontWeight: '700',
+                            textDayHeaderFontWeight: '600',
+                            textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                            textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                            textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                          }}
+                          style={{
+                            minHeight: Platform.OS === 'android' ? 320 : 350,
+                            width: '100%',
+                          }}
+                        />
+                      </View>
+                    </ScrollView>
+
+                    {/* Enhanced Confirm Button - Fixed at bottom */}
+                    <View style={{ 
+                      paddingTop: Platform.OS === 'android' ? 16 : 20,
+                      paddingBottom: Platform.OS === 'android' ? 8 : 12,
+                    }}>
+                      <TouchableOpacity 
+                        onPress={handleReturnCalendarConfirm} 
+                        style={{ 
+                          backgroundColor: '#FFD600',
+                          borderRadius: Platform.OS === 'android' ? 12 : 16,
+                          padding: Platform.OS === 'android' ? 14 : 18,
+                          alignItems: 'center',
+                          shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFD600',
+                          shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
+                          shadowRadius: Platform.OS === 'android' ? 0 : 12,
+                          shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
+                          elevation: Platform.OS === 'android' ? 4 : 12,
+                          borderWidth: 1,
+                          borderColor: 'rgba(0, 0, 0, 0.1)',
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <MaterialIcons name="check" size={Platform.OS === 'android' ? 20 : 22} color="#1E293B" style={{ marginRight: 8 }} />
+                          <Text style={{ 
+                            color: '#1E293B', 
+                            fontWeight: '800', 
+                            fontSize: Platform.OS === 'android' ? 16 : 18,
+                            letterSpacing: 0.5,
+                          }}>
+                            Confirm Return Date
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </Modal>
 
           </View>
         </View>
@@ -4166,7 +4297,8 @@ const SearchFerry = ({ navigation, route }) => {
               justifyContent: 'center', 
               width: '100%', 
               marginVertical: hp('3.5%'),
-              paddingHorizontal: wp('5%')
+              paddingHorizontal: wp('5%'),
+              marginBottom: Platform.OS === 'android' ? hp('12%') : hp('10%'), // เพิ่ม margin bottom เพื่อไม่ให้ bottom bar บัง
             }}>
               <View style={{
                 flexDirection: 'row',
@@ -4176,11 +4308,11 @@ const SearchFerry = ({ navigation, route }) => {
                 borderRadius: wp('8%'),
                 paddingVertical: hp('1.5%'),
                 paddingHorizontal: wp('6%'),
-                shadowColor: '#001233',
-                shadowOpacity: 0.12,
-                shadowRadius: wp('4%'),
-                shadowOffset: { width: 0, height: hp('0.5%') },
-                elevation: 15,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
+                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
+                elevation: Platform.OS === 'android' ? 0 : 15,
                 minWidth: wp('50%'),
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.08)',
@@ -4198,11 +4330,11 @@ const SearchFerry = ({ navigation, route }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: wp('4.5%'),
-                    shadowColor: currentPageDepart === 1 ? 'transparent' : '#FD501E',
-                    shadowOpacity: 0.25,
-                    shadowRadius: wp('2%'),
-                    shadowOffset: { width: 0, height: hp('0.3%') },
-                    elevation: currentPageDepart === 1 ? 0 : 8,
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (currentPageDepart === 1 ? 'transparent' : '#FD501E'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                    shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                    elevation: Platform.OS === 'android' ? 0 : (currentPageDepart === 1 ? 0 : 8),
                     opacity: currentPageDepart === 1 ? 0.5 : 1,
                     borderWidth: currentPageDepart === 1 ? 1 : 0,
                     borderColor: currentPageDepart === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -4227,10 +4359,10 @@ const SearchFerry = ({ navigation, route }) => {
                   alignItems: 'center',
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.15)',
-                  shadowColor: '#FD501E',
-                  shadowOpacity: 0.08,
-                  shadowRadius: wp('1%'),
-                  elevation: 2,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                  elevation: Platform.OS === 'android' ? 0 : 2,
                 }}>
                   <Text style={{
                     fontSize: wp('5.5%'),
@@ -4257,11 +4389,11 @@ const SearchFerry = ({ navigation, route }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginLeft: wp('4.5%'),
-                    shadowColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'transparent' : '#FD501E',
-                    shadowOpacity: 0.25,
-                    shadowRadius: wp('2%'),
-                    shadowOffset: { width: 0, height: hp('0.3%') },
-                    elevation: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0 : 8,
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : ((currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'transparent' : '#FD501E'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                    shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                    elevation: Platform.OS === 'android' ? 0 : ((currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0 : 8),
                     opacity: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0.5 : 1,
                     borderWidth: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 1 : 0,
                     borderColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -4301,7 +4433,8 @@ const SearchFerry = ({ navigation, route }) => {
               justifyContent: 'center', 
               width: '100%', 
               marginVertical: hp('3.5%'),
-              paddingHorizontal: wp('5%')
+              paddingHorizontal: wp('5%'),
+              marginBottom: Platform.OS === 'android' ? hp('12%') : hp('10%'), // เพิ่ม margin bottom เพื่อไม่ให้ bottom bar บัง
             }}>
               <View style={{
                 flexDirection: 'row',
@@ -4311,11 +4444,11 @@ const SearchFerry = ({ navigation, route }) => {
                 borderRadius: wp('8%'),
                 paddingVertical: hp('1.5%'),
                 paddingHorizontal: wp('6%'),
-                shadowColor: '#001233',
-                shadowOpacity: 0.12,
-                shadowRadius: wp('4%'),
-                shadowOffset: { width: 0, height: hp('0.5%') },
-                elevation: 15,
+                shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+                shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
+                shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
+                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
+                elevation: Platform.OS === 'android' ? 0 : 15,
                 minWidth: wp('50%'),
                 borderWidth: 1,
                 borderColor: 'rgba(255, 214, 0, 0.12)',
@@ -4333,11 +4466,11 @@ const SearchFerry = ({ navigation, route }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: wp('4.5%'),
-                    shadowColor: currentPageReturn === 1 ? 'transparent' : '#FFD600',
-                    shadowOpacity: 0.25,
-                    shadowRadius: wp('2%'),
-                    shadowOffset: { width: 0, height: hp('0.3%') },
-                    elevation: currentPageReturn === 1 ? 0 : 8,
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (currentPageReturn === 1 ? 'transparent' : '#FFD600'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                    shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                    elevation: Platform.OS === 'android' ? 0 : (currentPageReturn === 1 ? 0 : 8),
                     opacity: currentPageReturn === 1 ? 0.5 : 1,
                     borderWidth: currentPageReturn === 1 ? 1 : 0,
                     borderColor: currentPageReturn === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -4362,10 +4495,10 @@ const SearchFerry = ({ navigation, route }) => {
                   alignItems: 'center',
                   borderWidth: 1,
                   borderColor: 'rgba(255, 214, 0, 0.2)',
-                  shadowColor: '#FFD600',
-                  shadowOpacity: 0.08,
-                  shadowRadius: wp('1%'),
-                  elevation: 2,
+                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFD600',
+                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
+                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
+                  elevation: Platform.OS === 'android' ? 0 : 2,
                 }}>
                   <Text style={{
                     fontSize: wp('5.5%'),
@@ -4392,11 +4525,11 @@ const SearchFerry = ({ navigation, route }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginLeft: wp('4.5%'),
-                    shadowColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'transparent' : '#FFD600',
-                    shadowOpacity: 0.25,
-                    shadowRadius: wp('2%'),
-                    shadowOffset: { width: 0, height: hp('0.3%') },
-                    elevation: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0 : 8,
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : ((currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'transparent' : '#FFD600'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
+                    shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
+                    elevation: Platform.OS === 'android' ? 0 : ((currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0 : 8),
                     opacity: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0.5 : 1,
                     borderWidth: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 1 : 0,
                     borderColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',

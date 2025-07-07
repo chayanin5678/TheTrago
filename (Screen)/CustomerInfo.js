@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef,useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
 import Step from './../(component)/Step';
@@ -224,7 +224,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         <DateTimePicker
           value={dateOfIssue ? new Date(dateOfIssue) : new Date()}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="default"
           maximumDate={new Date()}
           onChange={(event, selectedDate) => {
             if (selectedDate) handleDateOfIssue(selectedDate.toISOString().split('T')[0]);
@@ -246,7 +246,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         <DateTimePicker
           value={passportExpiry ? new Date(passportExpiry) : new Date()}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="default"
           minimumDate={new Date()}
           onChange={(event, selectedDate) => {
             if (selectedDate) handlePassportExpiry(selectedDate.toISOString().split('T')[0]);
@@ -268,7 +268,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         <DateTimePicker
           value={birthday ? new Date(birthday) : new Date()}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="default"
           maximumDate={new Date()}
           onChange={(event, selectedDate) => {
             if (selectedDate) handleBirthday(selectedDate.toISOString().split('T')[0]);
@@ -709,7 +709,7 @@ const CustomerInfo = ({ navigation }) => {
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           style={{ flex: 1 }}
         >
           <ScrollView 

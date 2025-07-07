@@ -1,26 +1,24 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
 import Toptrending from './(component)/toptrending';
 import LogoTheTrago from './(component)/Logo';
-import PlatformStatusBar from './(component)/PlatformStatusBar';
-import PlatformSafeArea from './(component)/PlatformSafeArea';
-import CrossPlatformBackground from './(component)/CrossPlatformBackground';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './(Screen)/CustomerContext';
 import { CalendarList } from 'react-native-calendars';
 import styles from './(CSS)/HomeScreenStyles';
-import { designTokens, platformStyles } from './(CSS)/PlatformStyles';
-import { CrossPlatformUtils } from './(CSS)/PlatformSpecificUtils';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from './ipconfig';
 import { Easing } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 import { BlurView } from 'expo-blur';
+import CrossPlatformStatusBar from './(component)/CrossPlatformStatusBar';
+import SafeAreaDebugger from './(component)/SafeAreaDebugger';
+import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
 
 
 
@@ -156,7 +154,7 @@ const HomeScreen = ({ navigation }) => {
     });
   }, []);
 
-  const formatDecimal = (number = 0) => {
+  const formatDecimal = (number) => {
     return Number(number).toFixed(1);
   };
 
@@ -743,11 +741,17 @@ const HomeScreen = ({ navigation }) => {
 
 
   return (
-    <CrossPlatformBackground>
-      <PlatformSafeArea style={premiumStyles.container} edges={['top', 'left', 'right']}>
-        <PlatformStatusBar style="light" backgroundColor="transparent" translucent={true} />
-        
-        {/* Subtle Floating Particles - Outside ScrollView */}
+    <CrossPlatformStatusBar
+      barStyle="light-content"
+      backgroundColor="rgba(253, 80, 30, 0.9)"
+      translucent={true}
+      showGradient={true}
+    >
+      <View style={premiumStyles.container}>
+      
+      {/* Background with Elegant Gradient */}
+      <View style={premiumStyles.backgroundContainer}>
+        {/* Subtle Floating Particles */}
         <View style={premiumStyles.particlesContainer}>
           {[...Array(8)].map((_, i) => (
             <Animated.View
@@ -781,8 +785,8 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Minimalist Decorative Elements - Outside ScrollView */}
-        <View style={[premiumStyles.geometricShapes, { pointerEvents: 'none' }]}>
+        {/* Minimalist Decorative Elements */}
+        <View style={premiumStyles.geometricShapes}>
           <Animated.View style={[premiumStyles.shape1, {
             transform: [{
               rotate: bounceAnim.interpolate({
@@ -805,17 +809,7 @@ const HomeScreen = ({ navigation }) => {
             <FontAwesome5 name="anchor" size={wp('4.5%')} color="rgba(255,255,255,0.12)" />
           </Animated.View>
         </View>
-        
-        <ScrollView 
-          contentContainerStyle={premiumStyles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-          scrollEnabled={true}
-          nestedScrollEnabled={true}
-          style={{ flex: 1 }}
-        >
-          {/* Main Content Container */}
-          <View style={premiumStyles.mainContent}>
+      </View>
 
       {isLoading && (
         <View style={premiumStyles.loadingContainer}>
@@ -840,6 +834,12 @@ const HomeScreen = ({ navigation }) => {
           </BlurView>
         </View>
       )}
+
+      <ScrollView 
+        contentContainerStyle={premiumStyles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
 
         {/* Refined Header Section with Better Spacing */}
         <View style={premiumStyles.headerSection}>
@@ -1848,7 +1848,6 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
 
-          </View> {/* Close mainContent */}
 
         </View>
         {isLoadingTitle ? (
@@ -2328,8 +2327,11 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-      </PlatformSafeArea>
-    </CrossPlatformBackground>
+      </View>
+      
+      {/* Debug component - set visible={true} to see safe area values */}
+      <SafeAreaDebugger visible={false} />
+    </CrossPlatformStatusBar>
   );
 };
 
@@ -2339,11 +2341,17 @@ export default HomeScreen;
 const premiumStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent', // ให้ CrossPlatformBackground จัดการ
+    backgroundColor: 'transparent', // CrossPlatformStatusBar handles the orange background
+    // Ensure consistent behavior across platforms
+    paddingTop: 0, // CrossPlatformStatusBar will handle the padding
   },
-  mainContent: {
-    flex: 1,
-    paddingBottom: hp('2%'),
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
   },
   particlesContainer: {
     position: 'absolute',
@@ -2352,13 +2360,12 @@ const premiumStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 1,
-    pointerEvents: 'none', // ให้สามารถเลื่อนผ่านได้
   },
   particle: {
     position: 'absolute',
-    width: Platform.OS === 'ios' ? 6 : 5,
-    height: Platform.OS === 'ios' ? 6 : 5,
-    borderRadius: Platform.OS === 'ios' ? 3 : 2.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   geometricShapes: {
@@ -2412,32 +2419,39 @@ const premiumStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    fontSize: CrossPlatformUtils.getAdaptiveFontSize(wp('4.5%')),
-    fontWeight: Platform.OS === 'ios' ? '600' : 'bold',
+    fontSize: wp('4.5%'),
+    fontWeight: 'bold',
     color: '#fff',
     marginBottom: hp('1%'),
   },
   loadingSubtext: {
-    fontSize: CrossPlatformUtils.getAdaptiveFontSize(wp('3.5%')),
+    fontSize: wp('3.5%'),
     color: 'rgba(255,255,255,0.7)',
-    fontWeight: Platform.OS === 'ios' ? '400' : 'normal',
   },
   scrollContainer: {
-    paddingBottom: CrossPlatformUtils.getAdaptiveTabBarHeight(),
+    flexGrow: 1,
+    paddingBottom: hp('12.5%'),
   },
   headerSection: {
-    marginTop: CrossPlatformUtils.getAdaptiveSpacing(hp('2%')),
+    marginTop: hp('2%'),
     marginHorizontal: wp('3%'),
-    borderRadius: CrossPlatformUtils.getAdaptiveBorderRadius(wp('6%')),
+    borderRadius: wp('6%'),
     overflow: 'hidden',
-    ...CrossPlatformUtils.getUnifiedShadow(8, 0.2),
+    // Unified shadow system for both platforms
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+    // Additional Android compatibility
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   headerBlur: {
     borderRadius: wp('6%'),
     overflow: 'hidden',
   },
   headerGradient: {
-    paddingVertical: CrossPlatformUtils.getAdaptiveSpacing(hp('2.5%')),
+    paddingVertical: hp('2.5%'),
     paddingHorizontal: wp('4%'),
     position: 'relative',
   },
@@ -2604,11 +2618,13 @@ const premiumStyles = StyleSheet.create({
   servicesContainer: {
     borderRadius: 20,
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   servicesBlur: {
     borderRadius: 20,
@@ -2663,11 +2679,13 @@ const premiumStyles = StyleSheet.create({
   serviceItem: {
     borderRadius: 16,
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   serviceItemBlur: {
     borderRadius: 16,
@@ -2718,11 +2736,13 @@ const premiumStyles = StyleSheet.create({
   hotDealsContainer: {
     borderRadius: 20,
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 8,
+    backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   hotDealsSkeleton: {
     height: 50,
@@ -2786,11 +2806,13 @@ const premiumStyles = StyleSheet.create({
   bannerContainer: {
     borderRadius: wp('4.5%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   bannerBlur: {
     borderRadius: wp('4.5%'),
@@ -2811,11 +2833,13 @@ const premiumStyles = StyleSheet.create({
   bannerBadge: {
     borderRadius: wp('3%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: hp('0.4%') },
     shadowOpacity: 0.25,
     shadowRadius: wp('1.5%'),
     elevation: 6,
+    backgroundColor: 'rgba(255, 215, 0, 0.95)',
   },
   bannerBadgeText: {
     fontSize: wp('2.8%'),
@@ -2873,11 +2897,13 @@ const premiumStyles = StyleSheet.create({
   destinationBlur: {
     borderRadius: wp('3%'), // More responsive border radius
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.3%') },
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
     elevation: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   destinationGradient: {
     position: 'relative',
@@ -2972,11 +2998,13 @@ const premiumStyles = StyleSheet.create({
     height: '100%', // Take full height of parent container
     borderRadius: wp('3%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.3%') },
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
     elevation: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   routeGradient: {
     position: 'relative',
@@ -3122,11 +3150,13 @@ const premiumStyles = StyleSheet.create({
     marginHorizontal: wp('2.5%'),
     borderRadius: wp('6%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('1%') },
     shadowOpacity: 0.25,
     shadowRadius: wp('3%'),
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   trendingCarouselBlur: {
     flex: 1,
@@ -3249,6 +3279,7 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('1.25%'),
     backgroundColor: '#fff',
     marginHorizontal: wp('1%'),
+    // Unified shadow system for both platforms
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -3275,6 +3306,7 @@ const premiumStyles = StyleSheet.create({
     marginBottom: hp('1.5%'),
     borderRadius: wp('4%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.8%') },
@@ -3318,11 +3350,13 @@ const premiumStyles = StyleSheet.create({
     right: wp('2%'),
     borderRadius: wp('3%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
+    backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   attractionRatingContainer: {
     flexDirection: 'row',
@@ -3342,11 +3376,13 @@ const premiumStyles = StyleSheet.create({
     left: wp('2%'),
     borderRadius: wp('3%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
+    backgroundColor: 'rgba(255, 215, 0, 0.95)',
   },
   attractionPopularBadgeGradient: {
     flexDirection: 'row',
@@ -3369,11 +3405,13 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('2.5%'),
     justifyContent: 'center',
     alignItems: 'center',
+    // Unified shadow system for both platforms
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   attractionRankText: {
     color: '#fff',
@@ -3458,11 +3496,13 @@ const premiumStyles = StyleSheet.create({
   showMoreButton: {
     borderRadius: wp('10%'),
     overflow: 'hidden',
+    // Unified shadow system for both platforms
     elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.8%') },
     shadowOpacity: 0.3,
     shadowRadius: wp('3%'),
+    backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   showMoreBlur: {
     borderRadius: wp('10%'),

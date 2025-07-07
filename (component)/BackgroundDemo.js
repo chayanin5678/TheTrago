@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, Text, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, SafeAreaView, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import CrossPlatformBackground from './CrossPlatformBackground';
-import PlatformSafeArea from './PlatformSafeArea';
-import PlatformStatusBar from './PlatformStatusBar';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const BackgroundDemo = () => {
@@ -13,8 +11,8 @@ const BackgroundDemo = () => {
 
   return (
     <CrossPlatformBackground>
-      <PlatformSafeArea>
-        <PlatformStatusBar style="light" />
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           
@@ -64,7 +62,7 @@ const BackgroundDemo = () => {
               marginBottom: hp('2%'),
               textAlign: 'center',
             }}>
-              Current Platform: {Platform.OS.toUpperCase()}
+              Current Platform: REACT NATIVE
             </Text>
             
             <View style={{ marginBottom: hp('1%') }}>
@@ -191,7 +189,7 @@ const BackgroundDemo = () => {
                 shadowRadius: 4,
                 elevation: 4,
               }}
-              onPress={() => showAlert('Platform Info', `Running on ${Platform.OS.toUpperCase()}`)}
+              onPress={() => showAlert('Platform Info', 'Running on React Native')}
             >
               <Text style={{
                 color: 'white',
@@ -255,7 +253,7 @@ const BackgroundDemo = () => {
           </View>
           
         </ScrollView>
-      </PlatformSafeArea>
+      </SafeAreaView>
     </CrossPlatformBackground>
   );
 };

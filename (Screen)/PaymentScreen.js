@@ -1,5 +1,5 @@
 import React, { useState, useEffect, use } from "react";
-import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from "../ipconfig";
 import LogoTheTrago from "./../(component)/Logo";
@@ -922,7 +922,7 @@ const PaymentScreen = ({ navigation, route }) => {
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
             <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              behavior="padding"
               style={{ flex: 1 }}
             >
               <ScrollView 

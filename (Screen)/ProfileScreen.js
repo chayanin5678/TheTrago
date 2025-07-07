@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
@@ -776,7 +776,7 @@ const ProfileScreen = ({ navigation }) => {
       </Animated.View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         style={{ flex: 1 }}
       >
         <ScrollView 
@@ -976,7 +976,7 @@ const ProfileScreen = ({ navigation }) => {
                 <DateTimePicker
                   value={birthdate ? new Date(birthdate) : new Date(2000, 0, 1)}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  display="default"
                   onChange={handleConfirm}
                   maximumDate={new Date()}
                   style={{ width: '100%', alignItems: 'center' }}

@@ -1,6 +1,6 @@
 // AdvancedCalendarModal.js
 import React, { useState, useEffect  } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 
 const AdvancedCalendarModal = ({ visible, onClose, onConfirm, tripType }) => {
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   closeBtn: {
     position: 'absolute', 
-    top: Platform.OS === 'ios' ? 50 : 20, 
+    top: 50, 
     left: 20,
     zIndex: 99,
    // backgroundColor: '#fff',
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   closeText: { fontSize: 24, color: '#333' },
   headerSection: {
-    marginTop: Platform.OS === 'ios' ? 90 : 60,
+    marginTop: 90,
     paddingHorizontal: 20,
     paddingBottom: 10,
     borderBottomWidth: 1,

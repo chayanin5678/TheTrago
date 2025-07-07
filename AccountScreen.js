@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, SafeAreaView, Dimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, SafeAreaView, Dimensions, Platform, StatusBar } from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-import ipAddress from "../ipconfig";
+import ipAddress from "./ipconfig";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
-import { useCustomer } from './CustomerContext.js';
+import { useCustomer } from './(Screen)/CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../AuthContext';
+import { useAuth } from './AuthContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -231,9 +231,6 @@ const AccountScreen = ({ navigation }) => {
     outputRange: ['0deg', '360deg']
   });
 
-
-
-
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
       toValue: 0.9, // ย่อเล็กลง 10%
@@ -286,7 +283,6 @@ const AccountScreen = ({ navigation }) => {
     };
     checkLoginStatus(); // เรียกใช้เมื่อหน้าโหลด
 
-
   }, []); // ใช้ navigation เป็น dependency เพื่อให้ useEffect ทำงานเมื่อคอมโพเนนต์โหลด
 
   useEffect(() => {
@@ -330,8 +326,6 @@ const AccountScreen = ({ navigation }) => {
     }
 
   }, [token]);
-
-
 
   // แสดง ActivityIndicator ขณะตรวจสอบสถานะการล็อกอิน
   if (isLoading) {
@@ -459,9 +453,15 @@ const AccountScreen = ({ navigation }) => {
     }
   };
 
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Set StatusBar for cross-platform consistency */}
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#FD501E" 
+        translucent={Platform.OS === 'android'}
+      />
+      
       {/* Premium Header with Gradient - Full Screen */}
       <Animated.View
         style={[
@@ -626,7 +626,7 @@ const AccountScreen = ({ navigation }) => {
                             ? { uri: profileImage }
                             : item.md_member_photo
                               ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
-                              : require('../assets/icontrago.png')
+                              : require('./assets/icontrago.png')
                         }
                         style={styles.profileImage}
                         onLoadStart={() => console.log('Image loading started')}
@@ -675,9 +675,7 @@ const AccountScreen = ({ navigation }) => {
           <View style={styles.menuGrid}>
             {[
               { title: 'Dashboard', subtitle: 'View analytics', icon: 'space-dashboard', nav: 'Dashboard' },
-            //  { title: 'My Booking', subtitle: 'Manage bookings', icon: 'ticket', nav: 'MyBookings', isFA6: true },
               { title: 'Profile', subtitle: 'Edit details', icon: 'person', nav: 'ProfileScreen', isIonicons: true },
-          //    { title: 'Affiliate', subtitle: 'Earn rewards', icon: 'groups', nav: 'Affiliate' }
             ].map((item, index) => (
               <Animated.View
                 key={index}
@@ -713,47 +711,6 @@ const AccountScreen = ({ navigation }) => {
             ))}
           </View>
 
-          {/* <Text style={styles.sectionTitle}>Account Management</Text>
-          
-          <View style={styles.listSection}>
-            {[
-              { title: 'Privacy & Security', subtitle: 'Manage your privacy settings', icon: 'security', color: '#6B7280' },
-              { title: 'Notifications', subtitle: 'Configure alert preferences', icon: 'notifications', color: '#6B7280' },
-              { title: 'Delete Account', subtitle: 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' }
-            ].map((item, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.listItemWrapper,
-                  {
-                    opacity: menuItemAnims[index + 4]?.opacity || 1,
-                    transform: [
-                      { translateY: menuItemAnims[index + 4]?.translateY || 0 },
-                      { scale: menuItemAnims[index + 4]?.scale || 1 },
-                    ],
-                  },
-                ]}
-              >
-                <TouchableOpacity 
-                  style={styles.listItem}
-                  onPress={() => item.nav && navigation.navigate(item.nav)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.listIconContainer}>
-                    <MaterialIcons name={item.icon} size={20} color={item.color} />
-                  </View>
-                  <View style={styles.listContent}>
-                    <Text style={[styles.listTitle, { color: item.color === '#EF4444' ? '#EF4444' : '#1F2937' }]}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.listSubtitle}>{item.subtitle}</Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={20} color="#D1D5DB" />
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </View> */}
-
           {/* Premium Logout Button */}
           <Animated.View
             style={[
@@ -782,14 +739,14 @@ const AccountScreen = ({ navigation }) => {
         </View>
 
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
+    backgroundColor: '#F8FAFC',
   },
   
   // Floating Particles
@@ -818,9 +775,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+    ...Platform.select({
+      android: {
+        paddingTop: StatusBar.currentHeight || 0,
+      },
+    }),
   },
   headerGradient: {
-    paddingTop: 0,
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
     paddingBottom: 40,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 35,
@@ -834,12 +796,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   safeAreaHeader: {
-    paddingTop: Platform.OS === 'android' ? 40 : 0,
+    paddingTop: 0,
   },
   headerContent: {
     alignItems: 'center',
     position: 'relative',
     zIndex: 3,
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
   },
   headerTitle: {
     fontSize: 32,
@@ -872,7 +835,7 @@ const styles = StyleSheet.create({
   },
   
   scrollView: {
-    marginTop: 160, // Increased margin top for more spacing between header and content
+    marginTop: Platform.OS === 'android' ? 200 : 160,
   },
   scrollContent: {
     paddingBottom: 140,
@@ -893,8 +856,6 @@ const styles = StyleSheet.create({
     elevation: 15,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.15)',
-    // Glassmorphism effect
-    backdropFilter: 'blur(20px)',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -949,7 +910,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 30,
     zIndex: 20,
-    backdropFilter: 'blur(10px)',
   },
   uploadingText: {
     marginTop: 12,
@@ -1093,8 +1053,6 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.08)',
-    // Glassmorphism
-    backdropFilter: 'blur(15px)',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -1106,7 +1064,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    // ลบ shadow ออกจาก icon container
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   menuTitle: {
     fontSize: 16,
@@ -1120,60 +1082,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     textAlign: 'center',
-    fontWeight: '500',
-  },
-
-  // List Section
-  listSection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 25,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
-    elevation: 6,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(253, 80, 30, 0.05)',
-  },
-  listItemWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(229, 231, 235, 0.5)',
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'transparent',
-  },
-  listIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(107, 114, 128, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  listContent: {
-    flex: 1,
-  },
-  listTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-    letterSpacing: 0.2,
-  },
-  listSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
     fontWeight: '500',
   },
 
