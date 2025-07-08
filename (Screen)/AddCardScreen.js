@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ScrollView, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ScrollView, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AntDesign } from '@expo/vector-icons';
@@ -42,26 +42,26 @@ const AddCardScreen = ({ navigation, route }) => {
       >
         {/* Ultra Glass-Morphism Header */}
         <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.96)", "rgba(241,245,249,0.94)"]}
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
             headStyles.headerBg,
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
-              borderBottomLeftRadius: 45,
-              borderBottomRightRadius: 45,
-              paddingBottom: 12,
+              marginTop: Platform.OS === 'ios' ? 0 : -20,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              paddingBottom: 8,
               shadowColor: '#001233',
-              shadowOpacity: 0.18,
-              shadowRadius: 30,
-              shadowOffset: { width: 0, height: 10 },
-              elevation: 22,
-              padding: 12,
-              minHeight: hp('13%'),
-              borderWidth: 1.5,
-              borderColor: 'rgba(0, 18, 51, 0.1)',
-              backdropFilter: 'blur(40px)',
+              shadowOpacity: 0.15,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 18,
+              padding: 10,
+              minHeight: hp('12%'),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
+              backdropFilter: 'blur(30px)',
             },
           ]}
         >
@@ -74,29 +74,28 @@ const AddCardScreen = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: -10,
+                marginTop: Platform.OS === 'android' ? 70 : -10,
                 height: 56,
               },
             ]}
           >
-            {/* Ultra Back Button - Left */}
+            {/* Back Button - Left */}
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={{
                 position: 'absolute',
                 left: 16,
-                backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                borderRadius: 28,
-                padding: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 25,
+                padding: 8,
                 zIndex: 2,
                 shadowColor: '#FD501E',
-                shadowOpacity: 0.25,
-                shadowRadius: 15,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 12,
-                borderWidth: 1.5,
-                borderColor: 'rgba(253, 80, 30, 0.12)',
-                backdropFilter: 'blur(20px)',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
               <AntDesign name="arrowleft" size={24} color="#FD501E" />

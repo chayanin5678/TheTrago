@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -995,7 +995,7 @@ const TripDetail = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
+              marginTop: Platform.OS === 'ios' ? 0 : -20,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -1006,8 +1006,12 @@ const TripDetail = ({ navigation, route }) => {
               elevation: 18,
               padding: 10,
               minHeight: hp('12%'),
-              borderWidth: 1,
-              borderColor: 'rgba(0, 18, 51, 0.08)',
+              ...(Platform.OS === 'android' ? {
+                borderWidth: 0,
+              } : {
+                borderWidth: 1,
+                borderColor: 'rgba(0, 18, 51, 0.08)',
+              }),
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1021,7 +1025,7 @@ const TripDetail = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: -10,
+                marginTop: Platform.OS === 'android' ? 70 : -10,
                 height: 56,
               },
             ]}
@@ -1041,8 +1045,12 @@ const TripDetail = ({ navigation, route }) => {
                 shadowRadius: 12,
                 shadowOffset: { width: 0, height: 4 },
                 elevation: 8,
-                borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)',
+                ...(Platform.OS === 'android' ? {
+                  borderWidth: 0,
+                } : {
+                  borderWidth: 1,
+                  borderColor: 'rgba(253, 80, 30, 0.1)',
+                }),
               }}
             >
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
@@ -1055,35 +1063,30 @@ const TripDetail = ({ navigation, route }) => {
           </View>
         </LinearGradient>
 
-        {/* Step Component */}
-        <View style={{
-          alignItems: 'center',
-          marginTop: hp('1%'),
-          marginBottom: hp('1%'),
-        }}>
-          <Step logoUri={1} />
-        </View>
-
         {/* Enhanced Title Section */}
         <View style={{
           marginTop: hp('1%'),
           marginHorizontal: wp('6%'),
-          marginBottom: hp('2%'),
-          paddingHorizontal: wp('4%'),
-          paddingVertical: hp('1.5%'),
+          marginBottom: hp('1%'),
+          paddingHorizontal: wp('3%'),
+          paddingVertical: hp('1%'),
           backgroundColor: 'rgba(255,255,255,0.1)',
           borderRadius: wp('4%'),
           backdropFilter: 'blur(10px)',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.2)',
+          ...(Platform.OS === 'android' ? {
+            borderWidth: 0,
+          } : {
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.2)',
+          }),
         }}>
           <Text style={{
             color: '#FFFFFF',
-            fontSize: wp('7%'),
+            fontSize: wp('5%'),
             fontWeight: '800',
             letterSpacing: -0.5,
             textAlign: 'center',
-            lineHeight: wp('8%'),
+            lineHeight: wp('6%'),
             textShadowColor: 'rgba(0,0,0,0.3)',
             textShadowRadius: 4,
             textShadowOffset: { width: 1, height: 1 },
@@ -1092,10 +1095,10 @@ const TripDetail = ({ navigation, route }) => {
           </Text>
           <Text style={{
             color: 'rgba(255,255,255,0.8)',
-            fontSize: wp('3.5%'),
+            fontSize: wp('3%'),
             fontWeight: '500',
             textAlign: 'center',
-            marginTop: hp('0.5%'),
+            marginTop: hp('0.3%'),
             letterSpacing: 0.3,
             textShadowColor: 'rgba(0,0,0,0.2)',
             textShadowRadius: 2,
@@ -1109,7 +1112,7 @@ const TripDetail = ({ navigation, route }) => {
             styles.container,
             {
               backgroundColor: 'transparent',
-              paddingHorizontal: 24,
+              paddingHorizontal: 8,
               paddingTop: 8,
               paddingBottom: hp('12%'),
               flexGrow: 1,
@@ -1119,6 +1122,14 @@ const TripDetail = ({ navigation, route }) => {
           style={{ flex: 1 }}
           contentInsetAdjustmentBehavior="automatic"
         >
+          {/* Step Component inside ScrollView */}
+          <View style={{
+            alignItems: 'center',
+            marginTop: hp('2%'),
+            marginBottom: hp('2%'),
+          }}>
+            <Step logoUri={1} />
+          </View>
           {loading && (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#FD501E" />
@@ -1133,14 +1144,19 @@ const TripDetail = ({ navigation, route }) => {
                     styles.cardContainer,
                     {
                       marginTop: 24,
+                      marginHorizontal: 16,
                       backgroundColor: 'rgba(255,255,255,0.97)',
-                      borderWidth: 1.5,
-                      borderColor: 'rgba(253,80,30,0.13)',
                       shadowColor: '#FD501E',
                       shadowOpacity: 0.13,
                       shadowRadius: 16,
                       shadowOffset: { width: 0, height: 8 },
                       elevation: 7,
+                      ...(Platform.OS === 'android' ? {
+                        borderWidth: 0,
+                      } : {
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(253,80,30,0.13)',
+                      }),
                       overflow: 'visible',
                       padding: 0,
                       borderRadius: 32,
@@ -1162,7 +1178,19 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Image
                           source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                          style={{ 
+                            width: wp('10.6%'), 
+                            height: hp('5%'), 
+                            borderRadius: 12, 
+                            backgroundColor: '#fff', 
+                            marginRight: 10,
+                            ...(Platform.OS === 'android' ? {
+                              borderWidth: 0,
+                            } : {
+                              borderWidth: 1,
+                              borderColor: '#eee',
+                            }),
+                          }}
                           resizeMode="cover"
                         />
                         <View style={styles.coltitle}>
@@ -1612,14 +1640,19 @@ const TripDetail = ({ navigation, route }) => {
                       styles.cardContainer,
                       {
                         marginTop: 24,
+                        marginHorizontal: 16,
                         backgroundColor: 'rgba(255,255,255,0.97)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(253,80,30,0.13)',
                         shadowColor: '#FD501E',
                         shadowOpacity: 0.13,
                         shadowRadius: 16,
                         shadowOffset: { width: 0, height: 8 },
                         elevation: 7,
+                        ...(Platform.OS === 'android' ? {
+                          borderWidth: 0,
+                        } : {
+                          borderWidth: 1.5,
+                          borderColor: 'rgba(253,80,30,0.13)',
+                        }),
                         overflow: 'visible',
                         padding: 0,
                         borderRadius: 32,
@@ -1641,7 +1674,19 @@ const TripDetail = ({ navigation, route }) => {
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Image
                             source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                            style={{ 
+                              width: wp('10.6%'), 
+                              height: hp('5%'), 
+                              borderRadius: 12, 
+                              backgroundColor: '#fff', 
+                              marginRight: 10,
+                              ...(Platform.OS === 'android' ? {
+                                borderWidth: 0,
+                              } : {
+                                borderWidth: 1,
+                                borderColor: '#eee',
+                              }),
+                            }}
                             resizeMode="cover"
                           />
                           <View style={styles.coltitle}>
@@ -2088,7 +2133,7 @@ const TripDetail = ({ navigation, route }) => {
 
               {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
 
-                <View key={index} style={styles.promo}>
+                <View key={index} style={[styles.promo, { marginHorizontal: 16 }]}>
 
                   <Text style={styles.TextInput}>
                     Booking Summary
@@ -2421,7 +2466,7 @@ const TripDetail = ({ navigation, route }) => {
             priceDepart
               .filter(item => item.totalDepart) // ป้องกัน undefined
               .map((item, index) => (
-                <View key={index} style={styles.rowButton}>
+                <View key={index} style={[styles.rowButton, { marginHorizontal: 16 }]}>
                   <TouchableOpacity
                     style={[styles.ActionButton, { width: '100%' }]}
                     onPress={() => handleNext(item)}
@@ -2681,25 +2726,26 @@ const styles = StyleSheet.create({
     maxWidth: wp('85%'),
     borderRadius: wp('8%'),
     padding: wp('6%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.25,
-    shadowRadius: wp('8%'),
-    shadowOffset: { width: 0, height: hp('2%') },
-    elevation: 25,
-    borderWidth: wp('0.3%'),
-    borderColor: 'rgba(253, 80, 30, 0.15)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border และ shadow ที่ซ้อนทับ
+      borderWidth: 0,
+      elevation: 5,
+    } : {
+      // สำหรับ iOS
+      shadowColor: '#001233',
+      shadowOpacity: 0.25,
+      shadowRadius: wp('8%'),
+      shadowOffset: { width: 0, height: hp('2%') },
+      elevation: 25,
+      borderWidth: wp('0.3%'),
+      borderColor: 'rgba(253, 80, 30, 0.15)',
+    }),
     backdropFilter: 'blur(30px)',
     maxHeight: hp('70%'),
     position: 'relative',
     overflow: 'hidden',
     // Premium glass effect
     backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95), rgba(241,245,249,0.92))',
-    // Multiple shadow layers - removed Platform check for Hermes compatibility
-    shadowColor: 'rgba(253, 80, 30, 0.2)',
-    shadowOffset: { width: 0, height: hp('1.5%') },
-    shadowOpacity: 0.3,
-    shadowRadius: wp('6%'),
-    elevation: 8,
   },
   modalOption: {
     paddingVertical: hp('1.8%'),
@@ -2741,8 +2787,14 @@ const styles = StyleSheet.create({
     shadowRadius: wp('4%'),
     shadowOffset: { width: 0, height: hp('1%') },
     elevation: 12,
-    borderWidth: wp('0.3%'),
-    borderColor: 'rgba(253, 80, 30, 0.1)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.3%'),
+      borderColor: 'rgba(253, 80, 30, 0.1)',
+    }),
     backdropFilter: 'blur(20px)',
     overflow: 'visible',
     position: 'relative',
@@ -2771,8 +2823,14 @@ const styles = StyleSheet.create({
     shadowRadius: wp('3%'),
     shadowOffset: { width: 0, height: hp('0.6%') },
     elevation: 8,
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(253, 80, 30, 0.08)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.2%'),
+      borderColor: 'rgba(253, 80, 30, 0.08)',
+    }),
     backdropFilter: 'blur(10px)',
     // Premium glass effect
     backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))',
@@ -2934,15 +2992,27 @@ const styles = StyleSheet.create({
   },
 
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: 1,
+      borderColor: '#ddd',
+    }),
     borderRadius: 15,
     marginTop: 5,
     backgroundColor: 'white'
   },
   input: {
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(148, 163, 184, 0.3)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.2%'),
+      borderColor: 'rgba(148, 163, 184, 0.3)',
+    }),
     borderRadius: wp('4%'),
     padding: wp('3.5%'),
     fontSize: wp('4%'),
@@ -3064,8 +3134,14 @@ const styles = StyleSheet.create({
     shadowRadius: wp('2%'),
     shadowOffset: { width: 0, height: hp('0.3%') },
     elevation: 4,
-    borderWidth: wp('0.1%'),
-    borderColor: 'rgba(148, 163, 184, 0.2)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.1%'),
+      borderColor: 'rgba(148, 163, 184, 0.2)',
+    }),
   },
   BackButtonText: {
     color: '#64748B',
@@ -3087,8 +3163,14 @@ const styles = StyleSheet.create({
     shadowRadius: wp('3%'),
     shadowOffset: { width: 0, height: hp('0.6%') },
     elevation: 12,
-    borderWidth: wp('0.1%'),
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.1%'),
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+    }),
   },
   searchButtonText: {
     color: '#FFFFFF',
@@ -3111,13 +3193,20 @@ const styles = StyleSheet.create({
     width: '85%',
     borderRadius: wp('6%'),
     padding: wp('5%'),
-    elevation: 20,
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.2,
-    shadowRadius: wp('6%'),
-    shadowOffset: { width: 0, height: hp('1.5%') },
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(253, 80, 30, 0.12)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border และ shadow ที่ซ้อนทับ
+      borderWidth: 0,
+      elevation: 5,
+    } : {
+      // สำหรับ iOS
+      elevation: 20,
+      shadowColor: '#FD501E',
+      shadowOpacity: 0.2,
+      shadowRadius: wp('6%'),
+      shadowOffset: { width: 0, height: hp('1.5%') },
+      borderWidth: wp('0.2%'),
+      borderColor: 'rgba(253, 80, 30, 0.12)',
+    }),
     backdropFilter: 'blur(25px)',
     position: 'relative',
     overflow: 'hidden',
@@ -3133,8 +3222,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(148, 163, 184, 0.3)',
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border ทั้งหมด
+      borderWidth: 0,
+    } : {
+      // สำหรับ iOS
+      borderWidth: wp('0.2%'),
+      borderColor: 'rgba(148, 163, 184, 0.3)',
+    }),
     borderRadius: wp('4%'),
     width: '95%',
     justifyContent: 'space-between',
@@ -3150,18 +3245,25 @@ const styles = StyleSheet.create({
   optionItem: {
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
-    borderBottomWidth: wp('0.1%'),
-    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
     marginHorizontal: wp('1%'),
     borderRadius: wp('2.5%'),
     marginVertical: hp('0.2%'),
     backgroundColor: 'rgba(255,255,255,0.7)',
     backdropFilter: 'blur(8px)',
-    shadowColor: '#64748B',
-    shadowOpacity: 0.05,
-    shadowRadius: wp('1%'),
-    shadowOffset: { width: 0, height: hp('0.2%') },
-    elevation: 2,
+    ...(Platform.OS === 'android' ? {
+      // สำหรับ Android - ลบ border ล่าง และลด shadow
+      borderBottomWidth: 0,
+      elevation: 0,
+    } : {
+      // สำหรับ iOS
+      borderBottomWidth: wp('0.1%'),
+      borderBottomColor: 'rgba(148, 163, 184, 0.15)',
+      shadowColor: '#64748B',
+      shadowOpacity: 0.05,
+      shadowRadius: wp('1%'),
+      shadowOffset: { width: 0, height: hp('0.2%') },
+      elevation: 2,
+    }),
   },
   optionText: {
     fontSize: wp('4%'),

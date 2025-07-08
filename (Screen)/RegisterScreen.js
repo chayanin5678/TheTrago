@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -489,7 +489,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.25,
     shadowRadius: 25,
-    elevation: 15,
     borderWidth: 1,
     borderColor: 'rgba(253,80,30,0.1)',
   },
@@ -538,7 +537,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 25 },
     shadowOpacity: 0.15,
     shadowRadius: 30,
-    elevation: 25,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -588,15 +586,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 18,
     marginBottom: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 6,
+    paddingHorizontal: Platform.OS === 'android' ? 24 : 20,
+    paddingVertical: Platform.OS === 'android' ? 16 : 6,
+    minHeight: Platform.OS === 'android' ? 72 : 58,
     borderWidth: 2,
     borderColor: 'rgba(253,80,30,0.08)',
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
-    elevation: 6,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -616,7 +614,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
-    paddingVertical: 15,
+    paddingVertical: Platform.OS === 'android' ? 22 : 15,
     fontWeight: '500',
   },
   inputFocusLine: {
@@ -651,7 +649,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
-    elevation: 15,
   },
   buttonGradient: {
     paddingVertical: 18,
@@ -701,7 +698,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
-    elevation: 8,
   },
   socialBlur: {
     overflow: 'hidden',

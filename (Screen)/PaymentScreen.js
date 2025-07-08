@@ -1,5 +1,5 @@
 import React, { useState, useEffect, use } from "react";
-import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView } from "react-native";
+import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView, Platform } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import ipAddress from "../ipconfig";
 import LogoTheTrago from "./../(component)/Logo";
@@ -802,7 +802,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 {
                   width: '100%',
                   marginLeft: '0%',
-                  marginTop: -20,
+                  marginTop: Platform.OS === 'ios' ? 0 : -20,
                   borderBottomLeftRadius: 40,
                   borderBottomRightRadius: 40,
                   paddingBottom: 8,
@@ -828,7 +828,7 @@ const PaymentScreen = ({ navigation, route }) => {
                     paddingHorizontal: 0,
                     paddingTop: 0,
                     position: 'relative',
-                    marginTop: -10,
+                    marginTop: Platform.OS === 'android' ? 70 : -10,
                     height: 56,
                   },
                 ]}
@@ -950,7 +950,11 @@ const PaymentScreen = ({ navigation, route }) => {
                             styles.radioButton,
                             selectedOption === "7" && styles.selectedRadio,
                           ]}
-                        />
+                        >
+                          {selectedOption === "7" && (
+                            <AntDesign name="check" size={wp('3%')} color="#FFFFFF" />
+                          )}
+                        </View>
                         <View style={styles.logodown}>
                           <Text style={styles.labelHead}>Credit and Debit Card</Text>
                         </View>
@@ -1021,7 +1025,11 @@ const PaymentScreen = ({ navigation, route }) => {
                             styles.radioButton,
                             selectedOption === "2" && styles.selectedRadio,
                           ]}
-                        />
+                        >
+                          {selectedOption === "2" && (
+                            <AntDesign name="check" size={wp('3%')} color="#FFFFFF" />
+                          )}
+                        </View>
                         <View style={styles.logodown}>
                           <Text style={styles.labelHead}>PromptPay</Text>
                         </View>
@@ -1391,6 +1399,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E5E7EB',
     marginRight: wp('3%'),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedRadio: {
     backgroundColor: '#FD501E',
@@ -1417,7 +1427,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: wp('2%'),
     shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
+   // elevation: 3,
   },
   checkboxContainer: {
     flexDirection: 'row',

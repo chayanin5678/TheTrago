@@ -12,7 +12,8 @@ import {
   Animated,
   Easing,
   Dimensions,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -1199,7 +1200,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           style={styles.headerGradient}
         >
           <SafeAreaView style={styles.safeAreaHeader}>
-            <View style={styles.headerContent}>
+            <View style={styles.headerTopRow}>
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
@@ -1207,15 +1208,12 @@ const IDCardCameraScreen = ({ navigation }) => {
               >
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.headerTitle}>Document Scanner</Text>
-                <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
-              </View>
-
-              {/* Empty view for layout balance */}
-              <View style={{ width: 40 }} />
-
+            </View>
+            
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Document Scanner</Text>
+              <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
+              
               {/* Floating decorative elements */}
               <Animated.View
                 style={[
@@ -1224,15 +1222,6 @@ const IDCardCameraScreen = ({ navigation }) => {
                 ]}
               >
                 <MaterialCommunityIcons name="shield-check" size={20} color="rgba(255,255,255,0.3)" />
-              </Animated.View>
-
-              <Animated.View
-                style={[
-                  styles.floatingDecor2,
-                  { transform: [{ rotate: spin }] }
-                ]}
-              >
-                <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
               </Animated.View>
             </View>
           </SafeAreaView>
@@ -1618,17 +1607,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
-    elevation: 15,
     position: 'relative',
     overflow: 'hidden',
   },
   safeAreaHeader: {
     paddingTop: 0,
   },
-  headerContent: {
-    flexDirection: 'row',
+  headerTopRow: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    position: 'relative',
+    marginTop: Platform.OS === 'android' ? -20 : -50,
+    height: 56,
+  },
+  headerContent: {
+    alignItems: 'center',
     position: 'relative',
     zIndex: 3,
   },
@@ -1638,26 +1633,29 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   backButton: {
+    position: 'absolute',
+    left: 0,
+    top: Platform.OS === 'android' ? 60 : 60,
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 5,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: Platform.OS === 'android' ? 24 : 28,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 6,
     letterSpacing: 0.5,
-    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     fontWeight: '500',
@@ -1666,7 +1664,7 @@ const styles = StyleSheet.create({
   floatingDecor: {
     position: 'absolute',
     top: -10,
-    right: 60,
+    right: 20,
     opacity: 0.4,
   },
   floatingDecor2: {
@@ -1697,7 +1695,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.15,
     shadowRadius: 25,
-    elevation: 12,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.1)',
     backdropFilter: 'blur(20px)',
@@ -1770,7 +1767,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
     fontWeight: '500',
   },
   disabledPremium: {
@@ -1803,7 +1799,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 6,
     marginBottom: 20,
   },
   uploadGradient: {
@@ -1850,7 +1845,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
-    elevation: 10,
     position: 'relative',
   },
   documentImage: {
@@ -1891,7 +1885,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 15,
-    elevation: 10,
     overflow: 'hidden',
   },
   saveGradient: {

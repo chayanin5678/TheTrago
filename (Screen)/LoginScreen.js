@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -101,7 +101,12 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      {/* Set StatusBar for cross-platform consistency */}
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#FD501E" 
+        translucent={Platform.OS === 'android'}
+      />
       
       {/* Premium Background */}
       <LinearGradient
@@ -111,7 +116,7 @@ export default function LoginScreen({ navigation }) {
         end={{ x: 1, y: 1 }}
       />
       
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingTop: StatusBar.currentHeight || 0 }]}>
         {isLoading && (
           <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
             <View style={styles.loadingContent}>
@@ -319,7 +324,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.25,
     shadowRadius: 25,
-    elevation: 15,
     borderWidth: 1,
     borderColor: 'rgba(253,80,30,0.1)',
   },
@@ -333,7 +337,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    paddingTop: 5,
+    paddingTop: Platform.OS === 'android' ? 20 : 5,
     paddingBottom: 100,
     zIndex: 2,
   },
@@ -367,7 +371,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 25 },
     shadowOpacity: 0.15,
     shadowRadius: 30,
-    elevation: 25,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -425,7 +428,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
-    elevation: 6,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -492,7 +494,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
-    elevation: 15,
   },
   buttonGradient: {
     paddingVertical: 18,
@@ -542,7 +543,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
-    elevation: 8,
   },
   socialBlur: {
     overflow: 'hidden',

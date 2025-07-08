@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef,useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
 import Step from './../(component)/Step';
@@ -573,6 +573,16 @@ const CustomerInfo = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      {/* Orange Header Bar */}
+      <View style={{
+        height: Platform.OS === 'ios' ? 44 : 30,
+        backgroundColor: '#FD501E',
+        width: '100%',
+        position: 'absolute',
+        top: 0,
+        zIndex: 1,
+      }} />
+
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -588,7 +598,7 @@ const CustomerInfo = ({ navigation }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
+              marginTop: Platform.OS === 'ios' ? 44 : 10,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -596,7 +606,6 @@ const CustomerInfo = ({ navigation }) => {
               shadowOpacity: 0.15,
               shadowRadius: 25,
               shadowOffset: { width: 0, height: 8 },
-              elevation: 18,
               padding: 10,
               minHeight: hp('12%'),
               borderWidth: 1,
@@ -615,7 +624,7 @@ const CustomerInfo = ({ navigation }) => {
               paddingHorizontal: 0,
               paddingTop: 0,
               position: 'relative',
-              marginTop: -10,
+              marginTop: Platform.OS === 'android' ? 70 : -10,
               height: 56,
             },
           ]}
@@ -634,7 +643,6 @@ const CustomerInfo = ({ navigation }) => {
               shadowOpacity: 0.2,
               shadowRadius: 12,
               shadowOffset: { width: 0, height: 4 },
-              elevation: 8,
               borderWidth: 1,
               borderColor: 'rgba(253, 80, 30, 0.1)',
             }}
@@ -648,15 +656,6 @@ const CustomerInfo = ({ navigation }) => {
           </View>
         </View>
         </LinearGradient>
-
-        {/* Step Component */}
-        <View style={{
-          alignItems: 'center',
-          marginTop: hp('1%'),
-          marginBottom: hp('1%'),
-        }}>
-          <Step logoUri={2} />
-        </View>
 
         {/* Enhanced Ultra Premium Title Section */}
         <View style={{ 
@@ -718,6 +717,15 @@ const CustomerInfo = ({ navigation }) => {
             style={{ flex: 1 }}
             contentInsetAdjustmentBehavior="automatic"
           >
+            {/* Step Component */}
+            <View style={{
+              alignItems: 'center',
+              marginTop: hp('1%'),
+              marginBottom: hp('2%'),
+            }}>
+              <Step logoUri={2} />
+            </View>
+
             {/* Content Container */}
             <View style={styles.contentContainer}>
               {/* เงื่อนไขแสดงฟอร์มตาม international */}
@@ -1204,7 +1212,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: wp('4%'),
     shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 18, 51, 0.08)',
     backdropFilter: 'blur(20px)',
@@ -1230,8 +1237,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...(Platform.OS === 'android' ? {} : {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    }),
     borderRadius: wp('3%'),
     justifyContent: 'space-between',
     marginHorizontal: wp('2%'),
@@ -1240,7 +1249,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: wp('2%'),
     shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
   },
   buttonText: {
     fontSize: wp('4%'),
@@ -1266,9 +1274,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: wp('5%'),
     shadowOffset: { width: 0, height: hp('1%') },
-    elevation: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 18, 51, 0.08)',
+    ...(Platform.OS === 'android' ? {} : {
+      borderWidth: 1,
+      borderColor: 'rgba(0, 18, 51, 0.08)',
+    }),
   },
   modalContent: {
     backgroundColor: 'rgba(255,255,255,0.98)',
@@ -1280,9 +1289,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: wp('5%'),
     shadowOffset: { width: 0, height: hp('1%') },
-    elevation: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 18, 51, 0.08)',
+    ...(Platform.OS === 'android' ? {} : {
+      borderWidth: 1,
+      borderColor: 'rgba(0, 18, 51, 0.08)',
+    }),
   },
   optionItem: {
     paddingVertical: hp('1.5%'),
@@ -1330,11 +1340,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: wp('2%'),
     shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
   },
   promoInput: {
     flex: 1,
-    paddingVertical: hp('1.5%'),
+    paddingVertical: hp('2%'),
     paddingHorizontal: wp('4%'),
     fontSize: wp('4%'),
     backgroundColor: '#FFFFFF',
@@ -1345,7 +1354,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     justifyContent: 'center',
     alignItems: 'center',
-    height: hp('6%'),
+    
+    height: Platform.OS === 'android' ? hp('6.5%') : hp('6%'),
     borderTopRightRadius: wp('3%'),
     borderBottomRightRadius: wp('3%'),
   },
@@ -1356,8 +1366,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...(Platform.OS === 'android' ? {} : {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    }),
     borderRadius: wp('3%'),
     padding: wp('3%'),
     fontSize: wp('4%'),

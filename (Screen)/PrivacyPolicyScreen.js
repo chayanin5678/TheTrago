@@ -639,7 +639,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 5,
   },
   tragoShape2: {
     position: 'absolute',
@@ -658,7 +657,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.12,
     shadowRadius: 6,
-    elevation: 4,
   },
   waveParticle: {
     position: 'absolute',
@@ -699,7 +697,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 15,
     backgroundColor: '#FD501E', // Solid orange background
   },
   headerActions: {
@@ -739,7 +736,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 10,
   },
   headerDecoration1: {
     position: 'absolute',
@@ -770,7 +766,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 3,
   },
   headerTitle: {
     fontSize: 22,
@@ -802,7 +797,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 8,
   },
   heroGradient: {
     alignItems: 'center',
@@ -827,7 +821,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 6,
   },
   title: {
     fontSize: 32,
@@ -855,7 +848,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 4,
     overflow: 'hidden',
   },
   floatingBadgeGradient: {
@@ -880,7 +872,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 5,
   },
   companyGradient: {
     alignItems: 'center',
@@ -931,7 +922,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.08,
     shadowRadius: 6,
-    elevation: 4,
   },
   sectionAlternate: {
     shadowColor: '#4299e1',
@@ -961,7 +951,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
   },
   numberText: {
     fontSize: 18,
@@ -1066,7 +1055,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 15,
   },
   floatingIconGradient: {
     width: 50,
@@ -1113,7 +1101,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 20,
-    elevation: 10,
   },
   sectionBorder: {
     position: 'absolute',

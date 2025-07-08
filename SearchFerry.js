@@ -64,8 +64,17 @@ const SearchFerry = ({ navigation, route }) => {
 
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
-  const [calendarStartDate, setCalendarStartDate] = useState(new Date().toISOString().split('T')[0]); // string
-  const [calendarEndDate, setCalendarEndDate] = useState(new Date().toISOString().split('T')[0]); // string
+  const [calendarStartDate, setCalendarStartDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  }); // string
+  const [calendarEndDate, setCalendarEndDate] = useState(() => {
+    const returnDay = new Date();
+    returnDay.setDate(returnDay.getDate() + 2);
+    return returnDay.toISOString().split('T')[0];
+  }); // string
+  const [calendarReady, setCalendarReady] = useState(false);
   const [selectedCompaniesDepart, setSelectedCompaniesDepart] = useState([]);
   const [selectedCompaniesReturn, setSelectedCompaniesReturn] = useState([]);
   const [isFilterModalVisibleDepart, setIsFilterModalVisibleDepart] = useState(false);
@@ -151,6 +160,18 @@ const SearchFerry = ({ navigation, route }) => {
       alert('กรุณาเลือกวันที่กลับ');
     }
   };
+
+  useEffect(() => {
+    // Sync calendar dates with departure/return dates on component mount
+    if (departureDate) {
+      setCalendarStartDate(departureDate.toISOString().split('T')[0]);
+    }
+    if (returnDate) {
+      setCalendarEndDate(returnDate.toISOString().split('T')[0]);
+    }
+    // Mark calendar as ready after initial sync
+    setTimeout(() => setCalendarReady(true), 100);
+  }, []);
 
   useEffect(() => {
     fetch(`${ipAddress}/currency`)
@@ -1888,7 +1909,13 @@ const SearchFerry = ({ navigation, route }) => {
             </View>
 
             {/* Enhanced Departure Date Calendar Modal */}
-            <Modal visible={showDepartModal} transparent animationType="slide" onRequestClose={() => setShowDepartModal(false)}>
+            <Modal 
+              visible={showDepartModal} 
+              transparent 
+              animationType="fade" 
+              onRequestClose={() => setShowDepartModal(false)}
+              statusBarTranslucent
+            >
               <View style={{ 
                 flex: 1, 
                 backgroundColor: 'rgba(0,18,51,0.75)', 
@@ -1913,6 +1940,8 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 8 : 20,
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
+                  transform: [{ scale: showDepartModal ? 1 : 0.9 }],
+                  opacity: showDepartModal ? 1 : 0,
                 }}>
                   {/* Enhanced Header */}
                   <View style={{
@@ -1970,40 +1999,56 @@ const SearchFerry = ({ navigation, route }) => {
                         marginBottom: Platform.OS === 'android' ? 8 : 12,
                         minHeight: Platform.OS === 'android' ? 350 : 380,
                       }}>
-                        <Calendar
-                          current={calendarStartDate}
-                          minDate={new Date().toISOString().split('T')[0]}
-                          onDayPress={onDepartCalendarDayPress}
-                          markedDates={{
-                            [calendarStartDate]: { 
-                              selected: true, 
-                              selectedColor: '#FD501E',
-                              selectedTextColor: '#FFFFFF'
-                            }
-                          }}
-                          theme={{
-                            backgroundColor: 'transparent',
-                            calendarBackground: 'transparent',
-                            textSectionTitleColor: '#1E293B',
-                            selectedDayBackgroundColor: '#FD501E',
-                            selectedDayTextColor: '#FFFFFF',
-                            todayTextColor: '#FD501E',
-                            dayTextColor: '#1E293B',
-                            textDisabledColor: '#94A3B8',
-                            arrowColor: '#FD501E',
-                            monthTextColor: '#1E293B',
-                            textDayFontWeight: '600',
-                            textMonthFontWeight: '700',
-                            textDayHeaderFontWeight: '600',
-                            textDayFontSize: Platform.OS === 'android' ? 14 : 16,
-                            textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
-                            textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
-                          }}
-                          style={{
-                            minHeight: Platform.OS === 'android' ? 320 : 350,
-                            width: '100%',
-                          }}
-                        />
+                        {calendarReady ? (
+                          <Calendar
+                            current={calendarStartDate}
+                            minDate={new Date().toISOString().split('T')[0]}
+                            onDayPress={onDepartCalendarDayPress}
+                            markedDates={{
+                              [calendarStartDate]: { 
+                                selected: true, 
+                                selectedColor: '#FD501E',
+                                selectedTextColor: '#FFFFFF'
+                              }
+                            }}
+                            theme={{
+                              backgroundColor: 'transparent',
+                              calendarBackground: 'transparent',
+                              textSectionTitleColor: '#1E293B',
+                              selectedDayBackgroundColor: '#FD501E',
+                              selectedDayTextColor: '#FFFFFF',
+                              todayTextColor: '#FD501E',
+                              dayTextColor: '#1E293B',
+                              textDisabledColor: '#94A3B8',
+                              arrowColor: '#FD501E',
+                              monthTextColor: '#1E293B',
+                              textDayFontWeight: '600',
+                              textMonthFontWeight: '700',
+                              textDayHeaderFontWeight: '600',
+                              textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                              textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                              textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                            }}
+                            enableSwipeMonths={true}
+                            firstDay={1}
+                            hideExtraDays={false}
+                            disableMonthChange={false}
+                            hideDayNames={false}
+                            showWeekNumbers={false}
+                          />
+                        ) : (
+                          <View style={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: Platform.OS === 'android' ? 350 : 380,
+                          }}>
+                            <Text style={{
+                              color: '#64748B',
+                              fontSize: 16,
+                              fontWeight: '500',
+                            }}>Loading Calendar...</Text>
+                          </View>
+                        )}
                       </View>
                     </ScrollView>
 
@@ -2050,7 +2095,13 @@ const SearchFerry = ({ navigation, route }) => {
             </Modal>
 
             {/* Enhanced Return Date Calendar Modal */}
-            <Modal visible={showReturnModal} transparent animationType="slide" onRequestClose={() => setShowReturnModal(false)}>
+            <Modal 
+              visible={showReturnModal} 
+              transparent 
+              animationType="fade" 
+              onRequestClose={() => setShowReturnModal(false)}
+              statusBarTranslucent
+            >
               <View style={{ 
                 flex: 1, 
                 backgroundColor: 'rgba(0,18,51,0.75)', 
@@ -2075,6 +2126,8 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 8 : 20,
                   borderWidth: 1,
                   borderColor: 'rgba(255, 214, 0, 0.15)',
+                  transform: [{ scale: showReturnModal ? 1 : 0.9 }],
+                  opacity: showReturnModal ? 1 : 0,
                 }}>
                   {/* Enhanced Header */}
                   <View style={{
@@ -2132,40 +2185,56 @@ const SearchFerry = ({ navigation, route }) => {
                         marginBottom: Platform.OS === 'android' ? 8 : 12,
                         minHeight: Platform.OS === 'android' ? 350 : 380,
                       }}>
-                        <Calendar
-                          current={calendarEndDate}
-                          minDate={calendarStartDate}
-                          onDayPress={onReturnCalendarDayPress}
-                          markedDates={{
-                            [calendarEndDate]: { 
-                              selected: true, 
-                              selectedColor: '#FFD600',
-                              selectedTextColor: '#1E293B'
-                            }
-                          }}
-                          theme={{
-                            backgroundColor: 'transparent',
-                            calendarBackground: 'transparent',
-                            textSectionTitleColor: '#1E293B',
-                            selectedDayBackgroundColor: '#FFD600',
-                            selectedDayTextColor: '#1E293B',
-                            todayTextColor: '#B8860B',
-                            dayTextColor: '#1E293B',
-                            textDisabledColor: '#94A3B8',
-                            arrowColor: '#B8860B',
-                            monthTextColor: '#1E293B',
-                            textDayFontWeight: '600',
-                            textMonthFontWeight: '700',
-                            textDayHeaderFontWeight: '600',
-                            textDayFontSize: Platform.OS === 'android' ? 14 : 16,
-                            textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
-                            textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
-                          }}
-                          style={{
-                            minHeight: Platform.OS === 'android' ? 320 : 350,
-                            width: '100%',
-                          }}
-                        />
+                        {calendarReady ? (
+                          <Calendar
+                            current={calendarEndDate}
+                            minDate={calendarStartDate}
+                            onDayPress={onReturnCalendarDayPress}
+                            markedDates={{
+                              [calendarEndDate]: { 
+                                selected: true, 
+                                selectedColor: '#FFD600',
+                                selectedTextColor: '#1E293B'
+                              }
+                            }}
+                            theme={{
+                              backgroundColor: 'transparent',
+                              calendarBackground: 'transparent',
+                              textSectionTitleColor: '#1E293B',
+                              selectedDayBackgroundColor: '#FFD600',
+                              selectedDayTextColor: '#1E293B',
+                              todayTextColor: '#FFD600',
+                              dayTextColor: '#1E293B',
+                              textDisabledColor: '#94A3B8',
+                              arrowColor: '#FFD600',
+                              monthTextColor: '#1E293B',
+                              textDayFontWeight: '600',
+                              textMonthFontWeight: '700',
+                              textDayHeaderFontWeight: '600',
+                              textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                              textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                              textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                            }}
+                            enableSwipeMonths={true}
+                            firstDay={1}
+                            hideExtraDays={false}
+                            disableMonthChange={false}
+                            hideDayNames={false}
+                            showWeekNumbers={false}
+                          />
+                        ) : (
+                          <View style={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: Platform.OS === 'android' ? 350 : 380,
+                          }}>
+                            <Text style={{
+                              color: '#64748B',
+                              fontSize: 16,
+                              fontWeight: '500',
+                            }}>Loading Calendar...</Text>
+                          </View>
+                        )}
                       </View>
                     </ScrollView>
 
@@ -2670,8 +2739,8 @@ const SearchFerry = ({ navigation, route }) => {
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={{
-                          paddingHorizontal: 20,
-                          paddingVertical: 16,
+                          paddingHorizontal: Platform.OS === 'android' ? 18 : 20,
+                          paddingVertical: Platform.OS === 'android' ? 18 : 16,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -2746,35 +2815,39 @@ const SearchFerry = ({ navigation, route }) => {
                         }} />
                         
                         {/* Main Journey Info */}
-                        <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                        <View style={{ 
+                          paddingHorizontal: Platform.OS === 'android' ? 22 : 20, 
+                          paddingVertical: Platform.OS === 'android' ? 22 : 20 
+                        }}>
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            marginBottom: 20,
+                            marginBottom: Platform.OS === 'android' ? 22 : 20,
                           }}>
                             {/* From Location */}
                             <View style={{ flex: 1, alignItems: 'flex-start' }}>
                               <Text style={{
                                 color: '#1E293B',
-                                fontSize: 18,
+                                fontSize: Platform.OS === 'android' ? 17 : 18,
                                 fontWeight: 'bold',
-                                marginBottom: 4,
+                                marginBottom: Platform.OS === 'android' ? 6 : 4,
                               }}>
                                 {item.md_timetable_startid}
                               </Text>
                               <Text style={{
                                 color: '#64748B',
-                                fontSize: 12,
+                                fontSize: Platform.OS === 'android' ? 11 : 12,
                                 fontWeight: '500',
-                                marginBottom: 8,
+                                marginBottom: Platform.OS === 'android' ? 10 : 8,
+                                lineHeight: Platform.OS === 'android' ? 16 : 14,
                               }}>
                                 {item.md_timetable_pierstart}
                               </Text>
                               <View style={{
                                 backgroundColor: '#FFF3ED',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
+                                paddingHorizontal: Platform.OS === 'android' ? 14 : 12,
+                                paddingVertical: Platform.OS === 'android' ? 8 : 6,
                                 borderRadius: 12,
                                 borderWidth: 1,
                                 borderColor: '#FD501E',
@@ -2789,21 +2862,27 @@ const SearchFerry = ({ navigation, route }) => {
                               </View>
                               <Text style={{
                                 color: '#64748B',
-                                fontSize: 11,
+                                fontSize: Platform.OS === 'android' ? 10 : 11,
                                 fontWeight: '500',
-                                marginTop: 4,
+                                marginTop: Platform.OS === 'android' ? 6 : 4,
+                                lineHeight: Platform.OS === 'android' ? 14 : 12,
                               }}>
                                 {formatDate(calendarStartDate)}
                               </Text>
                             </View>
 
                             {/* Journey Info */}
-                            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
+                            <View style={{ 
+                              flex: 1, 
+                              alignItems: 'center', 
+                              paddingHorizontal: Platform.OS === 'android' ? 12 : 10 
+                            }}>
                               <Text style={{
                                 color: '#64748B',
-                                fontSize: 12,
+                                fontSize: Platform.OS === 'android' ? 11 : 12,
                                 fontWeight: '600',
-                                marginBottom: 8,
+                                marginBottom: Platform.OS === 'android' ? 10 : 8,
+                                textAlign: 'center',
                               }}>
                                 {item.md_timetable_boattypeid}
                               </Text>
@@ -2870,31 +2949,33 @@ const SearchFerry = ({ navigation, route }) => {
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>
                               <Text style={{
                                 color: '#1E293B',
-                                fontSize: 18,
+                                fontSize: Platform.OS === 'android' ? 17 : 18,
                                 fontWeight: 'bold',
-                                marginBottom: 4,
+                                marginBottom: Platform.OS === 'android' ? 6 : 4,
                               }}>
                                 {item.md_timetable_endid}
                               </Text>
                               <Text style={{
                                 color: '#64748B',
-                                fontSize: 12,
+                                fontSize: Platform.OS === 'android' ? 11 : 12,
                                 fontWeight: '500',
-                                marginBottom: 8,
+                                marginBottom: Platform.OS === 'android' ? 10 : 8,
+                                lineHeight: Platform.OS === 'android' ? 16 : 14,
+                                textAlign: 'right',
                               }}>
                                 {item.md_timetable_pierend}
                               </Text>
                               <View style={{
                                 backgroundColor: '#F0FDF4',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
+                                paddingHorizontal: Platform.OS === 'android' ? 14 : 12,
+                                paddingVertical: Platform.OS === 'android' ? 8 : 6,
                                 borderRadius: 12,
                                 borderWidth: 1,
                                 borderColor: '#16A34A',
                               }}>
                                 <Text style={{
                                   color: '#16A34A',
-                                  fontSize: 16,
+                                  fontSize: Platform.OS === 'android' ? 15 : 16,
                                   fontWeight: 'bold',
                                 }}>
                                   {formatTime(item.md_timetable_arrivaltime)}
@@ -2915,7 +2996,7 @@ const SearchFerry = ({ navigation, route }) => {
                           <View style={{
                             height: 1,
                             backgroundColor: '#E2E8F0',
-                            marginVertical: 16,
+                            marginVertical: Platform.OS === 'android' ? 18 : 16,
                           }} />
 
                           {/* Price and Booking Section */}
@@ -2923,20 +3004,21 @@ const SearchFerry = ({ navigation, route }) => {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
+                            paddingBottom: Platform.OS === 'android' ? 4 : 0,
                           }}>
                             <View style={{ flex: 1 }}>
                               <Text style={{
                                 color: '#64748B',
-                                fontSize: 13,
+                                fontSize: Platform.OS === 'android' ? 12 : 13,
                                 fontWeight: '500',
-                                marginBottom: 4,
+                                marginBottom: Platform.OS === 'android' ? 6 : 4,
                               }}>
                                 Price per person
                               </Text>
                               <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                                 <Text style={{
                                   color: '#1E293B',
-                                  fontSize: 14,
+                                  fontSize: Platform.OS === 'android' ? 13 : 14,
                                   fontWeight: '600',
                                   marginRight: 4,
                                 }}>
@@ -2944,7 +3026,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 </Text>
                                 <Text style={{
                                   color: '#1E293B',
-                                  fontSize: 24,
+                                  fontSize: Platform.OS === 'android' ? 22 : 24,
                                   fontWeight: 'bold',
                                 }}>
                                  {formatNumberWithComma(parseFloat((parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(item.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2)))}
@@ -2973,14 +3055,15 @@ const SearchFerry = ({ navigation, route }) => {
                             <TouchableOpacity
                               style={{
                                 backgroundColor: '#FD501E',
-                                paddingHorizontal: 24,
-                                paddingVertical: 14,
-                                borderRadius: 16,
-                                shadowColor: '#FD501E',
-                                shadowOpacity: 0.3,
-                                shadowRadius: 8,
-                                shadowOffset: { width: 0, height: 4 },
-                                elevation: 8,
+                                paddingHorizontal: Platform.OS === 'android' ? 20 : 24,
+                                paddingVertical: Platform.OS === 'android' ? 12 : 14,
+                                borderRadius: Platform.OS === 'android' ? 14 : 16,
+                                shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                                shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
+                                shadowRadius: Platform.OS === 'android' ? 0 : 8,
+                                shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
+                                elevation: Platform.OS === 'android' ? 6 : 8,
+                                minWidth: Platform.OS === 'android' ? 110 : 120,
                               }}
                               onPress={() => {
                                 updateCustomerData({
@@ -3015,9 +3098,10 @@ const SearchFerry = ({ navigation, route }) => {
                             >
                               <Text style={{
                                 color: '#FFFFFF',
-                                fontSize: 16,
+                                fontSize: Platform.OS === 'android' ? 15 : 16,
                                 fontWeight: 'bold',
                                 letterSpacing: 0.5,
+                                textAlign: 'center',
                               }}>
                                 Book Now
                               </Text>
@@ -3785,8 +3869,8 @@ const SearchFerry = ({ navigation, route }) => {
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={{
-                            paddingHorizontal: 0,
-                            paddingVertical: 16,
+                            paddingHorizontal: Platform.OS === 'android' ? 20 : 22,
+                            paddingVertical: Platform.OS === 'android' ? 18 : 16,
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -3794,7 +3878,6 @@ const SearchFerry = ({ navigation, route }) => {
                             marginTop: -2,
                             borderTopLeftRadius: 20,
                             borderTopRightRadius: 20,
-                            paddingHorizontal: 22,
                           }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -3866,42 +3949,46 @@ const SearchFerry = ({ navigation, route }) => {
                           }} />
                           
                           {/* Main Journey Info */}
-                          <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+                          <View style={{ 
+                            paddingHorizontal: Platform.OS === 'android' ? 22 : 20, 
+                            paddingVertical: Platform.OS === 'android' ? 22 : 20 
+                          }}>
                             <View style={{
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              marginBottom: 20,
+                              marginBottom: Platform.OS === 'android' ? 22 : 20,
                             }}>
                               {/* From Location */}
                               <View style={{ flex: 1, alignItems: 'flex-start' }}>
                                 <Text style={{
                                   color: '#1E293B',
-                                  fontSize: 18,
+                                  fontSize: Platform.OS === 'android' ? 17 : 18,
                                   fontWeight: 'bold',
-                                  marginBottom: 4,
+                                  marginBottom: Platform.OS === 'android' ? 6 : 4,
                                 }}>
                                   {item.md_timetable_startid}
                                 </Text>
                                 <Text style={{
                                   color: '#64748B',
-                                  fontSize: 12,
+                                  fontSize: Platform.OS === 'android' ? 11 : 12,
                                   fontWeight: '500',
-                                  marginBottom: 8,
+                                  marginBottom: Platform.OS === 'android' ? 10 : 8,
+                                  lineHeight: Platform.OS === 'android' ? 16 : 14,
                                 }}>
                                   {item.md_timetable_pierstart}
                                 </Text>
                                 <View style={{
                                   backgroundColor: '#FEF3C7',
-                                  paddingHorizontal: 12,
-                                  paddingVertical: 6,
+                                  paddingHorizontal: Platform.OS === 'android' ? 14 : 12,
+                                  paddingVertical: Platform.OS === 'android' ? 8 : 6,
                                   borderRadius: 12,
                                   borderWidth: 1,
                                   borderColor: '#D97706',
                                 }}>
                                   <Text style={{
                                     color: '#D97706',
-                                    fontSize: 16,
+                                    fontSize: Platform.OS === 'android' ? 15 : 16,
                                     fontWeight: 'bold',
                                   }}>
                                     {formatTime(item.md_timetable_departuretime)}

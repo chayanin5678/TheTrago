@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert, Platform } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
@@ -1204,7 +1204,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 20,
     zIndex: 0,
     pointerEvents: 'none',
   },
@@ -1235,12 +1235,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
-    elevation: 15,
     position: 'relative',
     overflow: 'hidden',
   },
   safeAreaHeader: {
     paddingTop: 0,
+  },
+  headerTopRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    position: 'relative',
+    marginTop: Platform.OS === 'android' ? -20 : -50,
+    height: 56,
   },
   headerContent: {
     alignItems: 'center',
@@ -1250,7 +1258,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: 0,
-    top: 0,
+  top: Platform.OS === 'android' ? 60 : 60,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -1311,7 +1319,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
-    elevation: 10,
   },
   progressGradient: {
     padding: 25,
@@ -1339,7 +1346,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
   },
   progressBarFillPremium: {
     height: '100%',
@@ -1349,7 +1355,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
   },
   infoTextPremium: {
     fontSize: 14,
@@ -1371,7 +1376,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
   },
   verificationIcon: {
     width: 28,
@@ -1412,7 +1416,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.15,
     shadowRadius: 25,
-    elevation: 12,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.1)',
     backdropFilter: 'blur(20px)',
@@ -1458,7 +1461,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
     fontWeight: '500',
   },
   disabledPremium: {
@@ -1481,7 +1483,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
   },
   buttonTextPremium: {
     fontSize: 16,
@@ -1506,7 +1507,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
   },
   inputFlexPremium: {
     flex: 1,
@@ -1529,7 +1529,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 15,
-    elevation: 10,
     overflow: 'hidden',
   },
   saveGradient: {
@@ -1564,7 +1563,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.3,
     shadowRadius: 30,
-    elevation: 20,
   },
   modalGradient: {
     padding: 0,
@@ -1606,7 +1604,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
   },
   optionItemPremium: {
     paddingVertical: 15,
@@ -1748,7 +1745,6 @@ const styles = StyleSheet.create({
     width: '80%',
     borderRadius: 10,
     padding: 15,
-    elevation: 5,
   },
   modalContent: {
     backgroundColor: '#FFF',
@@ -1756,7 +1752,6 @@ const styles = StyleSheet.create({
     height: '40%',
     borderRadius: 10,
     padding: 15,
-    elevation: 5,
   },
   optionItem: {
     paddingVertical: 12,

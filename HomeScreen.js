@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView, Platform } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
@@ -1829,7 +1829,6 @@ const HomeScreen = ({ navigation }) => {
                   paddingHorizontal: wp('6%'),
                   paddingVertical: hp('1%'),
                   borderRadius: wp('6%'),
-                  elevation: 2,
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.2,
@@ -2308,7 +2307,6 @@ const HomeScreen = ({ navigation }) => {
                 paddingHorizontal: wp('6%'),
                 paddingVertical: hp('1%'),
                 borderRadius: wp('6%'),
-                elevation: 2,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.2,
@@ -2438,11 +2436,10 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('6%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowColor: Platform.OS === 'android' ? 'transparent' : '#000',
+    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 6 },
+    shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
+    shadowRadius: Platform.OS === 'android' ? 0 : 12,
     // Additional Android compatibility
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
@@ -2542,7 +2539,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 5,
   },
   searchGradient: {
     flexDirection: 'row',
@@ -2623,7 +2619,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    elevation: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   servicesBlur: {
@@ -2684,7 +2679,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   serviceItemBlur: {
@@ -2741,7 +2735,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
-    elevation: 8,
     backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   hotDealsSkeleton: {
@@ -2811,7 +2804,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   bannerBlur: {
@@ -2838,7 +2830,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.4%') },
     shadowOpacity: 0.25,
     shadowRadius: wp('1.5%'),
-    elevation: 6,
     backgroundColor: 'rgba(255, 215, 0, 0.95)',
   },
   bannerBadgeText: {
@@ -2902,7 +2893,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.3%') },
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
-    elevation: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   destinationGradient: {
@@ -3003,7 +2993,6 @@ const premiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.3%') },
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
-    elevation: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   routeGradient: {
@@ -3151,7 +3140,6 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('6%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('1%') },
     shadowOpacity: 0.25,
@@ -3280,7 +3268,6 @@ const premiumStyles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: wp('1%'),
     // Unified shadow system for both platforms
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
@@ -3307,7 +3294,6 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('4%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.8%') },
     shadowOpacity: 0.25,
@@ -3351,7 +3337,6 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -3377,7 +3362,6 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -3406,7 +3390,6 @@ const premiumStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // Unified shadow system for both platforms
-    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -3497,7 +3480,6 @@ const premiumStyles = StyleSheet.create({
     borderRadius: wp('10%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: hp('0.8%') },
     shadowOpacity: 0.3,

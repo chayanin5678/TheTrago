@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.2,
     shadowRadius: 25,
-    elevation: 15,
+   // elevation: 15,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.15)',
     // Glassmorphism effect
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+   // elevation: 3,
   },
   skeletonName: {
     width: 170,
@@ -966,11 +966,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 65,
     overflow: 'visible',
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    elevation: 10,
   },
   profileImage: {
     width: 130,
@@ -978,6 +973,11 @@ const styles = StyleSheet.create({
     borderRadius: 65,
     borderWidth: 4,
     borderColor: 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+   // elevation: 10,
   },
   editIconContainer: {
     position: 'absolute',

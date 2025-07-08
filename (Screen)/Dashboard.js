@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView, Animated, Easing, Platform, StatusBar } from 'react-native';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -81,6 +81,13 @@ const Dashboard = ({ navigation }) => {
  
   return (
     <View style={styles.container}>
+      {/* Set StatusBar for cross-platform consistency */}
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#FD501E" 
+        translucent={Platform.OS === 'android'}
+      />
+      
       {/* Ultra Premium Header with Gradient - Full Screen */}
       <Animated.View
         style={[
@@ -336,9 +343,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+    ...Platform.select({
+      android: {
+        paddingTop: StatusBar.currentHeight || 0,
+      },
+    }),
   },
   headerGradient: {
-    paddingTop: 0,
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
     paddingBottom: 25,
     paddingHorizontal: 25,
     borderBottomLeftRadius: 35,
@@ -347,7 +359,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
-    elevation: 15,
     position: 'relative',
   },
   safeAreaHeader: {
