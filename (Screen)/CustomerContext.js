@@ -6,6 +6,56 @@ const CustomerContext = createContext();
 // สร้าง Provider สำหรับ Context
 export const CustomerProvider = ({ children }) => {
   const [customerData, setCustomerData] = useState({
+    // booking infomation ----------------------------------------------------------------------------
+    md_booking_memberid: 0, //รหัสสมาชิก
+    md_booking_affiliate_id: 0, //รหัสตัวแทน
+    md_booking_affiliate_subid: 0, //รหัสตัวแทนย่อย
+    md_booking_affiliate_price: 0, //ราคาตัวแทน
+    md_booking_companyid: 0, //รหัสบริษัท
+    md_booking_reference: '', //รหัสอ้างอิง
+    md_booking_paymentid: '', //รหัสการชำระเงิน
+    md_booking_boattypeid: 0, //รหัสประเภทเรือ
+    md_booking_country:'', //ประเทศ
+    md_booking_countrycode: '', //รหัสประเทศ
+    md_booking_round: 1, //ประเภทการเดินทาง
+    md_booking_timetableid : 0, //รหัสตารางเวลา
+    md_booking_tel: '', //เบอร์โทร
+    md_booking_whatsapp: '', //เบอร์ WhatsApp
+    md_booking_email: '', //อีเมล
+    md_booking_price: 0, //ราคา
+    md_booking_total: 0, //ราคารวม
+    md_booking_vat: 0, //ภาษีมูลค่าเพิ่ม
+    md_booking_paypal:'', //รหัสการชำระเงิน PayPal
+    md_booking_refund:'',
+    md_booking_refundprice: 0, //ราคารับเงินคืน
+    md_booking_credit: 0, //เครดิต
+    md_booking_insurance: 0, //ประกันภัย
+    md_booking_currency: 'THB', //สกุลเงิน
+    md_booking_net: 0, //ราคาสุทธิ
+    md_booking_adult: 0, //จำนวนผู้ใหญ่
+    md_booking_child: 0, //จำนวนเด็ก
+    md_booking_infant: 0, //จำนวนทารก
+    md_booking_departdate: '', //วันที่เดินทาง
+    md_booking_departtime: '', //เวลาเดินทาง
+    md_booking_remark: '', //หมายเหตุ
+    md_booking_note: '', //บันทึก
+    md_booking_statuspayment: 0, 
+    md_booking_status: 0, //สถานะการจอง
+    md_booking_pay: 0, //สถานะการชำระเงิน
+    md_booking_payfee: 0, //ค่าธรรมเนียมการชำระ
+    md_booking_lang: 'en', //ภาษา
+    md_booking_from: 0, //มาจาก
+    md_booking_sent: '', //ส่งไปยัง
+    md_booking_sentbooking: '', //ส่งไปยังการจอง
+    md_booking_senttransfer: '', //ส่งไปยังการโอน
+    md_booking_device: 2, //อุปกรณ์ที่ใช้
+    md_booking_agentid: '',
+    md_booking_agentprice: 0, //ราคาตัวแทน
+    md_booking_promocode: '', //รหัสโปรโมชั่น
+    md_booking_promoprice: 0, //ส่วนลดโปรโมชั่น
+    md_booking_crebyid:'', //รหัสผู้สร้าง
+    md_booking_updatebyid:'', //รหัสผู้ปรับปรุง
+    //------------------------------------------------------------------------------------------------
     bookingcode: '', //รหัสการจอง
     bookingcodegroup: '', //รหัสการจอง
     groupcode: '', //
@@ -103,6 +153,7 @@ export const CustomerProvider = ({ children }) => {
       }
     ],
     symbol:'฿', //สัญลักษณ์เงิน
+    
   });
 
   const updateCustomerData = (newData) => {

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -995,7 +995,7 @@ const TripDetail = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'ios' ? 0 : -20,
+              marginTop: -20,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -1006,12 +1006,8 @@ const TripDetail = ({ navigation, route }) => {
               elevation: 18,
               padding: 10,
               minHeight: hp('12%'),
-              ...(Platform.OS === 'android' ? {
-                borderWidth: 0,
-              } : {
-                borderWidth: 1,
-                borderColor: 'rgba(0, 18, 51, 0.08)',
-              }),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1025,7 +1021,7 @@ const TripDetail = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: Platform.OS === 'android' ? 70 : -10,
+                marginTop: -10,
                 height: 56,
               },
             ]}
@@ -1037,20 +1033,17 @@ const TripDetail = ({ navigation, route }) => {
                 position: 'absolute',
                 left: 16,
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 25,
+                borderRadius: 22,
                 padding: 8,
                 zIndex: 2,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
+                // Unified cross-platform shadow
                 shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 8,
-                ...(Platform.OS === 'android' ? {
-                  borderWidth: 0,
-                } : {
-                  borderWidth: 1,
-                  borderColor: 'rgba(253, 80, 30, 0.1)',
-                }),
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 6,
               }}
             >
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
@@ -1063,30 +1056,35 @@ const TripDetail = ({ navigation, route }) => {
           </View>
         </LinearGradient>
 
+        {/* Step Component */}
+        <View style={{
+          alignItems: 'center',
+          marginTop: hp('1%'),
+          marginBottom: hp('1%'),
+        }}>
+          <Step logoUri={1} />
+        </View>
+
         {/* Enhanced Title Section */}
         <View style={{
           marginTop: hp('1%'),
           marginHorizontal: wp('6%'),
-          marginBottom: hp('1%'),
-          paddingHorizontal: wp('3%'),
-          paddingVertical: hp('1%'),
+          marginBottom: hp('2%'),
+          paddingHorizontal: wp('4%'),
+          paddingVertical: hp('1.5%'),
           backgroundColor: 'rgba(255,255,255,0.1)',
           borderRadius: wp('4%'),
           backdropFilter: 'blur(10px)',
-          ...(Platform.OS === 'android' ? {
-            borderWidth: 0,
-          } : {
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.2)',
-          }),
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.2)',
         }}>
           <Text style={{
             color: '#FFFFFF',
-            fontSize: wp('5%'),
+            fontSize: wp('7%'),
             fontWeight: '800',
             letterSpacing: -0.5,
             textAlign: 'center',
-            lineHeight: wp('6%'),
+            lineHeight: wp('8%'),
             textShadowColor: 'rgba(0,0,0,0.3)',
             textShadowRadius: 4,
             textShadowOffset: { width: 1, height: 1 },
@@ -1095,10 +1093,10 @@ const TripDetail = ({ navigation, route }) => {
           </Text>
           <Text style={{
             color: 'rgba(255,255,255,0.8)',
-            fontSize: wp('3%'),
+            fontSize: wp('3.5%'),
             fontWeight: '500',
             textAlign: 'center',
-            marginTop: hp('0.3%'),
+            marginTop: hp('0.5%'),
             letterSpacing: 0.3,
             textShadowColor: 'rgba(0,0,0,0.2)',
             textShadowRadius: 2,
@@ -1112,7 +1110,7 @@ const TripDetail = ({ navigation, route }) => {
             styles.container,
             {
               backgroundColor: 'transparent',
-              paddingHorizontal: 8,
+              paddingHorizontal: 24,
               paddingTop: 8,
               paddingBottom: hp('12%'),
               flexGrow: 1,
@@ -1122,14 +1120,6 @@ const TripDetail = ({ navigation, route }) => {
           style={{ flex: 1 }}
           contentInsetAdjustmentBehavior="automatic"
         >
-          {/* Step Component inside ScrollView */}
-          <View style={{
-            alignItems: 'center',
-            marginTop: hp('2%'),
-            marginBottom: hp('2%'),
-          }}>
-            <Step logoUri={1} />
-          </View>
           {loading && (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#FD501E" />
@@ -1144,30 +1134,20 @@ const TripDetail = ({ navigation, route }) => {
                     styles.cardContainer,
                     {
                       marginTop: 24,
-                      marginHorizontal: 16,
-                      backgroundColor: 'rgba(255,255,255,0.97)',
-                      shadowColor: '#FD501E',
-                      shadowOpacity: 0.13,
-                      shadowRadius: 16,
-                      shadowOffset: { width: 0, height: 8 },
-                      elevation: 7,
-                      ...(Platform.OS === 'android' ? {
-                        borderWidth: 0,
-                      } : {
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(253,80,30,0.13)',
-                      }),
-                      overflow: 'visible',
+                      backgroundColor: 'rgba(255,255,255,0.98)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(253,80,30,0.10)',
+                      borderRadius: 24,
                       padding: 0,
-                      borderRadius: 32,
+                      overflow: 'visible',
                       position: 'relative',
                     },
                   ]}>
                     {/* หัวตั๋ว */}
                     <View style={{
                       backgroundColor: '#FD501E',
-                      borderTopLeftRadius: 32,
-                      borderTopRightRadius: 32,
+                      borderTopLeftRadius: 24,
+                      borderTopRightRadius: 24,
                       paddingVertical: 20,
                       paddingHorizontal: 22,
                       flexDirection: 'row',
@@ -1178,19 +1158,7 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Image
                           source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ 
-                            width: wp('10.6%'), 
-                            height: hp('5%'), 
-                            borderRadius: 12, 
-                            backgroundColor: '#fff', 
-                            marginRight: 10,
-                            ...(Platform.OS === 'android' ? {
-                              borderWidth: 0,
-                            } : {
-                              borderWidth: 1,
-                              borderColor: '#eee',
-                            }),
-                          }}
+                          style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
                           resizeMode="cover"
                         />
                         <View style={styles.coltitle}>
@@ -1640,19 +1608,14 @@ const TripDetail = ({ navigation, route }) => {
                       styles.cardContainer,
                       {
                         marginTop: 24,
-                        marginHorizontal: 16,
                         backgroundColor: 'rgba(255,255,255,0.97)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(253,80,30,0.13)',
                         shadowColor: '#FD501E',
                         shadowOpacity: 0.13,
                         shadowRadius: 16,
                         shadowOffset: { width: 0, height: 8 },
                         elevation: 7,
-                        ...(Platform.OS === 'android' ? {
-                          borderWidth: 0,
-                        } : {
-                          borderWidth: 1.5,
-                          borderColor: 'rgba(253,80,30,0.13)',
-                        }),
                         overflow: 'visible',
                         padding: 0,
                         borderRadius: 32,
@@ -1674,19 +1637,7 @@ const TripDetail = ({ navigation, route }) => {
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Image
                             source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                            style={{ 
-                              width: wp('10.6%'), 
-                              height: hp('5%'), 
-                              borderRadius: 12, 
-                              backgroundColor: '#fff', 
-                              marginRight: 10,
-                              ...(Platform.OS === 'android' ? {
-                                borderWidth: 0,
-                              } : {
-                                borderWidth: 1,
-                                borderColor: '#eee',
-                              }),
-                            }}
+                            style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
                             resizeMode="cover"
                           />
                           <View style={styles.coltitle}>
@@ -2133,7 +2084,7 @@ const TripDetail = ({ navigation, route }) => {
 
               {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
 
-                <View key={index} style={[styles.promo, { marginHorizontal: 16 }]}>
+                <View key={index} style={styles.promo}>
 
                   <Text style={styles.TextInput}>
                     Booking Summary
@@ -2466,7 +2417,7 @@ const TripDetail = ({ navigation, route }) => {
             priceDepart
               .filter(item => item.totalDepart) // ป้องกัน undefined
               .map((item, index) => (
-                <View key={index} style={[styles.rowButton, { marginHorizontal: 16 }]}>
+                <View key={index} style={styles.rowButton}>
                   <TouchableOpacity
                     style={[styles.ActionButton, { width: '100%' }]}
                     onPress={() => handleNext(item)}
@@ -2721,31 +2672,22 @@ const styles = StyleSheet.create({
     backdropFilter: 'blur(15px)',
   },
   modalContent: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.98)',
     width: '90%',
     maxWidth: wp('85%'),
-    borderRadius: wp('8%'),
-    padding: wp('6%'),
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border และ shadow ที่ซ้อนทับ
-      borderWidth: 0,
-      elevation: 5,
-    } : {
-      // สำหรับ iOS
-      shadowColor: '#001233',
-      shadowOpacity: 0.25,
-      shadowRadius: wp('8%'),
-      shadowOffset: { width: 0, height: hp('2%') },
-      elevation: 25,
-      borderWidth: wp('0.3%'),
-      borderColor: 'rgba(253, 80, 30, 0.15)',
-    }),
-    backdropFilter: 'blur(30px)',
+    borderRadius: wp('6%'),
+    padding: wp('5%'),
     maxHeight: hp('70%'),
     position: 'relative',
     overflow: 'hidden',
-    // Premium glass effect
-    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95), rgba(241,245,249,0.92))',
+    // Unified cross-platform shadow
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('1%') },
+    shadowOpacity: 0.2,
+    shadowRadius: wp('4%'),
+    elevation: 15,
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.12)',
   },
   modalOption: {
     paddingVertical: hp('1.8%'),
@@ -2777,63 +2719,39 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: wp('8%'),
-    padding: 0,
+    borderRadius: wp('6%'),
     marginHorizontal: wp('4%'),
     marginTop: hp('2%'),
     marginBottom: hp('2%'),
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('1%') },
-    elevation: 12,
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.3%'),
-      borderColor: 'rgba(253, 80, 30, 0.1)',
-    }),
-    backdropFilter: 'blur(20px)',
-    overflow: 'visible',
-    position: 'relative',
-    // Premium gradient border effect
-    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))',
-    // Responsive sizing
     minHeight: hp('35%'),
     maxWidth: wp('92%'),
     alignSelf: 'center',
-    // Premium layered shadows - removed Platform check for Hermes compatibility
-    shadowColor: 'rgba(253, 80, 30, 0.08)',
-    shadowOffset: { width: 0, height: hp('1.2%') },
+    overflow: 'visible',
+    position: 'relative',
+    // Unified cross-platform shadow
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('0.8%') },
     shadowOpacity: 0.15,
-    shadowRadius: wp('5%'),
-    elevation: 6,
+    shadowRadius: wp('3%'),
+    elevation: 8,
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(253, 80, 30, 0.08)',
   },
   promo: {
     backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: wp('5%'),
+    borderRadius: wp('4%'),
     width: '100%',
     padding: wp('4%'),
     marginVertical: hp('1%'),
     marginHorizontal: wp('1%'),
+    // Unified cross-platform shadow
     shadowColor: '#FD501E',
-    shadowOpacity: 0.12,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.6%') },
-    elevation: 8,
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.2%'),
-      borderColor: 'rgba(253, 80, 30, 0.08)',
-    }),
-    backdropFilter: 'blur(10px)',
-    // Premium glass effect
-    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))',
+    shadowOffset: { width: 0, height: hp('0.5%') },
+    shadowOpacity: 0.1,
+    shadowRadius: wp('2%'),
+    elevation: 5,
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(253, 80, 30, 0.06)',
   },
   headerRow: {
     flexDirection: 'row',
@@ -2992,42 +2910,31 @@ const styles = StyleSheet.create({
   },
 
   pickerContainer: {
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: 1,
-      borderColor: '#ddd',
-    }),
+    borderWidth: 1,
+    borderColor: '#ddd',
     borderRadius: 15,
     marginTop: 5,
     backgroundColor: 'white'
   },
   input: {
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.2%'),
-      borderColor: 'rgba(148, 163, 184, 0.3)',
-    }),
-    borderRadius: wp('4%'),
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: wp('3%'),
     padding: wp('3.5%'),
     fontSize: wp('4%'),
     backgroundColor: 'rgba(255,255,255,0.95)',
     marginBottom: hp('1.5%'),
     marginHorizontal: wp('2.5%'),
     paddingVertical: hp('1.5%'),
-    shadowColor: '#64748B',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 4,
     color: '#1E293B',
     fontWeight: '500',
     letterSpacing: 0.3,
+    // Unified cross-platform shadow
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: hp('0.2%') },
+    shadowOpacity: 0.06,
+    shadowRadius: wp('1.5%'),
+    elevation: 3,
   },
   timetable: {
     fontSize: 12,
@@ -3123,25 +3030,20 @@ const styles = StyleSheet.create({
   BackButton: {
     backgroundColor: 'rgba(148, 163, 184, 0.15)',
     paddingVertical: hp('2%'),
-    borderRadius: wp('4%'),
+    borderRadius: wp('3%'),
     alignItems: 'center',
     marginTop: hp('1%'),
     width: '45%',
     marginBottom: hp('2%'),
     justifyContent: 'center',
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(148, 163, 184, 0.2)',
+    // Unified cross-platform shadow
     shadowColor: '#64748B',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 4,
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.1%'),
-      borderColor: 'rgba(148, 163, 184, 0.2)',
-    }),
+    shadowOffset: { width: 0, height: hp('0.2%') },
+    shadowOpacity: 0.08,
+    shadowRadius: wp('1.5%'),
+    elevation: 3,
   },
   BackButtonText: {
     color: '#64748B',
@@ -3152,25 +3054,20 @@ const styles = StyleSheet.create({
   ActionButton: {
     backgroundColor: '#FD501E',
     paddingVertical: hp('2%'),
-    borderRadius: wp('4%'),
+    borderRadius: wp('3%'),
     alignItems: 'center',
     marginTop: hp('1%'),
     width: '45%',
     marginBottom: hp('4%'),
     justifyContent: 'center',
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    // Unified cross-platform shadow
     shadowColor: '#FD501E',
-    shadowOpacity: 0.3,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.6%') },
-    elevation: 12,
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.1%'),
-      borderColor: 'rgba(255, 255, 255, 0.2)',
-    }),
+    shadowOffset: { width: 0, height: hp('0.4%') },
+    shadowOpacity: 0.25,
+    shadowRadius: wp('2%'),
+    elevation: 8,
   },
   searchButtonText: {
     color: '#FFFFFF',
@@ -3189,29 +3086,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', // จัดตำแหน่งแนวนอนให้อยู่ตรงกลาง
   },
   modalContentPre: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.98)',
     width: '85%',
-    borderRadius: wp('6%'),
-    padding: wp('5%'),
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border และ shadow ที่ซ้อนทับ
-      borderWidth: 0,
-      elevation: 5,
-    } : {
-      // สำหรับ iOS
-      elevation: 20,
-      shadowColor: '#FD501E',
-      shadowOpacity: 0.2,
-      shadowRadius: wp('6%'),
-      shadowOffset: { width: 0, height: hp('1.5%') },
-      borderWidth: wp('0.2%'),
-      borderColor: 'rgba(253, 80, 30, 0.12)',
-    }),
-    backdropFilter: 'blur(25px)',
+    borderRadius: wp('5%'),
+    padding: wp('4%'),
     position: 'relative',
     overflow: 'hidden',
-    // Premium glass effect
-    backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))',
+    borderWidth: wp('0.1%'),
+    borderColor: 'rgba(253, 80, 30, 0.1)',
+    // Unified cross-platform shadow
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: hp('1%') },
+    shadowOpacity: 0.15,
+    shadowRadius: wp('4%'),
+    elevation: 12,
   },
   icon: {
     marginLeft: 10,
@@ -3222,48 +3110,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border ทั้งหมด
-      borderWidth: 0,
-    } : {
-      // สำหรับ iOS
-      borderWidth: wp('0.2%'),
-      borderColor: 'rgba(148, 163, 184, 0.3)',
-    }),
-    borderRadius: wp('4%'),
+    borderWidth: wp('0.2%'),
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: wp('3%'),
     width: '95%',
     justifyContent: 'space-between',
     marginHorizontal: wp('2.5%'),
     marginVertical: hp('0.5%'),
+    // Unified cross-platform shadow
     shadowColor: '#64748B',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 4,
-    backdropFilter: 'blur(10px)',
+    shadowOffset: { width: 0, height: hp('0.2%') },
+    shadowOpacity: 0.06,
+    shadowRadius: wp('1.5%'),
+    elevation: 3,
   },
   optionItem: {
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
+    borderBottomWidth: wp('0.1%'),
+    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
     marginHorizontal: wp('1%'),
-    borderRadius: wp('2.5%'),
+    borderRadius: wp('2%'),
     marginVertical: hp('0.2%'),
     backgroundColor: 'rgba(255,255,255,0.7)',
-    backdropFilter: 'blur(8px)',
-    ...(Platform.OS === 'android' ? {
-      // สำหรับ Android - ลบ border ล่าง และลด shadow
-      borderBottomWidth: 0,
-      elevation: 0,
-    } : {
-      // สำหรับ iOS
-      borderBottomWidth: wp('0.1%'),
-      borderBottomColor: 'rgba(148, 163, 184, 0.15)',
-      shadowColor: '#64748B',
-      shadowOpacity: 0.05,
-      shadowRadius: wp('1%'),
-      shadowOffset: { width: 0, height: hp('0.2%') },
-      elevation: 2,
-    }),
+    // Unified cross-platform shadow
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: hp('0.1%') },
+    shadowOpacity: 0.04,
+    shadowRadius: wp('0.8%'),
+    elevation: 2,
   },
   optionText: {
     fontSize: wp('4%'),

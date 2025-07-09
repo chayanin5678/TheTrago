@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
@@ -12,6 +12,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import headStyles from './../(CSS)/StartingPointScreenStyles';
+import axios from 'axios';
 
 const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.', 'Master'];
 
@@ -97,6 +98,8 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
   };
 
+
+
   return (
     <View style={styles.promo}>
       <Text style={styles.TextInput}>{type.charAt(0).toUpperCase() + type.slice(1)} {index + 1}</Text>
@@ -145,7 +148,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         onChangeText={handleLnameChange}
         style={[styles.input, (fieldErrors.lname || (showAllErrors && !lname)) && styles.errorInput]}
       />
-   
+
 
       {/* Nationality */}
       <Text style={styles.textHead}>Nationality</Text>
@@ -208,7 +211,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         onChangeText={handlePassportChange}
         style={[styles.input, (fieldErrors.passport || (showAllErrors && !passport)) && styles.errorInput]}
       />
-     
+
 
       {/* Date of Issue */}
       <Text style={styles.textHead}>Date of Issue</Text>
@@ -297,11 +300,12 @@ const CustomerInfo = ({ navigation }) => {
   const [country, setCountry] = useState(customerData.country); // ใช้ค่าเริ่มต้นจาก customerData
   const [countrycode, setCountrycode] = useState(customerData.countrycode); // ใช้ค่าเริ่มต้นจาก customerData
   const [errors, setErrors] = useState({});
-  const [isWhatsapp, setIsWhatsapp] = useState(0); // State for Whatsapp checkbox
-  // State for Contact Details errors
+  const [isWhatsapp, setIsWhatsapp] = useState(''); // State for Whatsapp checkbox
   const [contactErrors, setContactErrors] = useState({ phone: false, mobile: false, email: false });
   const passengerFormRefs = useRef([]);
   const [showAllErrors, setShowAllErrors] = useState(false);
+  const [PriceDepart, setPriceDepart] = useState([]);
+  const [PriceReturn, setPriceReturn] = useState([]);
 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
@@ -314,7 +318,149 @@ const CustomerInfo = ({ navigation }) => {
   console.log('customerData:', customerData.countrycode);
   console.log('customerData.international:', customerData.international);
 
+  const fetchPrice = async () => {
+    try {
+      // console.log({
+      //   currency: customerData.currency,
+      //   roundtrip: customerData.roud,
+      //   departtrip: customerData.timeTableDepartId,
+      //   returntrip: customerData.timeTableReturnId,
+      //   adult: customerData.adult,
+      //   child: customerData.child,
+      //   infant: customerData.infant,
+      //   departdate: customerData.departdate,
+      //   returndate: customerData.returndate,
+      //   pickupdepart1: selectedPickupDepart,
+      //   dropoffdepart1: selectedDropoffDepart,
+      //   pickupdepart2: selectedPickupReturn,
+      //   dropoffdepart2: selectedDropoffReturn,
+      // });
 
+      const response = await axios.post(
+        'https://thetrago.com/api/V1/ferry/Getprice',
+        {
+          currency: customerData.currency,
+          roundtrip: customerData.roud,
+          departtrip: customerData.timeTableDepartId,
+          returntrip: customerData.timeTableReturnId,
+          adult: customerData.adult,
+          child: customerData.child,
+          infant: customerData.infant,
+          departdate: customerData.departdate,
+          returndate: customerData.returndate,
+          pickupdepart1: customerData.pickupDepartId,
+          pickupdepart2: customerData.pickupReturnId,
+          dropoffdepart1: customerData.dropoffDepartId,
+          dropoffdepart2: customerData.dropoffReturnId,
+          paymentfee: 0,
+
+
+
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.status === 'success') {
+
+
+        setPriceDepart([response.data.data]);
+
+
+
+      } else {
+        setPriceDepart([]);
+        setPriceReturn([]);
+      }
+    } catch (err) {
+      console.error("❌ API Error:", err.response?.data || err.message);
+      setPriceDepart([]);
+      setPriceReturn([]);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handlepromo = async () => {
+    try {
+      // console.log({
+      //   currency: customerData.currency,
+      //   roundtrip: customerData.roud,
+      //   departtrip: customerData.timeTableDepartId,
+      //   returntrip: customerData.timeTableReturnId,
+      //   adult: customerData.adult,
+      //   child: customerData.child,
+      //   infant: customerData.infant,
+      //   departdate: customerData.departdate,
+      //   returndate: customerData.returndate,
+      //   pickupdepart1: selectedPickupDepart,
+      //   dropoffdepart1: selectedDropoffDepart,
+      //   pickupdepart2: selectedPickupReturn,
+      //   dropoffdepart2: selectedDropoffReturn,
+      // });
+
+      const response = await axios.post(
+        'https://thetrago.com/api/V1/ferry/Getprice',
+        {
+          currency: customerData.currency,
+          roundtrip: customerData.roud,
+          departtrip: customerData.timeTableDepartId,
+          returntrip: customerData.timeTableReturnId,
+          adult: customerData.adult,
+          child: customerData.child,
+          infant: customerData.infant,
+          departdate: customerData.departdate,
+          returndate: customerData.returndate,
+          pickupdepart1: customerData.pickupDepartId,
+          pickupdepart2: customerData.pickupReturnId,
+          dropoffdepart1: customerData.dropoffDepartId,
+          dropoffdepart2: customerData.dropoffReturnId,
+          paymentfee: 0,
+          promotioncode: code,
+
+
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.status === 'success') {
+        if (response.data.data.totalDepart.promotionprice !== 0) {
+          Alert.alert('โค้ดสำเร็จ');
+        } else {
+          Alert.alert('โค้ดไม่ถูกต้อง');
+        }
+
+        // Set the price data correctly based on API response structure
+        setPriceDepart([response.data.data]);
+
+        // Set return data if exists
+        if (response.data.data.totalReturn) {
+          setPriceReturn([response.data.data.totalReturn]);
+        }
+
+      } else {
+        Alert.alert('โค้ดไม่ถูกต้อง');
+        setPriceDepart([]);
+        setPriceReturn([]);
+      }
+    } catch (err) {
+      console.error("❌ API Error:", err.response?.data || err.message);
+      setPriceDepart([]);
+      setPriceReturn([]);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ฟังก์ชันตรวจสอบข้อผิดพลาด
   const handleNext = () => {
@@ -350,6 +496,12 @@ const CustomerInfo = ({ navigation }) => {
         countrycode: '+' + countrycode,
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
+        // booking information
+        md_booking_country: country,
+        md_booking_countrycode: '+' + countrycode,
+        md_booking_tel: mobileNumber,
+        md_booking_email: email,
+        md_booking_whatsapp: isWhatsapp,
       });
 
       if (Object.keys(newErrors).length > 0) {
@@ -423,7 +575,15 @@ const CustomerInfo = ({ navigation }) => {
         countrycode: '+' + countrycode,
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
-        passenger: passengerDataArr
+        passenger: passengerDataArr,
+        // booking information
+        md_booking_country: country,
+        md_booking_countrycode: '+' + countrycode,
+        md_booking_tel: mobileNumber,
+        md_booking_email: email,
+        md_booking_whatsapp: isWhatsapp,
+        md_booking_promocode: code,
+        md_booking_promoprice: PriceDepart.totalDepart.promotionprice || 0,
       });
       navigation.navigate('PaymentScreen');
     }
@@ -539,6 +699,7 @@ const CustomerInfo = ({ navigation }) => {
   };
 
   useEffect(() => {
+    fetchPrice();
     if (customerData.roud === 2) {
       fetchTimetableReturn();
     }
@@ -573,16 +734,6 @@ const CustomerInfo = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      {/* Orange Header Bar */}
-      <View style={{
-        height: Platform.OS === 'ios' ? 44 : 30,
-        backgroundColor: '#FD501E',
-        width: '100%',
-        position: 'absolute',
-        top: 0,
-        zIndex: 1,
-      }} />
-
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -598,7 +749,7 @@ const CustomerInfo = ({ navigation }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'ios' ? 44 : 10,
+              marginTop: Platform.OS === 'ios' ? 0 : -20,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -615,55 +766,55 @@ const CustomerInfo = ({ navigation }) => {
             },
           ]}
         >
-        <View
-          style={[
-            headStyles.headerRow,
-            {
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingHorizontal: 0,
-              paddingTop: 0,
-              position: 'relative',
-              marginTop: Platform.OS === 'android' ? 70 : -10,
-              height: 56,
-            },
-          ]}
-        >
-          {/* Back Button - Left */}
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={{
-              position: 'absolute',
-              left: 16,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 25,
-              padding: 8,
-              zIndex: 2,
-              shadowColor: '#FD501E',
-              shadowOpacity: 0.2,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 4 },
-              borderWidth: 1,
-              borderColor: 'rgba(253, 80, 30, 0.1)',
-            }}
+          <View
+            style={[
+              headStyles.headerRow,
+              {
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: Platform.OS === 'android' ? 70 : -10,
+                height: 56,
+              },
+            ]}
           >
-            <AntDesign name="arrowleft" size={24} color="#FD501E" />
-          </TouchableOpacity>
+            {/* Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                position: 'absolute',
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 25,
+                padding: 8,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+            </TouchableOpacity>
 
-          {/* Logo - Center */}
-          <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
-            <LogoTheTrago />
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
           </View>
-        </View>
         </LinearGradient>
 
         {/* Enhanced Ultra Premium Title Section */}
-        <View style={{ 
-          flexDirection: 'row', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginTop: hp('1%'), 
-          marginHorizontal: wp('6%'), 
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: hp('1%'),
+          marginHorizontal: wp('6%'),
           marginBottom: hp('2%'),
           paddingHorizontal: wp('2%'),
           paddingVertical: hp('1.5%'),
@@ -675,13 +826,13 @@ const CustomerInfo = ({ navigation }) => {
         }}>
           <View style={{ flex: 1 }}>
             <Text style={[
-              headStyles.headerTitle, 
-              { 
-                color: '#FFFFFF', 
-                fontSize: wp('7%'), 
-                fontWeight: '800', 
-                letterSpacing: -0.5, 
-                textAlign: 'left', 
+              headStyles.headerTitle,
+              {
+                color: '#FFFFFF',
+                fontSize: wp('7%'),
+                fontWeight: '800',
+                letterSpacing: -0.5,
+                textAlign: 'left',
                 marginLeft: 0,
                 lineHeight: wp('8%'),
                 textShadowColor: 'rgba(0,0,0,0.3)',
@@ -711,7 +862,7 @@ const CustomerInfo = ({ navigation }) => {
           behavior="padding"
           style={{ flex: 1 }}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
@@ -736,161 +887,58 @@ const CustomerInfo = ({ navigation }) => {
                   {/* คำนำหน้า */}
                   <Text style={styles.textHead}>Title</Text>
                   <TouchableOpacity
-                  
+
                     style={[styles.button, errors.selectedTitle && styles.errorInput]}
                     onPress={toggleModal}>
                     <Text style={styles.buttonText}>{selectedTitle}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                   </TouchableOpacity>
 
-                {/* Modal for title selection */}
-                <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContentPre}>
-                      <FlatList
-                        data={titleOptions}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item)}>
-                            <Text style={styles.optionText}>{item}</Text>
-                          </TouchableOpacity>
-                        )}
-                        keyExtractor={(item, index) => index.toString()}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        pagingEnabled
-                      />
+                  {/* Modal for title selection */}
+                  <Modal visible={isModalVisible} transparent animationType="fade" onRequestClose={toggleModal}>
+                    <View style={styles.modalOverlay}>
+                      <View style={styles.modalContentPre}>
+                        <FlatList
+                          data={titleOptions}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item)}>
+                              <Text style={styles.optionText}>{item}</Text>
+                            </TouchableOpacity>
+                          )}
+                          keyExtractor={(item, index) => index.toString()}
+                          initialNumToRender={5}
+                          maxToRenderPerBatch={5}
+                          windowSize={5}
+                          pagingEnabled
+                        />
+                      </View>
                     </View>
-                  </View>
-                </Modal>
-                {/* ชื่อจริง & นามสกุล */}
-                <Text style={styles.textHead}>First Name</Text>
-                <TextInput
-                  placeholder="First Name"
-                  value={Firstname}
-                  onChangeText={(text) => {
-                    setFirstname(text);
-                    setErrors((prev) => ({ ...prev, Firstname: false }));
-                  }}
-                  style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                />
-
-                <Text style={styles.textHead}>Last Name</Text>
-                <TextInput
-                  placeholder="Last Name"
-                  value={Lastname}
-                  onChangeText={(text) => {
-                    setLastname(text);
-                    setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
-                  }}
-                  style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                />
-
-
-                {/* รายละเอียดการติดต่อ */}
-                <Text style={styles.TextInput}>Contact Details</Text>
-                <Text style={styles.textHead}>Phone number</Text>
-                <TouchableOpacity
-                  style={[styles.button, errors.selectedTele && styles.errorInput]}
-                  onPress={toggleTeleModal}>
-                  <Text style={styles.buttonText}>{selectedTele}</Text>
-                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                </TouchableOpacity>
-
-                {/* Modal for selecting telephone */}
-                <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <TextInput
-                        placeholder="Search country"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        style={styles.textInput}
-                        placeholderTextColor="#888"
-                      />
-                      <FlatList
-                        data={filteredTelePhones}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                            <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                              {item.sys_countries_nameeng === 'Please Select'
-                                ? 'Please Select'
-                                : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                        keyExtractor={(item, index) => index.toString()}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        pagingEnabled
-                      />
-                    </View>
-                  </View>
-                </Modal>
-
-                <TextInput
-                  placeholder="Mobile Number"
-                  value={mobileNumber}
-                  keyboardType="number-pad"
-                  onChangeText={(text) => {
-                    setmobileNumber(text);
-                    setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
-                  }}
-                  style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                />
-                <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
-                <Text style={styles.textHead}>Email</Text>
-                <TextInput
-                  placeholder="Enter Your Email"
-                  value={email}
-                  onChangeText={(text) => {
-                    setemail(text);
-                    setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
-                  }}
-                  style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                  editable={!customerData.email}
-                />
-              </View>
-            ) : (
-              // ถ้า international ไม่ใช่ 0 ให้แสดงฟอร์มตามจำนวนผู้โดยสาร
-              <>
-                {/* ก่อน map ทุกครั้ง ให้ reset refs */}
-                {passengerFormRefs.current = []}
-
-                {[...Array(customerData.adult)].map((_, i) => (
-                  <PassengerForm
-                    ref={el => (passengerFormRefs.current[i] = el)}
-                    key={`adult-${i}`}
-                    type="adult"
-                    index={i}
-                    telePhone={telePhone}
-                    showAllErrors={showAllErrors}
+                  </Modal>
+                  {/* ชื่อจริง & นามสกุล */}
+                  <Text style={styles.textHead}>First Name</Text>
+                  <TextInput
+                    placeholder="First Name"
+                    value={Firstname}
+                    onChangeText={(text) => {
+                      setFirstname(text);
+                      setErrors((prev) => ({ ...prev, Firstname: false }));
+                    }}
+                    style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                   />
-                ))}
-                {[...Array(customerData.child)].map((_, i) => (
-                  <PassengerForm
-                    ref={el => (passengerFormRefs.current[customerData.adult + i] = el)}
-                    key={`child-${i}`}
-                    type="child"
-                    index={i}
-                    telePhone={telePhone}
-                    showAllErrors={showAllErrors}
-                  />
-                ))}
-                {[...Array(customerData.infant)].map((_, i) => (
-                  <PassengerForm
-                    ref={el => (passengerFormRefs.current[customerData.adult + customerData.child + i] = el)}
-                    key={`infant-${i}`}
-                    type="infant"
-                    index={i}
-                    telePhone={telePhone}
-                    showAllErrors={showAllErrors}
-                  />
-                ))}
 
-                {/* Contact Details Section (after all PassengerForms) */}
-                <View style={styles.promo}>
+                  <Text style={styles.textHead}>Last Name</Text>
+                  <TextInput
+                    placeholder="Last Name"
+                    value={Lastname}
+                    onChangeText={(text) => {
+                      setLastname(text);
+                      setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
+                    }}
+                    style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                  />
+
+
+                  {/* รายละเอียดการติดต่อ */}
                   <Text style={styles.TextInput}>Contact Details</Text>
                   <Text style={styles.textHead}>Phone number</Text>
                   <TouchableOpacity
@@ -931,19 +979,20 @@ const CustomerInfo = ({ navigation }) => {
                       </View>
                     </View>
                   </Modal>
+
                   <TextInput
-                    placeholder="Enter your mobile number"
-                    style={[styles.input, contactErrors.mobile && styles.errorInput]}
-                    keyboardType="number-pad"
+                    placeholder="Mobile Number"
                     value={mobileNumber}
-                    onChangeText={text => {
+                    keyboardType="number-pad"
+                    onChangeText={(text) => {
                       setmobileNumber(text);
-                      setContactErrors(prev => ({ ...prev, mobile: false }));
+                      setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
                     }}
+                    style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                   />
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginBottom: 10 }}>
                     <TouchableOpacity
-                      onPress={() => setIsWhatsapp(isWhatsapp ? 0 : 1)}
+                      onPress={() => setIsWhatsapp(isWhatsapp ? "0" : "on")}
                       style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center', marginRight: 6 }}>
                       <MaterialIcons name={isWhatsapp ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                     </TouchableOpacity>
@@ -953,20 +1002,130 @@ const CustomerInfo = ({ navigation }) => {
                   <Text style={styles.textHead}>Email</Text>
                   <TextInput
                     placeholder="Enter Your Email"
-                    style={[styles.input, contactErrors.email && styles.errorInput]}
-                    keyboardType="email-address"
                     value={email}
-                    onChangeText={text => {
+                    onChangeText={(text) => {
                       setemail(text);
-                      setContactErrors(prev => ({ ...prev, email: false }));
+                      setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
                     }}
+                    style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                    editable={!customerData.email}
                   />
                 </View>
-              </>
-            )}
+              ) : (
+                // ถ้า international ไม่ใช่ 0 ให้แสดงฟอร์มตามจำนวนผู้โดยสาร
+                <>
+                  {/* ก่อน map ทุกครั้ง ให้ reset refs */}
+                  {passengerFormRefs.current = []}
 
-            {/* Render ฟอร์มผู้โดยสารแบบ map พร้อมส่ง type, index ให้แต่ละฟอร์ม */}
-            {/* {[...Array(customerData.adult)].map((_, i) => (
+                  {[...Array(customerData.adult)].map((_, i) => (
+                    <PassengerForm
+                      ref={el => (passengerFormRefs.current[i] = el)}
+                      key={`adult-${i}`}
+                      type="adult"
+                      index={i}
+                      telePhone={telePhone}
+                      showAllErrors={showAllErrors}
+                    />
+                  ))}
+                  {[...Array(customerData.child)].map((_, i) => (
+                    <PassengerForm
+                      ref={el => (passengerFormRefs.current[customerData.adult + i] = el)}
+                      key={`child-${i}`}
+                      type="child"
+                      index={i}
+                      telePhone={telePhone}
+                      showAllErrors={showAllErrors}
+                    />
+                  ))}
+                  {[...Array(customerData.infant)].map((_, i) => (
+                    <PassengerForm
+                      ref={el => (passengerFormRefs.current[customerData.adult + customerData.child + i] = el)}
+                      key={`infant-${i}`}
+                      type="infant"
+                      index={i}
+                      telePhone={telePhone}
+                      showAllErrors={showAllErrors}
+                    />
+                  ))}
+
+                  {/* Contact Details Section (after all PassengerForms) */}
+                  <View style={styles.promo}>
+                    <Text style={styles.TextInput}>Contact Details</Text>
+                    <Text style={styles.textHead}>Phone number</Text>
+                    <TouchableOpacity
+                      style={[styles.button, errors.selectedTele && styles.errorInput]}
+                      onPress={toggleTeleModal}>
+                      <Text style={styles.buttonText}>{selectedTele}</Text>
+                      <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                    </TouchableOpacity>
+
+                    {/* Modal for selecting telephone */}
+                    <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
+                      <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                          <TextInput
+                            placeholder="Search country"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            style={styles.textInput}
+                            placeholderTextColor="#888"
+                          />
+                          <FlatList
+                            data={filteredTelePhones}
+                            renderItem={({ item }) => (
+                              <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
+                                <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
+                                  {item.sys_countries_nameeng === 'Please Select'
+                                    ? 'Please Select'
+                                    : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                            keyExtractor={(item, index) => index.toString()}
+                            initialNumToRender={5}
+                            maxToRenderPerBatch={5}
+                            windowSize={5}
+                            pagingEnabled
+                          />
+                        </View>
+                      </View>
+                    </Modal>
+                    <TextInput
+                      placeholder="Enter your mobile number"
+                      style={[styles.input, contactErrors.mobile && styles.errorInput]}
+                      keyboardType="number-pad"
+                      value={mobileNumber}
+                      onChangeText={text => {
+                        setmobileNumber(text);
+                        setContactErrors(prev => ({ ...prev, mobile: false }));
+                      }}
+                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginBottom: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => setIsWhatsapp(isWhatsapp ? "0" : "on")}
+                        style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center', marginRight: 6 }}>
+                        <MaterialIcons name={isWhatsapp ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                      </TouchableOpacity>
+                      <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Whatsapp</Text>
+                    </View>
+                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
+                    <Text style={styles.textHead}>Email</Text>
+                    <TextInput
+                      placeholder="Enter Your Email"
+                      style={[styles.input, contactErrors.email && styles.errorInput]}
+                      keyboardType="email-address"
+                      value={email}
+                      onChangeText={text => {
+                        setemail(text);
+                        setContactErrors(prev => ({ ...prev, email: false }));
+                      }}
+                    />
+                  </View>
+                </>
+              )}
+
+              {/* Render ฟอร์มผู้โดยสารแบบ map พร้อมส่ง type, index ให้แต่ละฟอร์ม */}
+              {/* {[...Array(customerData.adult)].map((_, i) => (
               <PassengerForm
                 key={`adult-${i}`}
                 type="adult"
@@ -993,188 +1152,210 @@ const CustomerInfo = ({ navigation }) => {
                 // ...other props if needed...
               />
             ))} */}
-
-            <View style={styles.promo}>
-              <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>Booking Summary</Text>
-              <View style={styles.divider} />
-              {timetableDepart.map((item, index) => (
+              {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => (
                 <View key={index}>
-                  <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
 
-                  <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company </Text>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {item.md_company_nameeng}</Text>
-                  </View>
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_seat_nameeng}</Text>
-                  </View>
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat </Text>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_boattype_nameeng}</Text>
-                  </View>
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Data</Text>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
-                  </View>
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time : </Text>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                  </View>
-                  <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                    <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
-                    <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
-                  </View>
-                  {customerData.child !== 0 && (
+                  <View style={styles.promo}>
+                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>Booking Summary</Text>
+                    <View style={styles.divider} />
+                    {timetableDepart.map((item, index) => (
+                      <View key={index}>
+                        <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
+
+                        <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {item.md_company_nameeng}</Text>
+                        </View>
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_seat_nameeng}</Text>
+                        </View>
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_boattype_nameeng}</Text>
+                        </View>
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Data</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
+                        </View>
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time : </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                        </View>
+
+
+
+
+                        <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceadult)}</Text>
+                        </View>
+                        {customerData.child !== 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.pricechild)}</Text>
+                          </View>
+                        )}
+                        {customerData.infant !== 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>infant x {customerData.infant}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceinfant)}</Text>
+                          </View>
+                        )}
+                        {customerData.pickupDepartId && (
+                          <View style={styles.rowpromo}>
+                            <Text>Pick up</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricepickupdepart)}</Text>
+                          </View>
+                        )}
+                        {customerData.dropoffDepartId && (
+                          <View style={styles.rowpromo}>
+                            <Text>Drop off</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricedropoffdepart)}</Text>
+                          </View>
+                        )}
+                        {all.totalDepart.save != 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text>Discount</Text>
+                            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
+                          </View>
+                        )}
+                        {all.totalDepart.promotionprice != 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text>Promotion Code</Text>
+                            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
+                          </View>
+                        )}
+                        <View style={styles.rowpromo}>
+                          <Text>Ticket fare</Text>
+                          <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
+                        </View>
+
+                        <View style={styles.divider} />
+                      </View>
+                    ))}
+                    {customerData.roud === 2 && (
+                      <>
+                        {timetableReturn.map((item, index) => (
+                          <View key={index}>
+                            <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                            <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                              {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                            </Text>
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#666666' }}>Company </Text>
+                              <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                            </View>
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#666666' }}>Seat</Text>
+                              <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                            </View>
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#666666' }}>Boat </Text>
+                              <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                            </View>
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#666666' }}>Departure Data</Text>
+                              <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                            </View>
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                              <Text style={{ color: '#666666' }}>
+                                {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
+                              </Text>
+                            </View>
+                            <View style={[styles.rowpromo, { marginTop: 5 }]}>
+                              <Text>Adult x {customerData.adult}</Text>
+                              <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceadult)}</Text>
+                            </View>
+                            {customerData.child !== 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Child x {customerData.child}</Text>
+                                <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.pricechild)}</Text>
+                              </View>
+                            )}
+                            {customerData.infant !== 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>infant x {customerData.infant}</Text>
+                                <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceinfant)}</Text>
+                              </View>
+                            )}
+                            {customerData.pickupReturnId != 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Pick up</Text>
+                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricepickupdepart)}</Text>
+                              </View>
+                            )}
+                            {customerData.dropoffReturnId != 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Drop off</Text>
+                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricedropoffdepart)}</Text>
+                              </View>
+                            )}
+                            {all.totalReturn.save != 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Discount</Text>
+                                <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
+                              </View>
+                            )}
+                            {all.totalReturn.promotionprice != 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Promotion Code</Text>
+                                <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
+                              </View>
+                            )}
+                            <View style={styles.rowpromo}>
+                              <Text>Ticket fare</Text>
+                              <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.total)}</Text>
+                            </View>
+                            <View style={styles.divider} />
+                          </View>
+                        ))}
+                      </>
+                    )}
                     <View style={styles.rowpromo}>
-                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
-                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+                      <Text>Subtotal </Text>
+                      <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
                     </View>
-                  )}
-                  {customerData.infant !== 0 && (
+                    <View style={styles.divider} />
                     <View style={styles.rowpromo}>
-                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>infant x {customerData.infant}</Text>
-                      <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+                      <Text style={{ color: '#FD501E' }}>total </Text>
+                      <Text style={{ color: '#FD501E' }}>{customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                     </View>
-                  )}
-                  {customerData.pickupPriceDepart != 0 && (
-                    <View style={styles.rowpromo}>
-                      <Text>Pick up</Text>
-                      <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
-                    </View>
-                  )}
-                  {customerData.dropoffPriceDepart != 0 && (
-                    <View style={styles.rowpromo}>
-                      <Text>Drop off</Text>
-                      <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
-                    </View>
-                  )}
-                  {customerData.discountDepart != 0 && (
-                    <View style={styles.rowpromo}>
-                      <Text>Discount</Text>
-                      <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountDepart)}</Text>
-                    </View>
-                  )}
-                  <View style={styles.rowpromo}>
-                    <Text>Ticket fare</Text>
-                    <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalDepart)}</Text>
                   </View>
-                  <View style={styles.divider} />
                 </View>
               ))}
-              {customerData.roud === 2 && (
-                <>
-                  {timetableReturn.map((item, index) => (
-                    <View key={index}>
-                      <Text style={{ fontWeight: 'bold' }}>Return</Text>
-                      <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                        {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
-                      </Text>
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#666666' }}>Company </Text>
-                        <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
-                      </View>
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#666666' }}>Seat</Text>
-                        <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
-                      </View>
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#666666' }}>Boat </Text>
-                        <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
-                      </View>
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#666666' }}>Departure Data</Text>
-                        <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
-                      </View>
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#666666' }}>Departure Time : </Text>
-                        <Text style={{ color: '#666666' }}>
-                          {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
-                        </Text>
-                      </View>
-                      <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                        <Text>Adult x {customerData.adult}</Text>
-                        <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultReturn)}</Text>
-                      </View>
-                      {customerData.child !== 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>Child x {customerData.child}</Text>
-                          <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalchildReturn)}</Text>
-                        </View>
-                      )}
-                      {customerData.infant !== 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>infant x {customerData.infant}</Text>
-                          <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantReturn)}</Text>
-                        </View>
-                      )}
-                      {customerData.pickupPriceReturn != 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>Pick up</Text>
-                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
-                        </View>
-                      )}
-                      {customerData.dropoffPriceReturn != 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>Drop off</Text>
-                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
-                        </View>
-                      )}
-                      {customerData.discountReturn != 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>Discount</Text>
-                          <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountReturn)}</Text>
-                        </View>
-                      )}
-                      <View style={styles.rowpromo}>
-                        <Text>Ticket fare</Text>
-                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalReturn)}</Text>
-                      </View>
-                      <View style={styles.divider} />
-                    </View>
-                  ))}
-                </>
-              )}
-              <View style={styles.rowpromo}>
-                <Text>Subtotal </Text>
-                <Text>{customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
+
+
+              <View style={styles.promo}>
+                <Text style={styles.promoLabel}>Promotion Code</Text>
+
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.promoInput}
+                    placeholder="Coupon code"
+                    value={code}
+                    onChangeText={setcode}
+                    placeholderTextColor="#A1A1A1"
+                  />
+
+                  <TouchableOpacity style={styles.applyButton} onPress={handlepromo}>
+                    <Text style={styles.applyText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.divider} />
-              <View style={styles.rowpromo}>
-                <Text style={{ color: '#FD501E' }}>total </Text>
-                <Text style={{ color: '#FD501E' }}>{customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.promo}>
-              <Text style={styles.promoLabel}>Promotion Code</Text>
-
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.promoInput}
-                  placeholder="Coupon code"
-                  value={code}
-                  onChangeText={setcode}
-                  placeholderTextColor="#A1A1A1"
-                />
-
-                <TouchableOpacity style={styles.applyButton} >
-                  <Text style={styles.applyText}>Apply</Text>
+              <View style={styles.rowButton}>
+                <TouchableOpacity
+                  style={[styles.ActionButton, { width: '100%' }]}
+                  onPress={() => {
+                    handleNext();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.searchButtonText}>Next</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-            <View style={styles.rowButton}>
-              <TouchableOpacity
-                style={[styles.ActionButton, { width: '100%' }]}
-                onPress={() => {
-                  handleNext();
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.searchButtonText}>Next</Text>
-              </TouchableOpacity>
-            </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -1354,7 +1535,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     justifyContent: 'center',
     alignItems: 'center',
-    
+
     height: Platform.OS === 'android' ? hp('6.5%') : hp('6%'),
     borderTopRightRadius: wp('3%'),
     borderBottomRightRadius: wp('3%'),

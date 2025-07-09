@@ -238,71 +238,62 @@ const PaymentScreen = ({ navigation, route }) => {
     fetchPriceferry();
   }, [customerData, paymentfee]);
 
-  const fetchPriceferry = async () => {
-    try {
-      // console.log({
-      //   currency: customerData.currency,
-      //   roundtrip: customerData.roud,
-      //   departtrip: customerData.timeTableDepartId,
-      //   returntrip: customerData.timeTableReturnId,
-      //   adult: customerData.adult,
-      //   child: customerData.child,
-      //   infant: customerData.infant,
-      //   departdate: customerData.departdate,
-      //   returndate: customerData.returndate,
-      //   pickupdepart1: selectedPickupDepart,
-      //   dropoffdepart1: selectedDropoffDepart,
-      //   pickupdepart2: selectedPickupReturn,
-      //   dropoffdepart2: selectedDropoffReturn,
-      // });
-
-      const response = await axios.post(
-        'https://thetrago.com/api/V1/ferry/Getprice',
-        {
-          currency: customerData.currency,
-          roundtrip: customerData.roud,
-          departtrip: customerData.timeTableDepartId,
-          returntrip: customerData.timeTableReturnId,
-          adult: customerData.adult,
-          child: customerData.child,
-          infant: customerData.infant,
-          departdate: customerData.departdate,
-          returndate: customerData.returndate,
-          pickupdepart1: customerData.pickupDepartId,
-          pickupdepart2: customerData.pickupReturnId,
-          dropoffdepart1: customerData.dropoffDepartId,
-          dropoffdepart2: customerData.dropoffReturnId,
-          paymentfee: paymentfee,
-
-
+const fetchPriceferry = async () => {
+  try {
+    const response = await axios.post(
+      'https://thetrago.com/api/V1/ferry/Getprice',
+      {
+        currency: customerData.currency,
+        roundtrip: customerData.roud,
+        departtrip: customerData.timeTableDepartId,
+        returntrip: customerData.timeTableReturnId,
+        adult: customerData.adult,
+        child: customerData.child,
+        infant: customerData.infant,
+        departdate: customerData.departdate,
+        returndate: customerData.returndate,
+        pickupdepart1: customerData.pickupDepartId,
+        pickupdepart2: customerData.pickupReturnId,
+        dropoffdepart1: customerData.dropoffDepartId,
+        dropoffdepart2: customerData.dropoffReturnId,
+        paymentfee: paymentfee,
+        promotioncode: '', // เพิ่มบรรทัดนี้
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data.status === 'success') {
-
-        setPriceDepart(Array.isArray(response.data.data)
-          ? response.data.data
-          : [response.data.data]); // บังคับให้เป็น array
-
-
-
-      } else {
-        setError('ไม่สามารถโหลดข้อมูลได้');
       }
-    } catch (err) {
-      console.error("❌ API Error:", err.response?.data || err.message);
-      setPriceDepart([]);
-      setPriceReturn([]);
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
-    } finally {
-      setLoading(false);
+    );
+
+    if (response.data.status === 'success') {
+      setPriceDepart(Array.isArray(response.data.data)
+        ? response.data.data
+        : [response.data.data]); // บังคับให้เป็น array
+    
+      // แก้ไข: ใช้ response.data แทน data
+      updateCustomerData({
+        md_booking_price: response.data.data.totalDepart.priceadult,
+        md_booking_total: response.data.data.totalbooking_insert,
+        md_booking_vat: response.data.data.vat,
+        md_booking_currency: response.data.data.totalDepart.currencycode,
+        md_booking_net: response.data.data.totalDepart.priceadultnet,
+        md_booking_pay: selectedOption,
+        md_booking_payfee: response.data.data.paymentfee,
+      });
+
+    } else {
+      setError('ไม่สามารถโหลดข้อมูลได้');
     }
-  };
+  } catch (err) {
+    console.error("❌ API Error:", err.response?.data || err.message);
+    setPriceDepart([]);
+    setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
 
@@ -409,6 +400,9 @@ const PaymentScreen = ({ navigation, route }) => {
       // ✅ 4. บันทึก Payment Code และสร้าง Booking
 
       setpaymentcode(paymentResult.charge_id);
+      updateCustomerData({
+       md_booking_paymentid: paymentResult.charge_id, // บันทึก Payment ID
+      });
       console.log('✅ Payment code:', paymentcode);
       console.log('✅ booking code:', booking_code);
       // ✅ 3. เปิด Omise Authorize URL
