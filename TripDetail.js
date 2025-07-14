@@ -1056,15 +1056,6 @@ const TripDetail = ({ navigation, route }) => {
           </View>
         </LinearGradient>
 
-        {/* Step Component */}
-        <View style={{
-          alignItems: 'center',
-          marginTop: hp('1%'),
-          marginBottom: hp('1%'),
-        }}>
-          <Step logoUri={1} />
-        </View>
-
         {/* Enhanced Title Section */}
         <View style={{
           marginTop: hp('1%'),
@@ -1120,6 +1111,15 @@ const TripDetail = ({ navigation, route }) => {
           style={{ flex: 1 }}
           contentInsetAdjustmentBehavior="automatic"
         >
+          {/* Step Component */}
+          <View style={{
+            alignItems: 'center',
+            marginTop: hp('1%'),
+            marginBottom: hp('2%'),
+          }}>
+            <Step logoUri={1} />
+          </View>
+
           {loading && (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#FD501E" />
@@ -2083,334 +2083,212 @@ const TripDetail = ({ navigation, route }) => {
 
 
               {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
-
-                <View key={index} style={styles.promo}>
-
-                  <Text style={styles.TextInput}>
-                    Booking Summary
-                  </Text>
+                <View key={index} style={[styles.promo, {
+                  backgroundColor: 'rgba(255,255,255,0.95)',
+                  borderRadius: wp('5%'),
+                  width: '100%',
+                  padding: wp('4%'),
+                  marginVertical: hp('1%'),
+                  shadowColor: '#001233',
+                  shadowOpacity: 0.15,
+                  shadowRadius: wp('4%'),
+                  shadowOffset: { width: 0, height: hp('0.5%') },
+                  borderWidth: 1,
+                  borderColor: 'rgba(0, 18, 51, 0.08)',
+                  backdropFilter: 'blur(20px)',
+                }]}>
+                  <Text style={{
+                    color: '#1E293B',
+                    fontSize: wp('5%'),
+                    fontWeight: '800',
+                    marginBottom: hp('2%'),
+                    textAlign: 'left'
+                  }}>Booking Summary</Text>
 
                   <View style={styles.divider} />
-                  <Text style={styles.margin}>
-                    Depart
-                  </Text>
-                  <View style={styles.rowpromo}>
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        Adult x {customerData.adult}
+                  
+                  {timetableDepart.map((tripItem, tripIndex) => (
+                    <View key={tripIndex}>
+                      <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
 
-
-
+                      <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                        {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
                       </Text>
-                      {/* Tooltip icon */}
-                      <TouchableOpacity onPress={toggleTooltipadultDepart}>
-                        <Icon name="information-circle-outline" size={20} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2) * customerData.adult)} </Text>
-                    {/* Modal (tooltip) */}
-                    <Modal
-                      visible={modaladultVisibleDepart}
-                      transparent={true}
-                      animationType="fade"
-                      onRequestClose={closeModaladultDepart}
-                    >
-                      <TouchableWithoutFeedback onPress={closeModaladultDepart}>
-                        <View style={styles.modalOverlay}>
-                          {/* This area will close the modal when tapped */}
-                          <TouchableWithoutFeedback>
-                            <View style={styles.tooltip}>
-                              <Text style={styles.tooltipText}>{customerData.adult} Adult THB {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}/persons</Text>
-                            </View>
-                          </TouchableWithoutFeedback>
+                      
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_company_nameeng}</Text>
+                      </View>
+                      
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_seat_nameeng}</Text>
+                      </View>
+                      
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_boattype_nameeng}</Text>
+                      </View>
+                      
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Date</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.departdate)}</Text>
+                      </View>
+                      
+                      <View style={styles.rowpromo}>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                          {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
+                        </Text>
+                      </View>
+
+                      <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}</Text>
+                      </View>
+                      
+                      {customerData.child !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}</Text>
                         </View>
-                      </TouchableWithoutFeedback>
-                    </Modal>
-
-
-                  </View>
-                  {customerData.child !== 0 && (
-                    <View style={styles.rowpromo}>
+                      )}
+                      
+                      {customerData.infant !== 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant).toFixed(2))}</Text>
+                        </View>
+                      )}
+                      
+                      {pickupDepart && (
+                        <View style={styles.rowpromo}>
+                          <Text>Pick up</Text>
+                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart).toFixed(2))}</Text>
+                        </View>
+                      )}
+                      
+                      {dropoffDepart && (
+                        <View style={styles.rowpromo}>
+                          <Text>Drop off</Text>
+                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
+                        </View>
+                      )}
+                      
+                      {item.totalDepart.save != 0 && (
+                        <View style={styles.rowpromo}>
+                          <Text>Discount</Text>
+                          <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))}</Text>
+                        </View>
+                      )}
+                      
                       <View style={styles.rowpromo}>
-                        <Text>
-                          Child x {customerData.child}
-                        </Text>
-                        <TouchableOpacity onPress={toggleTooltipchildDepart}>
-                          <Icon name="information-circle-outline" size={20} color="red" />
-                        </TouchableOpacity>
+                        <Text>Ticket fare</Text>
+                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))}</Text>
                       </View>
-                      {parseFloat(item.totalDepart.pricechild) !== 0 ? (
-                        <Text>
-                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild) * customerData.child)}
-                        </Text>
-                      ) : (
-                        <Text>
-                          Free
-                        </Text>
-                      )}
 
-                      {/* Modal (tooltip) */}
-                      <Modal
-                        visible={modalchildVisibleDepart}
-                        transparent={true}
-                        animationType="fade"
-                        onRequestClose={closeModalchildDepart} // Close modal when pressing the back button
-                      >
-                        <TouchableWithoutFeedback onPress={closeModalchildDepart}>
-                          <View style={styles.modalOverlay}>
-                            {/* This area will close the modal when tapped */}
-                            <TouchableWithoutFeedback>
-                              <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.children} Child THB {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}/persons</Text>
-                              </View>
-                            </TouchableWithoutFeedback>
-                          </View>
-                        </TouchableWithoutFeedback>
-                      </Modal>
+                      <View style={styles.divider} />
                     </View>
-                  )}
-                  {customerData.infant !== 0 && (
-                    <View style={styles.rowpromo}>
-                      <View style={styles.rowpromo}>
-                        <Text>
-                          infant x {customerData.infant}
-                        </Text>
-                        <TouchableOpacity onPress={toggleTooltipinfantDepart}>
-                          <Icon name="information-circle-outline" size={20} color="red" />
-                        </TouchableOpacity>
-                      </View>
-                      {parseFloat(item.totalDepart.priceinfant) !== 0 ? (
-                        <Text>
-                          {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant) * customerData.infant)}
-                        </Text>
-                      ) : (
-                        <Text>
-                          Free
-                        </Text>
-                      )}
-
-                      {/* Modal (tooltip) */}
-                      <Modal
-                        visible={modalInfantVisibleDepart}
-                        transparent={true}
-                        animationType="fade"
-                        onRequestClose={closeModalindantDepart} // Close modal when pressing the back button
-                      >
-                        <TouchableWithoutFeedback onPress={closeModalindantDepart}>
-                          <View style={styles.modalOverlay}>
-                            {/* This area will close the modal when tapped */}
-                            <TouchableWithoutFeedback>
-                              <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant))}/persons</Text>
-                              </View>
-                            </TouchableWithoutFeedback>
-                          </View>
-                        </TouchableWithoutFeedback>
-                      </Modal>
-                    </View>
-                  )}
-                  {pickupDepart && (
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        Pick up
-                      </Text>
-                      {parseFloat(item.totalDepart.pricepickupdepart) != 0 ? (
-                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart))} </Text>
-                      ) : (
-                        <Text>Free</Text>
-                      )}
-                    </View>
-                  )}
-                  {dropoffDepart && (
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        Drop off
-                      </Text>
-                      {parseFloat(item.totalDepart.pricedropoffdepart) != 0 ? (
-                        <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart))} </Text>
-                      ) : (
-                        <Text>Free</Text>
-                      )}
-                    </View>
-                  )}
-                  {item.totalDepart.save != 0 && (
-                    <View style={styles.rowpromo}>
-                      <Text>
-                        Discount
-                      </Text>
-                      <Text style={styles.redText}>
-                        - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))} </Text>
-
-                    </View>
-                  )}
-                  <View style={styles.rowpromo}>
-                    <Text>
-                      Subtotal
-                    </Text>
-                    <Text style={{ fontWeight: 'bold' }}>  {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))} </Text>
-                  </View>
-                  <View style={styles.divider} />
+                  ))}
 
                   {customerData.roud === 2 && (
                     <>
-                      <Text style={styles.margin}>
-                        Return
-                      </Text>
-                      <View style={styles.rowpromo}>
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            Adult x {customerData.adult}
-
-
-
+                      {timetableReturn.map((tripItem, tripIndex) => (
+                        <View key={tripIndex}>
+                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Return</Text>
+                          
+                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                            {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
                           </Text>
-                          {/* Tooltip icon */}
-                          <TouchableOpacity onPress={toggleTooltipadultReturn}>
-                            <Icon name="information-circle-outline" size={20} color="red" />
-                          </TouchableOpacity>
-                        </View>
-                        <Text>{customerData.symbol}  {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2) * customerData.adult)} </Text>
-                        {/* Modal (tooltip) */}
-                        <Modal
-                          visible={modaladultVisibleReturn}
-                          transparent={true}
-                          animationType="fade"
-                          onRequestClose={closeModaladultReturn} // Close modal when pressing the back button
-                        >
-                          <TouchableWithoutFeedback onPress={closeModaladultReturn}>
-                            <View style={styles.modalOverlay}>
-                              {/* This area will close the modal when tapped */}
-                              <TouchableWithoutFeedback>
-                                <View style={styles.tooltip}>
-                                  <Text style={styles.tooltipText}>{customerData.adults} Adult THB {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}/persons</Text>
-                                </View>
-                              </TouchableWithoutFeedback>
+                          
+                          <View style={styles.rowpromo}>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_company_nameeng}</Text>
+                          </View>
+                          
+                          <View style={styles.rowpromo}>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_seat_nameeng}</Text>
+                          </View>
+                          
+                          <View style={styles.rowpromo}>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_boattype_nameeng}</Text>
+                          </View>
+                          
+                          <View style={styles.rowpromo}>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Date</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.returndate)}</Text>
+                          </View>
+                          
+                          <View style={styles.rowpromo}>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                              {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
+                            </Text>
+                          </View>
+
+                          <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}</Text>
+                          </View>
+                          
+                          {customerData.child !== 0 && (
+                            <View style={styles.rowpromo}>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}</Text>
                             </View>
-                          </TouchableWithoutFeedback>
-                        </Modal>
-
-
-                      </View>
-                      {customerData.child !== 0 && (
-                        <View style={styles.rowpromo}>
+                          )}
+                          
+                          {customerData.infant !== 0 && (
+                            <View style={styles.rowpromo}>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}</Text>
+                            </View>
+                          )}
+                          
+                          {pickupReturn && (
+                            <View style={styles.rowpromo}>
+                              <Text>Pick up</Text>
+                              <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))}</Text>
+                            </View>
+                          )}
+                          
+                          {dropoffReturn && (
+                            <View style={styles.rowpromo}>
+                              <Text>Drop off</Text>
+                              <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
+                            </View>
+                          )}
+                          
+                          {item.totalReturn.save != 0 && (
+                            <View style={styles.rowpromo}>
+                              <Text>Discount</Text>
+                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))}</Text>
+                            </View>
+                          )}
+                          
                           <View style={styles.rowpromo}>
-                            <Text>
-                              Child x {customerData.child}
-                            </Text>
-                            <TouchableOpacity onPress={toggleTooltipchildReturn}>
-                              <Icon name="information-circle-outline" size={20} color="red" />
-                            </TouchableOpacity>
+                            <Text>Ticket fare</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))}</Text>
                           </View>
-                          {parseFloat(item.totalReturn.pricechild).toFixed(2) !== 0 ? (
-                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2) * customerData.child)} </Text>
-                          ) : (
-                            <Text>Free</Text>
-                          )}
-                          {/* Modal (tooltip) */}
-                          <Modal
-                            visible={modalchildVisibleReturn}
-                            transparent={true}
-                            animationType="fade"
-                            onRequestClose={closeModalchildReturn} // Close modal when pressing the back button
-                          >
-                            <TouchableWithoutFeedback onPress={closeModalchildReturn}>
-                              <View style={styles.modalOverlay}>
-                                {/* This area will close the modal when tapped */}
-                                <TouchableWithoutFeedback>
-                                  <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.child} Child THB {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}/persons</Text>
-                                  </View>
-                                </TouchableWithoutFeedback>
-                              </View>
-                            </TouchableWithoutFeedback>
-                          </Modal>
+                          
+                          <View style={styles.divider} />
                         </View>
-                      )}
-                      {customerData.infant !== 0 && (
-                        <View style={styles.rowpromo}>
-                          <View style={styles.rowpromo}>
-                            <Text>
-                              infant x {customerData.infant}
-                            </Text>
-                            <TouchableOpacity onPress={toggleTooltipinfantReturn}>
-                              <Icon name="information-circle-outline" size={20} color="red" />
-                            </TouchableOpacity>
-                          </View>
-                          {parseFloat(item.totalReturn.priceinfant) !== 0 ? (
-                            <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2) * customerData.infant)} </Text>
-                          ) : (
-                            <Text>Free</Text>
-                          )}
-                          {/* Modal (tooltip) */}
-                          <Modal
-                            visible={modalInfantVisibleReturn}
-                            transparent={true}
-                            animationType="fade"
-                            onRequestClose={closeModalinfantReturn} // Close modal when pressing the back button
-                          >
-                            <TouchableWithoutFeedback onPress={closeModalinfantReturn}>
-                              <View style={styles.modalOverlay}>
-                                {/* This area will close the modal when tapped */}
-                                <TouchableWithoutFeedback>
-                                  <View style={styles.tooltip}>
-                                    <Text style={styles.tooltipText}>{customerData.infant} Infant THB {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}/persons</Text>
-                                  </View>
-                                </TouchableWithoutFeedback>
-                              </View>
-                            </TouchableWithoutFeedback>
-                          </Modal>
-                        </View>
-                      )}
-                      {pickupReturn && (
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            Pick up
-                          </Text>
-                          {parseFloat(item.totalReturn.pricepickupdepart) != 0 ? (
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))} </Text>
-                          ) : (
-                            <Text>Free</Text>
-                          )}
-                        </View>
-                      )}
-                      {dropoffReturn && (
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            Drop off
-                          </Text>
-                          {parseFloat(item.totalReturn.pricedropoffdepart) != 0 ? (
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))} </Text>
-                          ) : (
-                            <Text>Free</Text>
-                          )}
-                        </View>
-                      )}
-                      {item.totalReturn.save != 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>
-                            Discount
-                          </Text>
-                          <Text style={styles.redText}>
-                            - {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))} </Text>
-
-                        </View>
-                      )}
-                      <View style={styles.rowpromo}>
-                        <Text>
-                          Subtotal
-                        </Text>
-                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))} </Text>
-                      </View>
-                      <View style={styles.divider} />
+                      ))}
                     </>
                   )}
 
                   <View style={styles.rowpromo}>
-                    <Text style={styles.totaltext}>Total</Text>
-                    <Text style={styles.totaltext}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
+                    <Text>Subtotal</Text>
+                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
+                  </View>
+                  <View style={styles.divider} />
+                  <View style={styles.rowpromo}>
+                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Total</Text>
+                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
                   </View>
                 </View>
-
               ))}
             </>)}
           {Array.isArray(priceDepart) &&

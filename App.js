@@ -30,6 +30,7 @@ import AccountScreen from './(Screen)/AccountScreen';
 import Dashboard from './(Screen)/Dashboard';
 import ProfileScreen from './(Screen)/ProfileScreen';
 import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
+import BankVerificationScreen from './(Screen)/BankVerificationScreen';
 import OCRResultScreen from './(Screen)/OCRResultScreen';
 import SplashScreenComponent from './(component)/SplashScreenComponent';
 import PopularDestination from './(Screen)/populardestination';
@@ -170,6 +171,8 @@ const AppNavigator = () => (
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
     <Stack.Screen name="LocationDetail" component={LocationDetail} options={{ headerShown: false }} />
+    <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="BankVerificationScreen" component={BankVerificationScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
@@ -209,6 +212,7 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="Dashboard" component={Dashboard} />
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} />
+          <Stack.Screen name="BankVerificationScreen" component={BankVerificationScreen} />
           <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} />
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />

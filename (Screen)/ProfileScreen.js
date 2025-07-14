@@ -828,7 +828,7 @@ const ProfileScreen = ({ navigation }) => {
                     { label: 'Verified Email', verified: isEmailVerified },
                     { label: 'Verified Profile', verified: isProfileVerified },
                     { label: 'Verified ID Card/Passport', verified: isIdVerified, nav: 'IDCardCameraScreen' },
-                    { label: 'Verified Bank Account', verified: isBankVerified }
+                    { label: 'Verified Bank Account', verified: isBankVerified, nav: 'BankVerificationScreen' }
                   ].map((item, index) => (
                     <TouchableOpacity 
                       key={index}
@@ -840,6 +840,19 @@ const ProfileScreen = ({ navigation }) => {
                             Alert.alert(
                               'Please update your profile!',
                               'Your profile is not yet complete. Please Update to proceed.',
+                              [
+                                { text: 'OK', style: 'default' }
+                              ]
+                            );
+                            return;
+                          }
+                        }
+                        if (item.nav === 'BankVerificationScreen') {
+                          // Check if profile is verified before allowing bank verification
+                          if (!isProfileVerified) {
+                            Alert.alert(
+                              'Please update your profile!',
+                              'Your profile is not yet complete. Please update your profile to proceed with bank verification.',
                               [
                                 { text: 'OK', style: 'default' }
                               ]

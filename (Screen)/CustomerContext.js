@@ -11,6 +11,8 @@ export const CustomerProvider = ({ children }) => {
     md_booking_affiliate_id: 0, //รหัสตัวแทน
     md_booking_affiliate_subid: 0, //รหัสตัวแทนย่อย
     md_booking_affiliate_price: 0, //ราคาตัวแทน
+    md_booking_code: '', //รหัสการจอง
+    md_booking_groupcode: '', //รหัสกลุ่มการจอง
     md_booking_companyid: 0, //รหัสบริษัท
     md_booking_reference: '', //รหัสอ้างอิง
     md_booking_paymentid: '', //รหัสการชำระเงิน
@@ -137,7 +139,7 @@ export const CustomerProvider = ({ children }) => {
     discount:0,
     exchaneRate:0,
     intervalId: null, 
-    international : '',
+    international : '0',
     passenger: [
       {
         prefix: '',

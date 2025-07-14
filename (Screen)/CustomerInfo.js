@@ -442,6 +442,10 @@ const CustomerInfo = ({ navigation }) => {
         // Set the price data correctly based on API response structure
         setPriceDepart([response.data.data]);
 
+        updateCustomerData({
+          md_booking_promoprice : response.data.data.totalDepart.promotionprice || 0,
+        });
+
         // Set return data if exists
         if (response.data.data.totalReturn) {
           setPriceReturn([response.data.data.totalReturn]);
@@ -502,6 +506,8 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_tel: mobileNumber,
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
+        md_booking_promocode: code,
+        md_booking_promoprice: PriceDepart[0].totalDepart.promotionprice
       });
 
       if (Object.keys(newErrors).length > 0) {
@@ -583,7 +589,7 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
         md_booking_promocode: code,
-        md_booking_promoprice: PriceDepart.totalDepart.promotionprice || 0,
+        md_booking_promoprice: PriceDepart[0].totalDepart.promotionprice
       });
       navigation.navigate('PaymentScreen');
     }
@@ -1307,7 +1313,7 @@ const CustomerInfo = ({ navigation }) => {
                             )}
                             <View style={styles.rowpromo}>
                               <Text>Ticket fare</Text>
-                              <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.total)}</Text>
+                              <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
                             </View>
                             <View style={styles.divider} />
                           </View>

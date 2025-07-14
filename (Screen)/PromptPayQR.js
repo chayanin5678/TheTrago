@@ -22,6 +22,7 @@ export default function PromptPayScreen({ route, navigation }) {
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
   const [intervalId, setIntervalId] = useState(null);
+  const [actualBookingCode, setActualBookingCode] = useState(null); // เก็บ booking code ที่สร้างจริง
   let booking_code = bookingcode.length > 0 
   ? "TG" + (parseInt(bookingcode[0].booking_code) + 1) 
   : " "; // ใช้ "N/A" ถ้าไม่มี booking code
@@ -63,12 +64,22 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         }
   
         // ✅ สร้าง booking โดยใช้ booking code ที่ได้จริง
-        await createBooking(response.data.charge_id, newBookingCode, newGroupBookingCode);
-        if (customerData.international=== "1") {
-     
-          await submitPassengers(customerData.passenger, newBookingCode);
+        const bookingResult = await createBooking(response.data.charge_id, newBookingCode, newGroupBookingCode);
+        
+        if (bookingResult.success) {
+          console.log("✅ PromptPay Booking created with code:", bookingResult.bookingCode);
+          
+          // ใช้ booking code จาก API response
+          const actualBookingCode = bookingResult.bookingCode;
+          setActualBookingCode(actualBookingCode); // เก็บไว้ใน state
+          
+          if (customerData.international === "1") {
+            await submitPassengers(customerData.passenger, actualBookingCode);
+          } else {
+            await createPassenger(actualBookingCode);
+          }
         } else {
-        await createPassenger(newBookingCode);
+          throw new Error("Failed to create PromptPay booking");
         }
        
   
@@ -103,7 +114,8 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         console.log("Payment Status Response:", res.data);
 
         if (res.data.success && res.data.status === "successful") {
-          updatestatus(booking_code); // อัปเดตสถานะการชำระเงิน
+          const bookingCodeToUpdate = actualBookingCode || booking_code;
+          updatestatus(bookingCodeToUpdate); // อัปเดตสถานะการชำระเงิน
           navigation.navigate("ResultScreen", { success: true });
           if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
         }
@@ -154,52 +166,131 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   
   const createBooking = async (paymentCode, bookingCode, groupBookingCode) => {
     try {
-      console.log("📌 Creating Booking with:", bookingCode, groupBookingCode);
-      await axios.post(`${ipAddress}/booking`, {
-        md_booking_code: bookingCode,
-        md_booking_groupcode: groupBookingCode,
+      console.log("🌐 PromptPay Network Debug Info:");
+      console.log("� API Endpoint:", `${ipAddress}/booking`);
+      console.log("🔑 Payment Code:", paymentCode);
+      console.log("📌 Booking Code:", bookingCode);
+      console.log("📌 Group Code:", groupBookingCode);
+      console.log("🏠 Country:", customerData.country);
+      
+      // สร้าง payload สำหรับ API
+      const bookingPayload = {
+        md_booking_memberid: customerData.md_booking_memberid,
+        md_booking_affiliate_id: customerData.md_booking_affiliate_id,
+        md_booking_affiliate_subid: customerData.md_booking_affiliate_subid,
+        md_booking_affiliate_price: customerData.md_booking_affiliate_price,
+        md_booking_companyid: customerData.md_booking_companyid || customerData.companyDepartId,
+        md_booking_reference: customerData.md_booking_reference,
         md_booking_paymentid: paymentCode,
-        md_booking_companyid: customerData.companyDepartId,
-        md_booking_boattypeid: customerData.boatypeid,
-        md_booking_country: customerData.country,
-        md_booking_countrycode: customerData.countrycode,
-        md_booking_round: customerData.roud,
-        md_booking_timetableid: customerData.timeTableDepartId,
-        md_booking_tel: customerData.tel,
-        md_booking_whatsapp: 0,
-        md_booking_email: customerData.email,
-        md_booking_price: customerData.subtotalDepart,
-        md_booking_total: Paymenttotal,
-        md_booking_refund: 0,
-        md_booking_refundprice: 0,
-        md_booking_credit: 0,
-        md_booking_currency: customerData.currency,
-        md_booking_net: customerData.netDepart,
-        md_booking_adult: customerData.adult,
-        md_booking_child: customerData.child,
-        md_booking_infant: customerData.infant,
-        md_booking_day: customerData.day,
-        md_booking_month: customerData.month,
-        md_booking_year: customerData.year,
-        md_booking_time: customerData.time,
-        md_booking_date: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
-        md_booking_departdate: customerData.departdate,
-        md_booking_departtime: customerData.departtime,
-        md_booking_statuspayment: 0,
-        md_booking_status: 0,
-        md_booking_pay: customerData.paymenttype,
-        md_booking_payfee: customerData.paymentfee,
-        md_booking_lang: 'en',
-        md_booking_from: 0,
-        md_booking_device: 2,
-        md_booking_promoprice: 0,
-        md_booking_credate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
-        md_booking_updatedate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
+        md_booking_boattypeid: customerData.md_booking_boattypeid || customerData.boatypeid,
+        md_booking_country: customerData.md_booking_country || customerData.country,
+        md_booking_countrycode: customerData.md_booking_countrycode || customerData.countrycode,
+        md_booking_round: customerData.md_booking_round || customerData.roud,
+        md_booking_timetableid: customerData.md_booking_timetableid || customerData.timeTableDepartId,
+        md_booking_tel: customerData.md_booking_tel || customerData.tel,
+        md_booking_whatsapp: customerData.md_booking_whatsapp || 0,
+        md_booking_email: customerData.md_booking_email || customerData.email,
+        md_booking_price: customerData.md_booking_price || customerData.subtotalDepart,
+        md_booking_total: customerData.md_booking_total || Paymenttotal,
+        md_booking_vat: customerData.md_booking_vat,
+        md_booking_paypal: customerData.md_booking_paypal,
+        md_booking_refund: customerData.md_booking_refund || 0,
+        md_booking_refundprice: customerData.md_booking_refundprice || 0,
+        md_booking_credit: customerData.md_booking_credit || 0,
+        md_booking_insurance: customerData.md_booking_insurance,
+        md_booking_currency: customerData.md_booking_currency || customerData.currency,
+        md_booking_net: customerData.md_booking_net || customerData.netDepart,
+        md_booking_adult: customerData.md_booking_adult || customerData.adult,
+        md_booking_child: customerData.md_booking_child || customerData.child,
+        md_booking_infant: customerData.md_booking_infant || customerData.infant,
+        md_booking_departdate: customerData.md_booking_departdate || customerData.departdate,
+        md_booking_departtime: customerData.md_booking_departtime || customerData.departtime,
+        md_booking_remark: customerData.md_booking_remark,
+        md_booking_note: customerData.md_booking_note,
+        md_booking_statuspayment: customerData.md_booking_statuspayment || 0,
+        md_booking_status: customerData.md_booking_status || 0,
+        md_booking_pay: customerData.md_booking_pay || customerData.paymenttype,
+        md_booking_payfee: customerData.md_booking_payfee || customerData.paymentfee,
+        md_booking_lang: customerData.md_booking_lang || 'en',
+        md_booking_from: customerData.md_booking_from || 0,
+        md_booking_sent: customerData.md_booking_sent,
+        md_booking_sentbooking: customerData.md_booking_sentbooking,
+        md_booking_senttransfer: customerData.md_booking_senttransfer,
+        md_booking_device: customerData.md_booking_device || 2,
+        md_booking_agentid: customerData.md_booking_agentid,
+        md_booking_agentprice: customerData.md_booking_agentprice,
+        md_booking_promocode: customerData.md_booking_promocode,
+        md_booking_promoprice: customerData.md_booking_promoprice || 0,
+        md_booking_crebyid: customerData.md_booking_crebyid,
+        md_booking_updatebyid: customerData.md_booking_updatebyid
+      };
+      
+      console.log("📦 PromptPay Booking Payload:", JSON.stringify(bookingPayload, null, 2));
+      
+      // ทำการ API call ด้วย enhanced configuration
+      const response = await axios.post(`${ipAddress}/booking`, bookingPayload, {
+        timeout: 30000, // 30 seconds timeout
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // สำหรับ ngrok
+        },
+        validateStatus: function (status) {
+          return status < 500; // Accept status codes less than 500
+        }
       });
-  
-      console.log("✅ Booking created successfully");
+
+      console.log("📋 PromptPay Booking API Response Status:", response.status);
+      console.log("📋 PromptPay Booking API Response Headers:", response.headers);
+      console.log("📋 PromptPay Booking API Response Data:", response.data);
+
+      // ✅ ตรวจสอบ status และ set booking code
+      if (response.data && response.data.status === 'success') {
+        const returnedBookingCode = response.data.booking_code;
+        const returnedGroupCode = response.data.group_code;
+        
+        console.log("✅ PromptPay Booking created successfully");
+        console.log("📌 Returned Booking Code:", returnedBookingCode);
+        console.log("📌 Returned Group Code:", returnedGroupCode);
+        
+        // อัปเดต customerData ด้วย booking codes จาก response
+        updateCustomerData({
+          md_booking_code: returnedBookingCode || bookingCode,
+          md_booking_groupcode: returnedGroupCode || groupBookingCode,
+        });
+        
+        return {
+          success: true,
+          bookingCode: returnedBookingCode || bookingCode,
+          groupCode: returnedGroupCode || groupBookingCode,
+          message: response.data.message
+        };
+      } else {
+        console.error("❌ PromptPay Booking creation failed - Server Response:", response.data);
+        throw new Error(response.data.message || "Failed to create booking - Invalid server response");
+      }
     } catch (error) {
-      console.error("❌ Error submitting booking:", error);
+      console.error("❌ PromptPay Full Error Object:", error);
+      
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        console.error("🌐 PromptPay Network Error Details:");
+        console.error("- Check internet connection");
+        console.error("- Verify API endpoint:", `${ipAddress}/booking`);
+        console.error("- Check if server is running");
+        throw new Error("Network connection failed. Please check your internet connection and try again.");
+      } else if (error.code === 'ECONNABORTED') {
+        console.error("⏱️ PromptPay Request Timeout");
+        throw new Error("Request timeout. Please try again.");
+      } else if (error.response) {
+        console.error("📱 PromptPay Server Error Response:");
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+        console.error("Headers:", error.response.headers);
+        throw new Error(`Server Error (${error.response.status}): ${error.response.data?.message || 'Unknown server error'}`);
+      } else {
+        console.error("❌ PromptPay Other Error:", error.message);
+        throw new Error(`PromptPay booking creation failed: ${error.message}`);
+      }
     }
   };
 
@@ -291,7 +382,8 @@ let booking_codeGroup = bookingcodeGroup.length > 0
       });
       if (res.data.success && res.data.status === "successful") {
         paid = true;
-        await updatestatus(booking_code);
+        const bookingCodeToUpdate = actualBookingCode || booking_code;
+        await updatestatus(bookingCodeToUpdate);
       }
     } catch (e) {
       console.error('Error checking payment status on manual paid:', e);
