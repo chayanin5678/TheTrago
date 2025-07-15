@@ -34,6 +34,7 @@ const ProfileScreen = ({ navigation }) => {
   const [countryName, setCountryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isPassportVerified, setIsPassportVerified] = useState(false);
+  const [isBankVerified, setIsBankVerified] = useState(false);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -300,13 +301,21 @@ const ProfileScreen = ({ navigation }) => {
       } finally {
         setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       }
-    };
-
-    fetchData();
+    };    fetchData();
     checkPassportStatus();
-
+    checkBankStatus();
 
   }, []);
+
+  // Add focus listener to refresh bank status when returning from BankVerificationScreen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Refresh bank status when screen comes into focus
+      checkBankStatus();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const getCountryByCode = async (code) => {
     try {
@@ -395,6 +404,44 @@ const ProfileScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Error checking passport status:', error);
       setIsPassportVerified(false);
+    }
+  };
+
+  const checkBankStatus = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+      
+      if (!token) {
+        console.warn('No token found for bank check');
+        return;
+      }
+
+      const response = await fetch(`${ipAddress}/bankbook-info`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to check bank status:', response.status);
+        return;
+      }
+
+      const json = await response.json();
+      
+      if (json.status === 'success' && json.data) {
+        const { has_bank_id, has_account_name, has_account_number, has_document } = json.data;
+        // Set bank as verified if user has all required bank information
+        setIsBankVerified(has_bank_id && has_account_name && has_account_number && has_document);
+      } else {
+        console.warn('Bank check failed:', json.message);
+        setIsBankVerified(false);
+      }
+    } catch (error) {
+      console.error('Error checking bank status:', error);
+      setIsBankVerified(false);
     }
   };
 
@@ -593,7 +640,6 @@ const ProfileScreen = ({ navigation }) => {
 
   // สมมุติยังไม่เชื่อม ID และ Bank Status
   const isIdVerified = isPassportVerified;
-  const isBankVerified = false;
 
   const verifiedCount = [
     isEmailVerified,
@@ -847,12 +893,13 @@ const ProfileScreen = ({ navigation }) => {
                             return;
                           }
                         }
+                        
                         if (item.nav === 'BankVerificationScreen') {
                           // Check if profile is verified before allowing bank verification
                           if (!isProfileVerified) {
                             Alert.alert(
                               'Please update your profile!',
-                              'Your profile is not yet complete. Please update your profile to proceed with bank verification.',
+                              'Your profile is not yet complete. Please complete your profile to proceed with bank verification.',
                               [
                                 { text: 'OK', style: 'default' }
                               ]
@@ -860,6 +907,7 @@ const ProfileScreen = ({ navigation }) => {
                             return;
                           }
                         }
+                        
                         item.nav && navigation.navigate(item.nav);
                       }}
                       activeOpacity={item.nav ? 0.7 : 1}

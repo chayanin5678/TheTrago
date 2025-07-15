@@ -31,7 +31,16 @@
       ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1326238592032941",
+          "clientToken": "50846de8bdf0e0ee492a60a041633298",
+          "displayName": "TheTrago",
+          "scheme": "1326238592032941"
+        }
+      ]
     ],
     "ios": {
       "buildNumber": "2",

@@ -9,6 +9,25 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
 import { useAuth } from '../AuthContext';
+// Social login imports - conditional for Expo Go compatibility
+let GoogleSignin, statusCodes, LoginManager, AccessToken;
+try {
+  const googleSignin = require('@react-native-google-signin/google-signin');
+  GoogleSignin = googleSignin.GoogleSignin;
+  statusCodes = googleSignin.statusCodes;
+} catch (error) {
+  console.log('Google Sign-In not available in Expo Go');
+}
+
+try {
+  const fbSdk = require('react-native-fbsdk-next');
+  LoginManager = fbSdk.LoginManager;
+  AccessToken = fbSdk.AccessToken;
+} catch (error) {
+  console.log('Facebook SDK not available in Expo Go');
+}
+
+import { GOOGLE_CONFIG } from '../socialConfig';
 
 
 const { width, height } = Dimensions.get('window');
@@ -21,6 +40,7 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(customerData.remember || false);
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState({ google: false, facebook: false });
 
   // Premium animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -28,6 +48,19 @@ export default function LoginScreen({ navigation }) {
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
+    // Configure Google Sign-In only if available
+    if (GoogleSignin) {
+      try {
+        GoogleSignin.configure({
+          webClientId: GOOGLE_CONFIG.webClientId, // จาก Google Cloud Console
+          offlineAccess: GOOGLE_CONFIG.offlineAccess,
+          forceCodeForRefreshToken: GOOGLE_CONFIG.forceCodeForRefreshToken,
+        });
+      } catch (error) {
+        console.log('Google Sign-In configuration failed:', error);
+      }
+    }
+
     // Entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -96,6 +129,112 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Email or password is incorrect');
     }
   };
+
+  // Google Sign-In Handler
+  const handleGoogleSignIn = async () => {
+    // Check if Google Sign-In is available (not in Expo Go)
+    if (!GoogleSignin) {
+      Alert.alert(
+        'Google Sign-In ไม่พร้อมใช้งาน', 
+        'Google Sign-In ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้\n\nโปรดใช้:\n• expo build หรือ eas build\n• หรือทดสอบด้วย Facebook Login แทน',
+        [{ text: 'เข้าใจแล้ว' }]
+      );
+      return;
+    }
+
+    try {
+      setSocialLoading(prev => ({ ...prev, google: true }));
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      console.log('Google User Info:', userInfo);
+      
+      // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
+      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+        provider: 'google',
+        providerId: userInfo.user.id,
+        email: userInfo.user.email,
+        name: userInfo.user.name,
+        photo: userInfo.user.photo,
+      });
+
+      if (socialLoginResponse.data.token) {
+        await login(socialLoginResponse.data.token);
+        Alert.alert('สำเร็จ', 'เข้าสู่ระบบด้วย Google สำเร็จ');
+      } else {
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้');
+      }
+    } catch (error) {
+      console.log('Google Sign-In Error:', error);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('กำลังดำเนินการ', 'การเข้าสู่ระบบกำลังดำเนินการอยู่');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('ข้อผิดพลาด', 'Google Play Services ไม่พร้อมใช้งาน');
+      } else {
+        Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google');
+      }
+    } finally {
+      setSocialLoading(prev => ({ ...prev, google: false }));
+    }
+  };
+
+  // Facebook Login Handler
+  const handleFacebookLogin = async () => {
+    // Check if Facebook SDK is available
+    if (!LoginManager || !AccessToken) {
+      Alert.alert(
+        'Facebook Login ไม่พร้อมใช้งาน', 
+        'Facebook SDK ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้\n\nโปรดใช้:\n• expo build หรือ eas build\n• หรือใช้การ login ปกติแทน',
+        [{ text: 'เข้าใจแล้ว' }]
+      );
+      return;
+    }
+
+    try {
+      setSocialLoading(prev => ({ ...prev, facebook: true }));
+      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      
+      if (result.isCancelled) {
+        return;
+      }
+
+      const data = await AccessToken.getCurrentAccessToken();
+      if (!data) {
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าถึง Facebook token ได้');
+        return;
+      }
+
+      // ดึงข้อมูลผู้ใช้จาก Facebook Graph API
+      const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,picture.type(large)`);
+      const facebookUserInfo = await facebookResponse.json();
+      
+      console.log('Facebook User Info:', facebookUserInfo);
+
+      // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
+      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+        provider: 'facebook',
+        providerId: facebookUserInfo.id,
+        email: facebookUserInfo.email,
+        name: facebookUserInfo.name,
+        photo: facebookUserInfo.picture?.data?.url,
+      });
+
+      if (socialLoginResponse.data.token) {
+        await login(socialLoginResponse.data.token);
+        Alert.alert('สำเร็จ', 'เข้าสู่ระบบด้วย Facebook สำเร็จ');
+      } else {
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าสู่ระบบด้วย Facebook ได้');
+      }
+    } catch (error) {
+      console.log('Facebook Login Error:', error);
+      Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Facebook');
+    } finally {
+      setSocialLoading(prev => ({ ...prev, facebook: false }));
+    }
+  };
   
 
 
@@ -117,11 +256,15 @@ export default function LoginScreen({ navigation }) {
       />
       
       <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingTop: StatusBar.currentHeight || 0 }]}>
-        {isLoading && (
+        {(isLoading || socialLoading.google || socialLoading.facebook) && (
           <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
-              <Text style={styles.loadingText}>Signing you in...</Text>
+              <Text style={styles.loadingText}>
+                {socialLoading.google ? 'เข้าสู่ระบบด้วย Google...' : 
+                 socialLoading.facebook ? 'เข้าสู่ระบบด้วย Facebook...' : 
+                 'Signing you in...'}
+              </Text>
             </View>
           </BlurView>
         )}
@@ -239,37 +382,57 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
 
               {/* Social Login Section */}
-              {/* <View style={styles.dividerContainer}>
+              <View style={styles.dividerContainer}>
                 <View style={styles.divider} />
                 <Text style={styles.orText}>Or continue with</Text>
                 <View style={styles.divider} />
               </View>
 
               <View style={styles.socialContainer}>
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity 
+                  style={styles.socialButton} 
+                  onPress={handleGoogleSignIn}
+                  disabled={socialLoading.google || isLoading}
+                >
                   <BlurView intensity={30} tint="light" style={styles.socialBlur}>
                     <LinearGradient
                       colors={['rgba(255,255,255,0.9)', 'rgba(250,250,250,0.95)']}
                       style={styles.socialGradient}
                     >
-                      <FontAwesome name="google" size={22} color="#EA4335" />
-                      <Text style={styles.socialText}>Google</Text>
+                      {socialLoading.google ? (
+                        <ActivityIndicator size="small" color="#EA4335" />
+                      ) : (
+                        <FontAwesome name="google" size={22} color="#EA4335" />
+                      )}
+                      <Text style={styles.socialText}>
+                        {socialLoading.google ? 'กำลังเข้าสู่ระบบ...' : 'Google'}
+                      </Text>
                     </LinearGradient>
                   </BlurView>
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity 
+                  style={styles.socialButton} 
+                  onPress={handleFacebookLogin}
+                  disabled={socialLoading.facebook || isLoading}
+                >
                   <BlurView intensity={30} tint="light" style={styles.socialBlur}>
                     <LinearGradient
                       colors={['rgba(255,255,255,0.9)', 'rgba(250,250,250,0.95)']}
                       style={styles.socialGradient}
                     >
-                      <FontAwesome name="facebook" size={22} color="#3b5998" />
-                      <Text style={styles.socialText}>Facebook</Text>
+                      {socialLoading.facebook ? (
+                        <ActivityIndicator size="small" color="#3b5998" />
+                      ) : (
+                        <FontAwesome name="facebook" size={22} color="#3b5998" />
+                      )}
+                      <Text style={styles.socialText}>
+                        {socialLoading.facebook ? 'กำลังเข้าสู่ระบบ...' : 'Facebook'}
+                      </Text>
                     </LinearGradient>
                   </BlurView>
                 </TouchableOpacity>
-              </View> */}
+              </View>
 
               {/* Fixed Policy Text */}
               <Text style={styles.policyText}>

@@ -90,9 +90,9 @@ android {
     defaultConfig {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion 24
-        targetSdkVersion 34
-        versionCode 40
-        versionName "1.4.0"
+        targetSdkVersion 35
+        versionCode 44
+        versionName "1.4.4"
     }
     signingConfigs {
         debug {
@@ -120,8 +120,27 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
+            
+            // เพิ่มการตั้งค่าเพื่อแก้ปัญหา Google Play Console warnings
+            ndk {
+                abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+            }
         }
     }
+    
+    // เพิ่มการตั้งค่า Bundle
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+    
     packagingOptions {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)

@@ -100,7 +100,6 @@ const BankVerificationScreen = ({ navigation }) => {
 
     if (isProcessing) {
       loadingTimeout = setTimeout(() => {
-        console.log('⚠️ Auto-clearing stuck loading state after timeout');
         setIsProcessing(false);
         setOcrProgress('');
         Alert.alert(
@@ -320,17 +319,6 @@ const BankVerificationScreen = ({ navigation }) => {
           style: "default"
         },
         {
-          text: "✍️ Manual Entry Only",
-          onPress: () => {
-            Alert.alert(
-              'Manual Entry Mode 📝',
-              'You can enter your bank information manually without uploading a document.\n\n📋 Please fill in the form fields below.',
-              [{ text: 'OK' }]
-            );
-          },
-          style: "default"
-        },
-        {
           text: "Cancel",
           style: "cancel"
         }
@@ -382,7 +370,6 @@ const BankVerificationScreen = ({ navigation }) => {
       }
 
     } catch (error) {
-      console.error('Error in openCamera:', error);
       setIsProcessing(false);
       Alert.alert(
         'Error',
@@ -433,7 +420,6 @@ const BankVerificationScreen = ({ navigation }) => {
       }
 
     } catch (error) {
-      console.error('Error in openGallery:', error);
       setIsProcessing(false);
       Alert.alert(
         'Error',
@@ -446,8 +432,6 @@ const BankVerificationScreen = ({ navigation }) => {
   // Auto-crop bank document from image
   const cropBankDocument = async (uri) => {
     try {
-      console.log('🔍 Auto-cropping and enhancing bank document from image...');
-
       const imageInfo = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.JPEG });
       const { width, height } = imageInfo;
       const aspectRatio = 3 / 2; // Better aspect ratio for bank books
@@ -502,11 +486,9 @@ const BankVerificationScreen = ({ navigation }) => {
         }
       );
 
-      console.log('✅ Bank document cropped and enhanced successfully');
       return enhancedImage.uri;
 
     } catch (error) {
-      console.error('❌ Bank document auto-crop failed, using original image:', error);
       return uri;
     }
   };
@@ -514,13 +496,11 @@ const BankVerificationScreen = ({ navigation }) => {
   // Check network and process image
   const checkNetworkAndProcess = async (imageUri) => {
     try {
-      console.log('🌐 Checking network connection for bank document processing...');
       setOcrProgress('Checking connection...');
 
       await recognizeText(imageUri);
 
     } catch (error) {
-      console.error('❌ Network check or processing failed:', error);
       setIsProcessing(false);
       setOcrProgress('');
       
@@ -538,7 +518,6 @@ const BankVerificationScreen = ({ navigation }) => {
   // OCR function for bank documents
   const recognizeText = async (uri) => {
     try {
-      console.log('🔍 Starting OCR processing for bank document:', uri);
       setOcrProgress('Processing bank document...');
 
       const processedImage = await ImageManipulator.manipulateAsync(
@@ -552,12 +531,6 @@ const BankVerificationScreen = ({ navigation }) => {
         }
       );
 
-      console.log('📷 Bank document image optimized, starting OCR...');
-      
-      // Log file size for debugging
-      const fileInfo = await FileSystem.getInfoAsync(processedImage.uri);
-      console.log(`📊 Processed image size: ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB`);
-      
       setOcrProgress('Reading bank information...');
 
       const base64Image = await FileSystem.readAsStringAsync(processedImage.uri, {
@@ -573,7 +546,6 @@ const BankVerificationScreen = ({ navigation }) => {
         
         if (ocrResult && ocrResult.status === 'success') {
           const extractedData = ocrResult.data || ocrResult;
-          console.log('✅ OCR extracted data:', extractedData);
           
           // Map OCR results to form fields
           if (extractedData.bank_name) {
@@ -617,8 +589,6 @@ const BankVerificationScreen = ({ navigation }) => {
         }
         
       } catch (ocrError) {
-        console.log('⚠️ All OCR services failed:', ocrError.message);
-        
         // No fallback data - user must enter manually
         setOcrProgress('');
         setIsProcessing(false);
@@ -640,7 +610,6 @@ const BankVerificationScreen = ({ navigation }) => {
       }
 
     } catch (error) {
-      console.error('❌ Bank document OCR failed:', error);
       setIsProcessing(false);
       setOcrProgress('');
       
@@ -679,16 +648,13 @@ const BankVerificationScreen = ({ navigation }) => {
 
     for (const service of ocrServices) {
       try {
-        console.log(`🔍 Trying ${service.name}...`);
         setOcrProgress(`Trying ${service.name}...`);
         
         const result = await service.apiCall();
         if (result && result.status === 'success') {
-          console.log(`✅ ${service.name} succeeded`);
           return result;
         }
       } catch (error) {
-        console.log(`❌ ${service.name} failed:`, error.message);
         continue; // Try next service
       }
     }
@@ -699,27 +665,52 @@ const BankVerificationScreen = ({ navigation }) => {
   // OCR.Space Free API (25,000 requests/month)
   const tryOCRSpace = async (base64Image) => {
     try {
-      console.log('🌐 Attempting OCR.Space API...');
+      // Try both FormData and URL-encoded approaches
+      let response;
       
-      const response = await fetch('https://api.ocr.space/parse/image', {
-        method: 'POST',
-        headers: {
-          'apikey': 'helloworld', // Free API key (limited)
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `base64Image=data:image/jpeg;base64,${base64Image}&language=tha&OCREngine=2&isTable=true&isOverlayRequired=false`,
-      });
+      try {
+        // Method 1: FormData (preferred)
+        const formData = new FormData();
+        formData.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
+        formData.append('language', 'tha');
+        formData.append('OCREngine', '2');
+        formData.append('isTable', 'true');
+        formData.append('isOverlayRequired', 'false');
+        
+        response = await fetch('https://api.ocr.space/parse/image', {
+          method: 'POST',
+          headers: {
+            'apikey': 'helloworld', // Free API key (limited)
+          },
+          body: formData,
+        });
+      } catch (formDataError) {
+        // Method 2: URL-encoded fallback
+        const params = new URLSearchParams();
+        params.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
+        params.append('language', 'tha');
+        params.append('OCREngine', '2');
+        params.append('isTable', 'true');
+        params.append('isOverlayRequired', 'false');
+        
+        response = await fetch('https://api.ocr.space/parse/image', {
+          method: 'POST',
+          headers: {
+            'apikey': 'helloworld',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString(),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`OCR.Space HTTP error: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('📄 OCR.Space full response:', result);
       
       if (result.OCRExitCode === 1 && result.ParsedResults?.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
-        console.log('📄 OCR.Space extracted text:', extractedText);
         
         if (!extractedText || extractedText.trim().length < 10) {
           throw new Error('OCR.Space extracted text is too short or empty');
@@ -739,11 +730,10 @@ const BankVerificationScreen = ({ navigation }) => {
           service: 'OCR.Space'
         };
       } else {
-        const errorMsg = result.ErrorMessage?.join(', ') || 'Unknown OCR.Space error';
+        const errorMsg = result.ErrorMessage?.join(', ') || result.ErrorDetails || 'Unknown OCR.Space error';
         throw new Error(`OCR.Space parsing failed: ${errorMsg}`);
       }
     } catch (error) {
-      console.error('❌ OCR.Space detailed error:', error);
       throw new Error(`OCR.Space API failed: ${error.message}`);
     }
   };
@@ -751,9 +741,6 @@ const BankVerificationScreen = ({ navigation }) => {
   // Custom server OCR (your existing API)
   const tryCustomServer = async (base64Image) => {
     try {
-      console.log('🌐 Attempting custom server OCR...');
-      console.log(`📡 Server endpoint: ${ipAddress}/ocr/bank-book`);
-      
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout')), 15000) // Increased timeout
       );
@@ -770,8 +757,6 @@ const BankVerificationScreen = ({ navigation }) => {
       });
 
       const ocrResponse = await Promise.race([fetchPromise, timeoutPromise]);
-
-      console.log(`📊 Custom server response status: ${ocrResponse.status}`);
 
       if (!ocrResponse.ok) {
         if (ocrResponse.status === 404) {
@@ -792,7 +777,6 @@ const BankVerificationScreen = ({ navigation }) => {
       }
 
       const responseText = await ocrResponse.text();
-      console.log('📄 Custom server response:', responseText);
       
       const ocrResult = JSON.parse(responseText);
       
@@ -802,7 +786,6 @@ const BankVerificationScreen = ({ navigation }) => {
         throw new Error(ocrResult.message || 'Custom server OCR processing failed');
       }
     } catch (error) {
-      console.error('❌ Custom server detailed error:', error);
       throw new Error(`Custom server failed: ${error.message}`);
     }
   };
@@ -810,8 +793,6 @@ const BankVerificationScreen = ({ navigation }) => {
   // Alternative Google Vision API (Free tier available)
   const tryGoogleVisionAlternative = async (base64Image) => {
     try {
-      console.log('🌐 Attempting Google Vision API alternative...');
-      
       // Note: This would require a Google Cloud API key
       // For demo purposes, we'll simulate a response or use a proxy service
       // You can replace this with actual Google Vision API call when you have an API key
@@ -847,7 +828,6 @@ const BankVerificationScreen = ({ navigation }) => {
       
       if (result.responses && result.responses[0] && result.responses[0].textAnnotations) {
         const extractedText = result.responses[0].textAnnotations[0].description;
-        console.log('📄 Google Vision extracted text:', extractedText);
         
         const bankData = parseBankBookText(extractedText);
         
@@ -862,15 +842,12 @@ const BankVerificationScreen = ({ navigation }) => {
       */
       
     } catch (error) {
-      console.error('❌ Google Vision detailed error:', error);
       throw new Error(`Google Vision API failed: ${error.message}`);
     }
   };
 
   // Parse bank book text using patterns
   const parseBankBookText = (text) => {
-    console.log('🔍 Parsing bank book text...');
-    
     // Thai bank name patterns with English alternatives
     const bankPatterns = [
       { 
@@ -983,16 +960,33 @@ const BankVerificationScreen = ({ navigation }) => {
       }
     }
 
-    console.log('📊 Parsed bank data:', extractedData);
     return extractedData;
   };
 
-  // Save bank verification data
+  // Save bank verification data using the new API
   const saveBankVerification = async () => {
-    if (!selectedBank || selectedBank === 'Select Bank Name' || !bankAccount || !bankNumber) {
+    if (!selectedBank || selectedBank === 'Select Bank Name' || !bankNumber || !bankAccount) {
       Alert.alert(
         'Missing Information',
-        'Please fill in all required bank information fields.',
+        'Please fill in bank name, account number, and account holder name.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!selectedBankId) {
+      Alert.alert(
+        'Bank Selection Required',
+        'Please select a bank from the list.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!photo) {
+      Alert.alert(
+        'Document Required',
+        'Please upload your bank book document.',
         [{ text: 'OK' }]
       );
       return;
@@ -1007,29 +1001,46 @@ const BankVerificationScreen = ({ navigation }) => {
         return;
       }
 
-      // Simulate API call to save bank verification
-      const response = await fetch(`${ipAddress}/bank-verification`, {
+      // Create FormData for file upload - matching server API exactly
+      const formData = new FormData();
+      formData.append('bank_id', selectedBankId.toString());
+      formData.append('account_number', bankNumber);
+      formData.append('account_name', bankAccount); // Changed to match server API
+      
+      // Add the bank document image - matching server field name
+      formData.append('bankbook_document', {
+        uri: photo,
+        type: 'image/jpeg',
+        name: 'bankbook_document.jpg',
+      });
+
+      const response = await fetch(`${ipAddress}/upload-bankbook`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify({
-          bank_id: selectedBankId,
-          bank_name: selectedBank,
-          bank_account: bankAccount,
-          bank_number: bankNumber,
-          branch: bankBranch,
-          document_path: photo || '',
-        }),
+        body: formData,
       });
 
-      const json = await response.json();
+      // Check if response is JSON or HTML
+      const contentType = response.headers.get('content-type');
+      let json = null;
+      let responseText = '';
 
-      if (json.status === 'success') {
+      try {
+        responseText = await response.text();
+        
+        if (contentType && contentType.includes('application/json')) {
+          json = JSON.parse(responseText);
+        }
+      } catch (parseError) {
+        // Parsing error - continue with error handling
+      }
+
+      if (response.ok && json && json.status === 'success') {
         Alert.alert(
-          '✅ Bank Verification Submitted',
-          'Your bank information has been submitted for verification. You will be notified once the verification is complete.',
+          'Bank Verification Submitted Successfully!',
           [
             {
               text: 'OK',
@@ -1038,12 +1049,43 @@ const BankVerificationScreen = ({ navigation }) => {
           ]
         );
       } else {
-        Alert.alert('❌ Submission Failed', json.message || 'Unable to submit bank verification');
+        let errorMessage = 'Unable to submit bank verification';
+        
+        if (response.status === 413) {
+          errorMessage = 'Image file is too large. Please try taking a smaller photo or compress the image.';
+        } else if (response.status === 400) {
+          errorMessage = json?.message || 'Invalid request. Please check all required fields.';
+        } else if (response.status === 404) {
+          errorMessage = 'Upload service not available. Please try again later.';
+        } else if (response.status === 500) {
+          if (responseText.includes('<html>') || responseText.includes('<!DOCTYPE')) {
+            errorMessage = 'Server internal error occurred. Please try again later or contact support.';
+          } else {
+            errorMessage = json?.message || 'Server error. Please try again later.';
+          }
+        } else if (json && json.message) {
+          errorMessage = json.message;
+        } else if (responseText && !responseText.includes('<html>')) {
+          errorMessage = responseText.length > 100 ? 'Server returned an error. Please try again.' : responseText;
+        }
+        
+        Alert.alert('❌ Upload Failed', errorMessage);
       }
 
     } catch (error) {
-      console.error('Error saving bank verification:', error);
-      Alert.alert('⚠️ Error', 'An error occurred while submitting bank verification');
+      let errorMessage = 'An error occurred while submitting bank verification';
+      
+      if (error.message.includes('Network request failed')) {
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Upload timeout. The file may be too large. Please try again with a smaller image.';
+      } else if (error.message.includes('JSON Parse error')) {
+        errorMessage = 'Server response error. The server may be experiencing issues. Please try again later.';
+      } else if (error.name === 'SyntaxError') {
+        errorMessage = 'Server returned an invalid response. Please try again or contact support if the issue persists.';
+      }
+      
+      Alert.alert('⚠️ Upload Error', errorMessage);
     } finally {
       setIsLoadingBank(false);
     }
@@ -1063,9 +1105,10 @@ const BankVerificationScreen = ({ navigation }) => {
     bank.bankname?.toLowerCase().includes(searchBankQuery.toLowerCase())
   );
 
-  // Fetch bank list from API
+  // Fetch bank list and existing bank info from API
   useEffect(() => {
     fetchBankList();
+    loadExistingBankInfo();
   }, []);
 
   const fetchBankList = async () => {
@@ -1073,7 +1116,6 @@ const BankVerificationScreen = ({ navigation }) => {
     setBankListError(null);
     
     try {
-      console.log('🏦 Fetching bank list from API...');
       const response = await fetch(`${ipAddress}/bankname`, {
         method: 'GET',
         headers: {
@@ -1086,8 +1128,6 @@ const BankVerificationScreen = ({ navigation }) => {
       }
 
       const data = await response.json();
-      console.log('📊 Bank API Response:', data);
-      console.log('📊 Total banks received:', data.data?.length || 0);
       
       if (data.status === 'success') {
         // Map the API response to the expected format
@@ -1098,13 +1138,10 @@ const BankVerificationScreen = ({ navigation }) => {
           bank_code: bank.md_bankname_masterkey || '',
         }));
         setBankList(mappedBanks);
-        console.log('✅ Bank list loaded successfully:', mappedBanks.length, 'banks');
-        console.log('📋 First few banks:', mappedBanks.slice(0, 3));
       } else {
         throw new Error(data.message || 'Failed to fetch bank list');
       }
     } catch (error) {
-      console.error('Error fetching bank list:', error);
       setBankListError('Failed to load bank list. Please try again.');
       
       // Fallback to static bank list if API fails
@@ -1123,9 +1160,92 @@ const BankVerificationScreen = ({ navigation }) => {
     }
   };
 
+  // Load existing bank information if available
+  const loadExistingBankInfo = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+      
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`${ipAddress}/bankbook-info`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const json = await response.json();
+
+      if (json.status === 'success' && json.data) {
+        const { 
+          bank_id, 
+          account_name, 
+          account_number, 
+          document_path, 
+          has_bank_id, 
+          has_account_name, 
+          has_account_number, 
+          has_document 
+        } = json.data;
+        
+        // Update form fields with existing data
+        if (has_account_name && account_name) {
+          setBankAccount(account_name); // This is the account holder name
+        }
+        
+        if (has_account_number && account_number) {
+          setBankNumber(account_number); // This is the bank account number
+        }
+        
+        if (has_bank_id && bank_id) {
+          setSelectedBankId(bank_id);
+          // Bank name will be set after bank list is loaded
+        }
+        
+        if (has_document && document_path) {
+          // Fix: Remove /AppApi/ from the path if it exists
+          const cleanedPath = document_path.replace('/AppApi/', '/');
+          const fullImagePath = `https://thetrago.com/${cleanedPath}`;
+          // Set the photo to show document is uploaded
+          setPhoto(fullImagePath);
+        }
+        
+        // Update existing bank info state
+        setExistingBankInfo({
+          bank_name: '',
+          account_number: account_number || '',
+          account_holder: account_name || '',
+          branch: '',
+          document_path: document_path || '',
+          has_bank_account: has_account_name && has_account_number,
+          has_document: has_document,
+          last_updated: json.data.last_updated
+        });
+      }
+    } catch (error) {
+      // Error loading bank info - continue silently
+    }
+  };
+
+  // Update bank name when bank list is loaded and we have a bank ID
+  useEffect(() => {
+    if (bankList.length > 0 && selectedBankId) {
+      const bank = bankList.find(b => b.id === selectedBankId);
+      if (bank && selectedBank === 'Select Bank Name') {
+        setSelectedBank(bank.bankname);
+      }
+    }
+  }, [bankList, selectedBankId]);
+
   // Fallback function - no demo data, just return empty result
   const extractBankInfoFallback = async () => {
-    console.log('📝 No OCR services available - user must enter data manually');
     return {
       status: 'failed',
       data: {
@@ -1137,6 +1257,8 @@ const BankVerificationScreen = ({ navigation }) => {
       service: 'Manual Entry Required'
     };
   };
+
+
 
   return (
     <View style={styles.containerPremium}>
@@ -1222,6 +1344,7 @@ const BankVerificationScreen = ({ navigation }) => {
         bounces={true}
       >
         <View style={styles.contentContainer}>
+          
           {/* Bank Information Form */}
           <Animated.View
             style={[
@@ -1238,6 +1361,12 @@ const BankVerificationScreen = ({ navigation }) => {
             <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="bank-outline" size={24} color="#FD501E" />
               <Text style={styles.sectionTitlePremium}>Bank Information</Text>
+              {existingBankInfo.has_bank_account && (
+                <View style={styles.existingDataBadge}>
+                  <MaterialCommunityIcons name="check-circle" size={16} color="#22C55E" />
+                  <Text style={styles.existingDataText}>Verified</Text>
+                </View>
+              )}
             </View>
             
             <View style={styles.inputWrapperPremium}>
@@ -1253,10 +1382,10 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Bank Account *</Text>
+              <Text style={styles.inputLabelPremium}>Account Holder Name *</Text>
               <TextInput 
                 style={styles.inputPremium} 
-                placeholder="Bank Account" 
+                placeholder="Enter account holder name" 
                 value={bankAccount}
                 onChangeText={setBankAccount}
                 placeholderTextColor="#9CA3AF"
@@ -1264,10 +1393,10 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Bank Number *</Text>
+              <Text style={styles.inputLabelPremium}>Bank Account Number *</Text>
               <TextInput 
                 style={styles.inputPremium} 
-                placeholder="Bank Account Number" 
+                placeholder="Enter your bank account number" 
                 value={bankNumber}
                 onChangeText={setBankNumber}
                 placeholderTextColor="#9CA3AF"
@@ -1323,6 +1452,8 @@ const BankVerificationScreen = ({ navigation }) => {
                 </LinearGradient>
               </TouchableOpacity>
               
+
+              
               {/* Document Preview */}
               {photo && (
                 <Animated.View
@@ -1341,8 +1472,20 @@ const BankVerificationScreen = ({ navigation }) => {
                     <Image 
                       source={{ uri: photo }} 
                       style={styles.documentImage}
-                      onError={() => setImageLoadError(true)}
+                      onError={(error) => {
+                        setImageLoadError(true);
+                      }}
+                      onLoad={() => {
+                        setImageLoadError(false);
+                      }}
                     />
+                    {imageLoadError && (
+                      <View style={styles.imageErrorContainer}>
+                        <MaterialIcons name="error" size={32} color="#EF4444" />
+                        <Text style={styles.imageErrorText}>Failed to load image</Text>
+                        <Text style={styles.imageErrorUri}>{photo}</Text>
+                      </View>
+                    )}
                     <View style={styles.documentOverlay}>
                       <TouchableOpacity
                         style={styles.retakeButton}
@@ -1360,19 +1503,7 @@ const BankVerificationScreen = ({ navigation }) => {
 
             <View style={styles.buttonRow}>
               <TouchableOpacity 
-                style={[styles.saveButtonPremium, styles.closeButton]} 
-                onPress={() => navigation.goBack()}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.saveGradient, styles.closeGradient]}>
-                  <Text style={[styles.saveButtonTextPremium, styles.closeButtonText]}>
-                    Close
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.saveButtonPremium, styles.saveButtonFlex]} 
+                style={[styles.saveButtonPremium, styles.saveButtonFullWidth]} 
                 onPress={saveBankVerification}
                 activeOpacity={0.8}
                 disabled={isLoadingBank}
@@ -1639,6 +1770,23 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginLeft: 12,
     letterSpacing: 0.3,
+    flex: 1,
+  },
+  existingDataBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  existingDataText: {
+    fontSize: 12,
+    color: '#22C55E',
+    marginLeft: 4,
+    fontWeight: '600',
   },
 
   // Upload Button Premium
@@ -1826,6 +1974,10 @@ const styles = StyleSheet.create({
   saveButtonFlex: {
     flex: 2,
   },
+  saveButtonFullWidth: {
+    flex: 1,
+    width: '100%',
+  },
   closeGradient: {
     backgroundColor: '#6B7280',
   },
@@ -1999,6 +2151,32 @@ const styles = StyleSheet.create({
   },
   bankListContent: {
     paddingBottom: 20,
+  },
+
+  // Image Error Styles
+  imageErrorContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  imageErrorText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginTop: 8,
+  },
+  imageErrorUri: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 16,
   },
 });
 
