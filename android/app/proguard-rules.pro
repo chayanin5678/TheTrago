@@ -7,6 +7,51 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
+# React Native
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Facebook SDK
+-keep class com.facebook.** { *; }
+-keep class com.facebook.login.** { *; }
+-keep class com.facebook.share.** { *; }
+-dontwarn com.facebook.**
+
+# Expo
+-keep class expo.modules.** { *; }
+-keep class com.facebook.hermes.reactexecutor.** { *; }
+
+# Keep native methods
+-keepclassmembers class * {
+    native <methods>;
+}
+
+# Keep font resources
+-keep class **.R$*
+
+# Keep annotation
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
+
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# React Native Vector Icons
+-keep class com.oblador.vectoricons.** { *; }
+
+# Async Storage
+-keep class com.reactnativecommunity.asyncstorage.** { *; }
+
+# ML Kit
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**
+
+# Camera
+-keep class org.opencv.** { *; }
+-keep class com.mrousavy.camera.** { *; }
+
 # react-native-reanimated
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }

@@ -90,9 +90,14 @@ android {
     defaultConfig {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion 24
-        targetSdkVersion 35
-        versionCode 44
-        versionName "1.4.4"
+        targetSdkVersion 34
+        versionCode 46
+        versionName "1.4.6"
+        
+        // ระบุว่าไม่ใช้โฆษณาสำหรับ Google Play Console
+        manifestPlaceholders = [
+            'adIdPermission': 'false'
+        ]
     }
     signingConfigs {
         debug {
@@ -174,6 +179,10 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    
+    // Facebook SDK
+    implementation 'com.facebook.android:facebook-android-sdk:17.0.2'
+    
     implementation 'androidx.annotation:annotation:1.1.0'
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

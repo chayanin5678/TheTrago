@@ -183,8 +183,11 @@ export default function LoginScreen({ navigation }) {
 
   // Facebook Login Handler
   const handleFacebookLogin = async () => {
+    console.log('Starting Facebook Login...');
+    
     // Check if Facebook SDK is available
     if (!LoginManager || !AccessToken) {
+      console.log('Facebook SDK not available');
       Alert.alert(
         'Facebook Login ไม่พร้อมใช้งาน', 
         'Facebook SDK ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้\n\nโปรดใช้:\n• expo build หรือ eas build\n• หรือใช้การ login ปกติแทน',
@@ -195,25 +198,41 @@ export default function LoginScreen({ navigation }) {
 
     try {
       setSocialLoading(prev => ({ ...prev, facebook: true }));
+      console.log('Attempting Facebook login...');
+      
       const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      console.log('Facebook login result:', result);
       
       if (result.isCancelled) {
+        console.log('Facebook login was cancelled');
         return;
       }
 
+      console.log('Getting Facebook access token...');
       const data = await AccessToken.getCurrentAccessToken();
+      console.log('Facebook access token data:', data);
+      
       if (!data) {
+        console.log('No Facebook access token available');
         Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าถึง Facebook token ได้');
         return;
       }
 
       // ดึงข้อมูลผู้ใช้จาก Facebook Graph API
+      console.log('Fetching Facebook user info...');
       const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,picture.type(large)`);
       const facebookUserInfo = await facebookResponse.json();
       
       console.log('Facebook User Info:', facebookUserInfo);
 
+      // ตรวจสอบว่ามี email หรือไม่
+      if (!facebookUserInfo.email) {
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงอีเมลจาก Facebook ได้ กรุณาตรวจสอบการอนุญาต');
+        return;
+      }
+
       // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
+      console.log('Sending to backend API...');
       const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
         provider: 'facebook',
         providerId: facebookUserInfo.id,
@@ -221,6 +240,8 @@ export default function LoginScreen({ navigation }) {
         name: facebookUserInfo.name,
         photo: facebookUserInfo.picture?.data?.url,
       });
+
+      console.log('Backend response:', socialLoginResponse.data);
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
@@ -230,7 +251,17 @@ export default function LoginScreen({ navigation }) {
       }
     } catch (error) {
       console.log('Facebook Login Error:', error);
-      Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Facebook');
+      console.log('Error details:', error.message, error.stack);
+      
+      if (error.response) {
+        console.log('API Error Response:', error.response.data);
+        Alert.alert('ข้อผิดพลาด', `เกิดข้อผิดพลาดจาก API: ${error.response.data.message || 'ไม่ทราบสาเหตุ'}`);
+      } else if (error.request) {
+        console.log('Network Error:', error.request);
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      } else {
+        Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Facebook');
+      }
     } finally {
       setSocialLoading(prev => ({ ...prev, facebook: false }));
     }

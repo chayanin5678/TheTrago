@@ -502,11 +502,17 @@ export default function App() {
         // Prevent the splash screen from auto-hiding
         await SplashScreen.preventAutoHideAsync();
 
-        // Load fonts
-        await Font.loadAsync({
-          'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
-          'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
-        });
+        // Load fonts with better error handling
+        try {
+          await Font.loadAsync({
+            'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
+            'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
+          });
+          console.log('Fonts loaded successfully');
+        } catch (fontError) {
+          console.warn('Font loading failed:', fontError);
+          // Continue without custom fonts
+        }
         
         setFontLoaded(true);
 
@@ -515,17 +521,30 @@ export default function App() {
           SplashScreen.hideAsync();
         }, 1000);
 
-        // Load promotion data
-        fetch(`${ipAddress}/promotion`)
-          .then((res) => res.json())
-          .then((data) => {
+        // Load promotion data with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        try {
+          const response = await fetch(`${ipAddress}/promotion`, {
+            signal: controller.signal,
+            timeout: 10000
+          });
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const data = await response.json();
             if (Array.isArray(data.data)) {
               setPromotionData(data.data);
             }
-          })
-          .catch((error) => {
-            console.warn('Error loading promotion data:', error);
-          });
+          } else {
+            console.warn('Promotion API response not ok:', response.status);
+          }
+        } catch (networkError) {
+          clearTimeout(timeoutId);
+          console.warn('Error loading promotion data:', networkError.message);
+          // Continue without promotion data
+        }
 
       } catch (error) {
         console.warn('Error during app initialization:', error);
