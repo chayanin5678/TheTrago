@@ -150,11 +150,13 @@ export default function LoginScreen({ navigation }) {
       console.log('Google User Info:', userInfo);
       
       // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
-      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+      const socialLoginResponse = await axios.post(`${ipAddress}/AppApi/social-login`, {
         provider: 'google',
         providerId: userInfo.user.id,
         email: userInfo.user.email,
         name: userInfo.user.name,
+        firstName: userInfo.user.givenName || null,
+        lastName: userInfo.user.familyName || null,
         photo: userInfo.user.photo,
       });
 
@@ -220,7 +222,7 @@ export default function LoginScreen({ navigation }) {
 
       // ดึงข้อมูลผู้ใช้จาก Facebook Graph API
       console.log('Fetching Facebook user info...');
-      const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,picture.type(large)`);
+      const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,first_name,last_name,picture.type(large)`);
       const facebookUserInfo = await facebookResponse.json();
       
       console.log('Facebook User Info:', facebookUserInfo);
@@ -238,6 +240,8 @@ export default function LoginScreen({ navigation }) {
         providerId: facebookUserInfo.id,
         email: facebookUserInfo.email,
         name: facebookUserInfo.name,
+        firstName: facebookUserInfo.first_name || null,
+        lastName: facebookUserInfo.last_name || null,
         photo: facebookUserInfo.picture?.data?.url,
       });
 
