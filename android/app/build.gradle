@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -182,6 +183,10 @@ dependencies {
     
     // Facebook SDK
     implementation 'com.facebook.android:facebook-android-sdk:17.0.2'
+    
+    // Google Play Services for Google Sign-In
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
     
     implementation 'androidx.annotation:annotation:1.1.0'
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";

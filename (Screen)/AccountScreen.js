@@ -625,7 +625,11 @@ const AccountScreen = ({ navigation }) => {
                           profileImage
                             ? { uri: profileImage }
                             : item.md_member_photo
-                              ? { uri: `https://www.thetrago.com/${item.md_member_photo}` }
+                              ? { 
+                                  uri: item.md_member_photo.startsWith('http') 
+                                    ? item.md_member_photo 
+                                    : `https://www.thetrago.com/${item.md_member_photo}` 
+                                }
                               : require('../assets/icontrago.png')
                         }
                         style={styles.profileImage}
