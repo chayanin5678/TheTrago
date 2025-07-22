@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { useLanguage } from './(Screen)/LanguageContext';
 import ipAddress from './ipconfig';
 
 const EndPointScreen = ({ navigation, route }) => {
+  const { t } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [filteredEndPoints, setFilteredEndPoints] = useState([]);
   const [allEndPoints, setAllEndPoints] = useState([]);
@@ -89,13 +91,13 @@ const EndPointScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <AntDesign name="arrowleft" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Select Destination</Text>
+          <Text style={styles.headerTitle}>{t('selectDestination')}</Text>
         </View>
         <View style={styles.searchBarWrap}>
           <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search city or airport"
+            placeholder={t('searchCityOrAirport')}
             placeholderTextColor="#B7B7B7"
             value={searchText}
             onChangeText={setSearchText}
@@ -104,7 +106,7 @@ const EndPointScreen = ({ navigation, route }) => {
         </View>
       </LinearGradient>
       <View style={{ flex: 1, backgroundColor: '#F7F7FA', borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: 44, paddingTop: 32 }}>
-        <Text style={styles.suggestionLabel}>Suggestion</Text>
+        <Text style={styles.suggestionLabel}>{t('suggestion')}</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#FD501E" style={{ marginTop: 40 }} />
         ) : (

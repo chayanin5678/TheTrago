@@ -21,6 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useCustomer } from './CustomerContext.js';
+import { useLanguage } from './LanguageContext';
 import { Linking } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
@@ -29,6 +30,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const IDCardCameraScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
+  const { language, t } = useLanguage();
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
   const [firstName, setFirstName] = useState(customerData.Firstname || '');
@@ -92,11 +94,11 @@ const IDCardCameraScreen = ({ navigation }) => {
         setIsProcessing(false);
         setOcrProgress('');
         Alert.alert(
-          'Processing Taking Too Long ⏱️',
-          'Document scanning is taking longer than expected.\n\n🚀 This usually means:\n• Slow internet connection\n• Large image file\n• Network congestion\n\n💡 Try:\n• Check WiFi/4G signal\n• Take a clearer, smaller photo\n• Or enter details manually',
+          t('processingTooLong') || 'Processing Taking Too Long ⏱️',
+          t('processingTooLongMessage') || 'Document scanning is taking longer than expected.\n\n🚀 This usually means:\n• Slow internet connection\n• Large image file\n• Network congestion\n\n💡 Try:\n• Check WiFi/4G signal\n• Take a clearer, smaller photo\n• Or enter details manually',
           [
-            { text: 'Try Again', onPress: () => pickImage() },
-            { text: 'Enter Manually', style: 'default' }
+            { text: t('tryAgain') || 'Try Again', onPress: () => pickImage() },
+            { text: t('enterManually') || 'Enter Manually', style: 'default' }
           ]
         );
       }, 120000); // 2 minute safety timeout (optimized for speed)
@@ -296,21 +298,21 @@ const IDCardCameraScreen = ({ navigation }) => {
   const pickImage = async () => {
     // Show action sheet with options and helpful tips
     Alert.alert(
-      "Select ID Card/Passport Image",
-      "For best results:\n• Use good lighting\n• Keep document flat and stable\n• Ensure all text is clearly visible\n• Make sure the entire document is in frame\n\nChoose how you'd like to upload your document:",
+      t('selectIdCardImage') || "Select ID Card/Passport Image",
+      t('selectImageInstructions') || "For best results:\n• Use good lighting\n• Keep document flat and stable\n• Ensure all text is clearly visible\n• Make sure the entire document is in frame\n\nChoose how you'd like to upload your document:",
       [
         {
-          text: "Take Photo",
+          text: t('takePhoto') || "Take Photo",
           onPress: () => openCamera(),
           style: "default"
         },
         {
-          text: "Choose from Gallery",
+          text: t('chooseFromGallery') || "Choose from Gallery",
           onPress: () => openGallery(),
           style: "default"
         },
         {
-          text: "Cancel",
+          text: t('cancel') || "Cancel",
           style: "cancel"
         }
       ],
@@ -324,11 +326,11 @@ const IDCardCameraScreen = ({ navigation }) => {
       let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (permissionResult.granted === false) {
         Alert.alert(
-          "Camera Permission Required",
-          "Permission to access camera is required to scan your ID card or passport!",
+          t('cameraPermissionRequired') || "Camera Permission Required",
+          t('cameraPermissionMessage') || "Permission to access camera is required to scan your ID card or passport!",
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() }
+            { text: t('cancel') || "Cancel", style: "cancel" },
+            { text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }
           ]
         );
         return;
@@ -1211,8 +1213,8 @@ const IDCardCameraScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Document Scanner</Text>
-              <Text style={styles.headerSubtitle}>ID Card/Passport OCR</Text>
+              <Text style={styles.headerTitle}>{t('documentScanner') || 'Document Scanner'}</Text>
+              <Text style={styles.headerSubtitle}>{t('idCardPassportOCR') || 'ID Card/Passport OCR'}</Text>
               
               {/* Floating decorative elements */}
               <Animated.View
@@ -1250,20 +1252,20 @@ const IDCardCameraScreen = ({ navigation }) => {
           >
             <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="card-account-details" size={24} color="#FD501E" />
-              <Text style={styles.sectionTitlePremium}>Personal Information</Text>
+              <Text style={styles.sectionTitlePremium}>{t('personalInformation') || 'Personal Information'}</Text>
             </View>
 
             {/* Info note about name fields being read-only */}
             <View style={styles.infoNotePremium}>
               <MaterialCommunityIcons name="information" size={16} color="#3B82F6" />
-              <Text style={styles.infoNoteText}>Name and surname are loaded from your profile and cannot be changed here.</Text>
+              <Text style={styles.infoNoteText}>{t('nameFieldsReadonly') || 'Name and surname are loaded from your profile and cannot be changed here.'}</Text>
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Name*</Text>
+              <Text style={styles.inputLabelPremium}>{t('name') || 'Name'}*</Text>
               <TextInput
                 style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]}
-                placeholder="Loaded from your profile"
+                placeholder={t('loadedFromProfile') || "Loaded from your profile"}
                 value={firstName}
                 editable={false}
                 placeholderTextColor="#9CA3AF"
@@ -1271,10 +1273,10 @@ const IDCardCameraScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Surname*</Text>
+              <Text style={styles.inputLabelPremium}>{t('surname') || 'Surname'}*</Text>
               <TextInput
                 style={[styles.inputPremium, { backgroundColor: '#F3F4F6', color: '#6B7280' }]}
-                placeholder="Loaded from your profile"
+                placeholder={t('loadedFromProfile') || "Loaded from your profile"}
                 value={lastName}
                 editable={false}
                 placeholderTextColor="#9CA3AF"
@@ -1282,10 +1284,10 @@ const IDCardCameraScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>{documentType} Number*</Text>
+              <Text style={styles.inputLabelPremium}>{documentType === 'ID Card' ? (t('idCardNumber') || 'ID Card Number') : (t('passportNumber') || 'Passport Number')}*</Text>
               <TextInput
                 style={styles.inputPremium}
-                placeholder={`Enter your ${documentType.toLowerCase()} number`}
+                placeholder={documentType === 'ID Card' ? (t('enterIdNumber') || 'Enter your ID card number') : (t('enterPassportNumber') || 'Enter your passport number')}
                 value={idNumber}
                 onChangeText={setIdNumber}
                 placeholderTextColor="#9CA3AF"
@@ -1295,7 +1297,7 @@ const IDCardCameraScreen = ({ navigation }) => {
               {existingPassportInfo.has_passport && (
                 <View style={styles.existingDataBadge}>
                   <MaterialCommunityIcons name="check-circle" size={16} color="#22C55E" />
-                  <Text style={styles.existingDataText}>Previously saved data loaded</Text>
+                  <Text style={styles.existingDataText}>{t('previouslySavedData') || 'Previously saved data loaded'}</Text>
                 </View>
               )}
             </View>
@@ -1316,7 +1318,7 @@ const IDCardCameraScreen = ({ navigation }) => {
           >
             <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="card-multiple" size={24} color="#FD501E" />
-              <Text style={styles.sectionTitlePremium}>Document Type</Text>
+              <Text style={styles.sectionTitlePremium}>{t('documentType') || 'Document Type'}</Text>
             </View>
 
             <View style={styles.documentTypeContainer}>
@@ -1337,7 +1339,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                   styles.documentTypeText,
                   documentType === 'ID Card' && styles.documentTypeTextActive
                 ]}>
-                  ID Card
+                  {t('idCard') || 'ID Card'}
                 </Text>
               </TouchableOpacity>
 
@@ -1358,7 +1360,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                   styles.documentTypeText,
                   documentType === 'Passport' && styles.documentTypeTextActive
                 ]}>
-                  Passport
+                  {t('passport') || 'Passport'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1379,10 +1381,10 @@ const IDCardCameraScreen = ({ navigation }) => {
           >
             <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="camera-plus" size={24} color="#FD501E" />
-              <Text style={styles.sectionTitlePremium}>Upload your {documentType}*</Text>
+              <Text style={styles.sectionTitlePremium}>{t('uploadDocument') || `Upload your ${documentType}`}*</Text>
               <View style={styles.realOcrBadge}>
                 <MaterialCommunityIcons name="check-circle" size={12} color="#22C55E" />
-                <Text style={styles.realOcrText}>REAL OCR</Text>
+                <Text style={styles.realOcrText}>{t('realOCR') || 'REAL OCR'}</Text>
               </View>
             </View>
 
@@ -1391,10 +1393,10 @@ const IDCardCameraScreen = ({ navigation }) => {
               <View style={styles.existingDocumentInfo}>
                 <View style={styles.existingDocumentHeader}>
                   <MaterialCommunityIcons name="file-document" size={20} color="#22C55E" />
-                  <Text style={styles.existingDocumentTitle}>Previously Uploaded Document</Text>
+                  <Text style={styles.existingDocumentTitle}>{t('previouslyUploadedDocument') || 'Previously Uploaded Document'}</Text>
                 </View>
                 <Text style={styles.existingDocumentDate}>
-                  Last updated: {new Date(existingPassportInfo.last_updated).toLocaleDateString('en-US')}
+                  {t('lastUpdated') || 'Last updated'}: {new Date(existingPassportInfo.last_updated).toLocaleDateString('en-US')}
                 </Text>
                 <Text style={styles.existingDocumentNote}>
                   You can upload a new document to replace the existing one

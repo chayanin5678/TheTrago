@@ -4,8 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import ipAddress from './ipconfig';
 import startingPointScreenStyles from './(CSS)/StartingPointScreenStyles';
+import { useLanguage } from './(Screen)/LanguageContext';
 
 const StartingPointScreen = ({ navigation, route }) => {
+  const { t } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [filteredStartingPoints, setFilteredStartingPoints] = useState([]);
   const [allStartingPoints, setAllStartingPoints] = useState([]);
@@ -87,13 +89,13 @@ const StartingPointScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={startingPointScreenStyles.backBtn}>
             <AntDesign name="arrowleft" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={startingPointScreenStyles.headerTitle}>Select Starting Point</Text>
+          <Text style={startingPointScreenStyles.headerTitle}>{ t('selectStartingPoint') }</Text>
         </View>
         <View style={startingPointScreenStyles.searchBarWrap}>
           <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
             style={startingPointScreenStyles.searchInput}
-            placeholder="Search city or airport"
+            placeholder={ t('searchCityOrAirport') }
             placeholderTextColor="#B7B7B7"
             value={searchText}
             onChangeText={setSearchText}
@@ -102,7 +104,7 @@ const StartingPointScreen = ({ navigation, route }) => {
         </View>
       </LinearGradient>
       <View style={{ flex: 1, backgroundColor: '#F7F7FA', borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: 44, paddingTop: 32 }}>
-        <Text style={startingPointScreenStyles.suggestionLabel}>Suggestion</Text>
+        <Text style={startingPointScreenStyles.suggestionLabel}>{ t('suggestion') }</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#FD501E" style={{ marginTop: 40 }} />
         ) : (

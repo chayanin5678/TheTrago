@@ -11,6 +11,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from './navigationRef';
 import { AuthProvider, useAuth } from './AuthContext';
+import { LanguageProvider } from './(Screen)/LanguageContext';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -41,6 +42,7 @@ import ipAddress from './ipconfig';
 import { PromotionProvider } from './PromotionProvider';
 import TermsScreen from './(Screen)/TermsScreen';
 import PrivacyPolicyScreen from './(Screen)/PrivacyPolicyScreen';
+import ContactScreen from './(Screen)/ContactScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -205,6 +207,7 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="ContactScreen" component={ContactScreen} />
         </>
       ) : (
         <>
@@ -216,6 +219,7 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="OCRResultScreen" component={OCRResultScreen} />
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="ContactScreen" component={ContactScreen} />
         </>
       )}
     </Stack.Navigator>
@@ -567,19 +571,21 @@ export default function App() {
   };
 
   return (
-    <AuthProvider>
-      <PromotionProvider>
-        {!isReady ? (
-          <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
-        ) : (
-          <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
-            <CustomerProvider>
-              <MainNavigator />
-            </CustomerProvider>
-          </NavigationContainer>
-        )}
-      </PromotionProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <PromotionProvider>
+          {!isReady ? (
+            <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
+          ) : (
+            <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
+              <CustomerProvider>
+                <MainNavigator />
+              </CustomerProvider>
+            </NavigationContainer>
+          )}
+        </PromotionProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,7 +14,9 @@ import moment from 'moment';
 import { useCustomer } from './(Screen)/CustomerContext';
 import axios from 'axios';
 import headStyles from './(CSS)/StartingPointScreenStyles';
+import { useLanguage } from './(Screen)/LanguageContext';
 const TripDetail = ({ navigation, route }) => {
+  const { t } = useLanguage();
 
   const [tripType, setTripType] = useState("One Way Trip");
   const [pickupPriceDepart, setpickupPriceDepart] = useState();
@@ -951,12 +953,12 @@ const TripDetail = ({ navigation, route }) => {
 
       // Show an alert if there are missing fields or invalid email
       if (newErrors.email) {
-        Alert.alert('Invalid Email', 'Please enter a valid email address.', [
-          { text: 'OK', onPress: () => console.log('OK Pressed') }
+        Alert.alert(t('invalidEmail') || 'Invalid Email', t('pleaseEnterValidEmail') || 'Please enter a valid email address.', [
+          { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
         ]);
       } else {
-        Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
-          { text: 'OK', onPress: () => console.log('OK Pressed') }
+        Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredFields') || 'Please fill in all required fields.', [
+          { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
         ]);
       }
 
@@ -980,6 +982,7 @@ const TripDetail = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -995,7 +998,7 @@ const TripDetail = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
+              marginTop: Platform.OS === 'ios' ? 0 : -20,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -1021,7 +1024,7 @@ const TripDetail = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: -10,
+                marginTop: Platform.OS === 'android' ? 70 : -10,
                 height: 56,
               },
             ]}
@@ -1033,17 +1036,16 @@ const TripDetail = ({ navigation, route }) => {
                 position: 'absolute',
                 left: 16,
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 22,
+                borderRadius: 25,
                 padding: 8,
                 zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
-                // Unified cross-platform shadow
-                shadowColor: '#FD501E',
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                elevation: 6,
               }}
             >
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
@@ -1080,7 +1082,7 @@ const TripDetail = ({ navigation, route }) => {
             textShadowRadius: 4,
             textShadowOffset: { width: 1, height: 1 },
           }}>
-            Shuttle Transfer
+            {t('shuttleTransfer') || 'Shuttle Transfer'}
           </Text>
           <Text style={{
             color: 'rgba(255,255,255,0.8)',
@@ -1092,7 +1094,7 @@ const TripDetail = ({ navigation, route }) => {
             textShadowColor: 'rgba(0,0,0,0.2)',
             textShadowRadius: 2,
           }}>
-            Complete your trip details
+            {t('completeYourTripDetails') || 'Complete your trip details'}
           </Text>
         </View>
 
@@ -1244,9 +1246,9 @@ const TripDetail = ({ navigation, route }) => {
 
                     {item.md_location_airport === 1 && (
                       <>
-                        <Text style={styles.inputLabel}>Filght Number</Text>
+                        <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
                         <TextInput style={styles.input} />
-                        <Text style={styles.inputLabel}>Arrive Time</Text>
+                        <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
                         <View style={styles.inputRow}>
                           <View style={styles.buttonSelect}>
                             <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
@@ -1304,12 +1306,12 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.section}>
                         <TouchableOpacity onPress={() => setpickupDepart(!pickupDepart)} style={styles.checkboxContainer}>
                           <MaterialIcons name={pickupDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                          <Text style={styles.label}>I need a pick up</Text>
+                          <Text style={styles.label}>{t('iNeedAPickUp') || 'I need a pick up'}</Text>
                         </TouchableOpacity>
 
                         {pickupDepart && (
                           <View>
-                            <Text style={styles.inputLabel}>Transport type</Text>
+                            <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
                             {/* Button ที่คลิกเพื่อเปิด Modal */}
 
 
@@ -1327,7 +1329,7 @@ const TripDetail = ({ navigation, route }) => {
                               <View style={styles.modalOverlay}>
                                 <View style={styles.modalContentPre}>
                                   <FlatList
-                                    data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
+                                    data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
                                     renderItem={({ item }) => (
                                       <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupDepart(item)}>
                                         <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
@@ -1346,7 +1348,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-                            <Text style={styles.inputLabel}>Pick up area</Text>
+                            <Text style={styles.inputLabel}>{t('pickUpArea') || 'Pick up area'}</Text>
                             <TouchableOpacity onPress={toggleModalPickupDepart} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
                               <Text style={styles.buttonText}>{selectedPickupDepartName}</Text>
                               <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1356,7 +1358,7 @@ const TripDetail = ({ navigation, route }) => {
                               <View style={styles.modalOverlay}>
                                 <View style={styles.modalContentPre}>
                                   <FlatList
-                                    data={[{ md_pickup_id: "0", md_transfer_nameeng: "Please Select" }, ...pickupAreaDepart]}
+                                    data={[{ md_pickup_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...pickupAreaDepart]}
                                     renderItem={({ item }) => (
                                       <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupDepart(item)}>
                                         <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
@@ -1370,9 +1372,9 @@ const TripDetail = ({ navigation, route }) => {
                             {airPortPickupDepart === 1 && (
 
                               <>
-                                <Text style={styles.inputLabel}>Filght Number</Text>
+                                <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
                                 <TextInput style={styles.input} />
-                                <Text style={styles.inputLabel}>Arrive Time</Text>
+                                <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
                                 <View style={styles.inputRow}>
                                   <View style={styles.buttonSelect}>
                                     <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
@@ -1427,9 +1429,9 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-                            <Text style={styles.inputLabel}>Hotel / Pick up point</Text>
+                            <Text style={styles.inputLabel}>{t('hotelPickUpPoint') || 'Hotel / Pick up point'}</Text>
                             <TextInput
-                              placeholder="Input Hotel / Pick up point"
+                              placeholder={t('inputHotelPickUpPoint') || "Input Hotel / Pick up point"}
                               value={HotelpickupDepart}
                               onChangeText={(text) => {
                                 setHotelpickupDepart(text);
@@ -1451,12 +1453,12 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.section}>
                         <TouchableOpacity onPress={() => setDropoffDepart(!dropoffDepart)} style={styles.checkboxContainer}>
                           <MaterialIcons name={dropoffDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                          <Text style={styles.label}>I need a drop off</Text>
+                          <Text style={styles.label}>{t('iNeedADropOff') || 'I need a drop off'}</Text>
                         </TouchableOpacity>
 
                         {dropoffDepart && (
                           <View>
-                            <Text style={styles.inputLabel}>Transport type</Text>
+                            <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
                             <TouchableOpacity
                               style={[styles.buttonSelect, errors.selectedTransportDropoffDepartName && styles.errorInput]}
                               onPress={toggleModalTransportDropoffDepart}
@@ -1489,7 +1491,7 @@ const TripDetail = ({ navigation, route }) => {
                             </Modal>
 
 
-                            <Text style={styles.inputLabel}>Drop off area</Text>
+                            <Text style={styles.inputLabel}>{t('dropOffArea') || 'Drop off area'}</Text>
                             <TouchableOpacity onPress={toggleModalDropoffDepart} style={styles.buttonSelect}>
                               <Text style={styles.buttonText}>{selectedDropoffDepartName}</Text>
                               <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1499,7 +1501,7 @@ const TripDetail = ({ navigation, route }) => {
                               <View style={styles.modalOverlay}>
                                 <View style={styles.modalContentPre}>
                                   <FlatList
-                                    data={[{ md_dropoff_id: "0", md_transfer_nameeng: "Please Select" }, ...DropoffAreaDepart]}
+                                    data={[{ md_dropoff_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...DropoffAreaDepart]}
                                     renderItem={({ item }) => (
                                       <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffDepart(item)}>
                                         <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
@@ -1567,9 +1569,9 @@ const TripDetail = ({ navigation, route }) => {
                             )}
 
 
-                            <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
+                            <Text style={styles.inputLabel}>{t('hotelDropOffPoint') || 'Hotel / Drop off point'}</Text>
                             <TextInput
-                              placeholder="Input Hotel / Drop off point"
+                              placeholder={t('inputHotelDropOffPoint') || "Input Hotel / Drop off point"}
                               value={HoteldropoffDepart}
                               onChangeText={(text) => {
                                 setHoteldropoffDepart(text);
@@ -2103,87 +2105,87 @@ const TripDetail = ({ navigation, route }) => {
                     fontWeight: '800',
                     marginBottom: hp('2%'),
                     textAlign: 'left'
-                  }}>Booking Summary</Text>
+                  }}>{t('bookingSummary') || 'Booking Summary'}</Text>
 
                   <View style={styles.divider} />
                   
                   {timetableDepart.map((tripItem, tripIndex) => (
                     <View key={tripIndex}>
-                      <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
+                      <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
                       <Text style={{ marginTop: 5, color: '#FD501E' }}>
                         {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
                       </Text>
                       
                       <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'}</Text>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_company_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_seat_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'}</Text>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_boattype_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Date</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureDate') || 'Departure Date'}</Text>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.departdate)}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'}</Text>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
                           {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
                         </Text>
                       </View>
 
                       <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                         <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}</Text>
                       </View>
                       
                       {customerData.child !== 0 && (
                         <View style={styles.rowpromo}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
                           <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}</Text>
                         </View>
                       )}
                       
                       {customerData.infant !== 0 && (
                         <View style={styles.rowpromo}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                           <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant).toFixed(2))}</Text>
                         </View>
                       )}
                       
                       {pickupDepart && (
                         <View style={styles.rowpromo}>
-                          <Text>Pick up</Text>
+                          <Text>{t('pickUp') || 'Pick up'}</Text>
                           <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart).toFixed(2))}</Text>
                         </View>
                       )}
                       
                       {dropoffDepart && (
                         <View style={styles.rowpromo}>
-                          <Text>Drop off</Text>
+                          <Text>{t('dropOff') || 'Drop off'}</Text>
                           <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
                         </View>
                       )}
                       
                       {item.totalDepart.save != 0 && (
                         <View style={styles.rowpromo}>
-                          <Text>Discount</Text>
+                          <Text>{t('discount') || 'Discount'}</Text>
                           <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))}</Text>
                         </View>
                       )}
                       
                       <View style={styles.rowpromo}>
-                        <Text>Ticket fare</Text>
+                        <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                         <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))}</Text>
                       </View>
 
@@ -2195,7 +2197,7 @@ const TripDetail = ({ navigation, route }) => {
                     <>
                       {timetableReturn.map((tripItem, tripIndex) => (
                         <View key={tripIndex}>
-                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Return</Text>
+                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('return') || 'Return'}</Text>
                           
                           <Text style={{ marginTop: 5, color: '#FD501E' }}>
                             {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
@@ -2280,12 +2282,12 @@ const TripDetail = ({ navigation, route }) => {
                   )}
 
                   <View style={styles.rowpromo}>
-                    <Text>Subtotal</Text>
+                    <Text>{t('subtotal') || 'Subtotal'}</Text>
                     <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
                   </View>
                   <View style={styles.divider} />
                   <View style={styles.rowpromo}>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Total</Text>
+                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{t('total') || 'Total'}</Text>
                     <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
                   </View>
                 </View>
@@ -2300,7 +2302,7 @@ const TripDetail = ({ navigation, route }) => {
                     style={[styles.ActionButton, { width: '100%' }]}
                     onPress={() => handleNext(item)}
                   >
-                    <Text style={styles.searchButtonText}>Next</Text>
+                    <Text style={styles.searchButtonText}>{t('next') || 'Next'}</Text>
                   </TouchableOpacity>
                 </View>
               ))}

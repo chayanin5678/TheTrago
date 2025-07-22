@@ -8,6 +8,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
 import moment from 'moment';
+import { useLanguage } from './(Screen)/LanguageContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { CalendarList, Calendar } from 'react-native-calendars';
 import styles from './(CSS)/HomeScreenStyles';
@@ -20,9 +21,19 @@ const itemsPerPage = 5;
 
 
 const SearchFerry = ({ navigation, route }) => {
+  const { language, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
-  // const [detaDepart, setDetaDepart] = useState(new Date(customerData.departdate)); // แปลงวันที่จาก input
-  // const [detaReturn, setDetaReturn] = useState(new Date(customerData.returndate)); // แปลงวันที่จาก input
+
+  // Trip type constants for consistent comparison
+  const TRIP_TYPES = {
+    ONE_WAY: 'One Way Trip',
+    ROUND_TRIP: 'Round Trip'
+  };
+
+  const [tripType, setTripType] = useState(TRIP_TYPES.ONE_WAY);
+  const [tripTypeSearch, setTripTypeSearch] = useState(TRIP_TYPES.ONE_WAY);
+
+  // Date states
   const [detaDepart, setDetaDepart] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -35,11 +46,10 @@ const SearchFerry = ({ navigation, route }) => {
     return returnDay;
   });
 
+  // Location states
   const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name, countryId: customerData.countrycode });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
   const [searchQuery, setSearchQuery] = useState('');
-  const [tripType, setTripType] = useState("One Way Trip");
-  const [tripTypeSearch, setTripTypeSearch] = useState("One Way Trip");
   const [tripTypeSearchResult, settripTypeSearchResult] = useState("Depart Trip");
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -901,34 +911,31 @@ const SearchFerry = ({ navigation, route }) => {
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.2)',
         }}>
-          <View style={{ flex: 1 }}>
-            <Text style={[
-              headStyles.headerTitle,
-              {
+          <View style={{ flex: 1, paddingRight: wp('2%') }}>
+            <Text style={{
                 color: '#FFFFFF',
-                fontSize: wp('6%'),
+                fontSize: wp('5.5%'),
                 fontWeight: '800',
                 letterSpacing: -0.5,
                 textAlign: 'left',
-                marginLeft: 0,
-                lineHeight: Platform.OS === 'android' ? wp('5%') : wp('6%'),
+                marginBottom: hp('0.5%'),
+                lineHeight: wp('7%'),
                 textShadowColor: 'rgba(0,0,0,0.3)',
                 textShadowRadius: 4,
                 textShadowOffset: { width: 1, height: 1 },
-              }
-            ]}>
-              Search Ferry
+              }}>
+              {t('searchFerry')}
             </Text>
             <Text style={{
               color: 'rgba(255,255,255,0.8)',
-              fontSize: wp('3.5%'),
+              fontSize: wp('3.2%'),
               fontWeight: '500',
-              marginTop: hp('0.5%'),
+              lineHeight: wp('4.5%'),
               letterSpacing: 0.3,
               textShadowColor: 'rgba(0,0,0,0.2)',
               textShadowRadius: 2,
             }}>
-              Find your perfect journey
+              {t('findYourPerfectJourney')}
             </Text>
           </View>
           <TouchableOpacity
@@ -958,7 +965,7 @@ const SearchFerry = ({ navigation, route }) => {
                 letterSpacing: 0.5,
                 textShadowColor: Platform.OS === 'android' ? 'transparent' : 'rgba(0,0,0,0.2)',
                 textShadowRadius: Platform.OS === 'android' ? 0 : 2,
-              }}>Filters</Text>
+              }}>{ t('filters') }</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -998,7 +1005,7 @@ const SearchFerry = ({ navigation, route }) => {
                   color: '#1E293B',
                   letterSpacing: -0.3
                 }}>
-                  Ferry Operators
+                  { t('ferryOperators') }
                 </Text>
                 <TouchableOpacity
                   onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
@@ -1048,7 +1055,7 @@ const SearchFerry = ({ navigation, route }) => {
                   color: '#1E293B',
                   letterSpacing: 0.2
                 }}>
-                  Select all operators
+                  { t('selectAllOperators') }
                 </Text>
               </TouchableOpacity>
 
@@ -1164,7 +1171,7 @@ const SearchFerry = ({ navigation, route }) => {
                     textShadowColor: 'rgba(0,0,0,0.2)',
                     textShadowRadius: 2,
                   }}>
-                    Apply Filters
+                    { t('applyFilters') }
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -1249,7 +1256,7 @@ const SearchFerry = ({ navigation, route }) => {
                   }
                 ]}
                 onPress={() => {
-                  setTripType("One Way Trip");
+                  setTripType(TRIP_TYPES.ONE_WAY);
                   updateCustomerData({
                     roud: 1
                   })
@@ -1259,16 +1266,16 @@ const SearchFerry = ({ navigation, route }) => {
                   style={[
                     styles.tripTypeText,
                     {
-                      color: tripType === "One Way Trip" ? '#FFFFFF' : '#64748B',
-                      fontWeight: tripType === "One Way Trip" ? '700' : '600',
+                      color: tripType === TRIP_TYPES.ONE_WAY ? '#FFFFFF' : '#64748B',
+                      fontWeight: tripType === TRIP_TYPES.ONE_WAY ? '700' : '600',
                       fontSize: wp('3.5%'),
                       letterSpacing: 0.2,
-                      textShadowColor: tripType === "One Way Trip" ? 'rgba(0,0,0,0.1)' : 'transparent',
+                      textShadowColor: tripType === TRIP_TYPES.ONE_WAY ? 'rgba(0,0,0,0.1)' : 'transparent',
                       textShadowRadius: 1,
                     }
                   ]}
                 >
-                  One Way Trip
+                  {t('oneWayTrip')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -1308,7 +1315,7 @@ const SearchFerry = ({ navigation, route }) => {
                     }
                   ]}
                 >
-                  Round Trip
+                  { t('roundTrip') }
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1354,7 +1361,7 @@ const SearchFerry = ({ navigation, route }) => {
                     fontWeight: '600',
                     letterSpacing: 0.2,
                     marginBottom: 2,
-                  }]}>Passengers</Text>
+                  }]}>{t('passengers')}</Text>
                   <Text
                     style={[styles.inputText, {
                       color: '#1E293B',
@@ -1365,7 +1372,7 @@ const SearchFerry = ({ navigation, route }) => {
                     }]}
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                  >{adults} Adult, {children} Child, {infant} Infant</Text>
+                  >{adults} { t('adult') }, {children} { t('child') }, {infant} { t('infant') }</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -1402,7 +1409,7 @@ const SearchFerry = ({ navigation, route }) => {
                       color: '#1E293B',
                       letterSpacing: -0.5
                     }}>
-                      Select Passengers
+                      { t('selectPassengers') }
                     </Text>
                     <TouchableOpacity
                       onPress={() => setPassengerModalVisible(false)}
@@ -1440,7 +1447,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        Adults
+                        { t('adults') }
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1508,7 +1515,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        Children
+                        { t('children') }
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1575,7 +1582,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        Infants
+                        { t('infants') }
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1643,7 +1650,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontSize: 16,
                       letterSpacing: 0.5
                     }}>
-                      Confirm Selection
+                      { t('confirmSelection') }
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -1691,7 +1698,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontWeight: '600',
                       letterSpacing: 0.2,
                       marginBottom: 2,
-                    }]}>From</Text>
+                    }]}>{t('from')}</Text>
                     <Text
                       style={[styles.inputText, {
                         color: '#1E293B',
@@ -1769,7 +1776,7 @@ const SearchFerry = ({ navigation, route }) => {
                     fontWeight: '600',
                     letterSpacing: 0.2,
                     marginBottom: 2,
-                  }]}>To</Text>
+                  }]}>{t('to')}</Text>
                   <Text
                     style={[styles.inputText, {
                       color: '#1E293B',
@@ -1836,7 +1843,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontWeight: '600',
                       letterSpacing: 0.2,
                       marginBottom: 2,
-                    }]}>Departure date</Text>
+                    }]}>{t('departureDate')}</Text>
                     <Text
                       style={[styles.inputText, {
                         color: '#1E293B',
@@ -1891,7 +1898,7 @@ const SearchFerry = ({ navigation, route }) => {
                           fontWeight: '600',
                           letterSpacing: 0.2,
                           marginBottom: 2,
-                        }]}>Return date</Text>
+                        }]}>{ t('returnDate') }</Text>
                         <Text
                           style={[styles.inputText, {
                             color: '#1E293B',
@@ -1962,7 +1969,7 @@ const SearchFerry = ({ navigation, route }) => {
                           color: '#1E293B',
                           letterSpacing: -0.3,
                           flex: 1,
-                        }} numberOfLines={1}>Select Departure Date</Text>
+                        }} numberOfLines={1}>{ t('selectDepartureDate') }</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => setShowDepartModal(false)}
@@ -2084,7 +2091,7 @@ const SearchFerry = ({ navigation, route }) => {
                               textShadowColor: 'rgba(0,0,0,0.2)',
                               textShadowRadius: 2,
                             }}>
-                              Confirm Departure Date
+                              { t('confirmDepartureDate') }
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -2148,7 +2155,7 @@ const SearchFerry = ({ navigation, route }) => {
                           color: '#1E293B',
                           letterSpacing: -0.3,
                           flex: 1,
-                        }} numberOfLines={1}>Select Return Date</Text>
+                        }} numberOfLines={1}>{ t('selectReturnDate') }</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => setShowReturnModal(false)}
@@ -2268,7 +2275,7 @@ const SearchFerry = ({ navigation, route }) => {
                               fontSize: Platform.OS === 'android' ? 16 : 18,
                               letterSpacing: 0.5,
                             }}>
-                              Confirm Return Date
+                              { t('confirmReturnDate') }
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -2693,7 +2700,7 @@ const SearchFerry = ({ navigation, route }) => {
                 letterSpacing: -0.3,
                 textAlign: 'center'
               }}>
-                Searching for ferries...
+                {t('searchingForFerries')}
               </Text>
               <Text style={{
                 marginTop: 8,
@@ -2703,7 +2710,7 @@ const SearchFerry = ({ navigation, route }) => {
                 letterSpacing: 0.2,
                 textAlign: 'center'
               }}>
-                Finding the best routes for you
+                {t('findingBestRoutes')}
               </Text>
             </View>
           )}
@@ -3114,7 +3121,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   letterSpacing: 0.5,
                                   textAlign: 'center',
                                 }}>
-                                  Book Now
+                                  {t('bookNow')}
                                 </Text>
                               </TouchableOpacity>
                             </View>
@@ -3289,7 +3296,7 @@ const SearchFerry = ({ navigation, route }) => {
                           tripTypeSearchResult === "Depart Trip" && styles.activeText,
                         ]}
                       >
-                        Depart Trip
+                        { t('departTrip') }
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -3305,7 +3312,7 @@ const SearchFerry = ({ navigation, route }) => {
                           tripTypeSearchResult === "Return Trip" && styles.activeText,
                         ]}
                       >
-                        Return Trip
+                        { t('returnTrip') }
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -3706,7 +3713,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: 'bold',
                                     letterSpacing: 0.5,
                                   }}>
-                                    Book Now
+                                    {t('bookNow')}
                                   </Text>
                                 </TouchableOpacity>
                               </View>

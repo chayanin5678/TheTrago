@@ -8,6 +8,7 @@ import ipAddress from "../ipconfig";
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import { useAuth } from '../AuthContext';
 // Social login imports - conditional for Expo Go compatibility
 let GoogleSignin, statusCodes, LoginManager, AccessToken;
@@ -35,6 +36,7 @@ const { width, height } = Dimensions.get('window');
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState(customerData.email || '');
   const [password, setPassword] = useState(customerData.password || '');
   const [showPassword, setShowPassword] = useState(false);
@@ -121,12 +123,12 @@ export default function LoginScreen({ navigation }) {
         console.log('Login successful. AuthContext will handle navigation automatically.');
       } else {
         setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
-        Alert.alert('Error', 'Invalid credentials');
+        Alert.alert(t('error'), t('invalidCredentials'));
       }
     } catch (error) {
       setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
       console.log('Error:', error);  // Log the error for debugging
-      Alert.alert('Error', 'Email or password is incorrect');
+      Alert.alert(t('error'), t('emailOrPasswordIncorrect'));
     }
   };
 
@@ -135,16 +137,22 @@ export default function LoginScreen({ navigation }) {
     // Check if Google Sign-In is available (not in Expo Go)
     if (!GoogleSignin) {
       Alert.alert(
-        'Google Sign-In ไม่พร้อมใช้งาน', 
-        'Google Sign-In ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้\n\nโปรดใช้:\n• expo build หรือ eas build\n• หรือทดสอบด้วย Facebook Login แทน',
-        [{ text: 'เข้าใจแล้ว' }]
+        t('googleSignInNotAvailable'), 
+        t('googleSignInRequiresBuild'),
+        [{ text: t('understood') }]
       );
       return;
     }
 
     try {
       setSocialLoading(prev => ({ ...prev, google: true }));
+      
+      // ตรวจสอบการกำหนดค่า
+      console.log('Google Config:', GOOGLE_CONFIG);
+      console.log('Checking Play Services...');
       await GoogleSignin.hasPlayServices();
+      
+      console.log('Starting Google Sign-In...');
       const userInfo = await GoogleSignin.signIn();
       
       console.log('Google User Info:', userInfo);
@@ -162,22 +170,31 @@ export default function LoginScreen({ navigation }) {
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
-        Alert.alert('สำเร็จ', 'เข้าสู่ระบบด้วย Google สำเร็จ');
+        Alert.alert(t('success'), t('googleSignInSuccess'));
       } else {
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้');
+        Alert.alert(t('error'), t('googleSignInError'));
       }
     } catch (error) {
       console.log('Google Sign-In Error:', error);
+      console.log('Error Code:', error.code);
+      console.log('Error Message:', error.message);
+      
+      let errorMessage = t('googleSignInGeneralError');
+      
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
         return;
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        Alert.alert('กำลังดำเนินการ', 'การเข้าสู่ระบบกำลังดำเนินการอยู่');
+        errorMessage = t('signInInProgress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('ข้อผิดพลาด', 'Google Play Services ไม่พร้อมใช้งาน');
-      } else {
-        Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google');
+        errorMessage = t('playServicesNotAvailable');
+      } else if (error.code === statusCodes.SIGN_IN_REQUIRED) {
+        errorMessage = t('pleaseSignInGoogle');
+      } else if (error.message) {
+        errorMessage = `${t('errorPrefix')} ${error.message}`;
       }
+      
+      Alert.alert(t('googleSignInErrorTitle'), errorMessage);
     } finally {
       setSocialLoading(prev => ({ ...prev, google: false }));
     }
@@ -191,9 +208,9 @@ export default function LoginScreen({ navigation }) {
     if (!LoginManager || !AccessToken) {
       console.log('Facebook SDK not available');
       Alert.alert(
-        'Facebook Login ไม่พร้อมใช้งาน', 
-        'Facebook SDK ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้\n\nโปรดใช้:\n• expo build หรือ eas build\n• หรือใช้การ login ปกติแทน',
-        [{ text: 'เข้าใจแล้ว' }]
+        t('facebookSignInNotAvailable'), 
+        t('facebookSignInRequiresBuild'),
+        [{ text: t('understood') }]
       );
       return;
     }
@@ -216,7 +233,7 @@ export default function LoginScreen({ navigation }) {
       
       if (!data) {
         console.log('No Facebook access token available');
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าถึง Facebook token ได้');
+        Alert.alert(t('error'), t('cannotAccessFacebookEmail'));
         return;
       }
 
@@ -229,7 +246,7 @@ export default function LoginScreen({ navigation }) {
 
       // ตรวจสอบว่ามี email หรือไม่
       if (!facebookUserInfo.email) {
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงอีเมลจาก Facebook ได้ กรุณาตรวจสอบการอนุญาต');
+        Alert.alert(t('error'), t('cannotAccessFacebookEmail'));
         return;
       }
 
@@ -249,9 +266,9 @@ export default function LoginScreen({ navigation }) {
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
-        Alert.alert('สำเร็จ', 'เข้าสู่ระบบด้วย Facebook สำเร็จ');
+        Alert.alert(t('success'), t('facebookSignInSuccess'));
       } else {
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเข้าสู่ระบบด้วย Facebook ได้');
+        Alert.alert(t('error'), t('facebookSignInError'));
       }
     } catch (error) {
       console.log('Facebook Login Error:', error);
@@ -259,12 +276,12 @@ export default function LoginScreen({ navigation }) {
       
       if (error.response) {
         console.log('API Error Response:', error.response.data);
-        Alert.alert('ข้อผิดพลาด', `เกิดข้อผิดพลาดจาก API: ${error.response.data.message || 'ไม่ทราบสาเหตุ'}`);
+        Alert.alert(t('error'), `${t('apiError')}: ${error.response.data.message || t('unknownReason')}`);
       } else if (error.request) {
         console.log('Network Error:', error.request);
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+        Alert.alert(t('error'), t('cannotConnectToServer'));
       } else {
-        Alert.alert('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Facebook');
+        Alert.alert(t('error'), t('facebookLoginErrorGeneral'));
       }
     } finally {
       setSocialLoading(prev => ({ ...prev, facebook: false }));
@@ -296,9 +313,9 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
               <Text style={styles.loadingText}>
-                {socialLoading.google ? 'เข้าสู่ระบบด้วย Google...' : 
-                 socialLoading.facebook ? 'เข้าสู่ระบบด้วย Facebook...' : 
-                 'Signing you in...'}
+                {socialLoading.google ? t('signInWithGoogle') : 
+                 socialLoading.facebook ? t('signInWithFacebook') : 
+                 t('signingYouIn')}
               </Text>
             </View>
           </BlurView>
@@ -318,8 +335,8 @@ export default function LoginScreen({ navigation }) {
             },
           ]}
         >
-          <Text style={styles.welcomeText}>Welcome Back</Text>
-          <Text style={styles.welcomeSubtext}>Sign in to continue your journey</Text>
+          <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
+          <Text style={styles.welcomeSubtext}>{t('signInToContinue')}</Text>
         </Animated.View>
 
         {/* Main Content Card */}
@@ -338,14 +355,14 @@ export default function LoginScreen({ navigation }) {
               style={styles.cardGradient}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.title}>Sign In</Text>
+                <Text style={styles.title}>{t('signIn')}</Text>
                 <View style={styles.titleUnderline} />
               </View>
               
               <View style={styles.subtitleContainer}>
-                <Text style={styles.subtitle}>Don't have an account?</Text>
+                <Text style={styles.subtitle}>{t('dontHaveAccount')}</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
-                  <Text style={styles.link}> Create account</Text>
+                  <Text style={styles.link}>{t('createAccount')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -357,7 +374,7 @@ export default function LoginScreen({ navigation }) {
                   </View>
                   <TextInput
                     style={styles.input}
-                    placeholder="Email address"
+                    placeholder={t('emailAddress')}
                     placeholderTextColor="#aaa"
                     value={email}
                     onChangeText={setEmail}
@@ -372,7 +389,7 @@ export default function LoginScreen({ navigation }) {
                   </View>
                   <TextInput
                     style={styles.input}
-                    placeholder="Password"
+                    placeholder={t('password')}
                     placeholderTextColor="#aaa"
                     secureTextEntry={!showPassword}
                     value={password}
@@ -388,10 +405,10 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.row}>
                 <TouchableOpacity onPress={() => setRemember(!remember)} style={styles.checkboxContainer}>
                   <MaterialIcons name={remember ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                  <Text style={styles.rememberText}>Remember me</Text>
+                  <Text style={styles.rememberText}>{t('rememberMe')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity>
-                  <Text style={styles.forgotText}>Forgot password?</Text>
+                  <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -410,7 +427,7 @@ export default function LoginScreen({ navigation }) {
                   end={{ x: 1, y: 1 }}
                 >
                   <View style={styles.buttonContent}>
-                    <Text style={styles.signInText}>Sign In</Text>
+                    <Text style={styles.signInText}>{t('signIn')}</Text>
                     <MaterialIcons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
                   </View>
                 </LinearGradient>
@@ -419,7 +436,7 @@ export default function LoginScreen({ navigation }) {
               {/* Social Login Section */}
               <View style={styles.dividerContainer}>
                 <View style={styles.divider} />
-                <Text style={styles.orText}>Or continue with</Text>
+                <Text style={styles.orText}>{t('orContinueWith')}</Text>
                 <View style={styles.divider} />
               </View>
 
@@ -440,7 +457,7 @@ export default function LoginScreen({ navigation }) {
                         <FontAwesome name="google" size={22} color="#EA4335" />
                       )}
                       <Text style={styles.socialText}>
-                        {socialLoading.google ? 'กำลังเข้าสู่ระบบ...' : 'Google'}
+                        {socialLoading.google ? t('signInWithGoogle') : t('google')}
                       </Text>
                     </LinearGradient>
                   </BlurView>
@@ -462,29 +479,30 @@ export default function LoginScreen({ navigation }) {
                         <FontAwesome name="facebook" size={22} color="#3b5998" />
                       )}
                       <Text style={styles.socialText}>
-                        {socialLoading.facebook ? 'กำลังเข้าสู่ระบบ...' : 'Facebook'}
+                        {socialLoading.facebook ? t('signInWithFacebook') : t('facebook')}
                       </Text>
                     </LinearGradient>
                   </BlurView>
                 </TouchableOpacity>
               </View>
 
-              {/* Fixed Policy Text */}
+              {/* Policy Text */}
               <Text style={styles.policyText}>
-                By continuing, you agree to The Trago's{' '}
-                <TouchableOpacity 
-                  onPress={() => navigation.navigate('TermsScreen')} 
-                  style={styles.inlineLink}
+                {t('byContinuing')}{' '}
+                <Text 
+                  style={styles.linkText}
+                  onPress={() => navigation.navigate('TermsScreen')}
                 >
-                  <Text style={styles.linkText}>Terms of Use</Text>
-                </TouchableOpacity>
-                {' '}and{' '}
-                <TouchableOpacity 
-                  onPress={() => navigation.navigate('PrivacyPolicyScreen')} 
-                  style={styles.inlineLink}
+                  {t('termsOfUse')}
+                </Text>
+                {' '}{t('and')}{' '}
+                <Text 
+                  style={styles.linkText}
+                  onPress={() => navigation.navigate('PrivacyPolicyScreen')}
                 >
-                  <Text style={styles.linkText}>Privacy Policy</Text>
-                </TouchableOpacity>.
+                  {t('privacyPolicy')}
+                </Text>
+                {t('ofTheTrago')}.
               </Text>
             </LinearGradient>
           </BlurView>
@@ -762,8 +780,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 10,
+    lineHeight: 22,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    flexWrap: 'wrap',
   },
   inlineLink: {
     // No additional styles needed - the TouchableOpacity wraps the Text
@@ -772,5 +792,6 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     fontWeight: '700',
     fontSize: 13,
+    textDecorationLine: 'underline',
   },
 });

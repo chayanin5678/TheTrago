@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, SafeAreaView, Dimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, ScrollView, Animated, TouchableWithoutFeedback, Easing, Alert, SafeAreaView, Dimensions, Platform, Modal } from 'react-native';
 import { MaterialIcons, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -10,12 +10,14 @@ import Feather from '@expo/vector-icons/Feather';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../AuthContext';
+import { useLanguage } from './LanguageContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AccountScreen = ({ navigation }) => {
   const { logout } = useAuth();
+  const { selectedLanguage, changeLanguage, t } = useLanguage();
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState([]);
@@ -24,6 +26,9 @@ const AccountScreen = ({ navigation }) => {
   const [isUploading, setIsUploading] = useState(false);
   const { customerData, updateCustomerData } = useCustomer();
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [selectedLanguageLocal, setSelectedLanguageLocal] = useState(selectedLanguage);
+  const [selectedCurrency, setSelectedCurrency] = useState('THB');
   const shimmerAnim = useRef(new Animated.Value(-200)).current;
 
   // Ultra Premium Animations
@@ -57,6 +62,47 @@ const AccountScreen = ({ navigation }) => {
     const timer = setTimeout(() => setIsLoadingProfile(false), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // โหลดการตั้งค่าภาษาจาก SecureStore
+  useEffect(() => {
+    const loadLanguageSettings = async () => {
+      try {
+        const savedLanguage = await SecureStore.getItemAsync('userLanguage');
+        const savedCurrency = await SecureStore.getItemAsync('userCurrency');
+        
+        if (savedLanguage) {
+          setSelectedLanguageLocal(savedLanguage);
+        }
+        if (savedCurrency) {
+          setSelectedCurrency(savedCurrency);
+        }
+      } catch (error) {
+        console.log('Error loading language settings:', error);
+      }
+    };
+    
+    loadLanguageSettings();
+  }, []);
+
+  // ฟังก์ชันบันทึกการตั้งค่า
+  const saveLanguageSettings = async () => {
+    try {
+      await SecureStore.setItemAsync('userLanguage', selectedLanguageLocal);
+      await SecureStore.setItemAsync('userCurrency', selectedCurrency);
+      
+      // Update language in LanguageContext
+      changeLanguage(selectedLanguageLocal);
+      
+      Alert.alert(
+        t('settingsSaved'),
+        `${t('language')}: ${selectedLanguageLocal === 'th' ? t('thai') : t('english')}\n${t('currency')}: ${selectedCurrency}`,
+        [{ text: 'OK', onPress: () => setShowSettingsModal(false) }]
+      );
+    } catch (error) {
+      console.log('Error saving language settings:', error);
+      Alert.alert('Error', 'Failed to save settings');
+    }
+  };
 
   useEffect(() => {
     // Premium entrance animations
@@ -331,6 +377,10 @@ const AccountScreen = ({ navigation }) => {
 
   }, [token]);
 
+  // Sync selectedLanguageLocal with selectedLanguage context
+  useEffect(() => {
+    setSelectedLanguageLocal(selectedLanguage);
+  }, [selectedLanguage]);
 
 
   // แสดง ActivityIndicator ขณะตรวจสอบสถานะการล็อกอิน
@@ -480,8 +530,17 @@ const AccountScreen = ({ navigation }) => {
         >
           <SafeAreaView style={styles.safeAreaHeader}>
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>My Account</Text>
-              <Text style={styles.headerSubtitle}>Manage your profile and preferences</Text>
+              {/* Settings Button - Top Right */}
+              <TouchableOpacity 
+                style={styles.settingsButton}
+                onPress={() => setShowSettingsModal(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="settings" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              
+              <Text style={styles.headerTitle}>{t('myAccount')}</Text>
+              <Text style={styles.headerSubtitle}>{t('manageProfile')}</Text>
               
               {/* Floating decorative elements */}
               <Animated.View 
@@ -664,7 +723,7 @@ const AccountScreen = ({ navigation }) => {
                   <Text style={styles.userEmail}>{item.md_member_email}</Text>
                   <View style={styles.statusBadge}>
                     <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Active Member</Text>
+                    <Text style={styles.statusText}>{t('activeMember')}</Text>
                   </View>
                 </View>
               </View>
@@ -674,14 +733,13 @@ const AccountScreen = ({ navigation }) => {
 
         {/* Premium Menu Section */}
         <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{t('quickActions')}</Text>
           
           <View style={styles.menuGrid}>
             {[
-              { title: 'Dashboard', subtitle: 'View analytics', icon: 'space-dashboard', nav: 'Dashboard' },
-            //  { title: 'My Booking', subtitle: 'Manage bookings', icon: 'ticket', nav: 'MyBookings', isFA6: true },
-              { title: 'Profile', subtitle: 'Edit details', icon: 'person', nav: 'ProfileScreen', isIonicons: true },
-          //    { title: 'Affiliate', subtitle: 'Earn rewards', icon: 'groups', nav: 'Affiliate' }
+              { title: t('dashboard'), subtitle: t('dashboardDesc'), icon: 'space-dashboard', nav: 'Dashboard' },
+              { title: t('profile'), subtitle: t('profileDesc'), icon: 'person', nav: 'ProfileScreen', isIonicons: true },
+              { title: t('contact'), subtitle: t('contactDesc'), icon: 'mail', nav: 'ContactScreen', isIonicons: true },
             ].map((item, index) => (
               <Animated.View
                 key={index}
@@ -779,13 +837,132 @@ const AccountScreen = ({ navigation }) => {
                 style={styles.logoutGradient}
               >
                 <MaterialIcons name="logout" size={20} color="#FFFFFF" />
-                <Text style={styles.logoutText}>Sign Out</Text>
+                <Text style={styles.logoutText}>{t('signOut')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
         </View>
 
       </ScrollView>
+
+      {/* Settings Modal */}
+      <Modal
+        visible={showSettingsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSettingsModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowSettingsModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <Animated.View style={styles.modalContent}>
+                <LinearGradient
+                  colors={['#FFFFFF', '#F8F9FA']}
+                  style={styles.modalGradient}
+                >
+                  {/* Modal Header */}
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{t('settings')}</Text>
+                    <TouchableOpacity 
+                      style={styles.closeButton}
+                      onPress={() => setShowSettingsModal(false)}
+                    >
+                      <MaterialIcons name="close" size={24} color="#6B7280" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Language Setting */}
+                  <View style={styles.settingSection}>
+                    <View style={styles.settingHeader}>
+                      <MaterialIcons name="language" size={24} color="#FD501E" />
+                      <Text style={styles.settingTitle}>{t('language')}</Text>
+                    </View>
+                    
+                    <View style={styles.optionsContainer}>
+                      {[
+                        { code: 'th', name: t('thai'), flag: '🇹🇭' },
+                        { code: 'en', name: t('english'), flag: '🇺🇸' },
+                      ].map((lang, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.optionItem,
+                            selectedLanguageLocal === lang.code && styles.optionItemSelected
+                          ]}
+                          onPress={() => setSelectedLanguageLocal(lang.code)}
+                        >
+                          <Text style={styles.flagText}>{lang.flag}</Text>
+                          <Text style={[
+                            styles.optionText,
+                            selectedLanguageLocal === lang.code && styles.optionTextSelected
+                          ]}>
+                            {lang.name}
+                          </Text>
+                          {selectedLanguage === lang.code && (
+                            <MaterialIcons name="check-circle" size={20} color="#FD501E" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Currency Setting */}
+                  <View style={styles.settingSection}>
+                    <View style={styles.settingHeader}>
+                      <MaterialIcons name="attach-money" size={24} color="#FD501E" />
+                      <Text style={styles.settingTitle}>{t('currency')}</Text>
+                    </View>
+                    
+                    <View style={styles.optionsContainer}>
+                      {[
+                        { code: 'THB', name: 'Thai Baht', symbol: '฿' },
+                        { code: 'USD', name: 'US Dollar', symbol: '$' },
+                        { code: 'EUR', name: 'Euro', symbol: '€' },
+                        { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+                      ].map((currency, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.optionItem,
+                            selectedCurrency === currency.code && styles.optionItemSelected
+                          ]}
+                          onPress={() => setSelectedCurrency(currency.code)}
+                        >
+                          <Text style={styles.currencySymbol}>{currency.symbol}</Text>
+                          <Text style={[
+                            styles.optionText,
+                            selectedCurrency === currency.code && styles.optionTextSelected
+                          ]}>
+                            {currency.name}
+                          </Text>
+                          <Text style={styles.currencyCode}>({currency.code})</Text>
+                          {selectedCurrency === currency.code && (
+                            <MaterialIcons name="check-circle" size={20} color="#FD501E" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Save Button */}
+                  <TouchableOpacity 
+                    style={styles.saveSettingsButton}
+                    onPress={saveLanguageSettings}
+                  >
+                    <LinearGradient
+                      colors={['#FD501E', '#FF6B40']}
+                      style={styles.saveGradient}
+                    >
+                      <MaterialIcons name="save" size={20} color="#FFFFFF" />
+                      <Text style={styles.saveText}>{t('saveSettings')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </Animated.View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -833,7 +1010,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
     shadowRadius: 20,
-    elevation: 15,
+   // elevation: 15,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -844,6 +1021,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     zIndex: 3,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: -10,
+    right: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   headerTitle: {
     fontSize: 32,
@@ -999,7 +1192,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
-    elevation: 8,
+   // elevation: 8,
     zIndex: 30,
   },
   editPulse: {
@@ -1040,7 +1233,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+  //  elevation: 2,
   },
   statusDot: {
     width: 10,
@@ -1052,7 +1245,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 2,
-    elevation: 1,
+  //  elevation: 1,
   },
   statusText: {
     fontSize: 13,
@@ -1094,7 +1287,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 20,
-    elevation: 8,
+  //  elevation: 8,
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.08)',
     // Glassmorphism
@@ -1136,7 +1329,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 15,
-    elevation: 6,
+   // elevation: 6,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.05)',
@@ -1163,7 +1356,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 2,
   },
   listContent: {
     flex: 1,
@@ -1192,7 +1384,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 15,
-    elevation: 10,
     overflow: 'hidden',
   },
   logoutGradient: {
@@ -1216,6 +1407,133 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
+  },
+
+  // Settings Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  modalGradient: {
+    padding: 25,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 25,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 231, 235, 0.5)',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1F2937',
+    letterSpacing: 0.5,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(107, 114, 128, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingSection: {
+    marginBottom: 25,
+  },
+  settingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  settingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginLeft: 10,
+    letterSpacing: 0.3,
+  },
+  optionsContainer: {
+    backgroundColor: 'rgba(248, 250, 252, 0.8)',
+    borderRadius: 15,
+    overflow: 'hidden',
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 231, 235, 0.3)',
+  },
+  optionItemSelected: {
+    backgroundColor: 'rgba(253, 80, 30, 0.1)',
+  },
+  flagText: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FD501E',
+    marginRight: 12,
+    width: 20,
+    textAlign: 'center',
+  },
+  optionText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  optionTextSelected: {
+    color: '#FD501E',
+    fontWeight: '700',
+  },
+  currencyCode: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginRight: 10,
+    fontWeight: '500',
+  },
+  saveSettingsButton: {
+    marginTop: 10,
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  saveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+  },
+  saveText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
+    letterSpacing: 0.5,
   },
 });
 

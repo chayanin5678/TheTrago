@@ -23,6 +23,7 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useCustomer } from './CustomerContext.js';
+import { useLanguage } from './LanguageContext';
 import { Linking } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../ipconfig";
@@ -31,9 +32,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const BankVerificationScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
+  const { t } = useLanguage();
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
-  const [selectedBank, setSelectedBank] = useState('Select Bank Name');
+  const [selectedBank, setSelectedBank] = useState(t('selectBankName') || 'Select Bank Name');
   const [selectedBankId, setSelectedBankId] = useState(null);
   const [bankAccount, setBankAccount] = useState('');
   const [bankNumber, setBankNumber] = useState('');
@@ -103,11 +105,11 @@ const BankVerificationScreen = ({ navigation }) => {
         setIsProcessing(false);
         setOcrProgress('');
         Alert.alert(
-          'Processing Taking Too Long ⏱️',
-          'Bank document scanning is taking longer than expected.\n\n🚀 This usually means:\n• Slow internet connection\n• Large image file\n• Network congestion\n\n💡 Try:\n• Check WiFi/4G signal\n• Take a clearer, smaller photo\n• Or enter details manually',
+          t('bankProcessingTooLong') || 'Processing Taking Too Long ⏱️',
+          t('bankProcessingTooLongMessage') || 'Bank document scanning is taking longer than expected.\n\n🚀 This usually means:\n• Slow internet connection\n• Large image file\n• Network congestion\n\n💡 Try:\n• Check WiFi/4G signal\n• Take a clearer, smaller photo\n• Or enter details manually',
           [
-            { text: 'Try Again', onPress: () => pickImage() },
-            { text: 'Enter Manually', style: 'default' }
+            { text: t('tryAgain') || 'Try Again', onPress: () => pickImage() },
+            { text: t('enterManually') || 'Enter Manually', style: 'default' }
           ]
         );
       }, 120000); // 2 minute safety timeout
@@ -305,21 +307,21 @@ const BankVerificationScreen = ({ navigation }) => {
   // Enhanced image picker with options for camera or gallery
   const pickImage = async () => {
     Alert.alert(
-      "Select Bank Book Image",
-      "📖 For best bank book scanning results:\n\n✅ Good Practices:\n• Use bright, even lighting\n• Place bank book on flat surface\n• Ensure all text is clearly visible\n• Keep camera parallel to the page\n• Include the bank name and account details\n\n❌ Avoid:\n• Shadows or glare on the page\n• Blurry or tilted images\n• Cut-off text or numbers\n\n💡 Note: OCR may not work perfectly. You can always enter information manually.\n\nChoose how you'd like to upload your bank book:",
+      t('selectBankBookImage') || "Select Bank Book Image",
+      t('bankBookScanningTips') || "📖 For best bank book scanning results:\n\n✅ Good Practices:\n• Use bright, even lighting\n• Place bank book on flat surface\n• Ensure all text is clearly visible\n• Keep camera parallel to the page\n• Include the bank name and account details\n\n❌ Avoid:\n• Shadows or glare on the page\n• Blurry or tilted images\n• Cut-off text or numbers\n\n💡 Note: OCR may not work perfectly. You can always enter information manually.\n\nChoose how you'd like to upload your bank book:",
       [
         {
-          text: "📷 Take Photo",
+          text: t('takePhotoEmoji') || "📷 Take Photo",
           onPress: () => openCamera(),
           style: "default"
         },
         {
-          text: "🖼️ Choose from Gallery",
+          text: t('chooseFromGalleryEmoji') || "🖼️ Choose from Gallery",
           onPress: () => openGallery(),
           style: "default"
         },
         {
-          text: "Cancel",
+          text: t('cancel') || "Cancel",
           style: "cancel"
         }
       ],
@@ -333,11 +335,11 @@ const BankVerificationScreen = ({ navigation }) => {
       let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (permissionResult.granted === false) {
         Alert.alert(
-          "Camera Permission Required",
-          "Permission to access camera is required to scan your bank document!",
+          t('cameraPermissionRequiredBank') || "Camera Permission Required",
+          t('cameraPermissionMessageBank') || "Permission to access camera is required to scan your bank document!",
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() }
+            { text: t('cancel') || "Cancel", style: "cancel" },
+            { text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }
           ]
         );
         return;
@@ -363,18 +365,18 @@ const BankVerificationScreen = ({ navigation }) => {
       } else {
         setIsProcessing(false);
         Alert.alert(
-          'No Photo Taken',
-          'You can enter your bank information manually',
-          [{ text: 'OK' }]
+          t('noPhotoTaken') || 'No Photo Taken',
+          t('noPhotoTakenMessage') || 'You can enter your bank information manually',
+          [{ text: t('ok') || 'OK' }]
         );
       }
 
     } catch (error) {
       setIsProcessing(false);
       Alert.alert(
-        'Error',
-        'Unable to open camera. Please try again.',
-        [{ text: 'OK' }]
+        t('error') || 'Error',
+        t('unableToOpenCamera') || 'Unable to open camera. Please try again.',
+        [{ text: t('ok') || 'OK' }]
       );
     }
   };
@@ -385,11 +387,11 @@ const BankVerificationScreen = ({ navigation }) => {
       let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permissionResult.granted === false) {
         Alert.alert(
-          "Gallery Permission Required",
-          "Permission to access photo library is required to select images!",
+          t('galleryPermissionRequired') || "Gallery Permission Required",
+          t('galleryPermissionMessage') || "Permission to access photo library is required to select images!",
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() }
+            { text: t('cancel') || "Cancel", style: "cancel" },
+            { text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }
           ]
         );
         return;
@@ -413,18 +415,18 @@ const BankVerificationScreen = ({ navigation }) => {
       } else {
         setIsProcessing(false);
         Alert.alert(
-          'No Image Selected',
-          'You can enter your bank information manually',
-          [{ text: 'OK' }]
+          t('noImageSelected') || 'No Image Selected',
+          t('noImageSelectedMessage') || 'You can enter your bank information manually',
+          [{ text: t('ok') || 'OK' }]
         );
       }
 
     } catch (error) {
       setIsProcessing(false);
       Alert.alert(
-        'Error',
-        'Unable to access gallery. Please try again.',
-        [{ text: 'OK' }]
+        t('error') || 'Error',
+        t('unableToAccessGallery') || 'Unable to access gallery. Please try again.',
+        [{ text: t('ok') || 'OK' }]
       );
     }
   };
@@ -496,7 +498,7 @@ const BankVerificationScreen = ({ navigation }) => {
   // Check network and process image
   const checkNetworkAndProcess = async (imageUri) => {
     try {
-      setOcrProgress('Checking connection...');
+      setOcrProgress(t('checkingConnection') || 'Checking connection...');
 
       await recognizeText(imageUri);
 
@@ -505,11 +507,11 @@ const BankVerificationScreen = ({ navigation }) => {
       setOcrProgress('');
       
       Alert.alert(
-        'Processing Failed',
-        'Unable to process the bank document. Please check your internet connection and try again, or enter the information manually.',
+        t('processingFailed') || 'Processing Failed',
+        t('unableToProcessDocument') || 'Unable to process the bank document. Please check your internet connection and try again, or enter the information manually.',
         [
-          { text: 'Retry', onPress: () => checkNetworkAndProcess(imageUri) },
-          { text: 'Enter Manually', style: 'default' }
+          { text: t('retry') || 'Retry', onPress: () => checkNetworkAndProcess(imageUri) },
+          { text: t('enterManually') || 'Enter Manually', style: 'default' }
         ]
       );
     }
@@ -518,7 +520,7 @@ const BankVerificationScreen = ({ navigation }) => {
   // OCR function for bank documents
   const recognizeText = async (uri) => {
     try {
-      setOcrProgress('Processing bank document...');
+      setOcrProgress(t('processingBankDocument') || 'Processing bank document...');
 
       const processedImage = await ImageManipulator.manipulateAsync(
         uri,
@@ -531,14 +533,14 @@ const BankVerificationScreen = ({ navigation }) => {
         }
       );
 
-      setOcrProgress('Reading bank information...');
+      setOcrProgress(t('readingBankInformation') || 'Reading bank information...');
 
       const base64Image = await FileSystem.readAsStringAsync(processedImage.uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
       // Send to OCR API service
-      setOcrProgress('Analyzing bank data...');
+      setOcrProgress(t('analyzingBankData') || 'Analyzing bank data...');
       
       try {
         // Try multiple free OCR services
@@ -579,9 +581,9 @@ const BankVerificationScreen = ({ navigation }) => {
           
           const serviceName = ocrResult.service || 'OCR Service';
           Alert.alert(
-            'Bank Document Scanned Successfully! 🎉',
-            `${serviceName} has successfully extracted information from your bank book:\n\n• Bank: ${extractedData.bank_name || 'Not detected'}\n• Account Number: ${extractedData.account_number || 'Not detected'}\n• Account Name: ${extractedData.account_name || 'Not detected'}\n\nPlease verify the information for accuracy.`,
-            [{ text: 'OK' }]
+            t('bankDocumentScannedSuccessfully') || 'Bank Document Scanned Successfully! 🎉',
+            `${serviceName} ${t('extractedInformationFromBank') || 'has successfully extracted information from your bank book'}:\n\n• ${t('bankName') || 'Bank'}: ${extractedData.bank_name || (t('notDetected') || 'Not detected')}\n• ${t('bankAccountNumber') || 'Account Number'}: ${extractedData.account_number || (t('notDetected') || 'Not detected')}\n• ${t('accountHolderName') || 'Account Name'}: ${extractedData.account_name || (t('notDetected') || 'Not detected')}\n\n${t('verifyInformationAccuracy') || 'Please verify the information for accuracy.'}`,
+            [{ text: t('ok') || 'OK' }]
           );
           
         } else {
@@ -997,7 +999,7 @@ const BankVerificationScreen = ({ navigation }) => {
       const token = await SecureStore.getItemAsync('userToken');
 
       if (!token) {
-        Alert.alert('Error', 'User token not found');
+        Alert.alert(t('error') || 'Error', t('userTokenNotFound') || 'User token not found');
         return;
       }
 
@@ -1040,52 +1042,53 @@ const BankVerificationScreen = ({ navigation }) => {
 
       if (response.ok && json && json.status === 'success') {
         Alert.alert(
-          'Bank Verification Submitted Successfully!',
+          t('bankVerificationSubmittedSuccessfully') || 'Bank Verification Submitted Successfully!',
+          '',
           [
             {
-              text: 'OK',
+              text: t('ok') || 'OK',
               onPress: () => navigation.goBack()
             }
           ]
         );
       } else {
-        let errorMessage = 'Unable to submit bank verification';
+        let errorMessage = t('unableToSubmitBankVerification') || 'Unable to submit bank verification';
         
         if (response.status === 413) {
-          errorMessage = 'Image file is too large. Please try taking a smaller photo or compress the image.';
+          errorMessage = t('imageFileTooLarge') || 'Image file is too large. Please try taking a smaller photo or compress the image.';
         } else if (response.status === 400) {
-          errorMessage = json?.message || 'Invalid request. Please check all required fields.';
+          errorMessage = json?.message || (t('invalidRequestCheckFields') || 'Invalid request. Please check all required fields.');
         } else if (response.status === 404) {
-          errorMessage = 'Upload service not available. Please try again later.';
+          errorMessage = t('uploadServiceNotAvailable') || 'Upload service not available. Please try again later.';
         } else if (response.status === 500) {
           if (responseText.includes('<html>') || responseText.includes('<!DOCTYPE')) {
-            errorMessage = 'Server internal error occurred. Please try again later or contact support.';
+            errorMessage = t('serverInternalError') || 'Server internal error occurred. Please try again later or contact support.';
           } else {
-            errorMessage = json?.message || 'Server error. Please try again later.';
+            errorMessage = json?.message || (t('serverError') || 'Server error. Please try again later.');
           }
         } else if (json && json.message) {
           errorMessage = json.message;
         } else if (responseText && !responseText.includes('<html>')) {
-          errorMessage = responseText.length > 100 ? 'Server returned an error. Please try again.' : responseText;
+          errorMessage = responseText.length > 100 ? (t('serverReturnedError') || 'Server returned an error. Please try again.') : responseText;
         }
         
-        Alert.alert('❌ Upload Failed', errorMessage);
+        Alert.alert(t('uploadFailed') || '❌ Upload Failed', errorMessage);
       }
 
     } catch (error) {
-      let errorMessage = 'An error occurred while submitting bank verification';
+      let errorMessage = t('errorOccurredWhileSubmitting') || 'An error occurred while submitting bank verification';
       
       if (error.message.includes('Network request failed')) {
-        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+        errorMessage = t('networkConnectionFailed') || 'Network connection failed. Please check your internet connection and try again.';
       } else if (error.message.includes('timeout')) {
-        errorMessage = 'Upload timeout. The file may be too large. Please try again with a smaller image.';
+        errorMessage = t('uploadTimeout') || 'Upload timeout. The file may be too large. Please try again with a smaller image.';
       } else if (error.message.includes('JSON Parse error')) {
-        errorMessage = 'Server response error. The server may be experiencing issues. Please try again later.';
+        errorMessage = t('serverResponseError') || 'Server response error. The server may be experiencing issues. Please try again later.';
       } else if (error.name === 'SyntaxError') {
-        errorMessage = 'Server returned an invalid response. Please try again or contact support if the issue persists.';
+        errorMessage = t('invalidServerResponse') || 'Server returned an invalid response. Please try again or contact support if the issue persists.';
       }
       
-      Alert.alert('⚠️ Upload Error', errorMessage);
+      Alert.alert(t('uploadError') || '⚠️ Upload Error', errorMessage);
     } finally {
       setIsLoadingBank(false);
     }
@@ -1312,8 +1315,8 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Bank Verification</Text>
-              <Text style={styles.headerSubtitle}>Verify your bank account</Text>
+              <Text style={styles.headerTitle}>{t('bankVerification') || 'Bank Verification'}</Text>
+              <Text style={styles.headerSubtitle}>{t('verifyBankAccount') || 'Verify your bank account'}</Text>
               
               {/* Floating decorative elements */}
               <Animated.View 
@@ -1360,17 +1363,17 @@ const BankVerificationScreen = ({ navigation }) => {
           >
             <View style={styles.sectionHeaderPremium}>
               <MaterialCommunityIcons name="bank-outline" size={24} color="#FD501E" />
-              <Text style={styles.sectionTitlePremium}>Bank Information</Text>
+              <Text style={styles.sectionTitlePremium}>{t('bankInformation') || 'Bank Information'}</Text>
               {existingBankInfo.has_bank_account && (
                 <View style={styles.existingDataBadge}>
                   <MaterialCommunityIcons name="check-circle" size={16} color="#22C55E" />
-                  <Text style={styles.existingDataText}>Verified</Text>
+                  <Text style={styles.existingDataText}>{t('verified') || 'Verified'}</Text>
                 </View>
               )}
             </View>
             
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Bank Name *</Text>
+              <Text style={styles.inputLabelPremium}>{t('bankName') || 'Bank Name'} *</Text>
               <TouchableOpacity
                 style={styles.buttonPremium}
                 onPress={toggleBankModal}
@@ -1382,10 +1385,10 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Account Holder Name *</Text>
+              <Text style={styles.inputLabelPremium}>{t('accountHolderName') || 'Account Holder Name'} *</Text>
               <TextInput 
                 style={styles.inputPremium} 
-                placeholder="Enter account holder name" 
+                placeholder={t('enterAccountHolderName') || "Enter account holder name"} 
                 value={bankAccount}
                 onChangeText={setBankAccount}
                 placeholderTextColor="#9CA3AF"
@@ -1393,10 +1396,10 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Bank Account Number *</Text>
+              <Text style={styles.inputLabelPremium}>{t('bankAccountNumber') || 'Bank Account Number'} *</Text>
               <TextInput 
                 style={styles.inputPremium} 
-                placeholder="Enter your bank account number" 
+                placeholder={t('enterBankAccountNumber') || "Enter your bank account number"} 
                 value={bankNumber}
                 onChangeText={setBankNumber}
                 placeholderTextColor="#9CA3AF"
@@ -1405,13 +1408,13 @@ const BankVerificationScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>Upload your book bank document *</Text>
+              <Text style={styles.inputLabelPremium}>{t('uploadBankBookDocument') || 'Upload your book bank document'} *</Text>
               
               {/* OCR Status Banner */}
               <View style={styles.ocrStatusBanner}>
                 <MaterialCommunityIcons name="information-outline" size={16} color="#3B82F6" />
                 <Text style={styles.ocrStatusText}>
-                  📱 App works perfectly! OCR is optional - manual entry is always available
+                  {t('appWorksOCROptional') || '📱 App works perfectly! OCR is optional - manual entry is always available'}
                 </Text>
               </View>
               
@@ -1435,18 +1438,18 @@ const BankVerificationScreen = ({ navigation }) => {
                         <MaterialCommunityIcons name="loading" size={24} color="#FFFFFF" />
                       </Animated.View>
                       <Text style={styles.uploadTextProcessing}>
-                        {ocrProgress || 'Processing...'}
+                        {ocrProgress || t('processing') || 'Processing...'}
                       </Text>
                     </>
                   ) : photo ? (
                     <>
                       <MaterialIcons name="check-circle" size={24} color="#FFFFFF" />
-                      <Text style={styles.uploadTextSuccess}>Bank Document Uploaded</Text>
+                      <Text style={styles.uploadTextSuccess}>{t('bankDocumentUploaded') || 'Bank Document Uploaded'}</Text>
                     </>
                   ) : (
                     <>
                       <MaterialCommunityIcons name="camera" size={24} color="#FD501E" />
-                      <Text style={styles.uploadText}>Upload Bank Document</Text>
+                      <Text style={styles.uploadText}>{t('uploadBankDocument') || 'Upload Bank Document'}</Text>
                     </>
                   )}
                 </LinearGradient>
@@ -1482,7 +1485,7 @@ const BankVerificationScreen = ({ navigation }) => {
                     {imageLoadError && (
                       <View style={styles.imageErrorContainer}>
                         <MaterialIcons name="error" size={32} color="#EF4444" />
-                        <Text style={styles.imageErrorText}>Failed to load image</Text>
+                        <Text style={styles.imageErrorText}>{t('failedToLoadImage') || 'Failed to load image'}</Text>
                         <Text style={styles.imageErrorUri}>{photo}</Text>
                       </View>
                     )}
@@ -1493,7 +1496,7 @@ const BankVerificationScreen = ({ navigation }) => {
                         activeOpacity={0.8}
                       >
                         <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
-                        <Text style={styles.retakeButtonText}>Retake</Text>
+                        <Text style={styles.retakeButtonText}>{t('retake') || 'Retake'}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1522,7 +1525,7 @@ const BankVerificationScreen = ({ navigation }) => {
                     <MaterialIcons name="save" size={20} color="#FFFFFF" />
                   )}
                   <Text style={styles.saveButtonTextPremium}>
-                    {isLoadingBank ? 'Submitting...' : 'Save'}
+                    {isLoadingBank ? (t('submitting') || 'Submitting...') : (t('save') || 'Save')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -1544,14 +1547,11 @@ const BankVerificationScreen = ({ navigation }) => {
           >
             <View style={styles.infoHeader}>
               <MaterialCommunityIcons name="information" size={24} color="#3B82F6" />
-              <Text style={styles.infoTitle}>Verification Information</Text>
+              <Text style={styles.infoTitle}>{t('verificationInformation') || 'Verification Information'}</Text>
             </View>
             
             <Text style={styles.infoText}>
-              • Bank verification is required for secure transactions{'\n'}
-              • Your information will be verified within 1-3 business days{'\n'}
-              • Ensure all details match your bank account exactly{'\n'}
-              • Supported document types: Bank book, Bank statement
+              {t('verificationRequiredInfo') || '• Bank verification is required for secure transactions\n• Your information will be verified within 1-3 business days\n• Ensure all details match your bank account exactly\n• Supported document types: Bank book, Bank statement'}
             </Text>
           </Animated.View>
         </View>
@@ -1566,14 +1566,14 @@ const BankVerificationScreen = ({ navigation }) => {
               style={styles.modalGradient}
             >
               <View style={styles.modalHeaderPremium}>
-                <Text style={styles.modalTitlePremium}>Select Bank</Text>
+                <Text style={styles.modalTitlePremium}>{t('selectBank') || 'Select Bank'}</Text>
                 <TouchableOpacity onPress={toggleBankModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
               
               <TextInput
-                placeholder="Search bank"
+                placeholder={t('searchBank') || "Search bank"}
                 value={searchBankQuery}
                 onChangeText={setSearchBankQuery}
                 style={styles.searchInputPremium}
@@ -1585,14 +1585,14 @@ const BankVerificationScreen = ({ navigation }) => {
                   <Animated.View style={{ transform: [{ rotate: loadingSpin }] }}>
                     <MaterialIcons name="autorenew" size={24} color="#FD501E" />
                   </Animated.View>
-                  <Text style={styles.modalLoadingText}>Loading banks...</Text>
+                  <Text style={styles.modalLoadingText}>{t('loadingBanks') || 'Loading banks...'}</Text>
                 </View>
               ) : bankListError ? (
                 <View style={styles.modalErrorContainer}>
                   <MaterialIcons name="error-outline" size={24} color="#EF4444" />
                   <Text style={styles.modalErrorText}>{bankListError}</Text>
                   <TouchableOpacity onPress={fetchBankList} style={styles.retryButton}>
-                    <Text style={styles.retryButtonText}>Retry</Text>
+                    <Text style={styles.retryButtonText}>{t('retry') || 'Retry'}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -1614,7 +1614,7 @@ const BankVerificationScreen = ({ navigation }) => {
                   ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                       <MaterialIcons name="search-off" size={32} color="#9CA3AF" />
-                      <Text style={styles.emptyText}>No banks found</Text>
+                      <Text style={styles.emptyText}>{t('noBanksFound') || 'No banks found'}</Text>
                     </View>
                   }
                 />

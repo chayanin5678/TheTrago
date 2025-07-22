@@ -5,9 +5,11 @@ import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { useLanguage } from './LanguageContext';
 
 
 const Dashboard = ({ navigation }) => {
+  const { t } = useLanguage();
   const [token, setToken] = useState(null);
   const [bookings, setBookings] = useState({ upcoming: 0, cancelled: 0, completed: 0 });
   const [accumulatedPoints, setAccumulatedPoints] = useState(0);
@@ -121,9 +123,9 @@ const Dashboard = ({ navigation }) => {
             >
               <View style={styles.titleContainer}>
                 <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
-                <Text style={styles.headerTitle}>Dashboard</Text>
+                <Text style={styles.headerTitle}>{t('dashboard') || 'Dashboard'}</Text>
               </View>
-              <Text style={styles.headerSubtitle}>Ultra Premium Analytics</Text>
+              <Text style={styles.headerSubtitle}>{t('ultraPremiumAnalytics') || 'Ultra Premium Analytics'}</Text>
               <View style={styles.headerDivider} />
             </Animated.View>
           </SafeAreaView>
@@ -148,9 +150,9 @@ const Dashboard = ({ navigation }) => {
         >
           <View style={styles.sectionHeader}>
             <MaterialIcons name="flight" size={24} color="#FD501E" />
-            <Text style={styles.sectionTitle}>My Bookings</Text>
+            <Text style={styles.sectionTitle}>{t('myBookings') || 'My Bookings'}</Text>
             <View style={styles.premiumBadge}>
-              <Text style={styles.badgeText}>LIVE</Text>
+              <Text style={styles.badgeText}>{t('live') || 'LIVE'}</Text>
             </View>
           </View>
           
@@ -168,7 +170,7 @@ const Dashboard = ({ navigation }) => {
                     <View style={styles.cardIndicator} />
                     <View style={styles.cardTextContainer}>
                       <Text style={styles.bookingCount}>{bookings.upcoming}</Text>
-                      <Text style={styles.bookingStatus}>Upcoming</Text>
+                      <Text style={styles.bookingStatus}>{t('upcoming') || 'Upcoming'}</Text>
                     </View>
                   </View>
                   <View style={[styles.iconContainer, { backgroundColor: '#FFCC00' }]}>
@@ -192,7 +194,7 @@ const Dashboard = ({ navigation }) => {
                     <View style={[styles.cardIndicator, { backgroundColor: '#F73202' }]} />
                     <View style={styles.cardTextContainer}>
                       <Text style={styles.bookingCount}>{bookings.cancelled}</Text>
-                      <Text style={styles.bookingStatus}>Cancelled</Text>
+                      <Text style={styles.bookingStatus}>{t('cancelled') || 'Cancelled'}</Text>
                     </View>
                   </View>
                   <View style={[styles.iconContainer, { backgroundColor: '#F73202' }]}>
@@ -216,7 +218,7 @@ const Dashboard = ({ navigation }) => {
                     <View style={[styles.cardIndicator, { backgroundColor: '#28A745' }]} />
                     <View style={styles.cardTextContainer}>
                       <Text style={styles.bookingCount}>{bookings.completed}</Text>
-                      <Text style={styles.bookingStatus}>Completed</Text>
+                      <Text style={styles.bookingStatus}>{t('completed') || 'Completed'}</Text>
                     </View>
                   </View>
                   <View style={[styles.iconContainer, { backgroundColor: '#28A745' }]}>
@@ -241,9 +243,9 @@ const Dashboard = ({ navigation }) => {
         >
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="star-circle" size={24} color="#FD501E" />
-            <Text style={styles.sectionTitle}>Rewards & Points</Text>
+            <Text style={styles.sectionTitle}>{t('rewardsAndPoints') || 'Rewards & Points'}</Text>
             <View style={[styles.premiumBadge, { backgroundColor: '#FFD700' }]}>
-              <Text style={[styles.badgeText, { color: '#000' }]}>VIP</Text>
+              <Text style={[styles.badgeText, { color: '#000' }]}>{t('vip') || 'VIP'}</Text>
             </View>
           </View>
           
@@ -261,7 +263,7 @@ const Dashboard = ({ navigation }) => {
               <View style={styles.pointsContent}>
                 <View style={styles.pointsHeader}>
                   <MaterialCommunityIcons name="medal" size={28} color="#ffffff" />
-                  <Text style={styles.pointsHeaderText}>Premium Rewards</Text>
+                  <Text style={styles.pointsHeaderText}>{t('premiumRewards') || 'Premium Rewards'}</Text>
                   <View style={styles.levelBadge}>
                     <Text style={styles.levelText}>LV.1</Text>
                   </View>
@@ -275,7 +277,7 @@ const Dashboard = ({ navigation }) => {
                         style={styles.progressFill}
                       />
                     </View>
-                    <Text style={styles.progressText}>Next Level: 1000 points</Text>
+                    <Text style={styles.progressText}>{t('nextLevel') || 'Next Level: 1000 points'}</Text>
                   </View>
                 </View>
 
@@ -295,8 +297,8 @@ const Dashboard = ({ navigation }) => {
                   </Animated.View>
                   <View style={styles.pointsTextContainer}>
                     <Text style={styles.pointsNumber}>0</Text>
-                    <Text style={styles.pointsLabel}>Total Points</Text>
-                    <Text style={styles.pointsSubtext}>Earn more by traveling</Text>
+                    <Text style={styles.pointsLabel}>{t('totalPoints') || 'Total Points'}</Text>
+                    <Text style={styles.pointsSubtext}>{t('earnMoreByTraveling') || 'Earn more by traveling'}</Text>
                   </View>
                 </View>
               </View>
@@ -321,7 +323,7 @@ const Dashboard = ({ navigation }) => {
           >
             <View style={styles.backButtonSolid}>
               <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-              <Text style={styles.backButtonText}>Back to Profile</Text>
+              <Text style={styles.backButtonText}>{t('backToProfile') || 'Back to Profile'}</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>

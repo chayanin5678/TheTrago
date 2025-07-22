@@ -7,6 +7,7 @@ import Textinput from '../(component)/Textinput';
 import ipAddress from '../ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,13 +15,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import headStyles from './../(CSS)/StartingPointScreenStyles';
 import axios from 'axios';
 
-const titleOptions = ['Please Select', 'Mr.', 'Mrs.', 'Ms.', 'Master'];
-
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
-  const [selectedTitle, setSelectedTitle] = React.useState('Please Select');
+  const { t } = useLanguage();
+  const [selectedTitle, setSelectedTitle] = React.useState(t('pleaseSelect') || 'Please Select');
   const [isModalVisible, setModalVisible] = React.useState(false);
-  const [selectedNationality, setSelectedNationality] = React.useState('Please Select');
+  const [selectedNationality, setSelectedNationality] = React.useState(t('pleaseSelect') || 'Please Select');
   const [isNationalityModalVisible, setNationalityModalVisible] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [fname, setFname] = React.useState('');
@@ -51,10 +51,10 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     }),
     validate: () => {
       let errors = {};
-      if (!selectedTitle || selectedTitle === 'Please Select') errors.selectedTitle = true;
+      if (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select')) errors.selectedTitle = true;
       if (!fname || fname.trim() === '') errors.fname = true;
       if (!lname || lname.trim() === '') errors.lname = true;
-      if (!selectedNationality || selectedNationality === 'Please Select') errors.nationality = true;
+      if (!selectedNationality || selectedNationality === 'Please Select' || selectedNationality === (t('pleaseSelect') || 'Please Select')) errors.nationality = true;
       if (!passport || passport.trim() === '') errors.passport = true;
       if (!dateOfIssue) errors.dateOfIssue = true;
       if (!passportExpiry) errors.passportExpiry = true;
@@ -105,9 +105,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       <Text style={styles.TextInput}>{type.charAt(0).toUpperCase() + type.slice(1)} {index + 1}</Text>
 
       {/* คำนำหน้า */}
-      <Text style={styles.textHead}>Title</Text>
+      <Text style={styles.textHead}>{t('title') || 'Title'}</Text>
       <TouchableOpacity
-        style={[styles.button, (fieldErrors.selectedTitle || (showAllErrors && (selectedTitle === 'Please Select' || !selectedTitle))) && styles.errorInput]}
+        style={[styles.button, (fieldErrors.selectedTitle || (showAllErrors && (selectedTitle === (t('pleaseSelect') || 'Please Select') || !selectedTitle))) && styles.errorInput]}
         onPress={() => setModalVisible(true)}>
         <Text style={styles.buttonText}>{selectedTitle}</Text>
         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -131,9 +131,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       </Modal>
 
       {/* First Name */}
-      <Text style={styles.textHead}>First Name</Text>
+      <Text style={styles.textHead}>{t('firstName') || 'First Name'}</Text>
       <TextInput
-        placeholder="First Name"
+        placeholder={t('firstName') || 'First Name'}
         value={fname}
         onChangeText={handleFnameChange}
         style={[styles.input, (fieldErrors.fname || (showAllErrors && !fname)) && styles.errorInput]}
@@ -141,9 +141,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
 
 
       {/* Last Name */}
-      <Text style={styles.textHead}>Last Name</Text>
+      <Text style={styles.textHead}>{t('lastName') || 'Last Name'}</Text>
       <TextInput
-        placeholder="Last Name"
+        placeholder={t('lastName') || 'Last Name'}
         value={lname}
         onChangeText={handleLnameChange}
         style={[styles.input, (fieldErrors.lname || (showAllErrors && !lname)) && styles.errorInput]}
@@ -151,7 +151,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
 
 
       {/* Nationality */}
-      <Text style={styles.textHead}>Nationality</Text>
+      <Text style={styles.textHead}>{t('nationality') || 'Nationality'}</Text>
       <TouchableOpacity
         style={[styles.button, fieldErrors.nationality && styles.errorInput]}
         onPress={() => setNationalityModalVisible(true)}>
@@ -162,7 +162,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <TextInput
-              placeholder="Search country"
+              placeholder={t('searchCountry') || 'Search country'}
               value={searchQuery}
               onChangeText={setSearchQuery}
               style={styles.textInput}
@@ -204,9 +204,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       </Modal>
 
       {/* Passport */}
-      <Text style={styles.textHead}>Passport</Text>
+      <Text style={styles.textHead}>{t('passport') || 'Passport'}</Text>
       <TextInput
-        placeholder="Passport Number"
+        placeholder={t('passportNumber') || 'Passport Number'}
         value={passport}
         onChangeText={handlePassportChange}
         style={[styles.input, (fieldErrors.passport || (showAllErrors && !passport)) && styles.errorInput]}
@@ -214,12 +214,12 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
 
 
       {/* Date of Issue */}
-      <Text style={styles.textHead}>Date of Issue</Text>
+      <Text style={styles.textHead}>{t('dateOfIssue') || 'Date of Issue'}</Text>
       <TouchableOpacity
         style={[styles.button, (fieldErrors.dateOfIssue || (showAllErrors && !dateOfIssue)) && styles.errorInput]}
         onPress={() => setShowDatePicker(!showDatePicker)}>
         <Text style={styles.buttonText}>
-          {dateOfIssue ? new Date(dateOfIssue).toLocaleDateString('en-GB') : 'Select Date'}
+          {dateOfIssue ? new Date(dateOfIssue).toLocaleDateString('en-GB') : (t('selectDate') || 'Select Date')}
         </Text>
         <Icon name="calendar" size={18} color="#FD501E" style={styles.icon} />
       </TouchableOpacity>
@@ -236,12 +236,12 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       )}
 
       {/* Passport Expiry Date */}
-      <Text style={styles.textHead}>Passport Expiry Date</Text>
+      <Text style={styles.textHead}>{t('passportExpiryDate') || 'Passport Expiry Date'}</Text>
       <TouchableOpacity
         style={[styles.button, (fieldErrors.passportExpiry || (showAllErrors && !passportExpiry)) && styles.errorInput]}
         onPress={() => setShowPassportExpiryPicker(!showPassportExpiryPicker)}>
         <Text style={styles.buttonText}>
-          {passportExpiry ? new Date(passportExpiry).toLocaleDateString('en-GB') : 'Select Date'}
+          {passportExpiry ? new Date(passportExpiry).toLocaleDateString('en-GB') : (t('selectDate') || 'Select Date')}
         </Text>
         <Icon name="calendar" size={18} color="#FD501E" style={styles.icon} />
       </TouchableOpacity>
@@ -258,12 +258,12 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       )}
 
       {/* Date of Birth */}
-      <Text style={styles.textHead}>Date of Birth</Text>
+      <Text style={styles.textHead}>{t('dateOfBirth') || 'Date of Birth'}</Text>
       <TouchableOpacity
         style={[styles.button, fieldErrors.birthday && styles.errorInput]}
         onPress={() => setShowBirthdayPicker(!showBirthdayPicker)}>
         <Text style={styles.buttonText}>
-          {birthday ? new Date(birthday).toLocaleDateString('en-GB') : 'Select Date'}
+          {birthday ? new Date(birthday).toLocaleDateString('en-GB') : (t('selectDate') || 'Select Date')}
         </Text>
         <Icon name="calendar" size={18} color="#FD501E" style={styles.icon} />
       </TouchableOpacity>
@@ -283,11 +283,15 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
 });
 
 const CustomerInfo = ({ navigation }) => {
+  const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
+  
+  const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
+  
   const [code, setcode] = useState('');
   const [Firstname, setFirstname] = useState(customerData.Firstname);
   const [Lastname, setLastname] = useState(customerData.Lastname);
-  const [selectedTitle, setSelectedTitle] = useState('Please Select');
+  const [selectedTitle, setSelectedTitle] = useState(t('pleaseSelect') || 'Please Select');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedTele, setSelectedTele] = useState(customerData.selectcoountrycode);
   const [isTeleModalVisible, setIsTeleModalVisible] = useState(false);
@@ -434,9 +438,9 @@ const CustomerInfo = ({ navigation }) => {
 
       if (response.data.status === 'success') {
         if (response.data.data.totalDepart.promotionprice !== 0) {
-          Alert.alert('โค้ดสำเร็จ');
+          Alert.alert(t('codeSuccess') || 'โค้ดสำเร็จ');
         } else {
-          Alert.alert('โค้ดไม่ถูกต้อง');
+          Alert.alert(t('invalidCode') || 'โค้ดไม่ถูกต้อง');
         }
 
         // Set the price data correctly based on API response structure
@@ -452,7 +456,7 @@ const CustomerInfo = ({ navigation }) => {
         }
 
       } else {
-        Alert.alert('โค้ดไม่ถูกต้อง');
+        Alert.alert(t('invalidCode') || 'โค้ดไม่ถูกต้อง');
         setPriceDepart([]);
         setPriceReturn([]);
       }
@@ -470,10 +474,10 @@ const CustomerInfo = ({ navigation }) => {
   const handleNext = () => {
     if (customerData.international == 0) {
       let newErrors = {};
-      if (selectedTitle === 'Please Select') newErrors.selectedTitle = true;
+      if (selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTitle = true;
       if (!Firstname) newErrors.Firstname = true;
       if (!Lastname) newErrors.Lastname = true;
-      if (selectedTele === 'Please Select') newErrors.selectedTele = true;
+      if (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTele = true;
       if (!mobileNumber) newErrors.mobileNumber = true;
       if (!email) newErrors.email = true;
 
@@ -516,12 +520,12 @@ const CustomerInfo = ({ navigation }) => {
 
         // Show an alert if there are missing fields or invalid email
         if (newErrors.email) {
-          Alert.alert('Invalid Email', 'Please enter a valid email address.', [
-            { text: 'OK', onPress: () => console.log('OK Pressed') }
+          Alert.alert(t('invalidEmail') || 'Invalid Email', t('pleaseEnterValidEmail') || 'Please enter a valid email address.', [
+            { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
           ]);
         } else {
-          Alert.alert('Incomplete Information', 'Please fill in all required fields.', [
-            { text: 'OK', onPress: () => console.log('OK Pressed') }
+          Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredFields') || 'Please fill in all required fields.', [
+            { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
           ]);
         }
 
@@ -534,8 +538,8 @@ const CustomerInfo = ({ navigation }) => {
       // ตรวจสอบข้อมูลผู้โดยสาร (PassengerForm)
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
-        Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
-          { text: 'OK', onPress: () => { } }
+        Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredPassengerFields') || 'Please fill in all required passenger fields.', [
+          { text: t('ok') || 'OK', onPress: () => { } }
         ]);
         return;
       }
@@ -551,15 +555,15 @@ const CustomerInfo = ({ navigation }) => {
           console.log('🧾 Form data:', passengerFormRefs.current.map(r => r?.getData?.()));
           const errorObj = {};
           allFields.forEach(f => {
-            if (!data[f] || data[f] === 'Please Select') errorObj[f] = true;
+            if (!data[f] || data[f] === 'Please Select' || data[f] === (t('pleaseSelect') || 'Please Select')) errorObj[f] = true;
           });
           formRef.setFieldErrors?.(errorObj);
         }
       });
       if (hasPassengerError) {
         setShowAllErrors(true);
-        Alert.alert('Incomplete Information', 'Please fill in all required passenger fields.', [
-          { text: 'OK', onPress: () => { } }
+        Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredPassengerFields') || 'Please fill in all required passenger fields.', [
+          { text: t('ok') || 'OK', onPress: () => { } }
         ]);
         return;
       }
@@ -846,7 +850,7 @@ const CustomerInfo = ({ navigation }) => {
                 textShadowOffset: { width: 1, height: 1 },
               }
             ]}>
-              Customer Information
+              {t('customerInformation') || 'Customer Information'}
             </Text>
             <Text style={{
               color: 'rgba(255,255,255,0.8)',
@@ -857,12 +861,12 @@ const CustomerInfo = ({ navigation }) => {
               textShadowColor: 'rgba(0,0,0,0.2)',
               textShadowRadius: 2,
             }}>
-              Find your perfect journey
+              {t('findYourPerfectJourney') || 'Find your perfect journey'}
             </Text>
           </View>
         </View>
 
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
 
         <KeyboardAvoidingView
           behavior="padding"
@@ -888,13 +892,13 @@ const CustomerInfo = ({ navigation }) => {
               {/* เงื่อนไขแสดงฟอร์มตาม international */}
               {Number(customerData.international) === 0 ? (
                 <View style={styles.promo}>
-                  <Text style={styles.TextInput}>Passenger Details</Text>
+                  <Text style={styles.TextInput}>{t('passengerDetails') || 'Passenger Details'}</Text>
 
                   {/* คำนำหน้า */}
-                  <Text style={styles.textHead}>Title</Text>
+                  <Text style={styles.textHead}>{t('title') || 'Title'}</Text>
                   <TouchableOpacity
 
-                    style={[styles.button, errors.selectedTitle && styles.errorInput]}
+                    style={[styles.button, (errors.selectedTitle || (selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
                     onPress={toggleModal}>
                     <Text style={styles.buttonText}>{selectedTitle}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -921,9 +925,9 @@ const CustomerInfo = ({ navigation }) => {
                     </View>
                   </Modal>
                   {/* ชื่อจริง & นามสกุล */}
-                  <Text style={styles.textHead}>First Name</Text>
+                  <Text style={styles.textHead}>{t('firstName') || 'First Name'}</Text>
                   <TextInput
-                    placeholder="First Name"
+                    placeholder={t('firstName') || 'First Name'}
                     value={Firstname}
                     onChangeText={(text) => {
                       setFirstname(text);
@@ -932,9 +936,9 @@ const CustomerInfo = ({ navigation }) => {
                     style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                   />
 
-                  <Text style={styles.textHead}>Last Name</Text>
+                  <Text style={styles.textHead}>{t('lastName') || 'Last Name'}</Text>
                   <TextInput
-                    placeholder="Last Name"
+                    placeholder={t('lastName') || 'Last Name'}
                     value={Lastname}
                     onChangeText={(text) => {
                       setLastname(text);
@@ -945,10 +949,10 @@ const CustomerInfo = ({ navigation }) => {
 
 
                   {/* รายละเอียดการติดต่อ */}
-                  <Text style={styles.TextInput}>Contact Details</Text>
-                  <Text style={styles.textHead}>Phone number</Text>
+                  <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
+                  <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
                   <TouchableOpacity
-                    style={[styles.button, errors.selectedTele && styles.errorInput]}
+                    style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
                     onPress={toggleTeleModal}>
                     <Text style={styles.buttonText}>{selectedTele}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -959,7 +963,7 @@ const CustomerInfo = ({ navigation }) => {
                     <View style={styles.modalOverlay}>
                       <View style={styles.modalContent}>
                         <TextInput
-                          placeholder="Search country"
+                          placeholder={t('searchCountry') || 'Search country'}
                           value={searchQuery}
                           onChangeText={setSearchQuery}
                           style={styles.textInput}
@@ -987,7 +991,7 @@ const CustomerInfo = ({ navigation }) => {
                   </Modal>
 
                   <TextInput
-                    placeholder="Mobile Number"
+                    placeholder={t('mobileNumber') || 'Mobile Number'}
                     value={mobileNumber}
                     keyboardType="number-pad"
                     onChangeText={(text) => {
@@ -1002,12 +1006,12 @@ const CustomerInfo = ({ navigation }) => {
                       style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center', marginRight: 6 }}>
                       <MaterialIcons name={isWhatsapp ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                     </TouchableOpacity>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Whatsapp</Text>
+                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>WhatsApp</Text>
                   </View>
-                  <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
-                  <Text style={styles.textHead}>Email</Text>
+                  <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>{t('whereToSendBookingConfirmation') || 'Where should we send your booking confirmation?'}</Text>
+                  <Text style={styles.textHead}>{t('email') || 'Email'}</Text>
                   <TextInput
-                    placeholder="Enter Your Email"
+                    placeholder={t('enterYourEmail') || 'Enter Your Email'}
                     value={email}
                     onChangeText={(text) => {
                       setemail(text);
@@ -1056,10 +1060,10 @@ const CustomerInfo = ({ navigation }) => {
 
                   {/* Contact Details Section (after all PassengerForms) */}
                   <View style={styles.promo}>
-                    <Text style={styles.TextInput}>Contact Details</Text>
-                    <Text style={styles.textHead}>Phone number</Text>
+                    <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
+                    <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
                     <TouchableOpacity
-                      style={[styles.button, errors.selectedTele && styles.errorInput]}
+                      style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
                       onPress={toggleTeleModal}>
                       <Text style={styles.buttonText}>{selectedTele}</Text>
                       <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1070,7 +1074,7 @@ const CustomerInfo = ({ navigation }) => {
                       <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
                           <TextInput
-                            placeholder="Search country"
+                            placeholder={t('searchCountry') || 'Search country'}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             style={styles.textInput}
@@ -1097,7 +1101,7 @@ const CustomerInfo = ({ navigation }) => {
                       </View>
                     </Modal>
                     <TextInput
-                      placeholder="Enter your mobile number"
+                      placeholder={t('enterYourMobileNumber') || 'Enter your mobile number'}
                       style={[styles.input, contactErrors.mobile && styles.errorInput]}
                       keyboardType="number-pad"
                       value={mobileNumber}
@@ -1112,12 +1116,12 @@ const CustomerInfo = ({ navigation }) => {
                         style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center', marginRight: 6 }}>
                         <MaterialIcons name={isWhatsapp ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                       </TouchableOpacity>
-                      <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>Whatsapp</Text>
+                      <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>WhatsApp</Text>
                     </View>
-                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>Where should we send your booking confirmation?</Text>
-                    <Text style={styles.textHead}>Email</Text>
+                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('4%'), fontWeight: '600', marginBottom: hp('1%'), textAlign: 'left' }]}>{t('whereToSendBookingConfirmation') || 'Where should we send your booking confirmation?'}</Text>
+                    <Text style={styles.textHead}>{t('email') || 'Email'}</Text>
                     <TextInput
-                      placeholder="Enter Your Email"
+                      placeholder={t('enterYourEmail') || 'Enter Your Email'}
                       style={[styles.input, contactErrors.email && styles.errorInput]}
                       keyboardType="email-address"
                       value={email}
@@ -1162,31 +1166,31 @@ const CustomerInfo = ({ navigation }) => {
                 <View key={index}>
 
                   <View style={styles.promo}>
-                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>Booking Summary</Text>
+                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>{t('bookingSummary') || 'Booking Summary'}</Text>
                     <View style={styles.divider} />
                     {timetableDepart.map((item, index) => (
                       <View key={index}>
-                        <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>Depart</Text>
+                        <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
                         <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                         <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'} </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {item.md_company_nameeng}</Text>
                         </View>
                         <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_seat_nameeng}</Text>
                         </View>
                         <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'} </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{item.md_boattype_nameeng}</Text>
                         </View>
                         <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Data</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureData') || 'Departure Data'}</Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time : </Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'} : </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                         </View>
 
@@ -1194,47 +1198,47 @@ const CustomerInfo = ({ navigation }) => {
 
 
                         <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                           <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceadult)}</Text>
                         </View>
                         {customerData.child !== 0 && (
                           <View style={styles.rowpromo}>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
                             <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.pricechild)}</Text>
                           </View>
                         )}
                         {customerData.infant !== 0 && (
                           <View style={styles.rowpromo}>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>infant x {customerData.infant}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'infant'} x {customerData.infant}</Text>
                             <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceinfant)}</Text>
                           </View>
                         )}
                         {customerData.pickupDepartId && (
                           <View style={styles.rowpromo}>
-                            <Text>Pick up</Text>
+                            <Text>{t('pickUp') || 'Pick up'}</Text>
                             <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricepickupdepart)}</Text>
                           </View>
                         )}
                         {customerData.dropoffDepartId && (
                           <View style={styles.rowpromo}>
-                            <Text>Drop off</Text>
+                            <Text>{t('dropOff') || 'Drop off'}</Text>
                             <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricedropoffdepart)}</Text>
                           </View>
                         )}
                         {all.totalDepart.save != 0 && (
                           <View style={styles.rowpromo}>
-                            <Text>Discount</Text>
+                            <Text>{t('discount') || 'Discount'}</Text>
                             <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
                           </View>
                         )}
                         {all.totalDepart.promotionprice != 0 && (
                           <View style={styles.rowpromo}>
-                            <Text>Promotion Code</Text>
+                            <Text>{t('promotionCode') || 'Promotion Code'}</Text>
                             <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
                           </View>
                         )}
                         <View style={styles.rowpromo}>
-                          <Text>Ticket fare</Text>
+                          <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                           <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
                         </View>
 
@@ -1245,74 +1249,74 @@ const CustomerInfo = ({ navigation }) => {
                       <>
                         {timetableReturn.map((item, index) => (
                           <View key={index}>
-                            <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                            <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                             <Text style={{ marginTop: 5, color: '#FD501E' }}>
                               {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                             </Text>
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>Company </Text>
+                              <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
                               <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
                             </View>
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>Seat</Text>
+                              <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
                               <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
                             </View>
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>Boat </Text>
+                              <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
                               <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                             </View>
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>Departure Data</Text>
+                              <Text style={{ color: '#666666' }}>{t('departureData') || 'Departure Data'}</Text>
                               <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
                             </View>
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                              <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
                               <Text style={{ color: '#666666' }}>
                                 {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
                               </Text>
                             </View>
                             <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                              <Text>Adult x {customerData.adult}</Text>
+                              <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                               <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceadult)}</Text>
                             </View>
                             {customerData.child !== 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Child x {customerData.child}</Text>
+                                <Text>{t('child') || 'Child'} x {customerData.child}</Text>
                                 <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.pricechild)}</Text>
                               </View>
                             )}
                             {customerData.infant !== 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>infant x {customerData.infant}</Text>
+                                <Text>{t('infant') || 'infant'} x {customerData.infant}</Text>
                                 <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceinfant)}</Text>
                               </View>
                             )}
                             {customerData.pickupReturnId != 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Pick up</Text>
+                                <Text>{t('pickUp') || 'Pick up'}</Text>
                                 <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricepickupdepart)}</Text>
                               </View>
                             )}
                             {customerData.dropoffReturnId != 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Drop off</Text>
+                                <Text>{t('dropOff') || 'Drop off'}</Text>
                                 <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricedropoffdepart)}</Text>
                               </View>
                             )}
                             {all.totalReturn.save != 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Discount</Text>
+                                <Text>{t('discount') || 'Discount'}</Text>
                                 <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
                               </View>
                             )}
                             {all.totalReturn.promotionprice != 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Promotion Code</Text>
+                                <Text>{t('promotionCode') || 'Promotion Code'}</Text>
                                 <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
                               </View>
                             )}
                             <View style={styles.rowpromo}>
-                              <Text>Ticket fare</Text>
+                              <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                               <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
                             </View>
                             <View style={styles.divider} />
@@ -1321,12 +1325,12 @@ const CustomerInfo = ({ navigation }) => {
                       </>
                     )}
                     <View style={styles.rowpromo}>
-                      <Text>Subtotal </Text>
+                      <Text>{t('subtotal') || 'Subtotal'} </Text>
                       <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
                     </View>
                     <View style={styles.divider} />
                     <View style={styles.rowpromo}>
-                      <Text style={{ color: '#FD501E' }}>total </Text>
+                      <Text style={{ color: '#FD501E' }}>{t('total') || 'total'} </Text>
                       <Text style={{ color: '#FD501E' }}>{customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                     </View>
                   </View>
@@ -1335,19 +1339,19 @@ const CustomerInfo = ({ navigation }) => {
 
 
               <View style={styles.promo}>
-                <Text style={styles.promoLabel}>Promotion Code</Text>
+                <Text style={styles.promoLabel}>{t('promotionCode') || 'Promotion Code'}</Text>
 
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.promoInput}
-                    placeholder="Coupon code"
+                    placeholder={t('couponCode') || 'Coupon code'}
                     value={code}
                     onChangeText={setcode}
                     placeholderTextColor="#A1A1A1"
                   />
 
                   <TouchableOpacity style={styles.applyButton} onPress={handlepromo}>
-                    <Text style={styles.applyText}>Apply</Text>
+                    <Text style={styles.applyText}>{t('apply') || 'Apply'}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1359,7 +1363,7 @@ const CustomerInfo = ({ navigation }) => {
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.searchButtonText}>Next</Text>
+                  <Text style={styles.searchButtonText}>{t('next') || 'Next'}</Text>
                 </TouchableOpacity>
               </View>
             </View>

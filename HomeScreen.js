@@ -19,52 +19,50 @@ import { BlurView } from 'expo-blur';
 import CrossPlatformStatusBar from './(component)/CrossPlatformStatusBar';
 import SafeAreaDebugger from './(component)/SafeAreaDebugger';
 import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
-
-
-
-const data = [
-  { id: '1', title: 'Ferry', icon: 'boat', navigate: 'SearchFerry', item: 'new' },
-  { id: '2', title: 'Flights', icon: 'airplane', navigate: 'SearchFerryDemo', item: '' },
-  { id: '3', title: 'Trains', icon: 'train', navigate: '', item: '' },
-  { id: '4', title: 'Cars', icon: 'car', navigate: '', item: '' },
-  { id: '5', title: 'Hotel', icon: 'bed', navigate: '', item: '' },
-  { id: '6', title: 'Tours', icon: 'map', navigate: '', item: '' },
-  { id: '7', title: 'Attraction', icon: 'star', navigate: '', item: '' },
-  { id: '8', title: 'Ticket', icon: 'ticket', navigate: '', item: '' },
-];
-
-const placeholders = [
-  [
-    { text: 'The ', color: '#fff' },
-    { text: 'journey ', color: 'rgb(255, 166, 0)' },
-    { text: 'is endless, Book now', color: '#fff' },
-  ],
-  [
-    { text: 'Planning for a ', color: '#fff' },
-    { text: 'trip? ', color: 'rgb(255, 166, 0)' },
-  ],
-  [
-    { text: 'We will organize your ', color: '#fff' },
-    { text: 'best trip', color: 'rgb(255, 166, 0)' },
-  ],
-  [
-    { text: 'With the ', color: '#fff' },
-    { text: 'best destination', color: 'rgb(255, 166, 0)' },
-  ],
-  [
-    { text: 'And within the ', color: '#fff' },
-    { text: 'best budgets!', color: 'rgb(255, 166, 0)' },
-  ],
-];
-
-
-
+import { useLanguage } from './(Screen)/LanguageContext';
 
 const HomeScreen = ({ navigation }) => {
+  const { language, t } = useLanguage();
+
+  const placeholders = [
+    [
+      { text: t('the') + ' ', color: '#fff' },
+      { text: t('journey') + ' ', color: 'rgb(255, 166, 0)' },
+      { text: t('isEndlessBookNow'), color: '#fff' },
+    ],
+    [
+      { text: t('planningForA') + ' ', color: '#fff' },
+      { text: t('trip') + '? ', color: 'rgb(255, 166, 0)' },
+    ],
+    [
+      { text: t('weWillOrganizeYour') + ' ', color: '#fff' },
+      { text: t('bestTrip'), color: 'rgb(255, 166, 0)' },
+    ],
+    [
+      { text: t('withThe') + ' ', color: '#fff' },
+      { text: t('bestDestination'), color: 'rgb(255, 166, 0)' },
+    ],
+    [
+      { text: t('andWithinThe') + ' ', color: '#fff' },
+      { text: t('bestBudgets') + '!', color: 'rgb(255, 166, 0)' },
+    ],
+  ];
+
+  const data = [
+    { id: '1', title: t('ferry'), icon: 'boat', navigate: 'SearchFerry', item: 'new' },
+    { id: '2', title: t('flights'), icon: 'airplane', navigate: 'SearchFerryDemo', item: '' },
+    { id: '3', title: t('trains'), icon: 'train', navigate: '', item: '' },
+    { id: '4', title: t('cars'), icon: 'car', navigate: '', item: '' },
+    { id: '5', title: t('hotel'), icon: 'bed', navigate: '', item: '' },
+    { id: '6', title: t('tours'), icon: 'map', navigate: '', item: '' },
+    { id: '7', title: t('attraction'), icon: 'star', navigate: '', item: '' },
+    { id: '8', title: t('ticket'), icon: 'ticket', navigate: '', item: '' },
+  ];
+
   const [activeCountry, setActiveCountry] = useState(null);
   const [activeattraction, setActiveattraction] = useState(null);
-  const [startingPoint, setStartingPoint] = useState({ id: '0', name: 'Starting Point' });
-  const [endPoint, setEndPoint] = useState({ id: '0', name: 'Destination' });
+  const [startingPoint, setStartingPoint] = useState({ id: '0', name: t('startingPoint') });
+  const [endPoint, setEndPoint] = useState({ id: '0', name: t('destination') });
   const [departureDate, setDepartureDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -130,6 +128,12 @@ const HomeScreen = ({ navigation }) => {
       })
     ).start();
   }, []);
+
+  // Update language-dependent state when language changes
+  useEffect(() => {
+    setStartingPoint({ id: '0', name: t('startingPoint') });
+    setEndPoint({ id: '0', name: t('destination') });
+  }, [language, t]);
 
   // Improved floating animation with slower, more natural movement
   useEffect(() => {
@@ -976,8 +980,8 @@ const HomeScreen = ({ navigation }) => {
               >
                 {/* Refined Section Title */}
                 <View style={premiumStyles.servicesTitleContainer}>
-                  <Text style={premiumStyles.servicesTitle}>Our Services</Text>
-                  <Text style={premiumStyles.servicesSubtitle}>Choose your perfect journey</Text>
+                  <Text style={premiumStyles.servicesTitle}>{t('ourServices')}</Text>
+                  <Text style={premiumStyles.servicesSubtitle}>{t('chooseYourPerfectJourney')}</Text>
                 </View>
 
                 {/* Improved Services Grid */}
@@ -1018,9 +1022,9 @@ const HomeScreen = ({ navigation }) => {
                             if (item.id === '1') {
                               updateCustomerData({
                                 startingPointId: '0',
-                                startingpoint_name: 'Starting Point',
+                                startingpoint_name: t('startingPoint'),
                                 endPointId: '0',
-                                endpoint_name: 'Destination',
+                                endpoint_name: t('destination'),
                               });
                             }
                             if (item.id === '2') {
@@ -1054,7 +1058,7 @@ const HomeScreen = ({ navigation }) => {
                                     colors={['#FF4444', '#FF6666']}
                                     style={premiumStyles.badgeGradient}
                                   >
-                                    <Text style={premiumStyles.badgeText}>{item.item}</Text>
+                                    <Text style={premiumStyles.badgeText}>{t(item.item)}</Text>
                                   </LinearGradient>
                                 </Animated.View>
                               )}
@@ -1221,7 +1225,7 @@ const HomeScreen = ({ navigation }) => {
 
                   <Text style={styles.inputLabel}>Departure date</Text>
                   <Text style={styles.inputText}>
-                    {calendarStartDate ? formatDate(calendarStartDate) : "Select Date"}
+                    {calendarStartDate ? formatDate(calendarStartDate) : t('selectDate')}
                   </Text>
 
                 </View>
@@ -1244,7 +1248,7 @@ const HomeScreen = ({ navigation }) => {
                     />
                     <View style={styles.inputBoxCol}>
                       <Text style={styles.inputLabel}>Return date</Text>
-                      <Text style={styles.inputText}>{calendarEndDate ? formatDate(calendarEndDate.toString()) : "Select Date"}</Text>
+                      <Text style={styles.inputText}>{calendarEndDate ? formatDate(calendarEndDate.toString()) : t('selectDate')}</Text>
                     </View>
                   </TouchableOpacity>
                 </>
@@ -1256,7 +1260,7 @@ const HomeScreen = ({ navigation }) => {
 
 
                 <View style={{ marginTop: hp('3%'), paddingHorizontal: wp('5%'), paddingBottom: hp('1.5%'), borderBottomWidth: 1, borderBottomColor: '#ddd' }}>
-                  <Text style={{ fontSize: wp('5%'), fontWeight: 'bold', marginBottom: hp('1.5%') }}>Select Date</Text>
+                  <Text style={{ fontSize: wp('5%'), fontWeight: 'bold', marginBottom: hp('1.5%') }}>{t('selectDate')}</Text>
                   <View style={{ flexDirection: 'row', gap: wp('5%') }}>
                     <View style={{ backgroundColor: '#f2f2f2', padding: wp('2.5%'), borderRadius: wp('2.5%'), flex: 1 }}>
                       <Text style={{ fontSize: wp('3%'), color: '#555' }}>Departure date</Text>
@@ -1321,7 +1325,7 @@ const HomeScreen = ({ navigation }) => {
             }
           }}
         >
-          <Text style={styles.searchButtonText}>Search</Text>
+          <Text style={styles.searchButtonText}>{t('search')}</Text>
         </TouchableOpacity>
         <Modal
           visible={isModalVisible}
@@ -1331,7 +1335,7 @@ const HomeScreen = ({ navigation }) => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <Text style={styles.modalText}>Please select starting points and destination.</Text>
+              <Text style={styles.modalText}>{t('pleaseSelectStartEndPoints')}</Text>
               <TouchableOpacity
                 style={styles.modalButton}
                 onPress={() => setIsModalVisible(false)}
@@ -1376,9 +1380,9 @@ const HomeScreen = ({ navigation }) => {
                     <MaterialIcons name="local-fire-department" size={wp('6%')} color="#fff" />
                     <View style={premiumStyles.hotDealsTextContainer}>
                       <Text style={premiumStyles.hotDealsTitle}>
-                        Hot <Text style={premiumStyles.hotDealsAccent}>Deals</Text>
+                        {t('hot')} <Text style={premiumStyles.hotDealsAccent}>{t('deals')}</Text>
                       </Text>
-                      <Text style={premiumStyles.hotDealsSubtitle}>Limited Time Offers</Text>
+                      <Text style={premiumStyles.hotDealsSubtitle}>{t('limitedTimeOffers')}</Text>
                     </View>
                   </View>
                   
@@ -1440,7 +1444,7 @@ const HomeScreen = ({ navigation }) => {
                         style={premiumStyles.badgeGradient}
                       >
                         <MaterialIcons name="verified" size={wp('3.5%')} color="#fff" />
-                        <Text style={premiumStyles.bannerBadgeText}>Featured</Text>
+                        <Text style={premiumStyles.bannerBadgeText}>{t('featured')}</Text>
                       </LinearGradient>
                     </Animated.View>
                   </View>
@@ -1454,8 +1458,8 @@ const HomeScreen = ({ navigation }) => {
         {/* <View style={styles.rowtrip}>
           <View style={styles.coltrip}>
 
-            <Text style={styles.texcol}>Popular</Text>
-            <Text style={styles.texcol}><Text style={styles.highlight}>Destination</Text></Text>
+            <Text style={styles.texcol}>{t('popular')}</Text>
+            <Text style={styles.texcol}><Text style={styles.highlight}>{t('destination')}</Text></Text>
             <Text style={styles.Detail}>
               Lorem ipsum odor amet, consectetuer adipiscing elit. Curabitur lectus sodales suspendisse hendrerit eu taciti quis.
               Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
@@ -1477,7 +1481,7 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
                 <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
-                <Text style={styles.cardPrice}>Start From <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
+                <Text style={styles.cardPrice}>{t('startFrom')} <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
               </View>
             </View>
           ))}
@@ -1523,9 +1527,9 @@ const HomeScreen = ({ navigation }) => {
                 style={premiumStyles.sectionTitleGradient}
               >
                 <Text style={premiumStyles.sectionTitle}>
-                  Popular <Text style={premiumStyles.sectionTitleAccent}>Destination</Text>
+                  {t('destination')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
                 </Text>
-                <Text style={premiumStyles.sectionSubtitle}>Discover amazing places around the world</Text>
+                <Text style={premiumStyles.sectionSubtitle}>{t('discoverAmazingPlaces')}</Text>
               </LinearGradient>
             </BlurView>
           </View>
@@ -1605,12 +1609,12 @@ const HomeScreen = ({ navigation }) => {
                         ) : (
                           <>
                             <Text style={premiumStyles.destinationName}>
-                              {item.sys_countries_nameeng}
+                              {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
                             </Text>
                             <View style={premiumStyles.destinationMeta}>
                               <MaterialIcons name="place" size={wp('3.5%')} color="#FD501E" />
                               <Text style={premiumStyles.destinationMetaText}>
-                                Explore Now
+                                {t('exploreNow')}
                               </Text>
                             </View>
                           </>
@@ -1670,9 +1674,9 @@ const HomeScreen = ({ navigation }) => {
                 style={[premiumStyles.sectionTitleGradient, { paddingVertical: wp('2.5%') }]}
               >
                 <Text style={[premiumStyles.sectionTitle, { fontSize: wp('5%'), marginBottom: 0 }]}>
-                  Popular <Text style={premiumStyles.sectionTitleAccent}>Route</Text>
+                  {t('route')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
                 </Text>
-                <Text style={premiumStyles.sectionSubtitle}>Discover the most traveled ferry routes</Text>
+                <Text style={premiumStyles.sectionSubtitle}>{t('discoverMostTraveledRoutes')}</Text>
               </LinearGradient>
             </BlurView>
           </View>
@@ -1694,7 +1698,7 @@ const HomeScreen = ({ navigation }) => {
                   }}
                 >
                   <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
-                    {item.sys_countries_nameeng}
+                    {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -1745,9 +1749,9 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => {
                       updateCustomerData({
                         startingPointId: item.md_timetable_startid,
-                        startingpoint_name: item.start_location_name,
+                        startingpoint_name: language === 'th' ? item.start_location_namethai : item.start_location_nameeng,
                         endPointId: item.md_timetable_endid,
-                        endpoint_name: item.end_location_name,
+                        endpoint_name: language === 'th' ? item.end_location_namethai : item.end_location_nameeng,
                       });
                       navigation.navigate('SearchFerry');
                     }}
@@ -1783,7 +1787,7 @@ const HomeScreen = ({ navigation }) => {
                                 style={premiumStyles.hotRouteBadgeGradient}
                               >
                                 <MaterialIcons name="local-fire-department" size={wp('2.5%')} color="#fff" />
-                                <Text style={premiumStyles.hotRouteBadgeText}>Hot Route</Text>
+                                <Text style={premiumStyles.hotRouteBadgeText}>{t('hotRoute')}</Text>
                               </LinearGradient>
                             </Animated.View>
                           )}
@@ -1793,13 +1797,13 @@ const HomeScreen = ({ navigation }) => {
                           <View>
                             <View style={premiumStyles.routeHeader}>
                               <Text style={premiumStyles.routeFromText} numberOfLines={1} ellipsizeMode="tail">
-                                {item.start_location_name}
+                                {language === 'th' ? item.start_location_namethai : item.start_location_nameeng}
                               </Text>
                               <View style={premiumStyles.routeArrowContainer}>
                                 <MaterialIcons name="arrow-forward" size={wp('4%')} color="#FD501E" />
                               </View>
                               <Text style={premiumStyles.routeToText} numberOfLines={1} ellipsizeMode="tail">
-                                {item.end_location_name}
+                                {language === 'th' ? item.end_location_namethai : item.end_location_nameeng}
                               </Text>
                             </View>
                           </View>
@@ -1807,7 +1811,7 @@ const HomeScreen = ({ navigation }) => {
                           <View style={premiumStyles.routeFooter}>
                             <MaterialIcons name="place" size={wp('3%')} color="#999" />
                             <Text style={premiumStyles.routePierText} numberOfLines={1} ellipsizeMode="tail">
-                              {item.md_pier_nameeng}
+                              {language === 'th' ? item.md_pier_namethai : item.md_pier_nameeng}
                             </Text>
                           </View>
                         </View>
@@ -1844,7 +1848,7 @@ const HomeScreen = ({ navigation }) => {
                   fontSize: wp('3.5%'),
                   textAlign: 'center'
                 }}>
-                  Load More
+                  {t('loadMore')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1889,9 +1893,9 @@ const HomeScreen = ({ navigation }) => {
                 style={premiumStyles.sectionTitleGradient}
               >
                 <Text style={premiumStyles.sectionTitle}>
-                  Top Trending <Text style={premiumStyles.sectionTitleAccent}>Places</Text>
+                  {t('topTrending')} <Text style={premiumStyles.sectionTitleAccent}>{t('places')}</Text>
                 </Text>
-                <Text style={premiumStyles.sectionSubtitle}>Most popular destinations right now</Text>
+                <Text style={premiumStyles.sectionSubtitle}>{t('mostPopularDestinations')}</Text>
               </LinearGradient>
             </BlurView>
           </View>
@@ -2000,7 +2004,7 @@ const HomeScreen = ({ navigation }) => {
                       <View style={premiumStyles.trendingCarouselContent}>
                         <View style={premiumStyles.trendingCarouselTextContainer}>
                           <Text style={premiumStyles.trendingCarouselCountry} numberOfLines={1}>
-                            {item.sys_countries_nameeng}
+                            {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
                           </Text>
                           <Text style={premiumStyles.trendingCarouselLocation} numberOfLines={2}>
                             {item.md_location_nameeng}
@@ -2009,7 +2013,7 @@ const HomeScreen = ({ navigation }) => {
                           <View style={premiumStyles.trendingCarouselMeta}>
                             <View style={premiumStyles.trendingCarouselMetaItem}>
                               <MaterialIcons name="place" size={wp('4%')} color="#FD501E" />
-                              <Text style={premiumStyles.trendingCarouselMetaText}>Explore Destination</Text>
+                              <Text style={premiumStyles.trendingCarouselMetaText}>{t('exploreDestination')}</Text>
                             </View>
                           </View>
                         </View>
@@ -2052,7 +2056,7 @@ const HomeScreen = ({ navigation }) => {
                 style={premiumStyles.sectionTitleGradient}
               >
                 <Text style={premiumStyles.sectionTitle}>
-                  Popular <Text style={premiumStyles.sectionTitleAccent}>Attraction</Text>
+                  {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
                 </Text>
                 <Text style={premiumStyles.sectionSubtitle}>Explore the best attractions</Text>
               </LinearGradient>
@@ -2249,7 +2253,7 @@ const HomeScreen = ({ navigation }) => {
                               style={premiumStyles.attractionPopularBadgeGradient}
                             >
                               <MaterialIcons name="local-fire-department" size={wp('3.2%')} color="#fff" />
-                              <Text style={premiumStyles.attractionPopularBadgeText}>Popular</Text>
+                              <Text style={premiumStyles.attractionPopularBadgeText}>{t('popular')}</Text>
                             </LinearGradient>
                           </Animated.View>
                         )}
@@ -2271,13 +2275,13 @@ const HomeScreen = ({ navigation }) => {
                           <View style={premiumStyles.attractionMetaItem}>
                             <MaterialIcons name="people" size={wp('3.5%')} color="#666" />
                             <Text style={premiumStyles.attractionMetaText}>
-                              {item.md_tour_count} booked
+                              {item.md_tour_count} {t('booked')}
                             </Text>
                           </View>
                         </View>
                         
                         <View style={premiumStyles.attractionPriceContainer}>
-                          <Text style={premiumStyles.attractionPriceLabel}>Start from</Text>
+                          <Text style={premiumStyles.attractionPriceLabel}>{t('startFrom')}</Text>
                           <Text style={premiumStyles.attractionPrice}>
                             ฿{formatNumberWithComma(item.md_tour_priceadult)}
                           </Text>
@@ -2323,7 +2327,7 @@ const HomeScreen = ({ navigation }) => {
                 fontSize: wp('3.5%'),
                 textAlign: 'center'
               }}>
-                Load More
+                {t('loadMore')}
               </Text>
             </TouchableOpacity>
           </View>

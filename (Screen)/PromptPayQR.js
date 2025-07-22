@@ -3,9 +3,11 @@ import { View, SafeAreaView, StyleSheet, Image, TouchableOpacity, Text, ScrollVi
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import axios from "axios";
 import ipAddress from "../ipconfig";
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import moment from "moment-timezone";
@@ -18,6 +20,7 @@ export default function PromptPayScreen({ route, navigation }) {
   const [qrUri, setQrUri] = useState(null);
   const [loading, setLoading] = useState(true);
   const { customerData, updateCustomerData } = useCustomer();
+  const { t } = useLanguage();
   const [qrpayment, setqrpayment] = useState(Paymenttotal * 100);
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
@@ -84,7 +87,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
        
   
       } catch (error) {
-        Alert.alert('Failed to create QR code or booking');
+        Alert.alert(t('error'), t('failedToCreateQRCode'));
       } finally {
         setLoading(false);
       }
@@ -92,60 +95,68 @@ let booking_codeGroup = bookingcodeGroup.length > 0
   
     loadAll();
   }, [qrpayment]);
-    // เพิ่ม qrpayment เพื่อให้ `loadQR` ทำงานเมื่อ qrpayment เปลี่ยนแปลง
 
-  useEffect(() => {
-    let localIntervalId = null;
-    const checkPayment = async () => {
-      try {
-        console.log("Charge ID:", chargeid);
-        // ทำการตรวจสอบสถานะการชำระเงิน
-        let res;
+  // ใช้ useFocusEffect แทน useEffect สำหรับ payment checking
+  useFocusEffect(
+    React.useCallback(() => {
+      let localIntervalId = null;
+      
+      const checkPayment = async () => {
         try {
-          res = await axios.post(`${ipAddress}/check-charge`, {
-            charge_id: chargeid,
-          });
+          console.log("Charge ID:", chargeid);
+          // ทำการตรวจสอบสถานะการชำระเงิน
+          let res;
+          try {
+            res = await axios.post(`${ipAddress}/check-charge`, {
+              charge_id: chargeid,
+            });
+          } catch (error) {
+            // Fallback เป็น mock data
+            console.warn('Network error, using mock payment status');
+            res = { data: { success: true, status: 'successful' } };
+          }
+
+          console.log("Payment Status Response:", res.data);
+
+          if (res.data.success && res.data.status === "successful") {
+            const bookingCodeToUpdate = actualBookingCode || booking_code;
+            updatestatus(bookingCodeToUpdate); // อัปเดตสถานะการชำระเงิน
+            navigation.navigate("ResultScreen", { success: true });
+            if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
+          }
         } catch (error) {
-          // Fallback เป็น mock data
-          console.warn('Network error, using mock payment status');
-          res = { data: { success: true, status: 'successful' } };
+          console.error("Error during payment check:", error);
         }
-
-        console.log("Payment Status Response:", res.data);
-
-        if (res.data.success && res.data.status === "successful") {
-          const bookingCodeToUpdate = actualBookingCode || booking_code;
-          updatestatus(bookingCodeToUpdate); // อัปเดตสถานะการชำระเงิน
-          navigation.navigate("ResultScreen", { success: true });
-          if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
-        }
-      } catch (error) {
-        console.error("Error during payment check:", error);
-      }
-    };
-
-    if (chargeid) {
-      localIntervalId = setInterval(() => {
-        checkPayment();
-      }, 2000);
-      setIntervalId(localIntervalId); // เก็บ id ไว้ใน state
-      // cleanup
-      return () => {
-        if (localIntervalId) clearInterval(localIntervalId);
       };
-    }
-  }, [chargeid]);  // ทำงานเมื่อ `chargeid` เปลี่ยนแปลง
+
+      if (chargeid) {
+        localIntervalId = setInterval(() => {
+          checkPayment();
+        }, 2000);
+        setIntervalId(localIntervalId); // เก็บ id ไว้ใน state
+      }
+
+      // Cleanup function - จะทำงานเมื่อหน้าไม่ active หรือ component unmount
+      return () => {
+        console.log("🛑 Cleaning up payment check interval");
+        if (localIntervalId) {
+          clearInterval(localIntervalId);
+          setIntervalId(null);
+        }
+      };
+    }, [chargeid, actualBookingCode, booking_code])
+  );
 
   const saveQRToFile = async () => {
     try {
       if (!qrUri) {
-        Alert.alert('Error', 'QR code is not available');
+        Alert.alert(t('error'), t('qrCodeNotAvailable'));
         return;
       }
       // ขอ permission ก่อน
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'Please allow access to save images.');
+        Alert.alert(t('permissionRequired'), t('allowAccessToSaveImages'));
         return;
       }
       // สร้างไฟล์ชั่วคราว
@@ -155,11 +166,11 @@ let booking_codeGroup = bookingcodeGroup.length > 0
       });
       // บันทึกลงแกลเลอรี่
       await MediaLibrary.saveToLibraryAsync(path);
-      Alert.alert('✅ Success', 'QR code saved to your gallery!');
+      Alert.alert(t('success'), t('qrCodeSavedToGallery'));
       console.log('QR saved to', path);
     } catch (error) {
       console.error('Error saving QR code:', error);
-      Alert.alert('Error', 'Failed to save QR code');
+      Alert.alert(t('error'), t('failedToSaveQRCode'));
     }
   };
 
@@ -346,10 +357,10 @@ let booking_codeGroup = bookingcodeGroup.length > 0
       console.log('✅ Sent:', response.data);
     }
 
-    Alert.alert('Success', 'All passengers submitted!');
+    Alert.alert(t('success'), t('allPassengersSubmitted'));
   } catch (error) {
     console.error('❌ Failed to submit passenger:', error.response?.data || error.message);
-    Alert.alert('Error', 'Could not submit passenger data');
+    Alert.alert(t('error'), t('couldNotSubmitData'));
   }
 };
 
@@ -507,7 +518,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                 textShadowOffset: { width: 2, height: 2 },
               }
             ]}>
-              PromptPay QR
+              {t('promptPayQR')}
             </Text>
             <Text style={{
               color: 'rgba(255,255,255,0.85)',
@@ -519,7 +530,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
               textShadowRadius: 3,
               textShadowOffset: { width: 1, height: 1 },
             }}>
-              Scan to complete your payment
+              {t('scanToCompletePayment')}
             </Text>
           </View>
         </View>
@@ -559,7 +570,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                   />
                 </View>
                 <View style={styles.amountContainer}>
-                  <Text style={styles.amountLabel}>Total Amount</Text>
+                  <Text style={styles.amountLabel}>{t('totalAmount')}</Text>
                   <Text style={styles.amountValue}>{customerData.symbol} {Paymenttotal}</Text>
                 </View>
               </>
@@ -578,7 +589,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                 style={styles.saveButtonGradient}
               >
                 <Ionicons name="download-outline" size={20} color="#6B7280" style={{ marginRight: 8 }} />
-                <Text style={styles.saveButtonText}>Save QR</Text>
+                <Text style={styles.saveButtonText}>{t('saveQR')}</Text>
               </LinearGradient>
             </TouchableOpacity>
             
@@ -594,7 +605,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                 style={styles.cancelButtonGradient}
               >
                 <Ionicons name="close-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

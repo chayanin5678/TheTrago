@@ -8,11 +8,13 @@ import ipAddress from "../ipconfig";
 import axios from 'axios';
 import moment from "moment-timezone";
 import { useAuth } from '../AuthContext';
+import { useLanguage } from './LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
 const RegisterScreen = ({ navigation }) => {
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -59,7 +61,7 @@ const RegisterScreen = ({ navigation }) => {
     try {
       const res = await fetch(`${ipAddress}/checkemail/${email}`);
       if (!res.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(t('networkResponseError'));
       }
 
       const data = await res.json();
@@ -71,7 +73,7 @@ const RegisterScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error("Error during email check:", error);
-      Alert.alert("Error", "Failed to check email");
+      Alert.alert(t('error'), t('failedToCheckEmail'));
     }
   };
   useEffect(() => {
@@ -155,28 +157,28 @@ const RegisterScreen = ({ navigation }) => {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
-      Alert.alert('Incomplete Information', 'Please fill in all required fields.');
+      Alert.alert(t('incompleteInformation'), t('pleaseFillAllFields'));
       return;
     }
 
     // ตรวจสอบว่า password ตรงกันหรือไม่
     if (password !== confirmPassword) {
       setIsLoading(false);
-      Alert.alert("Passwords don't match!");
+      Alert.alert(t('passwordsDoNotMatch'));
       return;
     }
 
     // ตรวจสอบว่าอีเมลถูกต้องหรือไม่
     if (!validateEmail(email)) {
       setIsLoading(false);
-      Alert.alert("Invalid email format!");
+      Alert.alert(t('invalidEmailFormat'));
       return;
     }
 
     // ตรวจสอบว่าอีเมลมีในระบบหรือไม่
     if (emailExists) {
       setIsLoading(false);
-      Alert.alert("Email already exists!");
+      Alert.alert(t('emailAlreadyExists'));
       return;
     }
 
@@ -189,7 +191,7 @@ const RegisterScreen = ({ navigation }) => {
       // ตรวจสอบว่า data.newMemberId มีอยู่หรือไม่
       if (!data.newMemberId) {
         setIsLoading(false);
-        Alert.alert("Error", "Unable to retrieve member ID.");
+        Alert.alert(t('error'), t('unableToRetrieveMemberID'));
         return;
       }
 
@@ -203,11 +205,11 @@ const RegisterScreen = ({ navigation }) => {
 
       await createMember(newId);
       setIsLoading(false);
-      Alert.alert('Success', 'Registration successful! You are now logged in.');
+      Alert.alert(t('success'), t('registrationSuccessful'));
     } catch (error) {
       setIsLoading(false);
       console.error('Error during registration:', error);
-      Alert.alert('Error', 'Registration failed. Please try again.');
+      Alert.alert(t('error'), t('registrationFailed'));
     }
   };
 
@@ -230,7 +232,7 @@ const RegisterScreen = ({ navigation }) => {
           <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
-              <Text style={styles.loadingText}>Creating your account...</Text>
+              <Text style={styles.loadingText}>{t('creatingAccount')}</Text>
             </View>
           </BlurView>
         )}
@@ -249,8 +251,8 @@ const RegisterScreen = ({ navigation }) => {
               },
             ]}
           >
-            <Text style={styles.welcomeText}>Join The Trago</Text>
-            <Text style={styles.welcomeSubtext}>Create your account and start your journey</Text>
+            <Text style={styles.welcomeText}>{t('joinTheTrago')}</Text>
+            <Text style={styles.welcomeSubtext}>{t('createAccountAndStart')}</Text>
           </Animated.View>
 
           {/* Main Content Card */}
@@ -269,14 +271,14 @@ const RegisterScreen = ({ navigation }) => {
                 style={styles.cardGradient}
               >
                 <View style={styles.cardHeader}>
-                  <Text style={styles.title}>Create Account</Text>
+                  <Text style={styles.title}>{t('createAccount')}</Text>
                   <View style={styles.titleUnderline} />
                 </View>
                 
                 <View style={styles.subtitleContainer}>
-                  <Text style={styles.subtitle}>Already have an account?</Text>
+                  <Text style={styles.subtitle}>{t('alreadyHaveAccount')}</Text>
                   <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.link}> Sign in</Text>
+                    <Text style={styles.link}> {t('signIn')}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -289,7 +291,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="First Name"
+                      placeholder={t('firstName')}
                       placeholderTextColor="#aaa"
                       value={firstName}
                       onChangeText={(text) => {
@@ -307,7 +309,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Last Name"
+                      placeholder={t('lastName')}
                       placeholderTextColor="#aaa"
                       value={lastName}
                       onChangeText={(text) => {
@@ -324,7 +326,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Email address"
+                      placeholder={t('emailAddress')}
                       placeholderTextColor="#aaa"
                       value={email}
                       onChangeText={(text) => {
@@ -347,7 +349,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Password"
+                      placeholder={t('password')}
                       placeholderTextColor="#aaa"
                       secureTextEntry={!showPassword}
                       value={password}
@@ -368,7 +370,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Confirm Password"
+                      placeholder={t('confirmPassword')}
                       placeholderTextColor="#aaa"
                       secureTextEntry={!showConfirmPassword}
                       value={confirmPassword}
@@ -397,7 +399,7 @@ const RegisterScreen = ({ navigation }) => {
                     end={{ x: 1, y: 1 }}
                   >
                     <View style={styles.buttonContent}>
-                      <Text style={styles.registerText}>Create Account</Text>
+                      <Text style={styles.registerText}>{t('createAccount')}</Text>
                       <MaterialIcons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
                     </View>
                   </LinearGradient>
@@ -438,20 +440,21 @@ const RegisterScreen = ({ navigation }) => {
 
                 {/* Policy Text */}
                 <Text style={styles.policyText}>
-                  By continuing, you agree to The Trago's{' '}
-                  <TouchableOpacity 
-                    onPress={() => navigation.navigate('TermsScreen')} 
-                    style={styles.inlineLink}
+                  {t('byContinuing')}{' '}
+                  <Text 
+                    style={styles.linkText}
+                    onPress={() => navigation.navigate('TermsScreen')}
                   >
-                    <Text style={styles.linkText}>Terms of Use</Text>
-                  </TouchableOpacity>
-                  {' '}and{' '}
-                  <TouchableOpacity 
-                    onPress={() => navigation.navigate('PrivacyPolicyScreen')} 
-                    style={styles.inlineLink}
+                    {t('termsOfUse')}
+                  </Text>
+                  {' '}{t('and')}{' '}
+                  <Text 
+                    style={styles.linkText}
+                    onPress={() => navigation.navigate('PrivacyPolicyScreen')}
                   >
-                    <Text style={styles.linkText}>Privacy Policy</Text>
-                  </TouchableOpacity>.
+                    {t('privacyPolicy')}
+                  </Text>
+                  {t('ofTheTrago')}.
                 </Text>
               </LinearGradient>
             </BlurView>
@@ -719,8 +722,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 10,
+    lineHeight: 22,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    flexWrap: 'wrap',
   },
   inlineLink: {
     // No additional styles needed - the TouchableOpacity wraps the Text
@@ -729,6 +734,7 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     fontWeight: '700',
     fontSize: 13,
+    textDecorationLine: 'underline',
   },
 });
 

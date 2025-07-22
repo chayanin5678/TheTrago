@@ -10,6 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from 'axios';
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import moment from "moment-timezone";
 import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -25,6 +26,8 @@ const brandIcons = {
 };
 
 const PaymentScreen = ({ navigation, route }) => {
+  const { t } = useLanguage();
+  const { customerData, updateCustomerData } = useCustomer();
 
   const [Discount, setDiscount] = useState('');
   const [subtotal, setSubtotal] = useState('');
@@ -41,7 +44,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const [timetableReturn, settimetableReturn] = useState([]);
   const [bookingcode, setBookingcode] = useState([]);
   const [bookingcodeGroup, setBookingcodeGroup] = useState([]);
-  const { customerData, updateCustomerData } = useCustomer();
  const [booking_code,setBooking_code] = useState('');
  const [booking_codeGroup,setGroup_code] = useState('');
 
@@ -314,7 +316,7 @@ const PaymentScreen = ({ navigation, route }) => {
     // ✅ ใช้ selectedCard ที่ได้จากการเลือกบัตร
     if (!selectedCard) {
       setIsLoading(false);
-      Alert.alert("No Card Selected", "Please select a card to continue.");
+      Alert.alert(t('noCardSelected') || "No Card Selected", t('pleaseSelectCard') || "Please select a card to continue.");
       return;
     }
     // log ข้อมูลบัตรที่เลือก
@@ -349,7 +351,7 @@ const PaymentScreen = ({ navigation, route }) => {
       expYear = null;
     }
     if (!expMonth || !expYear || !/^\d{2}$/.test(expMonth) || !/^\d{4}$/.test(expYear)) {
-      Alert.alert("Invalid Expiry Date", "Please check the card's expiration date format (MM/YY or MM/YYYY). Month must be 2 digits, year must be 4 digits.");
+      Alert.alert(t('invalidExpiryDate') || "Invalid Expiry Date", t('checkExpiryFormat') || "Please check the card's expiration date format (MM/YY or MM/YYYY). Month must be 2 digits, year must be 4 digits.");
       return;
     }
     // --- End robust expiration year and month handling ---
@@ -453,7 +455,7 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("❌ Error:", error);
       setIsLoading(false);
-      Alert.alert("Error", error.message);
+      Alert.alert(t('error') || "Error", error.message);
     }
   };
 
@@ -644,10 +646,10 @@ const PaymentScreen = ({ navigation, route }) => {
         console.log('✅ Sent:', response.data);
       }
 
-      Alert.alert('Success', 'All passengers submitted!');
+      Alert.alert(t('success') || 'Success', t('allPassengersSubmitted') || 'All passengers submitted!');
     } catch (error) {
       console.error('❌ Failed to submit passenger:', error.response?.data || error.message);
-      Alert.alert('Error', 'Could not submit passenger data');
+      Alert.alert(t('error') || 'Error', t('couldNotSubmitData') || 'Could not submit passenger data');
     }
   };
 
@@ -686,11 +688,11 @@ const PaymentScreen = ({ navigation, route }) => {
           }
         } catch (error) {
           console.error("Error checking charge:", error);
-          Alert.alert("❌ Error", "There was an error processing your payment.");
+          Alert.alert(t('error') || "❌ Error", t('errorProcessingPayment') || "There was an error processing your payment.");
           navigation.navigate("ResultScreen", { success: false });
         }
       } else if (url.includes("payment/failure")) {
-        Alert.alert("❌ Payment Failed", "Something went wrong with your payment.");
+        Alert.alert(t('paymentFailed') || "❌ Payment Failed", t('somethingWentWrong') || "Something went wrong with your payment.");
         navigation.navigate("ResultScreen", { success: false });
       }
     };
@@ -813,7 +815,7 @@ const PaymentScreen = ({ navigation, route }) => {
       {isLoading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FD501E" />
-          <Text style={styles.loadingText}>Processing Payment...</Text>
+          <Text style={styles.loadingText}>{t('processingPayment') || 'Processing Payment...'}</Text>
         </View>
       )}
       {/* Skeleton Loader */}
@@ -956,7 +958,7 @@ const PaymentScreen = ({ navigation, route }) => {
                     textShadowOffset: { width: 1, height: 1 },
                   }
                 ]}>
-                  Payment
+                  {t('payment') || 'Payment'}
                 </Text>
                 <Text style={{
                   color: 'rgba(255,255,255,0.8)',
@@ -967,12 +969,12 @@ const PaymentScreen = ({ navigation, route }) => {
                   textShadowColor: 'rgba(0,0,0,0.2)',
                   textShadowRadius: 2,
                 }}>
-                  Complete your booking payment
+                  {t('completeBookingPayment') || 'Complete your booking payment'}
                 </Text>
               </View>
             </View>
 
-            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+            <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
 
             <KeyboardAvoidingView
               behavior="padding"
@@ -998,7 +1000,7 @@ const PaymentScreen = ({ navigation, route }) => {
                   <View style={styles.card}>
                     <View style={styles.row}>
                       <FontAwesome name="credit-card" size={24} color="black" marginRight='10' />
-                      <Text style={styles.header}>Payment Options</Text>
+                      <Text style={styles.header}>{t('paymentOptions') || 'Payment Options'}</Text>
                     </View>
 
                     {/* Radio Button 1 */}
@@ -1018,7 +1020,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           )}
                         </View>
                         <View style={styles.logodown}>
-                          <Text style={styles.labelHead}>Credit and Debit Card</Text>
+                          <Text style={styles.labelHead}>{t('creditDebitCard') || 'Credit and Debit Card'}</Text>
                         </View>
                         <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                       </TouchableOpacity>
@@ -1056,7 +1058,7 @@ const PaymentScreen = ({ navigation, route }) => {
                               </TouchableOpacity>
                             ))
                           ) : (
-                            <Text style={{ color: '#888', marginBottom: 12 }}>No cards saved yet.</Text>
+                            <Text style={{ color: '#888', marginBottom: 12 }}>{t('noCardsSaved') || 'No cards saved yet.'}</Text>
                           )}
                           <TouchableOpacity
                             style={styles.addCardButton}
@@ -1070,7 +1072,7 @@ const PaymentScreen = ({ navigation, route }) => {
                             }}
                           >
                             <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Add Card</Text>
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('addCard') || 'Add Card'}</Text>
                           </TouchableOpacity>
                         </View>
                       )}
@@ -1093,7 +1095,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           )}
                         </View>
                         <View style={styles.logodown}>
-                          <Text style={styles.labelHead}>PromptPay</Text>
+                          <Text style={styles.labelHead}>{t('promptPay') || 'PromptPay'}</Text>
                         </View>
                         <FontAwesome name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                       </TouchableOpacity>
@@ -1107,11 +1109,11 @@ const PaymentScreen = ({ navigation, route }) => {
                       </View>
                       <View style={styles.textContainer}>
                         <Text style={styles.label}>
-                          I understand and agree with the{' '}
+                          {t('agreeTermsText') || 'I understand and agree with the'}{' '}
                           <Text style={styles.textcolor} onPress={() => setTermsModalVisible(true)}>
-                            Terms of Services
+                            {t('termsOfServices') || 'Terms of Services'}
                           </Text>
-                          {' '}and <Text style={styles.textcolor} onPress={() => setPrivacyModalVisible(true)}>Policy</Text>
+                          {' '}{t('and') || 'and'} <Text style={styles.textcolor} onPress={() => setPrivacyModalVisible(true)}>{t('policy') || 'Policy'}</Text>
                         </Text>
                       </View>
                     </View>
@@ -1126,14 +1128,14 @@ const PaymentScreen = ({ navigation, route }) => {
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
                       <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '90%', maxHeight: '85%' }}>
                         <ScrollView>
-                          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#FD501E', textAlign: 'center' }}>Terms and conditions</Text>
+                          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#FD501E', textAlign: 'center' }}>{t('termsAndConditions') || 'Terms and conditions'}</Text>
                           <Text style={{ fontSize: 15, color: '#222' }}>{'1. Copyright\nThe Trago.com (Company Registration No.0905560003303) The Trago.com is the sole owner or lawful license of all right to www.thetrago.com\n\n2. Confirmation\nCustomers are responsible to make sure the selection on travelling date, time and destination are correct before making payment. By making payment and the issuance of Order Summary/Booking number/ Itinerary, the seats are confirmed immediately. All passengers above the age of 3 years old will be required to purchase a seat.\n\n3. Cancellations and Refunds\nRefunds are not available if the travel date is less than 72 hours away. Cancellations must be requested at least 72 hours before departure to qualify for a refund. Refunds will be processed within 1-7 business days to the original payment method.\n\n4. Validity\nFerry voucher is issued in the passenger’s name which is personal and non-transferable. It is valid only for the date and the trip for which it was issued.\n\n5. Check –in\nAll Passenger(s) has to contact to check-in at the counter at least 30 minutes in advance before departure time.\n\nFor foreign tourists might take more time at immigration so it is passenger(s) responsibility to make sure you can reach it on time before the ferry leaves. If passenger fail to board on time, passenger has to arrange your own transport to the destination.\n\nIn case a customer is more than the total that stated on the voucher or infant ages is over than boat company conditions , the boat company will charge the difference of amount from a customer right away at the counter.\n\n6. Ferry voucher\nThe voucher will send to you on e-mail when your booking is completed. If you have not received the voucher, please contact us by email or phone call to inform us the issues. Our customer support team will assist you to check and resend the voucher.\n\nPlease print the voucher or screen shot on your phone to show to the staff.\n\nThe Trago reserves the right to automatically change your reserved ticket itinerary if there are services for the same route or close round.\n\n7. No Show\nIf you are unable to board the ferry or bus on time or according to the schedule, you will be charged the full fare and will not be refunded.\n\n8. Passenger’s ticket conditions\nCompany is not responsible for any delay for boarding, deviation or modification of the scheduled route, due to bad weather conditions or pier authority orders. Passengers are entitled to carry maximum 2 pieces of baggage and maximum weight of the total luggage is 15 kilograms. The company is not responsible for any damage or loss of luggage retained under passenger’s personal care during the trip.\n\n9. Shuttle Companies Rights\nShuttle Company reserves the right to change or amend the itineraries without prior notice. Van/Bus seating depending on company design. The Trago.com will not responsible for any sudden change in van/bus schedules and customer waiting at the wrong boarding/pick-up point.\n\n10. Request on Van/Bus Seating Requirement\nCompany will provide the van/bus that are either self-owned or on charter from third parties. Company makes reasonable efforts to deliver the type of vehicle accord to what the customer booked for. However, the company reserves the right to replace, downgrade or upgrade the vehicle type booked by the customers in the event of unforeseen circumstances.\n\nThe company will not be held responsible for any contingent cost incurred by the customer arising from the van/bus delay.\n\nAll passengers above the age of 3 years old will be required to purchase a seat. The company shall not be responsible for any legal implications resulted from passengers not complying with the regularities.\n\n11. The Trago.com Legal Notice\nThe Trago.com will not liable and will not refund due to any action carried out by our ferry/shuttle company partners, or any event happens at our partner’s side. For instances, The Trago.com will not be responsible for any sudden change from ferry company or shuttle company , seat number(s), schedules, departure date & time, arrival date & time, loss or accident incurred while taking the ferry/shuttle or no ferry/shuttle service provided. However, customer may complain to us, and we will take necessary actions to prevent such things from happen again in the future.\n\nThe Trago.com will not include the following responsible of ,\n\n(a) Ferry/Shuttle not departing / reaching on time.\n\n(b) Maintaining the quality of Ferry/Shuttle, staff behavior and punctuality.\n\n(c) Ferry/Shuttle operator canceling the service due to unavoidable reasons.\n\n(d) The baggage of the customer getting lost / stolen / damaged.\n\n(e) The customer waiting at the wrong boarding point/pick-up point (please call the ferry/shuttle operator to find out the exact boarding point).\n\n(f) The Ferry/Shuttle operator changing the boarding point and/or using a pick-up vehicle (i.e : van transfer) at the boarding point to take customers to the ferry departure point.\n\n(g) The Trago.com is not be responsible for any sudden change in Ferry/Shuttle, schedules, departure date & time, arrival date & time, loss or accident incurred while taking ferry/shuttle.\n\n(h) Ferry / shuttle operators Request a fare increase before travelling. As the oil price situation\n\n12. Financial proof\nI confirm that the proof of payment. (Transfer slip) is a true and correct document It is not a fake document. Add or shorten the message Or modify by any means If it is later detected that it is a fake document I solely accept my breach of the law.'}</Text>
                         </ScrollView>
                         <TouchableOpacity
                           style={{ alignSelf: 'center', marginTop: 18, backgroundColor: '#FD501E', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 30 }}
                           onPress={() => setTermsModalVisible(false)}
                         >
-                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Close</Text>
+                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{t('close') || 'Close'}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1148,14 +1150,14 @@ const PaymentScreen = ({ navigation, route }) => {
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
                       <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '90%', maxHeight: '85%' }}>
                         <ScrollView>
-                          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#FD501E', textAlign: 'center' }}>Privacy Policy</Text>
+                          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#FD501E', textAlign: 'center' }}>{t('privacyPolicy') || 'Privacy Policy'}</Text>
                           <Text style={{ fontSize: 15, color: '#222' }}>{`The Trago is committed to respecting and protecting your privacy and complying with data protection and privacy laws. We have provided this Privacy Policy to help you understand how we collect, use, store, and protect your information as one of our customers. Please take a few moments to read the sections below and learn how we may use your personal information.\n\nFor all our services, the data controller, the company responsible for your privacy is The Trago\n\nYou should read this notice in conjunction with our cookies policy and the terms & conditions of use for The Trago websites and any separate terms & conditions issued with your booking of Thetrago or other products and services.\n\nOur Legal Basis for Using Your Personal Information\nWe will only process your personal information where we have a legal basis to do so. The legal basis will depend on the reason or reasons The Trago has collected and needs to use your information. Under EU and UK data protection laws, in almost all cases the legal basis will be:\n\nBecause we need to use your information to process your booking, fulfill your travel arrangements, and otherwise perform the contract we have with you.\nBecause it is in The Trago’s legitimate interests as a company to use your personal information to operate and improve our business as a travel provider.\nBecause we need to use your personal information to comply with a legal obligation.\n>To protect the vital interests of you or another person.\nBecause you have consented to The Trago using your information for a particular purpose.\nIf processing of your data is subject to any other laws, then the basis of processing your data may be different to that set out above and may in those circumstances be based on your consent in all cases.\n\nWhat Types of Personal Information Do We Collect From You?\nWe endeavor to collect and use your personal information only with your knowledge and consent. We collect information when you use the The Trago website, one of our products or services, or communicate with us. This information and the details of anyone traveling with you are necessary for the adequate performance of our contract with you and to allow us to comply with our legal obligations. Without it, we may not be able to provide you with all requested services.\n\nWe collect the following categories of personal information:\n\nyou provide to us to complete and manage your booking or another service you have requested from us: For example, your name, address, email, contact details, date of birth, gender, passport number, your vehicle details, and payment information. The exact information required will depend on the requirements of the ferry operator.\nInformation about your travel arrangements: For example, your travel itinerary and other information related to your booking.\nInformation about the services we have provided to you in the past: Details of any past bookings you have made with us, including any customer feedback you may have provided.\nInformation about your use of our websites, contact centers, and mobile applications: To help us to personalize your experience and improve our website, we collect information about your searches and the content you have viewed on our website using cookies and similar technologies.\nWhat Do We Use Your Personal Information For?\nTo fulfill and manage your bookings and deliver any other services you have asked for.\nTo send you status updates, if requested, and service communications.\nTo provide services tailored to your requirements and to treat you in a more personal way.\nTo carry out analysis and market research.\nTo improve our websites, products, and services.\nFor management and administrative purposes.\nTo carry out marketing and keep you informed of The Trago ’s products and services.\nWhen Will We Send You Marketing?\nWe may send you marketing messages via email to keep you up to date with the latest and best offers, ferry timetable releases, and to help you find Thetrago prices.\n\nYou can stop receiving marketing messages from us at any time by:\n\nClicking the unsubscribe link found in any email marketing message\nReplying to an email marketing message with a request to be unsubscribed\nContacting our Customer Service Team\nOnce you do this, we will update your account details so you don’t receive any more marketing messages. While we will update your details as quickly as possible, please allow for up to 2 business days for this to take effect. Unsubscribing from marketing messages will not stop service communications, such as booking confirmations and updates.\n\nWhen Will We Share Your Information With Others?\nWhen you make a booking, we may need to share your personal information with the providers (e.g., ferry operators, insurance providers, product distributors) of the services and products you’re purchasing. This information may also be shared with other third parties, including port authorities, customs, and passport offices, where this is necessary to fulfill the ferry service contract.\n\nWe may disclose information about you, your account, and booking history to:\n\nCompanies within the The Trago Group for the purposes and subject to the terms of this Privacy Policy.\nIn the event that we undergo re-organization or are sold to a third party, in which case you agree that any personal information we hold about you may be transferred to that re-organized entity or third party for the purposes and subject to the terms of this Privacy Policy.\nWe will not sell or pass your personal information to third parties (other than as set out above) unless you have given us permission or unless it is necessary to deliver and improve upon the products and services ordered or used by you. For example, we may disclose your data to a credit card company to validate your credit card details and obtain payment when you buy a product or service. It may also be necessary to pass your data to the organization from whom you have ordered any products or services.\n\nThe Trago may also be obliged to disclose your personal information to meet any legal or regulatory requirements or obligations in accordance with applicable law.\n\nHow We Use Cookies?\nWe may use cookies to record details such as a user identity and general registration details on your PC. This helps us recognize you on subsequent visits so that you do not have to re-enter your registration details each time you visit us and allows us to personalize your experience and improve our website.\n\nDepending upon the type of browser you are using, you may be able to configure your browser so that:\n\nYou are prompted to accept or reject cookies on an individual basis\nYou may be able to prevent your browser from accepting any cookies at all.\nYou should refer to the supplier or manufacturer of your web browser for specific details about cookie security.\n\nYou can read more about our cookie policy here.\n\nYour Rights Regarding Your Personal Information\nto Access & Transfer Data: You have the right to request a copy of any personal information that we hold about you or to have it transferred to a third party. We may ask you to supply appropriate evidence to verify your identity before responding to your request.\n\nOnce your identity has been verified, we will respond as quickly as possible and in any event within 30 business days.\n\nIf you have an online account, you can log in to your account at any time to view any personal information stored there.\n\nRight to Update & Amend: If any of the personal information we hold on you is inaccurate, you have the right to have that information corrected or completed where it is incomplete.\n\nRight to Complain: If you feel at any point that we have mishandled your data or infringed upon your rights set out under data protection laws, you can let us know by getting in touch with our customer service team or lodge a complaint with the supervisory authority responsible for data protection in the country you live in or the place of the alleged infringement.\n\nRight to be Forgotten: You can request to have your personal information erased when it is no longer required to process a transaction or we are not legally required to retain the information. Where your personal information is no longer required, any request to have the information erased will be carried out without undue delay.\n\nRight to Withdraw Consent: You can withdraw or restrict your consent to marketing or the processing of your personal information completely or partially, where it is no longer required.\n\nHow to Access, Amend or Transfer Your Information\nTrident Master Company Limited (www.thetrago.com)\n\nEmail : info@thetrago.com , sale@thetrago.com , info@worldferry.com\n\nPlease quote your name together with your booking reference and/or account number. We would be grateful if you could also provide brief details of what information you want a copy of (this helps us to more readily locate your data). We will take all reasonable steps to confirm your identity before providing you with details of any personal information we may hold about you.\n\nYour Personal Information and Countries Outside the EU\nAll our customer data is stored on servers held within the EU. To perform our contract with you, we may need to send some of your personal details to our partner ferry operators outside of the EU. Where this is necessary, we take steps to restrict the data transferred to only the data that is required to perform the contract.\n\nWe protect your privacy and your rights through the use of the European Commission’s standard data protection clauses.\n\nRetaining and Anonymizing Personal Data\nWe keep your personal information for either 3 years from the date of your last booking or interaction or, if longer, for any period for which we are required to keep personal information to comply with our legal and regulatory requirements. After this time has passed, we anonymize all data so that it is no longer personally identifiable.\n\nInformation Security\nThe Trago recognizes that its customers are increasingly concerned about how companies protect personal information from misuse and abuse and about privacy in general. The Trago is constantly reviewing and enhancing its technical, physical and managerial procedures and rules to protect your personal data from unauthorised access, accidental loss and/or destruction.\n\nChanges to this Policy\nWe may occasionally make changes to this page and our Privacy Policy to reflect changes in how we are processing your data.\n\nIf there are any significant changes, we make these clear either through the website or through another means of contact such as email.\n\nPrivacy Support\nTrident Master Co,. Ltd,. (www.thetrago.com) reserves the right to amend or modify this Privacy Policy Statement at any time and in response to changes in applicable data protection and privacy legislation.`}</Text>
                         </ScrollView>
                         <TouchableOpacity
                           style={{ alignSelf: 'center', marginTop: 18, backgroundColor: '#FD501E', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 30 }}
                           onPress={() => setPrivacyModalVisible(false)}
                         >
-                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Close</Text>
+                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{t('close') || 'Close'}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1165,74 +1167,74 @@ const PaymentScreen = ({ navigation, route }) => {
                 {Array.isArray(priceDepart) && priceDepart.map((all, index) => (
                   <View key={index}>
                     <View style={styles.card}>
-                      <Text style={styles.title}>Booking Summary</Text>
+                      <Text style={styles.title}>{t('bookingSummary') || 'Booking Summary'}</Text>
                       <View style={styles.divider} />
                       {timetableDepart.map((item, index) => (
                         <View key={index}>
-                          <Text style={{ fontWeight: 'bold' }}>Depart</Text>
+                          <Text style={{ fontWeight: 'bold' }}>{t('depart') || 'Depart'}</Text>
                           <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                           <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>Company </Text>
+                            <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
                             <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
                           </View>
                           <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>Seat</Text>
+                            <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
                             <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
                           </View>
                           <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>Boat </Text>
+                            <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
                             <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                           </View>
                           <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>Departure Data</Text>
+                            <Text style={{ color: '#666666' }}>{t('departureDate') || 'Departure Date'}</Text>
                             <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
                           </View>
                           <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                            <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
                             <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                           </View>
                           <View style={[styles.row, { marginTop: 5 }]}>
-                            <Text>Adult x {customerData.adult}</Text>
+                            <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                             <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceadult)}</Text>
                           </View>
                           {customerData.child !== 0 && (
                             <View style={styles.row}>
-                              <Text>Child x {customerData.child}</Text>
+                              <Text>{t('child') || 'Child'} x {customerData.child}</Text>
                               <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.pricechild)}</Text>
                             </View>
                           )}
                           {customerData.infant !== 0 && (
                             <View style={styles.row}>
-                              <Text>infant x {customerData.infant}</Text>
+                              <Text>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                               <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceinfant)}</Text>
                             </View>
                           )}
                           {customerData.pickupDepartId && (
                             <View style={styles.rowpromo}>
-                              <Text>Pick up</Text>
+                              <Text>{t('pickup') || 'Pick up'}</Text>
                               <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricepickupdepart)}</Text>
                             </View>
                           )}
                           {customerData.dropoffDepartId && (
                             <View style={styles.rowpromo}>
-                              <Text>Drop off</Text>
+                              <Text>{t('dropoff') || 'Drop off'}</Text>
                               <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricedropoffdepart)}</Text>
                             </View>
                           )}
                           {all.totalDepart.save != 0 && (
                             <View style={styles.rowpromo}>
-                              <Text>Discount</Text>
+                              <Text>{t('discount') || 'Discount'}</Text>
                               <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
                             </View>
                           )}
                           {all.totalDepart.promotionprice != 0 && (
                             <View style={styles.rowpromo}>
-                              <Text>Promotion Code</Text>
+                              <Text>{t('promotionCode') || 'Promotion Code'}</Text>
                               <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
                             </View>
                           )}
                           <View style={styles.rowpromo}>
-                            <Text>Ticket fare</Text>
+                            <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                             <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
                           </View>
                           <View style={styles.divider} />
@@ -1242,75 +1244,75 @@ const PaymentScreen = ({ navigation, route }) => {
                         <>
                           {timetableReturn.map((item, index) => (
                             <View key={index}>
-                              <Text style={{ fontWeight: 'bold' }}>Return</Text>
+                              <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                               <Text style={{ marginTop: 5, color: '#FD501E' }}>
                                 {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                               </Text>
                               <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>Company </Text>
+                                <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
                                 <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
                               </View>
                               <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>Seat</Text>
+                                <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
                                 <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
                               </View>
                               <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>Boat </Text>
+                                <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
                                 <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                               </View>
                               <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>Departure Data</Text>
+                                <Text style={{ color: '#666666' }}>{t('departureDate') || 'Departure Date'}</Text>
                                 <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
                               </View>
                               <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>Departure Time : </Text>
+                                <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
                                 <Text style={{ color: '#666666' }}>
                                   {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
                                 </Text>
                               </View>
 
                               <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                                <Text>Adult x {customerData.adult}</Text>
+                                <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                                 <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceadult)}</Text>
                               </View>
                               {customerData.child !== 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>Child x {customerData.child}</Text>
+                                  <Text>{t('child') || 'Child'} x {customerData.child}</Text>
                                   <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.pricechild)}</Text>
                                 </View>
                               )}
                               {customerData.infant !== 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>infant x {customerData.infant}</Text>
+                                  <Text>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                                   <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceinfant)}</Text>
                                 </View>
                               )}
                               {customerData.pickupReturnId != 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>Pick up</Text>
+                                  <Text>{t('pickup') || 'Pick up'}</Text>
                                   <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricepickupdepart)}</Text>
                                 </View>
                               )}
                               {customerData.dropoffReturnId != 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>Drop off</Text>
+                                  <Text>{t('dropoff') || 'Drop off'}</Text>
                                   <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricedropoffdepart)}</Text>
                                 </View>
                               )}
                               {all.totalReturn.save != 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>Discount</Text>
+                                  <Text>{t('discount') || 'Discount'}</Text>
                                   <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
                                 </View>
                               )}
                               {all.totalReturn.promotionprice != 0 && (
                                 <View style={styles.rowpromo}>
-                                  <Text>Promotion Code</Text>
+                                  <Text>{t('promotionCode') || 'Promotion Code'}</Text>
                                   <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
                                 </View>
                               )}
                               <View style={styles.rowpromo}>
-                                <Text>Ticket fare</Text>
+                                <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                                 <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
                               </View>
                               <View style={styles.divider} />
@@ -1320,12 +1322,12 @@ const PaymentScreen = ({ navigation, route }) => {
                       )}
 
                       <View style={styles.row}>
-                        <Text>Subtotal </Text>
+                        <Text>{t('subtotal') || 'Subtotal'} </Text>
                         <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
                       </View>
                       <View style={styles.divider} />
                       <View style={styles.row}>
-                        <Text>Payment Fee </Text>
+                        <Text>{t('paymentFee') || 'Payment Fee'} </Text>
                         <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(all.paymentfee)}</Text>
 
                       </View>
@@ -1334,7 +1336,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
                       <View style={styles.row}>
-                        <Text>total </Text>
+                        <Text>{t('total') || 'Total'} </Text>
                         <Text> {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                       </View>
                     </View>
@@ -1342,7 +1344,7 @@ const PaymentScreen = ({ navigation, route }) => {
                   style={[styles.buttonContainer]} // Use an array if you want to combine styles
                   onPress={() => {
                     if (!pickup) {
-                      Alert.alert('Terms and Conditions', 'Please check the Terms and Conditions before proceeding.');
+                      Alert.alert(t('termsAndConditions') || 'Terms and Conditions', t('pleaseCheckTerms') || 'Please check the Terms and Conditions before proceeding.');
                     } else if (selectedOption == "7") {
                       handlePayment();
                     } else if (selectedOption == "2") {
@@ -1350,10 +1352,10 @@ const PaymentScreen = ({ navigation, route }) => {
                       handlePaymentPromptpay();
 
                     } else {
-                      Alert.alert('Payment Option', 'Please select a payment option.');
+                      Alert.alert(t('paymentOption') || 'Payment Option', t('pleaseSelectPayment') || 'Please select a payment option.');
                     }
                   }}>
-                  <Text style={styles.BackButtonText}>Payment {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
+                  <Text style={styles.BackButtonText}>{t('payment') || 'Payment'} {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                 </TouchableOpacity>
                   </View>
                 ))}

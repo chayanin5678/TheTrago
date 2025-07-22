@@ -7,11 +7,13 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLanguage } from './LanguageContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
 const ProfileScreen = ({ navigation }) => {
+  const { language, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
@@ -75,7 +77,7 @@ const ProfileScreen = ({ navigation }) => {
 
   const formatDate = (dateString) => {
     if (!dateString || isNaN(new Date(dateString))) {
-      return 'Select your birthday';
+      return t('selectBirthday');
     }
 
     const date = new Date(dateString);
@@ -266,7 +268,7 @@ const ProfileScreen = ({ navigation }) => {
             setCountrycode(data.data[0].md_member_code);
 
           } else {
-            setSelectedTele('Please Select');
+            setSelectedTele(t('pleaseSelect'));
           }
           if (data.data[0].md_member_nationality) {
             getCountryByid(data.data[0].md_member_nationality);
@@ -274,12 +276,12 @@ const ProfileScreen = ({ navigation }) => {
             setCountryId(data.data[0].md_member_nationality);
 
           } else {
-            setSelectedCountry('Please Select');
+            setSelectedCountry(t('pleaseSelect'));
           }
           if (data.data[0].md_member_birthday) {
             setBirthdate(data.data[0].md_member_birthday);
           } else {
-            setBirthdate('Select your birthday');
+            setBirthdate(t('selectBirthday'));
           }
 
           updateCustomerData ({
@@ -451,7 +453,7 @@ const ProfileScreen = ({ navigation }) => {
   const handleSelectTele = (item) => {
     const selectedValue =
       item.sys_countries_nameeng === 'Please Select'
-        ? 'Please Select'
+        ? t('pleaseSelect')
         : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
 
     setSelectedTele(selectedValue);
@@ -465,15 +467,14 @@ const ProfileScreen = ({ navigation }) => {
   const handleSelectCountry = (item) => {
     const selectedValue =
       item.sys_countries_nameeng === 'Please Select'
-        ? 'Please Select'
+        ? t('pleaseSelect')
         : `${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
 
     setSelectedCountry(selectedValue);
     let country_id = item.sys_countries_id;
     setCountryId(country_id);
     //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
-    setErrors((prev) => ({ ...prev, selectedCountry: false })); md_member_passport, 
-      md_member_passport_doc,
+    setErrors((prev) => ({ ...prev, selectedCountry: false })); 
 
     toggleCountryModal();
   };
@@ -519,7 +520,7 @@ const ProfileScreen = ({ navigation }) => {
       const token = await SecureStore.getItemAsync('userToken');
 
       if (!token) {
-        alert("User token not found");
+        alert(t('userTokenNotFound'));
         return;
       }
 
@@ -542,25 +543,25 @@ const ProfileScreen = ({ navigation }) => {
       const json = await response.json();
 
       if (json.status === 'success') {
-        alert("✅ Profile updated successfully");
+        alert("✅ " + t('profileUpdatedSuccess'));
 
         // รวมอัปเดตไว้ใน object เดียว
         updateCustomerData({
           Firstname: Firstname,
           Lastname: Lastname,
           tel: tel,
-          selectcoountrycode: `(+${countrycode}) ${countryName}` || 'Please Select',
+          selectcoountrycode: `(+${countrycode}) ${countryName}` || t('pleaseSelect'),
           birthdate: birthdate,
-          country: countryName || 'Please Select',
+          country: countryName || t('pleaseSelect'),
         });
 
       } else {
-        alert("❌ Update failed: " + json.message);
+        alert("❌ " + t('updateFailed') + ": " + json.message);
       }
 
     } catch (error) {
       console.error("handleSave error:", error);
-      alert("⚠️ Error occurred while updating profile");
+      alert("⚠️ " + t('errorOccurred'));
     }
   };
 
@@ -568,19 +569,19 @@ const ProfileScreen = ({ navigation }) => {
   const handleChangePassword = async () => {
     // ตรวจสอบว่ากรอกข้อมูลครบถ้วน
     if (!currentPassword || !newPassword || !confirmPassword) {
-      alert("⚠️ Please fill in all password fields");
+      alert(t('fillAllPasswordFields'));
       return;
     }
 
     // ตรวจสอบว่ารหัสผ่านใหม่ตรงกัน
     if (newPassword !== confirmPassword) {
-      alert("⚠️ New password and confirm password do not match");
+      alert(t('passwordMismatch'));
       return;
     }
 
     // ตรวจสอบความยาวรหัสผ่านใหม่
     if (newPassword.length < 6) {
-      alert("⚠️ New password must be at least 6 characters long");
+      alert(t('passwordTooShort'));
       return;
     }
 
@@ -588,7 +589,7 @@ const ProfileScreen = ({ navigation }) => {
       const token = await SecureStore.getItemAsync('userToken');
 
       if (!token) {
-        alert("User token not found");
+        alert(t('userTokenNotFound'));
         return;
       }
 
@@ -607,7 +608,7 @@ const ProfileScreen = ({ navigation }) => {
       const json = await response.json();
 
       if (json.status === 'success') {
-        alert("✅ Password changed successfully");
+        alert(t('passwordChangedSuccess'));
         // เคลียร์ข้อมูลในฟอร์ม
         setCurrentPassword('');
         setNewPassword('');
@@ -621,7 +622,7 @@ const ProfileScreen = ({ navigation }) => {
 
     } catch (error) {
       console.error("handleChangePassword error:", error);
-      alert("⚠️ Error occurred while changing password");
+      alert(t('passwordChangeError'));
     }
   };
 
@@ -696,8 +697,8 @@ const ProfileScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.headerContent}>
-                <Text style={styles.headerTitle}>Profile Settings</Text>
-                <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+                <Text style={styles.headerTitle}>{t('profileSettings')}</Text>
+                <Text style={styles.headerSubtitle}>{t('completeProfile')}</Text>
                 
                 {/* Floating decorative elements */}
                 <Animated.View 
@@ -795,8 +796,8 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Profile Settings</Text>
-              <Text style={styles.headerSubtitle}>Complete your premium profile</Text>
+              <Text style={styles.headerTitle}>{t('profileSettings')}</Text>
+              <Text style={styles.headerSubtitle}>{t('completePremiumProfile')}</Text>
               
               {/* Floating decorative elements */}
               <Animated.View 
@@ -850,7 +851,7 @@ const ProfileScreen = ({ navigation }) => {
               >
                 <View style={styles.progressHeader}>
                   <MaterialCommunityIcons name="account-check" size={24} color="#FD501E" />
-                  <Text style={styles.titlePremium}>Complete Your Profile</Text>
+                  <Text style={styles.titlePremium}>{t('completeYourProfile')}</Text>
                 </View>
                 
                 <View style={styles.progressBarBackgroundPremium}>
@@ -866,15 +867,15 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
 
                 <Text style={styles.infoTextPremium}>
-                  Get the best out of booking by adding the remaining details!
+                  {t('getBestBooking')}
                 </Text>
                 
                 <View style={styles.verificationListPremium}>
                   {[
-                    { label: 'Verified Email', verified: isEmailVerified },
-                    { label: 'Verified Profile', verified: isProfileVerified },
-                    { label: 'Verified ID Card/Passport', verified: isIdVerified, nav: 'IDCardCameraScreen' },
-                    { label: 'Verified Bank Account', verified: isBankVerified, nav: 'BankVerificationScreen' }
+                    { label: t('verifiedEmail'), verified: isEmailVerified },
+                    { label: t('verifiedProfile'), verified: isProfileVerified },
+                    { label: t('verifiedId'), verified: isIdVerified, nav: 'IDCardCameraScreen' },
+                    { label: t('verifiedBankAccount'), verified: isBankVerified, nav: 'BankVerificationScreen' }
                   ].map((item, index) => (
                     <TouchableOpacity 
                       key={index}
@@ -884,8 +885,8 @@ const ProfileScreen = ({ navigation }) => {
                           // Check if profile is verified before allowing ID verification
                           if (!isProfileVerified) {
                             Alert.alert(
-                              'Please update your profile!',
-                              'Your profile is not yet complete. Please Update to proceed.',
+                              t('pleaseUpdateProfile'),
+                              t('profileNotComplete'),
                               [
                                 { text: 'OK', style: 'default' }
                               ]
@@ -898,8 +899,8 @@ const ProfileScreen = ({ navigation }) => {
                           // Check if profile is verified before allowing bank verification
                           if (!isProfileVerified) {
                             Alert.alert(
-                              'Please update your profile!',
-                              'Your profile is not yet complete. Please complete your profile to proceed with bank verification.',
+                              t('pleaseUpdateProfile'),
+                              t('profileIncompleteBank'),
                               [
                                 { text: 'OK', style: 'default' }
                               ]
@@ -946,25 +947,25 @@ const ProfileScreen = ({ navigation }) => {
             >
               <View style={styles.sectionHeaderPremium}>
                 <MaterialCommunityIcons name="account-edit" size={24} color="#FD501E" />
-                <Text style={styles.sectionTitlePremium}>Personal Information</Text>
+                <Text style={styles.sectionTitlePremium}>{t('personalInformation')}</Text>
               </View>
               
               <View style={styles.inputRowPremium}>
                 <View style={styles.inputWrapperPremium}>
-                  <Text style={styles.inputLabelPremium}>First Name</Text>
+                  <Text style={styles.inputLabelPremium}>{t('firstName')}</Text>
                   <TextInput 
                     style={styles.inputPremium} 
-                    placeholder="Enter your first name" 
+                    placeholder={t('enterFirstName')} 
                     value={Firstname}
                     onChangeText={setFirstname}
                     placeholderTextColor="#9CA3AF"
                   />
                 </View>
                 <View style={styles.inputWrapperPremium}>
-                  <Text style={styles.inputLabelPremium}>Last Name</Text>
+                  <Text style={styles.inputLabelPremium}>{t('lastName')}</Text>
                   <TextInput 
                     style={styles.inputPremium} 
-                    placeholder="Enter your last name" 
+                    placeholder={t('enterLastName')} 
                     value={Lastname}
                     onChangeText={setLastname}
                     placeholderTextColor="#9CA3AF"
@@ -973,7 +974,7 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Country Code</Text>
+                <Text style={styles.inputLabelPremium}>{t('countryCode')}</Text>
                 <TouchableOpacity
                   style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]}
                   onPress={toggleTeleModal}
@@ -985,10 +986,10 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Phone Number</Text>
+                <Text style={styles.inputLabelPremium}>{t('phoneNumber')}</Text>
                 <TextInput
                   style={styles.inputPremium}
-                  placeholder="Enter your phone number"
+                  placeholder={t('enterPhoneNumber')}
                   value={tel}
                   onChangeText={setTel}
                   keyboardType="numeric"
@@ -997,10 +998,10 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Email Address</Text>
+                <Text style={styles.inputLabelPremium}>{t('emailAddress')}</Text>
                 <TextInput 
                   style={[styles.inputPremium, styles.disabledPremium]} 
-                  placeholder="Email address" 
+                  placeholder={t('emailAddress')} 
                   value={email} 
                   editable={false}
                   placeholderTextColor="#9CA3AF"
@@ -1008,7 +1009,7 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Nationality</Text>
+                <Text style={styles.inputLabelPremium}>{t('nationality')}</Text>
                 <TouchableOpacity
                   style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]}
                   onPress={toggleCountryModal}
@@ -1020,14 +1021,14 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Date of Birth</Text>
+                <Text style={styles.inputLabelPremium}>{t('dateOfBirth')}</Text>
                 <TouchableOpacity
                   style={styles.buttonPremium}
                   onPress={() => setShowPicker(true)}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.buttonTextPremium}>
-                    {birthdate ? formatDate(birthdate) : 'Select your birthday'}
+                    {birthdate ? formatDate(birthdate) : t('selectBirthday')}
                   </Text>
                   <MaterialIcons name="calendar-today" size={20} color="#FD501E" />
                 </TouchableOpacity>
@@ -1056,7 +1057,7 @@ const ProfileScreen = ({ navigation }) => {
                   style={styles.saveGradient}
                 >
                   <MaterialIcons name="save" size={20} color="#FFFFFF" />
-                  <Text style={styles.saveButtonTextPremium}>Save Profile</Text>
+                  <Text style={styles.saveButtonTextPremium}>{t('saveProfile')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
@@ -1076,15 +1077,15 @@ const ProfileScreen = ({ navigation }) => {
             >
               <View style={styles.sectionHeaderPremium}>
                 <MaterialCommunityIcons name="lock-reset" size={24} color="#FD501E" />
-                <Text style={styles.sectionTitlePremium}>Change Password</Text>
+                <Text style={styles.sectionTitlePremium}>{t('changePassword')}</Text>
               </View>
               
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Current Password</Text>
+                <Text style={styles.inputLabelPremium}>{t('currentPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
                   <TextInput 
                     style={styles.inputFlexPremium} 
-                    placeholder="Enter current password" 
+                    placeholder={t('enterCurrentPassword')} 
                     secureTextEntry={!showCurrentPassword}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
@@ -1100,11 +1101,11 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>New Password</Text>
+                <Text style={styles.inputLabelPremium}>{t('newPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
                   <TextInput 
                     style={styles.inputFlexPremium} 
-                    placeholder="Enter new password" 
+                    placeholder={t('enterNewPassword')} 
                     secureTextEntry={!showNewPassword}
                     value={newPassword}
                     onChangeText={setNewPassword}
@@ -1120,11 +1121,11 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.inputWrapperPremium}>
-                <Text style={styles.inputLabelPremium}>Confirm Password</Text>
+                <Text style={styles.inputLabelPremium}>{t('confirmPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
                   <TextInput 
                     style={styles.inputFlexPremium} 
-                    placeholder="Confirm new password" 
+                    placeholder={t('confirmNewPassword')} 
                     secureTextEntry={!showConfirmPassword}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
@@ -1151,7 +1152,7 @@ const ProfileScreen = ({ navigation }) => {
                   style={styles.saveGradient}
                 >
                   <MaterialIcons name="lock" size={20} color="#FFFFFF" />
-                  <Text style={styles.saveButtonTextPremium}>Change Password</Text>
+                  <Text style={styles.saveButtonTextPremium}>{t('changePassword')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
@@ -1168,18 +1169,21 @@ const ProfileScreen = ({ navigation }) => {
               style={styles.modalGradient}
             >
               <View style={styles.modalHeaderPremium}>
-                <Text style={styles.modalTitlePremium}>Select Country Code</Text>
+                <Text style={styles.modalTitlePremium}>{t('selectCountryCode')}</Text>
                 <TouchableOpacity onPress={toggleTeleModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
               
               <TextInput
-                placeholder="Search country"
+                placeholder={t('searchCountry')}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
+                autoComplete="off"
+                autoCorrect={false}
+                autoCapitalize="none"
               />
               
               <FlatList
@@ -1192,7 +1196,7 @@ const ProfileScreen = ({ navigation }) => {
                   >
                     <Text style={styles.optionTextPremium}>
                       {item.sys_countries_nameeng === 'Please Select'
-                        ? 'Please Select'
+                        ? t('pleaseSelect')
                         : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
                     </Text>
                   </TouchableOpacity>
@@ -1213,18 +1217,21 @@ const ProfileScreen = ({ navigation }) => {
               style={styles.modalGradient}
             >
               <View style={styles.modalHeaderPremium}>
-                <Text style={styles.modalTitlePremium}>Select Nationality</Text>
+                <Text style={styles.modalTitlePremium}>{t('selectNationality')}</Text>
                 <TouchableOpacity onPress={toggleCountryModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
               
               <TextInput
-                placeholder="Search country"
+                placeholder={t('searchCountry')}
                 value={searchQueryCountry}
                 onChangeText={setSearchQueryCountry}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
+                autoComplete="off"
+                autoCorrect={false}
+                autoCapitalize="none"
               />
               
               <FlatList
@@ -1237,7 +1244,7 @@ const ProfileScreen = ({ navigation }) => {
                   >
                     <Text style={styles.optionTextPremium}>
                       {item.sys_countries_nameeng === 'Please Select'
-                        ? 'Please Select'
+                        ? t('pleaseSelect')
                         : `${item.sys_countries_nameeng}`}
                     </Text>
                   </TouchableOpacity>
@@ -1660,7 +1667,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(209, 213, 219, 0.8)',
     borderRadius: 15,
     fontSize: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

@@ -5,8 +5,10 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { AntDesign } from '@expo/vector-icons';
 import LogoTheTrago from './../(component)/Logo';
 import headStyles from './../(CSS)/StartingPointScreenStyles';
+import { useLanguage } from './LanguageContext';
 
 const AddCardScreen = ({ navigation, route }) => {
+  const { t } = useLanguage();
   const { onAddCard, nextCardId } = route.params || {};
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -15,7 +17,7 @@ const AddCardScreen = ({ navigation, route }) => {
 
   const handleAddCard = () => {
     if (!cardNumber || !expiry || !cvv || !name) {
-      Alert.alert('Please fill in all fields');
+      Alert.alert(t('pleaseFillAllFields') || 'Please fill in all fields');
       return;
     }
     const newCard = {
@@ -145,7 +147,7 @@ const AddCardScreen = ({ navigation, route }) => {
                 textShadowOffset: { width: 2, height: 2 },
               }
             ]}>
-              Add New Card
+              {t('addNewCard') || 'Add New Card'}
             </Text>
             <Text style={{
               color: 'rgba(255,255,255,0.85)',
@@ -157,12 +159,12 @@ const AddCardScreen = ({ navigation, route }) => {
               textShadowRadius: 3,
               textShadowOffset: { width: 1, height: 1 },
             }}>
-              Secure your payment method
+              {t('securePaymentMethod') || 'Secure your payment method'}
             </Text>
           </View>
         </View>
 
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -196,11 +198,11 @@ const AddCardScreen = ({ navigation, route }) => {
                     </Text>
                   </View>
                   <View style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>Cardholder</Text>
-                    <Text style={styles.cardLabel}>Valid Thru</Text>
+                    <Text style={styles.cardLabel}>{t('cardholder') || 'Cardholder'}</Text>
+                    <Text style={styles.cardLabel}>{t('validThru') || 'Valid Thru'}</Text>
                   </View>
                   <View style={styles.cardRow}>
-                    <Text style={styles.cardValue}>{name || 'MEMBER'}</Text>
+                    <Text style={styles.cardValue}>{name || (t('member') || 'MEMBER')}</Text>
                     <Text style={styles.cardValue}>{expiry || 'MM/YY'}</Text>
                   </View>
                 </LinearGradient>
@@ -209,10 +211,10 @@ const AddCardScreen = ({ navigation, route }) => {
               {/* Input Fields */}
               <View style={styles.inputSection}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Cardholder Name</Text>
+                  <Text style={styles.inputLabel}>{t('cardholderName') || 'Cardholder Name'}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter cardholder name"
+                    placeholder={t('enterCardholderName') || "Enter cardholder name"}
                     value={name}
                     onChangeText={setName}
                     placeholderTextColor="rgba(107, 114, 128, 0.6)"
@@ -220,7 +222,7 @@ const AddCardScreen = ({ navigation, route }) => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Card Number</Text>
+                  <Text style={styles.inputLabel}>{t('cardNumber') || 'Card Number'}</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="1234 5678 9012 3456"
@@ -238,7 +240,7 @@ const AddCardScreen = ({ navigation, route }) => {
 
                 <View style={styles.row}>
                   <View style={[styles.inputGroup, { flex: 1, marginRight: wp('2%') }]}>
-                    <Text style={styles.inputLabel}>Expiry Date</Text>
+                    <Text style={styles.inputLabel}>{t('expiryDate') || 'Expiry Date'}</Text>
                     <TextInput
                       style={[styles.input, styles.inputHalf]}
                       placeholder="MM/YY"
@@ -258,7 +260,7 @@ const AddCardScreen = ({ navigation, route }) => {
                     />
                   </View>
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: wp('2%') }]}>
-                    <Text style={styles.inputLabel}>CVV</Text>
+                    <Text style={styles.inputLabel}>{t('cvv') || 'CVV'}</Text>
                     <TextInput
                       style={[styles.input, styles.inputHalf]}
                       placeholder="123"
@@ -282,7 +284,7 @@ const AddCardScreen = ({ navigation, route }) => {
                     end={{ x: 1, y: 0.8 }}
                     style={styles.buttonGradient}
                   >
-                    <Text style={styles.buttonText}>Add Card</Text>
+                    <Text style={styles.buttonText}>{t('addCard') || 'Add Card'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
