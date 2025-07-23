@@ -89,14 +89,20 @@ const BookingScreen = () => {
       
       const { authToken, userEmail } = await Promise.race([authPromise, timeoutPromise]);
       
-      if (authToken && userEmail) {
-        console.log('✅ BookingScreen: Real token found, user is already logged in, skipping OTP');
-        console.log('BookingScreen: Setting email to:', userEmail);
-        setEmail(userEmail);
+      if (authToken) {
+        console.log('✅ BookingScreen: Valid token found, user is already logged in, skipping OTP');
+        console.log('BookingScreen: Token type:', authToken.startsWith('eyJ') ? 'JWT' : 'Simple');
+        console.log('BookingScreen: Email available:', !!userEmail);
+        
+        // Set email if available, otherwise keep current state
+        if (userEmail) {
+          setEmail(userEmail);
+        }
+        
         setIsLoggedIn(true);
         setShowOTP(false); // ไม่ให้แสดง OTP screen
       } else {
-        console.log('❌ BookingScreen: No real token found, user needs to login with OTP');
+        console.log('❌ BookingScreen: No token found, user needs to login with OTP');
         console.log('BookingScreen: authToken:', authToken);
         console.log('BookingScreen: userEmail:', userEmail);
         setIsLoggedIn(false);
