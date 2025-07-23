@@ -6,7 +6,7 @@ import { useLanguage } from './(Screen)/LanguageContext';
 import ipAddress from './ipconfig';
 
 const EndPointScreen = ({ navigation, route }) => {
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [filteredEndPoints, setFilteredEndPoints] = useState([]);
   const [allEndPoints, setAllEndPoints] = useState([]);
@@ -39,8 +39,11 @@ const EndPointScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (searchText) {
+      const locationNameField = selectedLanguage === 'th' ? 'md_location_namethai' : 'md_location_nameeng';
+      const countryNameField = selectedLanguage === 'th' ? 'sys_countries_namethai' : 'sys_countries_nameeng';
+      
       const filteredData = allEndPoints.filter(point =>
-        (`${point.md_location_nameeng}, ${point.sys_countries_nameeng}`)
+        (`${point[locationNameField]}, ${point[countryNameField]}`)
           .toLowerCase()
           .includes(searchText.toLowerCase())
       );
@@ -48,41 +51,51 @@ const EndPointScreen = ({ navigation, route }) => {
     } else {
       setFilteredEndPoints(allEndPoints);
     }
-  }, [searchText, allEndPoints]);
+  }, [searchText, allEndPoints, selectedLanguage]);
 
   const handleSelectEndPoint = (selectedPoint) => {
+    const locationNameField = selectedLanguage === 'th' ? 'md_location_namethai' : 'md_location_nameeng';
+    
     setSelectedItem({
-      name: selectedPoint.md_location_nameeng,
+      name: selectedPoint[locationNameField],
       id: selectedPoint.md_timetable_endid,
     });
     if (route.params?.setEndPoint) {
       route.params.setEndPoint({
         id: selectedPoint.md_timetable_endid,
-        name: selectedPoint.md_location_nameeng,
+        name: selectedPoint[locationNameField],
       });
     }
     navigation.goBack();
   };
 
   // Dummy airline/plane for demo UI (replace with real data if available)
-  const getSubText = (item) => item.airline || item.plane || item.sys_countries_nameeng || '';
+  const getSubText = (item) => {
+    const countryNameField = selectedLanguage === 'th' ? 'sys_countries_namethai' : 'sys_countries_nameeng';
+    return item.airline || item.plane || item[countryNameField] || '';
+  };
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.suggestionItem}
-      onPress={() => handleSelectEndPoint(item)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.suggestionIconBox}>
-        <MaterialIcons name="location-on" size={22} color="#FD501E" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.suggestionTitle}>{item.md_location_nameeng} - {item.sys_countries_nameeng}</Text>
-        <Text style={styles.suggestionSub}>{getSubText(item)}</Text>
-      </View>
-      <AntDesign name="right" size={18} color="#B7B7B7" />
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    const locationNameField = selectedLanguage === 'th' ? 'md_location_namethai' : 'md_location_nameeng';
+    const countryNameField = selectedLanguage === 'th' ? 'sys_countries_namethai' : 'sys_countries_nameeng';
+    
+    return (
+      <TouchableOpacity
+        style={styles.suggestionItem}
+        onPress={() => handleSelectEndPoint(item)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.suggestionIconBox}>
+          <MaterialIcons name="location-on" size={22} color="#FD501E" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.suggestionTitle}>{item[locationNameField]} - {item[countryNameField]}</Text>
+          <Text style={styles.suggestionSub}>{getSubText(item)}</Text>
+        </View>
+        <AntDesign name="right" size={18} color="#B7B7B7" />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>

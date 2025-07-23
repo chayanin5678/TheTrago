@@ -4,14 +4,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
 import { navigationRef } from './navigationRef';
 import { AuthProvider, useAuth } from './AuthContext';
-import { LanguageProvider } from './(Screen)/LanguageContext';
+import { LanguageProvider, useLanguage } from './(Screen)/LanguageContext';
 // Import หน้าต่างๆ
 import StartingPointScreen from './StartingPointScreen';
 import EndPointScreen from './EndPointScreen';
@@ -43,120 +43,21 @@ import { PromotionProvider } from './PromotionProvider';
 import TermsScreen from './(Screen)/TermsScreen';
 import PrivacyPolicyScreen from './(Screen)/PrivacyPolicyScreen';
 import ContactScreen from './(Screen)/ContactScreen';
+import BookingScreen from './(Screen)/BookingScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Settings Screen
-const SettingsScreen = () => (
-  <View style={styles.screen}>
-    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>Settings Screen</Text>
-  </View>
-);
-
-// Booking Screen
-const BookingScreen = () => (
-  <View style={[styles.screen, { backgroundColor: '#F8FAFC', paddingBottom: 100 }]}>
-    <View style={{
-      backgroundColor: '#FFFFFF',
-      borderRadius: 20,
-      padding: 30,
-      margin: 20,
-      shadowColor: '#FD501E',
-      shadowOffset: {
-        width: 0,
-        height: 10,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 20,
-      elevation: 10,
-      borderWidth: 1,
-      borderColor: 'rgba(253, 80, 30, 0.1)',
-    }}>
-      <View style={{
-        alignItems: 'center',
-        marginBottom: 20,
-      }}>
-        <View style={{
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: 'rgba(253, 80, 30, 0.1)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginBottom: 15,
-        }}>
-          <Icon name="calendar" size={30} color="#FD501E" />
-        </View>
-        <Text style={{ 
-          fontSize: 24, 
-          fontWeight: '700', 
-          color: '#1F2937',
-          marginBottom: 8,
-          letterSpacing: 0.5,
-        }}>Your Bookings</Text>
-        <Text style={{ 
-          fontSize: 16, 
-          color: '#6B7280',
-          textAlign: 'center',
-          lineHeight: 24,
-        }}>All your booking history and{'\n'}current reservations appear here</Text>
-      </View>
-      
-      <View style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 20,
-      }}>
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(253, 80, 30, 0.05)',
-          borderRadius: 15,
-          padding: 15,
-          marginRight: 10,
-          borderWidth: 1,
-          borderColor: 'rgba(253, 80, 30, 0.1)',
-        }}>
-          <Text style={{
-            fontSize: 18,
-            fontWeight: '700',
-            color: '#FD501E',
-            textAlign: 'center',
-          }}>2</Text>
-          <Text style={{
-            fontSize: 12,
-            color: '#6B7280',
-            textAlign: 'center',
-            marginTop: 5,
-          }}>Pending</Text>
-        </View>
-        
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(34, 197, 94, 0.05)',
-          borderRadius: 15,
-          padding: 15,
-          marginLeft: 10,
-          borderWidth: 1,
-          borderColor: 'rgba(34, 197, 94, 0.1)',
-        }}>
-          <Text style={{
-            fontSize: 18,
-            fontWeight: '700',
-            color: '#22C55E',
-            textAlign: 'center',
-          }}>8</Text>
-          <Text style={{
-            fontSize: 12,
-            color: '#6B7280',
-            textAlign: 'center',
-            marginTop: 5,
-          }}>Completed</Text>
-        </View>
-      </View>
+const SettingsScreen = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <View style={styles.screen}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{t('settingsScreen')}</Text>
     </View>
-  </View>
-);
+  );
+};
 
 // AppNavigator (ใช้ Stack Navigator)
 const AppNavigator = () => (
@@ -183,12 +84,13 @@ const AppNavigator = () => (
 // Smart Account Tab Component - ใช้ AuthContext เพื่อจัดการ login state
 const AccountTabNavigator = () => {
   const { isLoggedIn, isLoading } = useAuth();
+  const { t } = useLanguage();
   
   if (isLoading) {
     console.log('AccountTabNavigator is loading...');
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
-        <Text style={{ fontSize: 16, color: '#6B7280' }}>Loading...</Text>
+        <Text style={{ fontSize: 16, color: '#6B7280' }}>{t('loading')}</Text>
       </View>
     );
   }
@@ -242,54 +144,23 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   return (
     <View style={{
       position: 'absolute',
-      bottom: 25,
-      left: 20,
-      right: 20,
-      height: 70,
-      borderRadius: 35,
-      overflow: 'visible',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 90,
+      backgroundColor: '#FFFFFF',
+      borderTopWidth: 0.5,
+      borderTopColor: '#E5E7EB',
+      paddingBottom: 25, // Safe area for iPhone
+      paddingTop: 10,
     }}>
-      {/* Animated Background Slider */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 15,
-          left: activeAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [15, '65%'],
-          }),
-          width: '30%',
-          height: 50,
-          borderRadius: 25,
-          backgroundColor: 'rgba(253, 80, 30, 0.15)',
-          borderWidth: 2,
-          borderColor: 'rgba(253, 80, 30, 0.3)',
-        }}
-      />
-      
-      <LinearGradient
-        colors={[
-          'rgba(255, 255, 255, 0.98)', 
-          'rgba(248, 250, 252, 0.95)',
-          'rgba(255, 255, 255, 0.98)'
-        ]}
-        style={{
-          flexDirection: 'row',
-          height: '100%',
-          borderRadius: 35,
-          paddingHorizontal: 10,
-          paddingVertical: 5,
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          borderWidth: 1.5,
-          borderColor: 'rgba(253, 80, 30, 0.1)',
-          shadowColor: '#FD501E',
-          shadowOffset: { width: 0, height: 15 },
-          shadowOpacity: 0.25,
-          shadowRadius: 25,
-          elevation: 20,
-        }}
-      >
+      <View style={{
+        flexDirection: 'row',
+        height: 55,
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        paddingHorizontal: 20,
+      }}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label = options.tabBarLabel !== undefined 
@@ -313,15 +184,18 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           };
 
           let iconName;
+          let iconColor = isFocused ? '#FD501E' : '#9CA3AF';
+          let textColor = isFocused ? '#FD501E' : '#6B7280';
+          
           switch (route.name) {
             case 'Home':
-              iconName = isFocused ? 'home' : 'home-outline';
+              iconName = 'home';
               break;
             case 'Booking':
-              iconName = isFocused ? 'calendar' : 'calendar-outline';
+              iconName = 'calendar';
               break;
             case 'Login':
-              iconName = isFocused ? 'person-circle' : 'person-circle-outline';
+              iconName = 'person';
               break;
             default:
               iconName = 'ellipse';
@@ -337,126 +211,41 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 flex: 1,
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingVertical: 6,
+                paddingVertical: 8,
               }}
             >
-              <Animated.View
-                style={{
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transform: [
-                    { 
-                      scale: isFocused ? 1.15 : 1,
-                    },
-                    {
-                      translateY: isFocused ? -2 : 0,
-                    }
-                  ],
-                }}
-              >
-                {/* Pulsing Effect for Active Icon */}
-                {isFocused && (
-                  <View style={{
-                    position: 'absolute',
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: 'rgba(253, 80, 30, 0.08)',
-                    opacity: 0.8,
-                  }} />
-                )}
-                
+              <View style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
                 <Icon
                   name={iconName}
-                  size={isFocused ? 24 : 20}
-                  color={isFocused ? '#FD501E' : '#9CA3AF'}
+                  size={24}
+                  color={iconColor}
                   style={{
-                    textShadowColor: isFocused ? 'rgba(253, 80, 30, 0.5)' : 'transparent',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 3,
-                    zIndex: 2,
+                    marginBottom: 4,
                   }}
                 />
-
-                {/* Badge */}
-                {options.tabBarBadge && (
-                  <Animated.View
-                    style={{
-                      position: 'absolute',
-                      top: -6,
-                      right: -6,
-                      backgroundColor: '#FF3B30',
-                      borderRadius: 10,
-                      minWidth: 18,
-                      height: 18,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: '#FFFFFF',
-                      shadowColor: '#FF3B30',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 4,
-                      elevation: 5,
-                      transform: [{ scale: isFocused ? 1.1 : 1 }],
-                    }}
-                  >
-                    <Text style={{
-                      color: '#FFFFFF',
-                      fontSize: 8,
-                      fontWeight: '900',
-                      letterSpacing: 0.3,
-                    }}>{options.tabBarBadge}</Text>
-                  </Animated.View>
-                )}
-
-              </Animated.View>
-
-              {/* Label with Animation */}
-              <Animated.View
-                style={{
-                  marginTop: isFocused ? 6 : 4,
-                  opacity: isFocused ? 1 : 0.7,
-                  transform: [{ scale: isFocused ? 1 : 0.9 }],
-                }}
-              >
+                
                 <Text style={{
-                  fontSize: isFocused ? 9 : 8,
-                  fontWeight: isFocused ? '800' : '600',
-                  color: isFocused ? '#FD501E' : '#9CA3AF',
+                  fontSize: 10,
+                  fontWeight: isFocused ? '600' : '500',
+                  color: textColor,
                   textAlign: 'center',
-                  letterSpacing: 0.2,
-                  textShadowColor: isFocused ? 'rgba(253, 80, 30, 0.2)' : 'transparent',
-                  textShadowOffset: { width: 0, height: 1 },
-                  textShadowRadius: 1,
                 }}>
                   {label}
                 </Text>
-              </Animated.View>
+              </View>
             </TouchableOpacity>
           );
         })}
-      </LinearGradient>
-
-      {/* Bottom Glow Effect */}
-      <LinearGradient
-        colors={['transparent', 'rgba(253, 80, 30, 0.1)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          position: 'absolute',
-          bottom: -2,
-          left: 0,
-          right: 0,
-          height: 3,
-          borderRadius: 1.5,
-        }}
-      />
+      </View>
     </View>
   );
 };
 const MainNavigator = () => {
   const { isLoggedIn } = useAuth();
+  const { t } = useLanguage();
   
   return (
     <Tab.Navigator
@@ -480,15 +269,22 @@ const MainNavigator = () => {
         name="Home" 
         component={AppNavigator} 
         options={{ 
-          title: 'Home',
+          title: t('home'),
           tabBarBadge: null,
+        }} 
+      />
+      <Tab.Screen 
+        name="Booking" 
+        component={BookingScreen} 
+        options={{ 
+          title: 'จองตั๋ว',
         }} 
       />
       <Tab.Screen 
         name="Login" 
         component={AccountTabNavigator} 
         options={{ 
-          title: isLoggedIn ? 'Account' : 'Login',
+          title: isLoggedIn ? t('account') : t('login'),
         }} 
       />
     </Tab.Navigator>

@@ -1937,7 +1937,7 @@ const HomeScreen = ({ navigation }) => {
                   onPress={() => {
                     updateCustomerData({
                       startingPointId: item.md_location_id,
-                      startingpoint_name: item.md_location_nameeng,
+                      startingpoint_name: language === 'th' ? item.md_location_namethai : item.md_location_nameeng,
                       countrycode: item.md_location_countriesid,
                       country: item.sys_countries_nameeng,
                     });
@@ -1987,7 +1987,7 @@ const HomeScreen = ({ navigation }) => {
                             style={premiumStyles.trendingCarouselBadgeGradient}
                           >
                             <MaterialIcons name="trending-up" size={wp('4%')} color="#fff" />
-                            <Text style={premiumStyles.trendingCarouselBadgeText}>#{index + 1} Trending</Text>
+                            <Text style={premiumStyles.trendingCarouselBadgeText}>#{index + 1} {t('trending')}</Text>
                           </LinearGradient>
                         </Animated.View>
                       )}
@@ -2007,7 +2007,7 @@ const HomeScreen = ({ navigation }) => {
                             {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
                           </Text>
                           <Text style={premiumStyles.trendingCarouselLocation} numberOfLines={2}>
-                            {item.md_location_nameeng}
+                            {language === 'th' ? item.md_location_namethai : item.md_location_nameeng}
                           </Text>
                           
                           <View style={premiumStyles.trendingCarouselMeta}>
@@ -2058,7 +2058,7 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={premiumStyles.sectionTitle}>
                   {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
                 </Text>
-                <Text style={premiumStyles.sectionSubtitle}>Explore the best attractions</Text>
+                <Text style={premiumStyles.sectionSubtitle}>{t('exploreTheBestAttractions')}</Text>
               </LinearGradient>
             </BlurView>
           </View>
@@ -2075,7 +2075,7 @@ const HomeScreen = ({ navigation }) => {
                 // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
                 >
                   <Text style={[styles.tabText, activeattraction === item.md_province_id && styles.activeTabText]}>
-                    {item.md_province_nameeng}
+                    {language === 'th' ? item.md_province_namethai : item.md_province_nameeng}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -2190,7 +2190,7 @@ const HomeScreen = ({ navigation }) => {
                   style={premiumStyles.attractionTouchable}
                   onPress={() => {
                     // Navigate to attraction detail
-                    console.log('Navigate to attraction:', item.md_tour_name_eng);
+                    console.log('Navigate to attraction:', language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng);
                   }}
                   activeOpacity={0.95}
                 >
@@ -2268,7 +2268,7 @@ const HomeScreen = ({ navigation }) => {
                       
                       <View style={premiumStyles.attractionContent}>
                         <Text style={premiumStyles.attractionName} numberOfLines={2}>
-                          {truncateText(item.md_tour_name_eng)}
+                          {truncateText(language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng)}
                         </Text>
                         
                         <View style={premiumStyles.attractionMeta}>

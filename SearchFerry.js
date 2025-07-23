@@ -8,6 +8,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from './(component)/Logo';
 import { useCustomer } from './(Screen)/CustomerContext';
 import moment from 'moment';
+import 'moment/locale/th'; // เพิ่ม locale ภาษาไทย
 import { useLanguage } from './(Screen)/LanguageContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { CalendarList, Calendar } from 'react-native-calendars';
@@ -21,7 +22,7 @@ const itemsPerPage = 5;
 
 
 const SearchFerry = ({ navigation, route }) => {
-  const { language, t } = useLanguage();
+  const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
 
   // Trip type constants for consistent comparison
@@ -109,12 +110,12 @@ const SearchFerry = ({ navigation, route }) => {
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
   const day = calendarStartDate?.substring(8, 10) || "";
-  console.log("day", day);
+  // console.log("day", day);
   const month = calendarStartDate?.substring(5, 7) || "";
-  console.log("month", month);
+  // console.log("month", month);
   const year = calendarStartDate?.substring(0, 4) || "";
-  console.log("year", year);
-  console.log("country", startingPoint.countryId);
+  // console.log("year", year);
+  // console.log("country", startingPoint.countryId);
   // ฟังก์ชันสำหรับเลือกวันที่ไป
   const onDepartCalendarDayPress = (day) => {
     setCalendarStartDate(day.dateString);
@@ -122,15 +123,15 @@ const SearchFerry = ({ navigation, route }) => {
     // เซ็ตวันที่กลับเป็นวันเดียวกันกับวันที่ไป
     setCalendarEndDate(day.dateString);
     setReturnDate(new Date(day.dateString));
-    console.log('Selected Departure Date:', day.dateString);
-    console.log('Auto-set Return Date:', day.dateString);
+    // console.log('Selected Departure Date:', day.dateString);
+    // console.log('Auto-set Return Date:', day.dateString);
   };
 
   // ฟังก์ชันสำหรับเลือกวันที่กลับ
   const onReturnCalendarDayPress = (day) => {
     setCalendarEndDate(day.dateString);
     setReturnDate(new Date(day.dateString));
-    console.log('Selected Return Date:', day.dateString);
+    // console.log('Selected Return Date:', day.dateString);
   };
 
   const getMarkedDatesRange = (start, end) => {
@@ -190,11 +191,11 @@ const SearchFerry = ({ navigation, route }) => {
         if (data.status === 'success') {
           setCurrencyList(data.data);
         } else {
-          console.error('Unexpected response:', data);
+          // console.error('Unexpected response:', data);
         }
       })
       .catch((err) => {
-        console.error('Fetch error:', err);
+        // console.error('Fetch error:', err);
       })
       .finally(() => {
         setLoading(false);
@@ -224,7 +225,7 @@ const SearchFerry = ({ navigation, route }) => {
     } else {
       setSelectedPickup(id);
       const targetHeight = contentHeights[id] || 0;
-      console.log('Animating to height:', targetHeight);
+      // console.log('Animating to height:', targetHeight);
       Animated.timing(animatedHeight, {
         toValue: targetHeight,
         duration: 300,
@@ -238,11 +239,27 @@ const SearchFerry = ({ navigation, route }) => {
 
   const formatDateInput = (date) => {
     if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    
+    const dateObj = new Date(date);
+    
+    if (selectedLanguage === 'th') {
+      // เดือนภาษาไทยแบบย่อ
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      
+      const day = dateObj.getDate().toString().padStart(2, '0');
+      const monthName = monthNames[dateObj.getMonth()];
+      const year = dateObj.getFullYear() + 543; // แปลงเป็น พ.ศ.
+      
+      return `${day} ${monthName} ${year}`;
+    } else {
+      // แสดงวันที่ภาษาอังกฤษ
+      return dateObj.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
   };
 
 
@@ -373,7 +390,25 @@ const SearchFerry = ({ navigation, route }) => {
   }
 
   const formatDate = (dateString) => {
-    return moment(dateString).format("ddd, DD MMM YYYY");
+    const date = new Date(dateString);
+    
+    if (selectedLanguage === 'th') {
+      // วันในสัปดาห์ภาษาไทย
+      const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+      // เดือนภาษาไทย
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      
+      const dayName = dayNames[date.getDay()];
+      const day = date.getDate().toString().padStart(2, '0');
+      const monthName = monthNames[date.getMonth()];
+      const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+      
+      return `${dayName} ${day} ${monthName} ${year}`;
+    } else {
+      // แสดงวันที่ภาษาอังกฤษ
+      return moment(dateString).format("ddd, DD MMM YYYY");
+    }
   };
   useEffect(() => {
     handleSearchStart();
@@ -409,11 +444,11 @@ const SearchFerry = ({ navigation, route }) => {
   const handleSearchStart = () => {
 
 
-    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}/THB`)
+    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}/${selectedCurrency}`)
       .then((response) => {
         if (!response.ok) {
           // Logging response status for more details
-          console.error(`HTTP error! status: ${response.status}`);
+          // console.error(`HTTP error! status: ${response.status}`);
           throw new Error('Network response was not ok');
         }
         return response.json();
@@ -421,24 +456,15 @@ const SearchFerry = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setTimetableDepart(data.data);
-          const uniqueCompanies = [
-            ...new Set(data.data.map(item => item.md_company_nameeng))
-          ];
-
-          setSelectedCompaniesDepart(uniqueCompanies);
-          setAvailableCompaniesDepart(uniqueCompanies);
-          setAllSelectedDepart(true);
+          // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
         } else {
-          console.error('Data is not in expected format', data);
+          // console.error('Data is not in expected format', data);
           setTimetableDepart([]);
-          setSelectedCompaniesDepart([]);
-          setAvailableCompaniesDepart([]);
         }
       })
       .catch((error) => {
-        console.error('Error fetching data:', error.message);
-        setSelectedCompaniesDepart([]);
-        setAvailableCompaniesDepart([]);
+        // console.error('Error fetching data:', error.message);
+        // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
       })
       .finally(() => {
         setLoading(false); // Ensure loading is turned off after request is complete
@@ -448,9 +474,30 @@ const SearchFerry = ({ navigation, route }) => {
 
   const fetchFerryRoute = async () => {
     try {
+      // แสดงค่า selectedLanguage
+      // console.log('🌐 Selected Language:', selectedLanguage);
+      // console.log('🌐 Selected Language type:', typeof selectedLanguage);
+      
+      // ตรวจสอบข้อมูลที่จำเป็น
+      if (!startingPoint.id || !endPoint.id) {
+        // console.log('❌ Missing location data:', { startingPoint: startingPoint.id, endPoint: endPoint.id });
+        setError('กรุณาเลือกจุดเริ่มต้นและจุดหมาย');
+        setLoading(false);
+        return;
+      }
+      
+      if (!calendarStartDate) {
+        // console.log('❌ Missing start date');
+        setError('กรุณาเลือกวันที่เดินทาง');
+        setLoading(false);
+        return;
+      }
+      
       // ตรวจสอบค่าก่อนส่ง (optional แต่ดีมาก)
-      console.log({
-        lang: 'en',
+      const languageToSend = selectedLanguage && (selectedLanguage === 'th' || selectedLanguage === 'en') ? selectedLanguage : 'en';
+      
+      const requestData = {
+        lang: languageToSend, // ใช้ fallback เป็น 'en' ถ้า selectedLanguage ไม่ถูกต้อง
         currency: selectedCurrency,
         roundtrip: customerData.roud,
         locationstart: startingPoint.id,
@@ -460,22 +507,15 @@ const SearchFerry = ({ navigation, route }) => {
         infant: infant,
         departdate: calendarStartDate,
         returndate: calendarEndDate,
-      });
+      };
+      
+      // console.log('📤 Language to send:', languageToSend);
+      // console.log('📤 API Request Data:', requestData);
+      // console.log('🔗 API URL:', 'https://thetrago.com/api/V1/ferry/Getroute');
 
       const response = await axios.post(
         'https://thetrago.com/api/V1/ferry/Getroute',
-        {
-          lang: 'en',
-          currency: selectedCurrency,
-          roundtrip: customerData.roud,
-          locationstart: startingPoint.id,
-          locationend: endPoint.id,
-          adult: adults,
-          child: children,
-          infant: infant,
-          departdate: calendarStartDate,
-          returndate: calendarEndDate,
-        },
+        requestData,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -483,14 +523,50 @@ const SearchFerry = ({ navigation, route }) => {
         }
       );
 
+      // console.log('✅ API Response Status:', response.status);
+      // console.log('📥 API Response Data:', response.data);
+      // console.log('📥 Full API Response:', JSON.stringify(response.data, null, 2));
+
       if (response.data.status === 'success') {
+        // console.log('🚢 Depart Trips Data:', JSON.stringify(response.data.data.departtrip, null, 2));
+        // console.log('🔄 Return Trips Data:', JSON.stringify(response.data.data.returntrip, null, 2));
+        
         setDepartTrips(response.data.data.departtrip);
         setReturnTrips(response.data.data.returntrip);
-
+        // console.log('🚢 Depart Trips Count:', response.data.data.departtrip?.length || 0);
+        // console.log('🔄 Return Trips Count:', response.data.data.returntrip?.length || 0);
+        
+        // สร้างรายการบริษัทสำหรับ filter จากข้อมูล depart trips
+        const companyNames = response.data.data.departtrip?.map(trip => {
+          return trip.md_timetable_companyname;
+        }) || [];
+        
+        // ลบรายการซ้ำ
+        const uniqueCompanyNames = [...new Set(companyNames)].filter(name => name); // กรองเอาเฉพาะค่าที่ไม่ใช่ null/undefined
+        
+        // console.log('🏢 Available Company Names:', uniqueCompanyNames);
+        setAvailableCompaniesDepart(uniqueCompanyNames);
+        setSelectedCompaniesDepart(uniqueCompanyNames); // เลือกทุก company
+        
+        // สร้างรายการบริษัทสำหรับ return trips ด้วย
+        const returnCompanyNames = response.data.data.returntrip?.map(trip => {
+          return trip.md_timetable_companyname;
+        }) || [];
+        
+        const uniqueReturnCompanyNames = [...new Set(returnCompanyNames)].filter(name => name);
+        setAvailableCompaniesReturn(uniqueReturnCompanyNames);
+        setSelectedCompaniesReturn(uniqueReturnCompanyNames);
+        
       } else {
+        // console.log('❌ API returned unsuccessful status:', response.data);
         setError('ไม่สามารถโหลดข้อมูลได้');
       }
     } catch (err) {
+      // console.log('🚨 API Error caught:', err);
+      // console.log('🚨 Error message:', err.message);
+      // console.log('🚨 Error response:', err.response?.data);
+      // console.log('🚨 Error status:', err.response?.status);
+      
       const apiError = err.response?.data;
 
       const ignoredMessages = [
@@ -503,7 +579,7 @@ const SearchFerry = ({ navigation, route }) => {
         return;
       }
 
-      console.error("❌ API Error:", apiError || err.message);
+      // console.error("❌ API Error:", apiError || err.message);
       setDepartTrips([]);
       setReturnTrips([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
@@ -524,18 +600,10 @@ const SearchFerry = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           settimetableReturn(data.data);
-          const uniqueCompanies = [
-            ...new Set(data.data.map(item => item.md_company_nameeng))
-          ];
-
-          setSelectedCompaniesReturn(uniqueCompanies);
-          setAvailableCompaniesReturn(uniqueCompanies);
-          setAllSelectedReturn(true);
+          // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
         } else {
           console.error('Data is not an array', data);
           settimetableReturn([]);
-          setSelectedCompaniesReturn([]);
-          setAvailableCompaniesReturn([]);
         }
       })
       .catch((error) => {
@@ -651,13 +719,39 @@ const SearchFerry = ({ navigation, route }) => {
     setAllSelectedReturn(!allSelectedReturn);
   };
 
-  const filteredDepartData = departTrips.filter(item =>
-    selectedCompaniesDepart.includes(item.md_timetable_companyname)
-  );
+  // Filter ใช้ข้อมูลจาก API Getroute (departTrips/returnTrips) แต่ตั๋วแสดงจาก timetableDepart/Return
+  const filteredDepartData = departTrips.filter(item => {
+    // ถ้าเลือกทั้งหมด ให้แสดงข้อมูลทั้งหมด
+    if (allSelectedDepart) {
+      return true;
+    }
+    
+    // ใช้ md_timetable_companyname เท่านั้น
+    const companyName = item.md_timetable_companyname;
+    
+    // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
+    return selectedCompaniesDepart.includes(companyName);
+  });
 
-  const filteredReturnData = returnTrips.filter(item =>
-    selectedCompaniesReturn.includes(item.md_timetable_companyname)
-  );
+  const filteredReturnData = returnTrips.filter(item => {
+    // ถ้าเลือกทั้งหมด ให้แสดงข้อมูลทั้งหมด
+    if (allSelectedReturn) {
+      return true;
+    }
+    
+    // ใช้ md_timetable_companyname เท่านั้น
+    const companyName = item.md_timetable_companyname;
+    
+    // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
+    return selectedCompaniesReturn.includes(companyName);
+  });
+
+  // Debug: ตรวจสอบการ filter
+  console.log('🔍 Debug Filter Info:');
+  console.log('  - departTrips length:', departTrips.length);
+  console.log('  - selectedCompaniesDepart:', selectedCompaniesDepart);
+  console.log('  - filteredDepartData length:', filteredDepartData.length);
+  console.log('  - allSelectedDepart:', allSelectedDepart);
 
   // ต้องอยู่หลังจาก filter
   const pagedDataDepart = filteredDepartData.slice(
@@ -669,6 +763,11 @@ const SearchFerry = ({ navigation, route }) => {
     (currentPageReturn - 1) * itemsPerPage,
     currentPageReturn * itemsPerPage
   );
+
+  // console.log('📄 Paged Data:');
+  // console.log('  - pagedDataDepart length:', pagedDataDepart.length);
+  // console.log('  - currentPageDepart:', currentPageDepart);
+  // console.log('  - itemsPerPage:', itemsPerPage);
 
 
 
@@ -1059,8 +1158,12 @@ const SearchFerry = ({ navigation, route }) => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Enhanced Ultra Premium Company List */}
-              <View style={{ maxHeight: hp('40%'), marginBottom: hp('2.5%') }}>
+              {/* Enhanced Ultra Premium Company List with ScrollView */}
+              <ScrollView 
+                style={{ maxHeight: hp('40%'), marginBottom: hp('2.5%') }}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
                 {tripTypeSearchResult === 'Depart Trip'
                   ? availableCompaniesDepart.map((company, index) => (
                     <TouchableOpacity
@@ -1139,7 +1242,7 @@ const SearchFerry = ({ navigation, route }) => {
                     </TouchableOpacity>
                   ))
                 }
-              </View>
+              </ScrollView>
 
               {/* Enhanced Ultra Premium Apply Button */}
               <TouchableOpacity

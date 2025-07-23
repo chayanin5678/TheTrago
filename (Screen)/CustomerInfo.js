@@ -283,7 +283,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
 });
 
 const CustomerInfo = ({ navigation }) => {
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   
   const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
@@ -496,8 +496,8 @@ const CustomerInfo = ({ navigation }) => {
         Lastname: Lastname,
         tel: mobileNumber,
         email: email,
-        companyname: timetableDepart[0].md_company_nameeng,
-        startingpoint_name: timetableDepart[0].startingpoint_name,
+        companyname: selectedLanguage === 'th' ? timetableDepart[0].md_company_namethai : timetableDepart[0].md_company_nameeng,
+        startingpoint_name: selectedLanguage === 'th' ? timetableDepart[0].startingpoint_namethai : timetableDepart[0].startingpoint_nameeng,
         endpoint_name: timetableDepart[0].endpoint_name,
         boatypeid: timetableDepart[0].md_timetable_boattypeid,
         country: country,
@@ -577,8 +577,8 @@ const CustomerInfo = ({ navigation }) => {
         Lastname: Lastname,
         tel: mobileNumber,
         email: email,
-        companyname: timetableDepart[0].md_company_nameeng,
-        startingpoint_name: timetableDepart[0].startingpoint_name,
+        companyname: selectedLanguage === 'th' ? timetableDepart[0].md_company_namethai : timetableDepart[0].md_company_nameeng,
+        startingpoint_name: selectedLanguage === 'th' ? timetableDepart[0].startingpoint_namethai : timetableDepart[0].startingpoint_nameeng,
         endpoint_name: timetableDepart[0].endpoint_name,
         boatypeid: timetableDepart[0].md_timetable_boattypeid,
         country: country,
@@ -1172,10 +1172,10 @@ const CustomerInfo = ({ navigation }) => {
                       <View key={index}>
                         <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
-                        <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+                        <Text style={{ marginTop: 5, color: '#FD501E' }}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'} </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {item.md_company_nameeng}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
@@ -1251,11 +1251,11 @@ const CustomerInfo = ({ navigation }) => {
                           <View key={index}>
                             <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                             <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                              {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                              {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                             </Text>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                              <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                              <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>

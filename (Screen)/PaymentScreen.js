@@ -26,7 +26,7 @@ const brandIcons = {
 };
 
 const PaymentScreen = ({ navigation, route }) => {
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
 
   const [Discount, setDiscount] = useState('');
@@ -1172,10 +1172,10 @@ const PaymentScreen = ({ navigation, route }) => {
                       {timetableDepart.map((item, index) => (
                         <View key={index}>
                           <Text style={{ fontWeight: 'bold' }}>{t('depart') || 'Depart'}</Text>
-                          <Text style={{ marginTop: 5, color: '#FD501E' }}>{item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+                          <Text style={{ marginTop: 5, color: '#FD501E' }}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
                           <View style={styles.row}>
                             <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                            <Text style={{ color: '#666666' }}> {item.md_company_nameeng}</Text>
+                            <Text style={{ color: '#666666' }}> {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
                           </View>
                           <View style={styles.row}>
                             <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
@@ -1246,11 +1246,11 @@ const PaymentScreen = ({ navigation, route }) => {
                             <View key={index}>
                               <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                               <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                                {item.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                                {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
                               </Text>
                               <View style={styles.row}>
                                 <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                                <Text style={{ color: '#666666' }}>{item.md_company_nameeng}</Text>
+                                <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
                               </View>
                               <View style={styles.row}>
                                 <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>

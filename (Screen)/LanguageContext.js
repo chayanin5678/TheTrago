@@ -147,6 +147,8 @@ const translations = {
     booked: 'จองแล้ว',
     popular: 'ยอดนิยม',
     popularDestination: 'จุดหมายยอดนิยม',
+    exploreTheBestAttractions: 'สำรวจสถานที่ท่องเที่ยวที่ดีที่สุด',
+    trending: 'แนวโน้ม',
 
     // Account Screen
     myAccount: 'บัญชีของฉัน',
@@ -701,6 +703,17 @@ const translations = {
     registrationFailed: 'การลงทะเบียนล้มเหลว กรุณาลองใหม่อีกครั้ง',
     failedToCheckEmail: 'ไม่สามารถตรวจสอบอีเมลได้',
     networkResponseError: 'การตอบสนองของเครือข่ายไม่ถูกต้อง',
+
+    // App.js translations
+    settingsScreen: 'หน้าการตั้งค่า',
+    yourBookings: 'การจองของคุณ',
+    allYourBookingHistory: 'ประวัติการจองทั้งหมดและการจองปัจจุบันจะแสดงที่นี่',
+    pending: 'กำลังดำเนินการ',
+    completed: 'เสร็จสิ้น',
+    home: 'หน้าหลัก',
+    account: 'บัญชี',
+    login: 'เข้าสู่ระบบ',
+    loading: 'กำลังโหลด...',
   },
   en: {
     // Account Screen
@@ -921,6 +934,8 @@ const translations = {
     popularDestination: 'Popular Destination',
     popularRoute: 'Popular Route',
     popularAttraction: 'Popular Attraction',
+    exploreTheBestAttractions: 'Explore the best attractions',
+    trending: 'Trending',
 
     // Profile Screen Updates
     completeProfile: 'Complete your premium profile',
@@ -1391,6 +1406,17 @@ const translations = {
     registrationFailed: 'Registration failed. Please try again.',
     failedToCheckEmail: 'Failed to check email',
     networkResponseError: 'Network response was not ok',
+
+    // App.js translations
+    settingsScreen: 'Settings Screen',
+    yourBookings: 'Your Bookings',
+    allYourBookingHistory: 'All your booking history and current reservations appear here',
+    pending: 'Pending',
+    completed: 'Completed',
+    home: 'Home',
+    account: 'Account',
+    login: 'Login',
+    loading: 'Loading...',
   }
 };
 

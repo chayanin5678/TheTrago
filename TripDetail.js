@@ -16,7 +16,7 @@ import axios from 'axios';
 import headStyles from './(CSS)/StartingPointScreenStyles';
 import { useLanguage } from './(Screen)/LanguageContext';
 const TripDetail = ({ navigation, route }) => {
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
 
   const [tripType, setTripType] = useState("One Way Trip");
   const [pickupPriceDepart, setpickupPriceDepart] = useState();
@@ -1174,7 +1174,7 @@ const TripDetail = ({ navigation, route }) => {
                               flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                             }}
                           >
-                            {item.md_company_nameeng}
+                            {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}
                           </Text>
                           <Text
                             style={{
@@ -1188,7 +1188,7 @@ const TripDetail = ({ navigation, route }) => {
                         </View>
                       </View>
                       <View style={{ flexDirection: 'row', gap: 6 }}>
-                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
                         <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
                       </View>
                     </View>
@@ -1208,8 +1208,8 @@ const TripDetail = ({ navigation, route }) => {
                         />
                       </View>
                       <View style={styles.col}>
-                        <Text style={styles.location}>{item.startingpoint_name}</Text>
-                        <Text style={styles.ship}>{item.startpier_name}</Text>
+                        <Text style={styles.location}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng}</Text>
+                        <Text style={styles.ship}>{selectedLanguage === 'th' ? item.startpier_namethai : item.startpier_nameeng}</Text>
                       </View>
                     </View>
 
@@ -1225,7 +1225,7 @@ const TripDetail = ({ navigation, route }) => {
                       </View>
                       <View style={styles.col}>
                         <Text style={styles.ship}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        <Text style={styles.orangetext}>{item.md_boattype_nameeng}</Text>
+                        <Text style={styles.orangetext}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
                       </View>
                     </View>
                     <View style={styles.tripInfo}>
@@ -1239,8 +1239,8 @@ const TripDetail = ({ navigation, route }) => {
                         </View>
                       </View>
                       <View style={styles.col}>
-                        <Text style={styles.location}>{item.endpoint_name}</Text>
-                        <Text style={styles.ship}>{item.endpier_name}</Text>
+                        <Text style={styles.location}>{selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+                        <Text style={styles.ship}>{selectedLanguage === 'th' ? item.endpier_namethai : item.endpier_nameeng}</Text>
                       </View>
                     </View>
 
@@ -1653,7 +1653,7 @@ const TripDetail = ({ navigation, route }) => {
                                 flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                               }}
                             >
-                              {item.md_company_nameeng}
+                              {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}
                             </Text>
                             <Text
                               style={{
@@ -1667,7 +1667,7 @@ const TripDetail = ({ navigation, route }) => {
                           </View>
                         </View>
                         <View style={{ flexDirection: 'row', gap: 6 }}>
-                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{item.md_seat_nameeng}</Text>
+                          <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
                           <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
                         </View>
                       </View>
@@ -1685,8 +1685,8 @@ const TripDetail = ({ navigation, route }) => {
                           />
                         </View>
                         <View style={styles.col}>
-                          <Text style={styles.location}>{item.startingpoint_name}</Text>
-                          <Text style={styles.ship}>{item.startpier_name}</Text>
+                          <Text style={styles.location}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng}</Text>
+                          <Text style={styles.ship}>{selectedLanguage === 'th' ? item.startpier_namethai : item.startpier_nameeng}</Text>
                         </View>
                       </View>
 
@@ -1702,7 +1702,7 @@ const TripDetail = ({ navigation, route }) => {
                         </View>
                         <View style={styles.col}>
                           <Text style={styles.ship}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                          <Text style={styles.orangetext}>{item.md_boattype_nameeng}</Text>
+                          <Text style={styles.orangetext}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
                         </View>
                       </View>
                       <View style={styles.tripInfo}>
@@ -1716,8 +1716,8 @@ const TripDetail = ({ navigation, route }) => {
                           </View>
                         </View>
                         <View style={styles.col}>
-                          <Text style={styles.location}>{item.endpoint_name}</Text>
-                          <Text style={styles.ship}>{item.endpier_name}</Text>
+                          <Text style={styles.location}>{selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+                          <Text style={styles.ship}>{selectedLanguage === 'th' ? item.endpier_namethai : item.endpier_nameeng}</Text>
                         </View>
                       </View>
 
@@ -2114,22 +2114,22 @@ const TripDetail = ({ navigation, route }) => {
                       <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
                       <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                        {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
+                        {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
                       </Text>
                       
                       <View style={styles.rowpromo}>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_company_nameeng}</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_seat_nameeng}</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
                         <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_boattype_nameeng}</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
                       </View>
                       
                       <View style={styles.rowpromo}>
@@ -2200,22 +2200,22 @@ const TripDetail = ({ navigation, route }) => {
                           <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('return') || 'Return'}</Text>
                           
                           <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                            {tripItem.startingpoint_name} <AntDesign name="arrowright" size={14} color="#FD501E" /> {tripItem.endpoint_name}
+                            {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
                           </Text>
                           
                           <View style={styles.rowpromo}>
                             <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_company_nameeng}</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
                           </View>
                           
                           <View style={styles.rowpromo}>
                             <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_seat_nameeng}</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
                           </View>
                           
                           <View style={styles.rowpromo}>
                             <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{tripItem.md_boattype_nameeng}</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
                           </View>
                           
                           <View style={styles.rowpromo}>
