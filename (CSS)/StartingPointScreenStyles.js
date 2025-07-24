@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 const startingPointScreenStyles = StyleSheet.create({
   headerBg: {
@@ -6,8 +6,9 @@ const startingPointScreenStyles = StyleSheet.create({
     paddingBottom: 32,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
-    minHeight: 140,
+    minHeight: 160,
     justifyContent: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? -50 : 0,
   },
   headerRow: {
     flexDirection: 'row',

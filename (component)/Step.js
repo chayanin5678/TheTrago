@@ -3,10 +3,8 @@ import { View, StyleSheet, Image, Text, Dimensions, Platform } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-import { useLanguage } from '../(Screen)/LanguageContext';
 
 export default function Step({ logoUri }) { 
-  const { t, selectedLanguage } = useLanguage(); 
   
   // Enhanced Step Component
   const StepCircle = ({ isActive, isPassed, number, children }) => {
@@ -63,7 +61,7 @@ export default function Step({ logoUri }) {
               <Entypo name="check" size={wp('5%')} color="white" />
             </StepCircle>
           </View>
-          <Text style={[styles.step, styles.stepCompleted]}>{selectedLanguage === 'th' ? 'เลือกเรือ' : 'Choose Your Boat'}</Text>
+          <Text style={[styles.step, styles.stepCompleted]}>เลือกเรือของคุณ</Text>
         </View>
         
         {/* Step 2 */}
@@ -77,7 +75,7 @@ export default function Step({ logoUri }) {
               {logoUri >= 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>{selectedLanguage === 'th' ? 'รถรับส่ง' : 'Shuttle Transfer'}</Text>
+          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>รถรับส่ง</Text>
         </View>
         
         {/* Step 3 */}
@@ -91,7 +89,7 @@ export default function Step({ logoUri }) {
               {logoUri > 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>{selectedLanguage === 'th' ? 'ข้อมูลลูกค้า' : 'Customer Information'}</Text>
+          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>ข้อมูลลูกค้า</Text>
         </View>
         
         {/* Step 4 */}
@@ -102,7 +100,7 @@ export default function Step({ logoUri }) {
               number="4" 
             />
           </View>
-          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>{selectedLanguage === 'th' ? 'ชำระเงิน' : 'Payment'}</Text>
+          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>ชำระเงิน</Text>
         </View>
         
         {/* Connector Lines */}

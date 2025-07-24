@@ -20,6 +20,32 @@ const ResultScreen = ({ navigation, route }) => {
   const [pdfUri, setPdfUri] = useState(null);
   const [timetableDepart, settimetableDepart] = useState([]);
 
+  // ฟังก์ชันจัดการ countrycode ให้มี + เพียงตัวเดียว
+  const formatCountryCode = (code) => {
+    if (!code) return '';
+    const codeStr = code.toString();
+    // ลบ + ทั้งหมด แล้วเพิ่ม + หนึ่งตัวหน้า
+    const cleanCode = codeStr.replace(/\+/g, '');
+    return '+' + cleanCode;
+  };
+
+  // ฟังก์ชันแปลงคำนำหน้าชื่อจากไทยเป็นอังกฤษ
+  const convertTitleToEnglish = (thaiTitle) => {
+    const titleMapping = {
+      'นาย': 'Mr.',
+      'นาง': 'Mrs.',
+      'นางสาว': 'Miss',
+      'ดร.': 'Dr.',
+      'ผศ.ดร.': 'Dr.',
+      'รศ.ดร.': 'Dr.',
+      'ศ.ดร.': 'Dr.',
+      'เด็กชาย': 'Master',
+      'เด็กหญิง': 'Miss'
+    };
+    
+    return titleMapping[thaiTitle] || thaiTitle; // ถ้าไม่เจอให้ใช้ค่าเดิม
+  };
+
   const htmlContent = `
   
 <!DOCTYPE html>
@@ -287,8 +313,8 @@ const ResultScreen = ({ navigation, route }) => {
       <div>
         <h3>Passenger</h3>
         <table class="info-table">
-          <tr><td><strong>Name:</strong></td><td>${customerData.selectedTitle} ${customerData.Firstname}  ${customerData.Lastname}</td></tr>
-          <tr><td><strong>Tel.:</strong></td><td>(${customerData.countrycode})  ${formatPhoneNumber(customerData.tel)}</td></tr>
+          <tr><td><strong>Name:</strong></td><td>${convertTitleToEnglish(customerData.selectedTitle)} ${customerData.Firstname}  ${customerData.Lastname}</td></tr>
+          <tr><td><strong>Tel.:</strong></td><td>(${formatCountryCode(customerData.countrycode)})  ${formatPhoneNumber(customerData.tel)}</td></tr>
           <tr><td><strong>Adult:</strong></td><td>${customerData.adult} persons</td></tr>
           ${customerData.child !== 0 ? `<tr><td><strong>Child:</strong></td><td>${customerData.child} persons</td></tr>` : ''}
           ${customerData.infant !== 0 ? `<tr><td><strong>Infant:</strong></td><td>${customerData.infant} persons</td></tr>` : ''}
@@ -664,7 +690,7 @@ const ResultScreen = ({ navigation, route }) => {
           </View>
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text >Phone number </Text>
-            <Text>{customerData.countrycode} {formatPhoneNumber(customerData.tel)}</Text>
+            <Text>{formatCountryCode(customerData.countrycode)} {formatPhoneNumber(customerData.tel)}</Text>
           </View>
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text >Email address </Text>

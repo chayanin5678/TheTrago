@@ -12,16 +12,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from './LanguageContext';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import ipAddress from '../ipconfig';
 
 const BookingScreen = () => {
   const { t, selectedLanguage } = useLanguage();
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
@@ -29,6 +33,10 @@ const BookingScreen = () => {
   const [otp, setOTP] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isOTPLogin, setIsOTPLogin] = useState(false); // Track if user logged in via OTP on this screen
+  const [bookings, setBookings] = useState([]); // Store booking data from API
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false); // Loading state for bookings
+  const [imageErrors, setImageErrors] = useState({}); // Track image loading errors
   
   // Animation for loading spinner
   const spinValue = useState(new Animated.Value(0))[0];
@@ -38,11 +46,55 @@ const BookingScreen = () => {
     checkAuthStatus();
   }, []);
   
+  // Add focus effect to check auth status when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('BookingScreen: Screen focused, checking auth status...');
+      debugCurrentEmailState(); // Debug current email state first
+      checkAuthStatus();
+    }, [])
+  );
+
+  // Listen for Account logout to automatically logout from BookingScreen
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkAccountLogout = async () => {
+        try {
+          const userToken = await SecureStore.getItemAsync('userToken');
+          const bookingToken = await SecureStore.getItemAsync('bookingToken');
+          const isOTPLoginFlag = await SecureStore.getItemAsync('isOTPLogin');
+          
+          // Only logout if:
+          // 1. User was logged in via Account previously (userToken existed before)
+          // 2. userToken is now gone (Account logout)
+          // 3. bookingToken still exists
+          // 4. Current login is NOT from OTP
+          if (!userToken && bookingToken && isLoggedIn && isOTPLoginFlag !== 'true') {
+            console.log('🔄 Account logout detected, logging out from BookingScreen...');
+            console.log('🔄 This is NOT an OTP login, so safe to logout');
+            await handleLogout();
+          } else {
+            console.log('🔄 Logout check - conditions not met:');
+            console.log('  userToken:', !!userToken);
+            console.log('  bookingToken:', !!bookingToken);
+            console.log('  isLoggedIn:', isLoggedIn);
+            console.log('  isOTPLogin:', isOTPLoginFlag === 'true');
+            console.log('  Should logout?', !userToken && bookingToken && isLoggedIn && isOTPLoginFlag !== 'true');
+          }
+        } catch (error) {
+          console.error('Error checking account logout:', error);
+        }
+      };
+      
+      checkAccountLogout();
+    }, [isLoggedIn])
+  );
+  
   // Add function to debug all SecureStore keys
   const debugSecureStore = async () => {
     try {
       console.log('=== DEBUG: All SecureStore values ===');
-      const keys = ['userToken', 'userEmail', 'authToken', 'email'];
+      const keys = ['userToken', 'userEmail', 'bookingToken', 'bookingEmail', 'isOTPLogin'];
       
       for (const key of keys) {
         try {
@@ -58,6 +110,18 @@ const BookingScreen = () => {
     }
   };
   
+  // Add function to debug current email state
+  const debugCurrentEmailState = () => {
+    console.log('=== CURRENT EMAIL STATE DEBUG ===');
+    console.log('📧 Email field state:', email || 'empty');
+    console.log('📧 Email field length:', email ? email.length : 0);
+    console.log('📧 isLoggedIn:', isLoggedIn);
+    console.log('📧 isOTPLogin:', isOTPLogin);
+    console.log('📧 showOTP:', showOTP);
+    console.log('📧 Email being displayed to user:', email || '[no email]');
+    console.log('=== END EMAIL STATE DEBUG ===');
+  };
+  
   const checkAuthStatus = async () => {
     try {
       console.log('=== BookingScreen: Starting auth check ===');
@@ -69,43 +133,174 @@ const BookingScreen = () => {
       const timeoutPromise = new Promise((resolve) => {
         setTimeout(() => {
           console.log('BookingScreen: Auth check timeout');
-          resolve({ authToken: null, userEmail: null });
+          resolve({ authToken: null, userEmail: null, otpLoginFlag: null });
         }, 3000); // 3 second timeout
       });
       
-      // ใช้ SecureStore เหมือนหน้า Account แทน AsyncStorage - ใช้ของจริงเท่านั้น
+      // ตรวจสอบทั้ง bookingToken และ userToken (จากหน้า Account)
       const authPromise = Promise.all([
-        SecureStore.getItemAsync('userToken'), // เปลี่ยนจาก authToken เป็น userToken
-        SecureStore.getItemAsync('userEmail')  // เปลี่ยนจาก AsyncStorage เป็น SecureStore
-      ]).then(([authToken, userEmail]) => {
+        SecureStore.getItemAsync('bookingToken'), // ใช้ bookingToken แยกจาก userToken
+        SecureStore.getItemAsync('bookingEmail'), // ใช้ bookingEmail แยกจาก userEmail
+        SecureStore.getItemAsync('userToken'),    // ตรวจสอบ userToken จากหน้า Account ด้วย
+        SecureStore.getItemAsync('userEmail'),    // ตรวจสอบ userEmail จากหน้า Account ด้วย
+        SecureStore.getItemAsync('isOTPLogin')    // Check if user logged in via OTP
+      ]).then(([bookingToken, bookingEmail, userToken, userEmail, otpLoginFlag]) => {
         console.log('BookingScreen: Retrieved from SecureStore:', { 
-          hasToken: !!authToken, 
-          hasEmail: !!userEmail,
-          tokenLength: authToken?.length || 0,
-          email: userEmail 
+          hasBookingToken: !!bookingToken, 
+          hasUserToken: !!userToken,
+          hasBookingEmail: !!bookingEmail,
+          hasUserEmail: !!userEmail,
+          bookingTokenLength: bookingToken?.length || 0,
+          userTokenLength: userToken?.length || 0,
+          bookingEmail: bookingEmail,
+          userEmail: userEmail,
+          isOTPLogin: otpLoginFlag === 'true'
         });
-        return { authToken, userEmail };
+        
+        console.log('📧 Email from Account (userEmail):', userEmail);
+        console.log('📧 Email from Booking (bookingEmail):', bookingEmail);
+        
+        // ตรวจสอบว่า Account ถูก logout หรือไม่ 
+        // หาก userToken หายไปแต่ bookingToken ยังอยู่ แสดงว่า Account logout แล้ว
+        // แต่ถ้าเป็น OTP login ไม่ต้อง logout
+        if (!userToken && bookingToken && otpLoginFlag !== 'true') {
+          console.log('🔄 Account logout detected! userToken is gone but bookingToken still exists');
+          console.log('🔄 This means user logged out from Account screen');
+          console.log('🔄 Current login is NOT from OTP, so will logout from BookingScreen too');
+          
+          // ถ้าตรวจพบว่า Account logout แล้ว และไม่ใช่ OTP login ให้ logout จาก BookingScreen ด้วย
+          Promise.all([
+            SecureStore.deleteItemAsync('bookingToken'),
+            SecureStore.deleteItemAsync('bookingEmail'),
+            SecureStore.deleteItemAsync('isOTPLogin')
+          ]).then(() => {
+            setIsLoggedIn(false);
+            setEmail('');
+            setOTP(['', '', '', '', '', '']);
+            setShowOTP(false);
+            setIsOTPLogin(false);
+            
+            console.log('🔄 BookingScreen logout completed due to Account logout');
+          }).catch((error) => {
+            console.error('Error during auto-logout:', error);
+            // ถึงแม้จะมี error ก็ให้ logout ได้
+            setIsLoggedIn(false);
+            setEmail('');
+            setOTP(['', '', '', '', '', '']);
+            setShowOTP(false);
+            setIsOTPLogin(false);
+          });
+          
+          setIsCheckingAuth(false);
+          return;
+        } else if (!userToken && bookingToken && otpLoginFlag === 'true') {
+          console.log('🔄 No userToken but this is OTP login - keeping BookingScreen logged in');
+          console.log('🔄 OTP login should not be affected by Account logout');
+        }
+        
+        // ให้ความสำคัญกับ userToken จากหน้า Account ก่อน
+        const authToken = userToken || bookingToken;
+        const email = userEmail || bookingEmail;
+        const loginSource = userToken ? 'Account' : (bookingToken ? 'OTP' : null);
+        
+        console.log('🔍 Email Comparison Debug:');
+        console.log('  userEmail (from Account):', userEmail || 'null');
+        console.log('  bookingEmail (from OTP):', bookingEmail || 'null');
+        console.log('  Final email selected:', email || 'null');
+        console.log('  Email source priority: userEmail > bookingEmail');
+        console.log('  Will use email from:', loginSource === 'Account' ? 'Account screen' : 'OTP login');
+        console.log('  📊 Email Match Check:');
+        console.log('    - userEmail (Account):', userEmail || 'null');
+        console.log('    - bookingEmail (OTP):', bookingEmail || 'null');
+        console.log('    - Final email selected:', email || 'null');
+        console.log('    - All emails are accepted (no specific requirement)');
+        
+        return { authToken, userEmail: email, otpLoginFlag, loginSource };
       });
       
-      const { authToken, userEmail } = await Promise.race([authPromise, timeoutPromise]);
+      const { authToken, userEmail, otpLoginFlag, loginSource } = await Promise.race([authPromise, timeoutPromise]);
+      
+      console.log('📧 === FINAL EMAIL SELECTION DEBUG ===');
+      console.log('📧 Selected authToken:', authToken ? (authToken.length > 20 ? `${authToken.substring(0, 20)}...` : authToken) : 'null');
+      console.log('📧 Selected userEmail:', userEmail || 'null');
+      console.log('📧 Login source:', loginSource || 'null');
+      console.log('📧 Will this email be used?', !!userEmail);
+      console.log('📧 === END FINAL EMAIL DEBUG ===');
       
       if (authToken) {
         console.log('✅ BookingScreen: Valid token found, user is already logged in, skipping OTP');
         console.log('BookingScreen: Token type:', authToken.startsWith('eyJ') ? 'JWT' : 'Simple');
         console.log('BookingScreen: Email available:', !!userEmail);
+        console.log('BookingScreen: Login source:', loginSource);
+        console.log('BookingScreen: OTP Login Flag:', otpLoginFlag);
+        
+        console.log('📧 Email validation for booking:');
+        console.log('  Current stored email:', userEmail);
+        console.log('  Login source:', loginSource);
+        console.log('  Authentication strategy: Accept any valid email from Account login or OTP');
+        
+        // Simplified authentication logic:
+        // 1. If user has valid token from Account or OTP, accept it
+        // 2. No email validation required - accept any email from Account
+        // 3. Only show login if no token exists
+        
+        console.log('✅ User authentication accepted:', {
+          hasUserEmail: !!userEmail,
+          loginSource,
+          reason: loginSource === 'Account' ? 'Account login - email accepted' : 'OTP login - email verified'
+        });
         
         // Set email if available, otherwise keep current state
         if (userEmail) {
+          console.log('📧 BEFORE setEmail - current email state:', email);
           setEmail(userEmail);
+          console.log('📧 AFTER setEmail called - should update to:', userEmail);
+          console.log('📧 Email set from stored data:', userEmail);
+          console.log('📧 Email source:', loginSource === 'Account' ? 'userEmail (Account)' : 'bookingEmail (OTP)');
+          console.log('📧 Current email field state before update:', email);
+          console.log('📧 Email field will be updated to:', userEmail);
+          console.log('📧 Email consistency check:');
+          console.log('  - Setting email to UI field:', userEmail);
+          console.log('  - Email source:', loginSource === 'Account' ? 'Account (md_member_email)' : 'OTP verification');
+          console.log('  - Email will be accepted as valid');
+          
+          // Debug email state after setting with longer delay
+          setTimeout(() => {
+            console.log('📧 DELAYED CHECK - Email state after 500ms:', email);
+            debugCurrentEmailState();
+          }, 500);
+        } else {
+          console.log('⚠️ No email found in storage - user will need to enter email manually');
+          console.log('📧 Current email field state (unchanged):', email);
+          console.log('📧 User can enter any valid email address');
+          // Don't pre-fill email - let user enter their own email
         }
         
         setIsLoggedIn(true);
         setShowOTP(false); // ไม่ให้แสดง OTP screen
+        
+        // ตั้งค่า isOTPLogin ตาม login source
+        const isFromOTP = loginSource === 'OTP' && otpLoginFlag === 'true';
+        const isFromAccount = loginSource === 'Account';
+        
+        setIsOTPLogin(isFromOTP);
+        
+        console.log('🔍 Auth check found existing token - State updated:');
+        console.log('  isLoggedIn:', true);
+        console.log('  loginSource:', loginSource);
+        console.log('  isOTPLogin:', isFromOTP);
+        console.log('  isFromAccount:', isFromAccount);
+        console.log('  Logout button will be', isFromOTP ? 'VISIBLE (OTP login)' : 'HIDDEN (Account login)');
       } else {
         console.log('❌ BookingScreen: No token found, user needs to login with OTP');
         console.log('BookingScreen: authToken:', authToken);
         console.log('BookingScreen: userEmail:', userEmail);
+        console.log('BookingScreen: otpLoginFlag:', otpLoginFlag);
+        console.log('📊 Debug - What caused login screen to show:');
+        console.log('  - authToken is falsy:', !authToken);
+        console.log('  - authToken value:', JSON.stringify(authToken));
         setIsLoggedIn(false);
+        setIsOTPLogin(false);
       }
     } catch (error) {
       console.error('BookingScreen: Error checking auth status:', error);
@@ -141,11 +336,96 @@ const BookingScreen = () => {
     return emailRegex.test(email);
   };
 
+  // Function to fetch bookings from API
+  const fetchBookings = async (status) => {
+    if (!email || email.trim() === '') {
+      console.log('📧 No email available for booking fetch');
+      setBookings([]);
+      return;
+    }
+
+    setIsLoadingBookings(true);
+    try {
+      console.log(`📋 Fetching bookings for status ${status} with email: ${email.trim()}`);
+      
+      const response = await fetch(`${ipAddress}/checkbooking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          md_booking_email: email.trim(),
+          md_booking_status: status.toString()
+        }),
+      });
+
+      console.log('📋 Booking API Response status:', response.status);
+      console.log('📋 Booking API Response status text:', response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📋 Booking API Response data:', data);
+
+      if (data && Array.isArray(data.data)) {
+        setBookings(data.data);
+        console.log(`📋 Successfully loaded ${data.data.length} bookings for status ${status}`);
+        
+        // Debug company image data with correct field name
+        data.data.forEach((booking, index) => {
+          console.log(`📸 Booking ${index + 1} - Company Image Debug:`, {
+            md_company_picname: booking.md_company_picname,
+            company_name: booking.md_company_nameeng || booking.md_company_namethai,
+            full_image_url: booking.md_company_picname ? `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}` : 'no image available',
+            all_booking_fields: Object.keys(booking)
+          });
+        });
+      } else {
+        console.log('📋 No bookings found or invalid data format');
+        setBookings([]);
+      }
+    } catch (error) {
+      console.error('📋 Error fetching bookings:', error);
+      setBookings([]);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  };
+
+  // Effect to fetch bookings when tab changes or email is available
+  useEffect(() => {
+    if (isLoggedIn && email && email.trim() !== '') {
+      let status;
+      switch (activeTab) {
+        case 'upcoming':
+          status = 0;
+          break;
+        case 'cancelled':
+          status = 2;
+          break;
+        case 'past':
+          status = 1;
+          break;
+        default:
+          status = 0;
+      }
+      fetchBookings(status);
+    }
+  }, [activeTab, isLoggedIn, email]);
+
   const sendOTP = async (retryCount = 0) => {
     // Ensure retryCount is always a number
     if (typeof retryCount !== 'number') {
       retryCount = 0;
     }
+    
+    console.log('📧 === SEND OTP DEBUG ===');
+    console.log('📧 Email from state:', email || 'empty');
+    console.log('📧 Email trimmed:', email.trim() || 'empty');
+    console.log('📧 Email length:', email ? email.length : 0);
+    console.log('📧 === END SEND OTP DEBUG ===');
     
     if (!email || email.trim() === '') {
       Alert.alert(
@@ -221,6 +501,9 @@ const BookingScreen = () => {
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
+        console.log('✅ OTP sent successfully');
+        console.log('OTP response data:', data);
+        
         setShowOTP(true);
         // Clear previous OTP values when showing OTP screen
         setOTP(['', '', '', '', '', '']);
@@ -230,7 +513,9 @@ const BookingScreen = () => {
         }, 300);
         Alert.alert(
           selectedLanguage === 'th' ? 'ส่ง OTP แล้ว' : 'OTP Sent',
-          selectedLanguage === 'th' ? 'รหัส OTP ถูกส่งไปยังอีเมลของคุณแล้ว' : 'OTP code has been sent to your email'
+          selectedLanguage === 'th' ? 
+            `รหัส OTP ถูกส่งไปยังอีเมล:\n${email.trim()}\n\nกรุณาตรวจสอบในกล่องจดหมายและ Spam/Junk ด้วย\nรหัส OTP จะหมดอายุใน 10 นาที` : 
+            `OTP code has been sent to:\n${email.trim()}\n\nPlease check your inbox and Spam/Junk folder\nOTP code will expire in 10 minutes`
         );
       } else {
         console.error('API Error Response:', data);
@@ -310,10 +595,26 @@ const BookingScreen = () => {
 
   const verifyOTP = async (otpArray = null) => {
     const otpCode = otpArray ? otpArray.join('') : otp.join('');
+    
+    console.log('=== OTP Verification Debug ===');
+    console.log('OTP Code entered:', otpCode);
+    console.log('OTP Code length:', otpCode.length);
+    console.log('Email being used:', email.trim());
+    console.log('Language:', selectedLanguage);
+    
     if (otpCode.length !== 6) {
       Alert.alert(
         selectedLanguage === 'th' ? 'OTP ไม่ครบ' : 'Incomplete OTP',
         selectedLanguage === 'th' ? 'กรุณากรอก OTP ให้ครบ 6 หลัก' : 'Please enter all 6 digits of OTP'
+      );
+      return;
+    }
+
+    // Check if OTP contains only numbers
+    if (!/^\d{6}$/.test(otpCode)) {
+      Alert.alert(
+        selectedLanguage === 'th' ? 'OTP ไม่ถูกต้อง' : 'Invalid OTP Format',
+        selectedLanguage === 'th' ? 'กรุณากรอกเฉพาะตัวเลข 6 หลัก' : 'Please enter only 6 digits'
       );
       return;
     }
@@ -350,36 +651,82 @@ const BookingScreen = () => {
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        // เก็บ token หรือ user data ที่ได้จาก API ใช้ SecureStore เหมือนหน้า Account
+        // เก็บ token หรือ user data ที่ได้จาก API ใช้ SecureStore แต่ key แยกจากหน้า Account
         if (data.token) {
-          // เก็บ token และ email สำหรับการใช้งานต่อไป
-          await SecureStore.setItemAsync('userToken', data.token);  // เปลี่ยนจาก authToken เป็น userToken
-          await SecureStore.setItemAsync('userEmail', email.trim());
+          // เก็บ token และ email สำหรับการใช้งานต่อไป แยกจากหน้า Account
+          await SecureStore.setItemAsync('bookingToken', data.token);  // ใช้ bookingToken แยกจาก userToken
+          await SecureStore.setItemAsync('bookingEmail', email.trim());
         } else {
           // หากไม่มี token จาก API ให้เก็บข้อมูลพื้นฐาน
-          await SecureStore.setItemAsync('userToken', 'verified');  // เปลี่ยนจาก authToken เป็น userToken
-          await SecureStore.setItemAsync('userEmail', email.trim());
+          await SecureStore.setItemAsync('bookingToken', 'verified');  // ใช้ bookingToken แยกจาก userToken
+          await SecureStore.setItemAsync('bookingEmail', email.trim());
         }
+        
+        // Save OTP login flag to SecureStore to persist across tab changes
+        await SecureStore.setItemAsync('isOTPLogin', 'true');
         
         setIsLoggedIn(true);
         setShowOTP(false);
+        setIsOTPLogin(true); // This is OTP login method
+        
+        console.log('✅ OTP Login Success - State updated:');
+        console.log('  isLoggedIn:', true);
+        console.log('  isOTPLogin:', true);
+        console.log('  email saved:', email.trim());
+        console.log('  📧 Email consistency final check:');
+        console.log('    - Email being saved:', email.trim());
+        console.log('    - Email source: OTP verification');
+        console.log('    - All verified emails are accepted');
+        console.log('  Logout button should now be visible!');
+        console.log('  Token saved to SecureStore for persistence');
+        
+        // Debug what we saved - ใช้ key ที่ถูกต้องสำหรับ BookingScreen
+        const savedToken = await SecureStore.getItemAsync('bookingToken');
+        const savedEmail = await SecureStore.getItemAsync('bookingEmail');
+        const savedOTPFlag = await SecureStore.getItemAsync('isOTPLogin');
+        console.log('📱 Saved to SecureStore:');
+        console.log('  bookingToken:', savedToken);
+        console.log('  bookingEmail:', savedEmail);
+        console.log('  isOTPLogin:', savedOTPFlag);
+        
         Alert.alert(
           selectedLanguage === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login Successful',
           selectedLanguage === 'th' ? 'ยินดีต้อนรับเข้าสู่ระบบ' : 'Welcome to The Trago'
         );
       } else {
         console.error('Verify API Error Response:', data);
+        console.log('=== OTP Verification Failed ===');
+        console.log('Server response status:', response.status);
+        console.log('Server response message:', data.message);
+        console.log('OTP that was sent:', otpCode);
+        console.log('Email that was used:', email.trim());
+        
         // Clear OTP on error for fresh input
         setOTP(['', '', '', '', '', '']);
         setTimeout(() => {
           otpRefs[0].current?.focus();
         }, 100);
-        Alert.alert(
-          selectedLanguage === 'th' ? 'OTP ไม่ถูกต้อง' : 'Invalid OTP',
-          selectedLanguage === 'th' ? 
-            data.message || 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' : 
-            data.message || 'Invalid OTP code. Please try again.'
-        );
+        
+        // Show more detailed error message
+        let errorTitle = selectedLanguage === 'th' ? 'OTP ไม่ถูกต้อง' : 'Invalid OTP';
+        let errorMessage = '';
+        
+        if (data.message === 'Invalid OTP') {
+          errorMessage = selectedLanguage === 'th' ? 
+            'รหัส OTP ที่กรอกไม่ถูกต้อง\n\nสาเหตุที่เป็นไปได้:\n• รหัส OTP หมดอายุแล้ว (โดยปกติ 5-10 นาที)\n• กรอกรหัสผิด\n• ส่ง OTP ใหม่แล้วแต่ใช้รหัสเก่า\n\nกรุณาตรวจสอบรหัสในอีเมลล่าสุด หรือส่ง OTP ใหม่' : 
+            'The OTP code you entered is incorrect\n\nPossible causes:\n• OTP code has expired (usually 5-10 minutes)\n• Wrong code entered\n• New OTP sent but using old code\n\nPlease check the latest code in your email or request a new OTP';
+        } else if (data.message === 'OTP expired') {
+          errorTitle = selectedLanguage === 'th' ? 'OTP หมดอายุ' : 'OTP Expired';
+          errorMessage = selectedLanguage === 'th' ? 
+            'รหัส OTP หมดอายุแล้ว\nกรุณาส่ง OTP ใหม่' : 
+            'OTP code has expired\nPlease request a new OTP';
+        } else {
+          errorMessage = selectedLanguage === 'th' ? 
+            `เกิดข้อผิดพลาด: ${data.message}\n\nกรุณาลองใหม่อีกครั้ง` : 
+            `Error: ${data.message}\n\nPlease try again.`;
+        }
+        
+        Alert.alert(errorTitle, errorMessage);
       }
     } catch (error) {
       console.error('Verify OTP Error Details:', {
@@ -466,20 +813,29 @@ const BookingScreen = () => {
 
   const handleLogout = async () => {
     try {
-      // ใช้ SecureStore เหมือนหน้า Account
-      await SecureStore.deleteItemAsync('userToken');  // เปลี่ยนจาก authToken เป็น userToken
-      await SecureStore.deleteItemAsync('userEmail');
+      // ใช้ SecureStore แต่ใช้ key แยกจากหน้า Account
+      await SecureStore.deleteItemAsync('bookingToken');  // ใช้ bookingToken แยกจาก userToken
+      await SecureStore.deleteItemAsync('bookingEmail');  // ลบ bookingEmail ด้วย
+      await SecureStore.deleteItemAsync('isOTPLogin'); // Clear OTP login flag
       setIsLoggedIn(false);
-      setEmail('');
+      setEmail(''); // Clear email state
       setOTP(['', '', '', '', '', '']);
       setShowOTP(false);
+      setIsOTPLogin(false); // Reset OTP login flag
+      
+      console.log('📱 Logout completed - All booking data cleared:');
+      console.log('  bookingToken: deleted');
+      console.log('  bookingEmail: deleted');
+      console.log('  isOTPLogin: deleted');
+      console.log('  email state: cleared');
     } catch (error) {
       console.error('Error logging out:', error);
       // ถึงแม้จะมี error ก็ให้ logout ได้
       setIsLoggedIn(false);
-      setEmail('');
+      setEmail(''); // Clear email state even on error
       setOTP(['', '', '', '', '', '']);
       setShowOTP(false);
+      setIsOTPLogin(false); // Reset OTP login flag
     }
   };
 
@@ -533,13 +889,15 @@ const BookingScreen = () => {
                 placeholder={selectedLanguage === 'th' ? 'กรอกอีเมลของคุณ' : 'Enter your email'}
                 placeholderTextColor="#9CA3AF"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(newEmail) => {
+                  console.log('📧 Email input changed:', newEmail);
+                  setEmail(newEmail);
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoFocus={true}
                 returnKeyType="done"
-                onSubmitEditing={handleSendOTP}
               />
             </View>
 
@@ -668,7 +1026,10 @@ const BookingScreen = () => {
             : 'When you book your trip\nwill be shown here.'
           }
         </Text>
-        <TouchableOpacity style={styles.startBookingButton}>
+        <TouchableOpacity 
+          style={styles.startBookingButton}
+          onPress={() => navigation.navigate('Home', { screen: 'HomeScreen' })}
+        >
           <LinearGradient
             colors={['#FD501E', '#FF6B35']}
             start={{ x: 0, y: 0 }}
@@ -684,62 +1045,139 @@ const BookingScreen = () => {
     </View>
   );
 
-  const renderBookingItem = (booking) => (
-    <View key={booking.id} style={styles.bookingCard}>
-      <View style={styles.bookingHeader}>
-        <View style={styles.routeInfo}>
-          <View style={styles.ferryIconContainer}>
-            <MaterialCommunityIcons name="ferry" size={20} color="#FD501E" />
-          </View>
-          <View>
-            <Text style={styles.routeText}>{booking.route}</Text>
-            <Text style={styles.companyText}>{booking.company}</Text>
-          </View>
-        </View>
-        <View style={styles.statusBadge}>
-          <MaterialCommunityIcons name="check-circle" size={16} color="#22C55E" />
-          <Text style={styles.statusText}>
-            {selectedLanguage === 'th' ? 'จองเสร็จสิ้น' : 'Booking Completed'}
-          </Text>
-        </View>
-      </View>
+  const renderBookingItem = (booking) => {
+    // Map API data to display format
+    const statusConfig = {
+      0: { 
+        icon: 'clock-outline', 
+        color: '#FD501E', 
+        text: selectedLanguage === 'th' ? 'รอยืนยัน' : 'Pending'
+      },
+      1: { 
+        icon: 'check-circle', 
+        color: '#22C55E', 
+        text: selectedLanguage === 'th' ? 'เสร็จสิ้น' : 'Completed'
+      },
+      2: { 
+        icon: 'close-circle', 
+        color: '#EF4444', 
+        text: selectedLanguage === 'th' ? 'ยกเลิก' : 'Cancelled'
+      }
+    };
 
-      <View style={styles.bookingDetails}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>
-            {selectedLanguage === 'th' ? 'หมายเลขอ้างอิง' : 'Ref. number'}
-          </Text>
-          <Text style={styles.detailValue}>{booking.refNumber}</Text>
+    const status = statusConfig[booking.md_booking_status] || statusConfig[0];
+    
+    return (
+      <View key={booking.md_booking_id} style={styles.bookingCard}>
+        <View style={styles.bookingHeader}>
+          <View style={styles.routeInfo}>
+            <View style={[styles.ferryIconContainer, booking.md_company_picname && styles.companyImageContainer]}>
+              {booking.md_company_picname ? (
+                <Image 
+                  source={{ uri: `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}` }} 
+                  style={styles.companyImage}
+                  resizeMode="cover"
+                  onLoad={() => {
+                    console.log(`✅ Image loaded successfully: ${booking.md_company_picname}`);
+                  }}
+                  onError={(error) => {
+                    console.log(`❌ Image failed to load: ${booking.md_company_picname}`);
+                    console.log('Image error:', error.nativeEvent.error);
+                    console.log('Full URL attempted:', `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}`);
+                  }}
+                  onLoadStart={() => {
+                    console.log(`🔄 Image loading started: ${booking.md_company_picname}`);
+                  }}
+                  onLoadEnd={() => {
+                    console.log(`🏁 Image loading ended: ${booking.md_company_picname}`);
+                  }}
+                />
+              ) : (
+                <MaterialCommunityIcons name="ferry" size={20} color="#FD501E" />
+              )}
+            </View>
+            <View style={styles.routeTextContainer}>
+              <Text style={styles.routeText}>
+                {selectedLanguage === 'th' 
+                  ? `${booking.start_locationthai || booking.start_locationeng} → ${booking.end_locationthai || booking.end_locationeng}`
+                  : `${booking.start_locationeng || booking.start_locationthai} → ${booking.end_locationeng || booking.end_locationthai}`
+                }
+              </Text>
+              <Text style={styles.companyText}>
+                {selectedLanguage === 'th' 
+                  ? booking.md_company_namethai || booking.md_company_nameeng
+                  : booking.md_company_nameeng || booking.md_company_namethai
+                }
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: `${status.color}15` }]}>
+            <MaterialCommunityIcons name={status.icon} size={16} color={status.color} />
+            <Text style={[styles.statusText, { color: status.color }]}>
+              {status.text}
+            </Text>
+          </View>
         </View>
-        <View style={styles.separator} />
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>
-            {selectedLanguage === 'th' ? 'เวลาออกเดินทาง' : 'Departure Time'}
-          </Text>
-          <Text style={styles.detailValue}>{booking.departureTime}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>
-            {selectedLanguage === 'th' ? 'เวลาถึง' : 'Arrive Time'}
-          </Text>
-          <Text style={styles.detailValue}>{booking.arriveTime}</Text>
-        </View>
-        <View style={styles.separator} />
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>
-            {selectedLanguage === 'th' ? 'ผู้โดยสาร' : 'Passenger'}
-          </Text>
-          <Text style={styles.detailValue}>{booking.passenger}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>
-            {selectedLanguage === 'th' ? 'ที่นั่ง' : 'Seat'}
-          </Text>
-          <Text style={styles.detailValue}>{booking.seat}</Text>
+
+        <View style={styles.bookingDetails}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'หมายเลขอ้างอิง' : 'Booking Code'}
+            </Text>
+            <Text style={styles.detailValue}>{booking.md_booking_code}</Text>
+          </View>
+          <View style={styles.separator} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'วันที่เดินทาง' : 'Departure Date'}
+            </Text>
+            <Text style={styles.detailValue}>
+              {new Date(booking.md_booking_departdate).toLocaleDateString(
+                selectedLanguage === 'th' ? 'th-TH' : 'en-US',
+                { 
+                  weekday: 'short', 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                }
+              )}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'เวลาออกเดินทาง' : 'Departure Time'}
+            </Text>
+            <Text style={styles.detailValue}>{booking.md_timetable_departuretime}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'เวลาถึง' : 'Arrival Time'}
+            </Text>
+            <Text style={styles.detailValue}>{booking.md_timetable_arrivaltime}</Text>
+          </View>
+          <View style={styles.separator} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'ผู้โดยสาร' : 'Passengers'}
+            </Text>
+            <Text style={styles.detailValue}>
+              {booking.md_booking_adult > 0 ? `${booking.md_booking_adult} ${selectedLanguage === 'th' ? 'ผู้ใหญ่' : 'Adult'}` : ''}
+              {booking.md_booking_child > 0 ? ` ${booking.md_booking_child} ${selectedLanguage === 'th' ? 'เด็ก' : 'Child'}` : ''}
+              {booking.md_booking_infant > 0 ? ` ${booking.md_booking_infant} ${selectedLanguage === 'th' ? 'ทารก' : 'Infant'}` : ''}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>
+              {selectedLanguage === 'th' ? 'ประเภทที่นั่ง' : 'Seat Type'}
+            </Text>
+            <Text style={styles.detailValue}>
+              {selectedLanguage === 'th' ? booking.md_seat_namethai : booking.md_seat_nameeng}
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const mockBookings = [
     {
@@ -757,6 +1195,11 @@ const BookingScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      {/* Debug current email state in console */}
+      {console.log('🔍 RENDER DEBUG - Current email being used:', email || '[no email]')}
+      {console.log('🔍 RENDER DEBUG - isLoggedIn:', isLoggedIn)}
+      {console.log('🔍 RENDER DEBUG - isOTPLogin:', isOTPLogin)}
       
       {isCheckingAuth ? (
         // Loading screen while checking authentication
@@ -787,12 +1230,16 @@ const BookingScreen = () => {
                 <Text style={styles.headerTitle}>
                   {selectedLanguage === 'th' ? 'การจองของฉัน' : 'My booking'}
                 </Text>
-                <TouchableOpacity 
-                  style={styles.logoutButton}
-                  onPress={handleLogout}
-                >
-                  <MaterialCommunityIcons name="logout" size={24} color="#6B7280" />
-                </TouchableOpacity>
+                {/* Debug log for logout button */}
+                {console.log('🔍 Logout button debug:', { isOTPLogin, isLoggedIn })}
+                {isOTPLogin && (
+                  <TouchableOpacity 
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                  >
+                    <MaterialCommunityIcons name="logout" size={24} color="#6B7280" />
+                  </TouchableOpacity>
+                )}
               </View>
             </LinearGradient>
           </View>
@@ -842,12 +1289,34 @@ const BookingScreen = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {activeTab === 'past' && mockBookings.length > 0 ? (
+            {isLoadingBookings ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FD501E" />
+                <Text style={styles.loadingText}>
+                  {selectedLanguage === 'th' ? 'กำลังโหลดข้อมูล...' : 'Loading...'}
+                </Text>
+              </View>
+            ) : bookings && bookings.length > 0 ? (
               <View style={styles.bookingsContainer}>
                 <Text style={styles.bookingsCountText}>
-                  {selectedLanguage === 'th' ? 'การจองที่ผ่านมา (8)' : 'Booking Passed (8)'}
+                  {selectedLanguage === 'th' 
+                    ? `${
+                        activeTab === 'upcoming' 
+                          ? 'การจองที่รอยืนยัน' 
+                          : activeTab === 'past' 
+                            ? 'การจองที่เสร็จสิ้น' 
+                            : 'การจองที่ยกเลิก'
+                      } (${bookings.length})`
+                    : `${
+                        activeTab === 'upcoming' 
+                          ? 'Pending Confirmations' 
+                          : activeTab === 'past' 
+                            ? 'Completed Bookings' 
+                            : 'Cancelled Bookings'
+                      } (${bookings.length})`
+                  }
                 </Text>
-                {mockBookings.map(renderBookingItem)}
+                {bookings.map(renderBookingItem)}
               </View>
             ) : (
               renderEmptyState()
@@ -982,11 +1451,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 20,
+    paddingRight: 4,
   },
   routeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
   ferryIconContainer: {
     width: 40,
@@ -997,30 +1468,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  companyImageContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  companyImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+  },
+  routeTextContainer: {
+    flex: 1,
+    paddingRight: 8,
+  },
   routeText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 2,
+    flexShrink: 1,
   },
   companyText: {
     fontSize: 13,
     color: '#6B7280',
     fontWeight: '500',
+    flexShrink: 1,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
+    flexShrink: 0,
+    minWidth: 100,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#22C55E',
     marginLeft: 4,
+    flexShrink: 1,
   },
   bookingDetails: {
     backgroundColor: '#F8FAFC',
@@ -1380,6 +1868,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginTop: 16,
+    textAlign: 'center',
   },
 });
 

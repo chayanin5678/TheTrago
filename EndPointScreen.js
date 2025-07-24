@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { useLanguage } from './(Screen)/LanguageContext';
@@ -142,8 +142,9 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
-    minHeight: 140,
+    minHeight: 160,
     justifyContent: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? -50 : 0,
   },
   headerRow: {
     flexDirection: 'row',

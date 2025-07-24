@@ -28,7 +28,6 @@ const AccountScreen = ({ navigation }) => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedLanguageLocal, setSelectedLanguageLocal] = useState(selectedLanguage);
-  const [selectedCurrency, setSelectedCurrency] = useState('THB');
   const shimmerAnim = useRef(new Animated.Value(-200)).current;
 
   // Ultra Premium Animations
@@ -68,13 +67,9 @@ const AccountScreen = ({ navigation }) => {
     const loadLanguageSettings = async () => {
       try {
         const savedLanguage = await SecureStore.getItemAsync('userLanguage');
-        const savedCurrency = await SecureStore.getItemAsync('userCurrency');
         
         if (savedLanguage) {
           setSelectedLanguageLocal(savedLanguage);
-        }
-        if (savedCurrency) {
-          setSelectedCurrency(savedCurrency);
         }
       } catch (error) {
         console.log('Error loading language settings:', error);
@@ -88,16 +83,12 @@ const AccountScreen = ({ navigation }) => {
   const saveLanguageSettings = async () => {
     try {
       await SecureStore.setItemAsync('userLanguage', selectedLanguageLocal);
-      await SecureStore.setItemAsync('userCurrency', selectedCurrency);
       
       // Update language in LanguageContext
       changeLanguage(selectedLanguageLocal);
       
-      Alert.alert(
-        t('settingsSaved'),
-        `${t('language')}: ${selectedLanguageLocal === 'th' ? t('thai') : t('english')}\n${t('currency')}: ${selectedCurrency}`,
-        [{ text: 'OK', onPress: () => setShowSettingsModal(false) }]
-      );
+      // ปิด modal โดยไม่แสดง alert
+      setShowSettingsModal(false);
     } catch (error) {
       console.log('Error saving language settings:', error);
       Alert.alert('Error', 'Failed to save settings');
@@ -906,44 +897,6 @@ const AccountScreen = ({ navigation }) => {
                     </View>
                   </View>
 
-                  {/* Currency Setting */}
-                  <View style={styles.settingSection}>
-                    <View style={styles.settingHeader}>
-                      <MaterialIcons name="attach-money" size={24} color="#FD501E" />
-                      <Text style={styles.settingTitle}>{t('currency')}</Text>
-                    </View>
-                    
-                    <View style={styles.optionsContainer}>
-                      {[
-                        { code: 'THB', name: 'Thai Baht', symbol: '฿' },
-                        { code: 'USD', name: 'US Dollar', symbol: '$' },
-                        { code: 'EUR', name: 'Euro', symbol: '€' },
-                        { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-                      ].map((currency, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={[
-                            styles.optionItem,
-                            selectedCurrency === currency.code && styles.optionItemSelected
-                          ]}
-                          onPress={() => setSelectedCurrency(currency.code)}
-                        >
-                          <Text style={styles.currencySymbol}>{currency.symbol}</Text>
-                          <Text style={[
-                            styles.optionText,
-                            selectedCurrency === currency.code && styles.optionTextSelected
-                          ]}>
-                            {currency.name}
-                          </Text>
-                          <Text style={styles.currencyCode}>({currency.code})</Text>
-                          {selectedCurrency === currency.code && (
-                            <MaterialIcons name="check-circle" size={20} color="#FD501E" />
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-
                   {/* Save Button */}
                   <TouchableOpacity 
                     style={styles.saveSettingsButton}
@@ -1488,14 +1441,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginRight: 12,
   },
-  currencySymbol: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FD501E',
-    marginRight: 12,
-    width: 20,
-    textAlign: 'center',
-  },
   optionText: {
     flex: 1,
     fontSize: 16,
@@ -1505,12 +1450,6 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: '#FD501E',
     fontWeight: '700',
-  },
-  currencyCode: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginRight: 10,
-    fontWeight: '500',
   },
   saveSettingsButton: {
     marginTop: 10,

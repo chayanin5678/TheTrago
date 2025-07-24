@@ -81,6 +81,23 @@ const AppNavigator = () => (
 );
 
 
+// BookingNavigator (ใช้ Stack Navigator)
+const BookingNavigator = () => (
+  <Stack.Navigator initialRouteName="BookingScreenMain">
+    <Stack.Screen name="BookingScreenMain" component={BookingScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
+    <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
+    <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
+    <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+
 // Smart Account Tab Component - ใช้ AuthContext เพื่อจัดการ login state
 const AccountTabNavigator = () => {
   const { isLoggedIn, isLoading } = useAuth();
@@ -245,7 +262,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
 };
 const MainNavigator = () => {
   const { isLoggedIn } = useAuth();
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
   
   return (
     <Tab.Navigator
@@ -275,9 +292,9 @@ const MainNavigator = () => {
       />
       <Tab.Screen 
         name="Booking" 
-        component={BookingScreen} 
+        component={BookingNavigator} 
         options={{ 
-          title: 'จองตั๋ว',
+          title: selectedLanguage === 'th' ? 'จองตั๋ว' : 'Booking',
         }} 
       />
       <Tab.Screen 
