@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing } from 'react-native';
+import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from './ipconfig';
@@ -85,7 +86,6 @@ const SearchFerry = ({ navigation, route }) => {
     returnDay.setDate(returnDay.getDate() + 2);
     return returnDay.toISOString().split('T')[0];
   }); // string
-  const [calendarReady, setCalendarReady] = useState(false);
   const [selectedCompaniesDepart, setSelectedCompaniesDepart] = useState([]);
   const [selectedCompaniesReturn, setSelectedCompaniesReturn] = useState([]);
   const [isFilterModalVisibleDepart, setIsFilterModalVisibleDepart] = useState(false);
@@ -118,20 +118,33 @@ const SearchFerry = ({ navigation, route }) => {
   // console.log("country", startingPoint.countryId);
   // ฟังก์ชันสำหรับเลือกวันที่ไป
   const onDepartCalendarDayPress = (day) => {
+    console.log('📅 Depart date clicked:', day.dateString);
     setCalendarStartDate(day.dateString);
     setDepartureDate(new Date(day.dateString));
-    // เซ็ตวันที่กลับเป็นวันเดียวกันกับวันที่ไป
-    setCalendarEndDate(day.dateString);
-    setReturnDate(new Date(day.dateString));
-    // console.log('Selected Departure Date:', day.dateString);
-    // console.log('Auto-set Return Date:', day.dateString);
+    
+    // สำหรับ Round Trip: ถ้าวันที่กลับน้อยกว่าหรือเท่ากับวันที่ไป ให้เซ็ตเป็นวันถัดไป
+    if (tripType === TRIP_TYPES.ROUND_TRIP) {
+      const selectedDepartDate = new Date(day.dateString);
+      const currentReturnDate = new Date(calendarEndDate);
+      
+      if (currentReturnDate <= selectedDepartDate) {
+        const nextDay = new Date(selectedDepartDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const nextDayString = nextDay.toISOString().split('T')[0];
+        setCalendarEndDate(nextDayString);
+        setReturnDate(nextDay);
+      }
+    }
+    
+    console.log('✅ Depart date updated:', day.dateString);
   };
 
   // ฟังก์ชันสำหรับเลือกวันที่กลับ
   const onReturnCalendarDayPress = (day) => {
+    console.log('📅 Return date clicked:', day.dateString);
     setCalendarEndDate(day.dateString);
     setReturnDate(new Date(day.dateString));
-    // console.log('Selected Return Date:', day.dateString);
+    console.log('✅ Return date updated:', day.dateString);
   };
 
   const getMarkedDatesRange = (start, end) => {
@@ -157,6 +170,13 @@ const SearchFerry = ({ navigation, route }) => {
     if (calendarStartDate) {
       setDepartureDate(new Date(calendarStartDate));
       setShowDepartModal(false);
+      // Force trigger re-render
+      setTimeout(() => {
+        setCalendarStartDate(calendarStartDate);
+        // Trigger comprehensive ferry route search with updated date
+        console.log('🔄 Triggering ferry route search with new departure date:', calendarStartDate);
+        fetchFerryRoute();
+      }, 50);
     } else {
       alert('กรุณาเลือกวันที่ไป');
     }
@@ -167,6 +187,13 @@ const SearchFerry = ({ navigation, route }) => {
     if (calendarEndDate) {
       setReturnDate(new Date(calendarEndDate));
       setShowReturnModal(false);
+      // Force trigger re-render
+      setTimeout(() => {
+        setCalendarEndDate(calendarEndDate);
+        // Trigger comprehensive ferry route search with updated date
+        console.log('🔄 Triggering ferry route search with new return date:', calendarEndDate);
+        fetchFerryRoute();
+      }, 50);
     } else {
       alert('กรุณาเลือกวันที่กลับ');
     }
@@ -174,15 +201,41 @@ const SearchFerry = ({ navigation, route }) => {
 
   useEffect(() => {
     // Sync calendar dates with departure/return dates on component mount
-    if (departureDate) {
-      setCalendarStartDate(departureDate.toISOString().split('T')[0]);
+    console.log('🔄 Initial sync useEffect triggered');
+    console.log('  - departureDate:', departureDate);
+    console.log('  - returnDate:', returnDate);
+    console.log('  - calendarStartDate:', calendarStartDate);
+    console.log('  - calendarEndDate:', calendarEndDate);
+    
+    if (departureDate && !calendarStartDate) {
+      const newStartDate = departureDate.toISOString().split('T')[0];
+      console.log('  - Setting calendarStartDate to:', newStartDate);
+      setCalendarStartDate(newStartDate);
     }
-    if (returnDate) {
-      setCalendarEndDate(returnDate.toISOString().split('T')[0]);
+    if (returnDate && !calendarEndDate) {
+      const newEndDate = returnDate.toISOString().split('T')[0];
+      console.log('  - Setting calendarEndDate to:', newEndDate);
+      setCalendarEndDate(newEndDate);
     }
-    // Mark calendar as ready after initial sync
-    setTimeout(() => setCalendarReady(true), 100);
   }, []);
+
+  // Force re-render when calendar dates change
+  useEffect(() => {
+    if (calendarEndDate || calendarStartDate) {
+      // This will trigger re-render of components that depend on these dates
+    }
+  }, [calendarEndDate, calendarStartDate]);
+
+  // Force re-render when language changes
+  useEffect(() => {
+    if (selectedLanguage) {
+      // Force re-render to update date format when language changes
+      console.log('🌐 Language changed, forcing ticket update for dates:', selectedLanguage);
+      // Force state updates to trigger re-rendering of tickets
+      setCalendarStartDate(prev => prev);
+      setCalendarEndDate(prev => prev);
+    }
+  }, [selectedLanguage]);
 
   useEffect(() => {
     fetch(`${ipAddress}/currency`)
@@ -391,6 +444,11 @@ const SearchFerry = ({ navigation, route }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
+    console.log('🗓️ formatDate called:', {
+      dateString,
+      selectedLanguage,
+      formattedResult: ''
+    });
     
     if (selectedLanguage === 'th') {
       // วันในสัปดาห์ภาษาไทย
@@ -404,10 +462,21 @@ const SearchFerry = ({ navigation, route }) => {
       const monthName = monthNames[date.getMonth()];
       const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
       
-      return `${dayName} ${day} ${monthName} ${year}`;
+      const result = `${dayName} ${day} ${monthName} ${year}`;
+      console.log('🗓️ formatDate Thai result:', result);
+      return result;
     } else {
       // แสดงวันที่ภาษาอังกฤษ
-      return moment(dateString).format("ddd, DD MMM YYYY");
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = dayNames[date.getDay()];
+      
+      const result = `${dayName}, ${date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`;
+      console.log('🗓️ formatDate English result:', result);
+      return result;
     }
   };
   useEffect(() => {
@@ -590,7 +659,14 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   const handleSearchEnd = () => {
-    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}/THB`)
+    // Debug: ตรวจสอบวันที่ที่ใช้
+    console.log('🔍 handleSearchEnd Debug:');
+    console.log('  - calendarEndDate:', calendarEndDate);
+    console.log('  - returnDate:', returnDate);
+    console.log('  - endPoint.id:', endPoint.id);
+    console.log('  - startingPoint.id:', startingPoint.id);
+    
+    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}/${selectedCurrency}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -600,6 +676,7 @@ const SearchFerry = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           settimetableReturn(data.data);
+          console.log('✅ Return trip data loaded:', data.data.length, 'items');
           // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
         } else {
           console.error('Data is not an array', data);
@@ -607,7 +684,8 @@ const SearchFerry = ({ navigation, route }) => {
         }
       })
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching return data:', error);
+        settimetableReturn([]);
       }).finally(() => {
         setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       });
@@ -812,7 +890,7 @@ const SearchFerry = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'ios' ? 0 : -20,
+              marginTop: -10, // ใช้ค่าเฉลี่ย
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
@@ -839,7 +917,7 @@ const SearchFerry = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: Platform.OS === 'android' ? 70 : -10,
+                marginTop: 30, // ใช้ค่าเฉลี่ย
                 height: 56,
               },
             ]}
@@ -1043,11 +1121,11 @@ const SearchFerry = ({ navigation, route }) => {
               paddingVertical: hp('1.5%'),
               paddingHorizontal: wp('5%'),
               borderRadius: wp('4%'),
-              shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFFFFF',
-              shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-              shadowRadius: Platform.OS === 'android' ? 0 : wp('3%'),
-              shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
-              elevation: Platform.OS === 'android' ? 0 : 8,
+              shadowColor: '#FFFFFF',
+              shadowOpacity: 0.1,
+              shadowRadius: wp('1.5%'),
+              shadowOffset: { width: 0, height: hp('0.25%') },
+              elevation: 4,
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.3)',
               backdropFilter: 'blur(15px)',
@@ -1948,6 +2026,7 @@ const SearchFerry = ({ navigation, route }) => {
                       marginBottom: 2,
                     }]}>{t('departureDate')}</Text>
                     <Text
+                      key={`depart-${selectedLanguage}-${calendarStartDate}`}
                       style={[styles.inputText, {
                         color: '#1E293B',
                         fontSize: wp('3.5%'),
@@ -1956,7 +2035,7 @@ const SearchFerry = ({ navigation, route }) => {
                       }]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
-                    >{calendarStartDate ? formatDateInput(calendarStartDate.toString()) : "Select Date"}</Text>
+                    >{calendarStartDate ? formatDateInput(new Date(calendarStartDate)) : "Select Date"}</Text>
                   </View>
                 </TouchableOpacity>
 
@@ -2003,6 +2082,7 @@ const SearchFerry = ({ navigation, route }) => {
                           marginBottom: 2,
                         }]}>{ t('returnDate') }</Text>
                         <Text
+                          key={`return-${selectedLanguage}-${calendarEndDate}`}
                           style={[styles.inputText, {
                             color: '#1E293B',
                             fontSize: wp('3.5%'),
@@ -2011,7 +2091,7 @@ const SearchFerry = ({ navigation, route }) => {
                           }]}
                           numberOfLines={1}
                           ellipsizeMode="tail"
-                        >{calendarEndDate ? formatDateInput(calendarEndDate.toString()) : "No Date Available"}</Text>
+                        >{calendarEndDate ? formatDateInput(new Date(calendarEndDate)) : "No Date Available"}</Text>
                       </View>
                     </TouchableOpacity>
                   </>
@@ -2109,19 +2189,18 @@ const SearchFerry = ({ navigation, route }) => {
                           marginBottom: Platform.OS === 'android' ? 8 : 12,
                           minHeight: Platform.OS === 'android' ? 350 : 380,
                         }}>
-                          {calendarReady ? (
-                            <Calendar
-                              current={calendarStartDate}
-                              minDate={new Date().toISOString().split('T')[0]}
-                              onDayPress={onDepartCalendarDayPress}
-                              markedDates={{
-                                [calendarStartDate]: {
-                                  selected: true,
-                                  selectedColor: '#FD501E',
-                                  selectedTextColor: '#FFFFFF'
-                                }
-                              }}
-                              theme={{
+                          <Calendar
+                            current={calendarStartDate}
+                            minDate={new Date().toISOString().split('T')[0]}
+                            onDayPress={onDepartCalendarDayPress}
+                            markedDates={{
+                              [calendarStartDate]: {
+                                selected: true,
+                                selectedColor: '#FD501E',
+                                selectedTextColor: '#FFFFFF'
+                              }
+                            }}
+                            theme={{
                                 backgroundColor: 'transparent',
                                 calendarBackground: 'transparent',
                                 textSectionTitleColor: '#1E293B',
@@ -2146,19 +2225,6 @@ const SearchFerry = ({ navigation, route }) => {
                               hideDayNames={false}
                               showWeekNumbers={false}
                             />
-                          ) : (
-                            <View style={{
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              minHeight: Platform.OS === 'android' ? 350 : 380,
-                            }}>
-                              <Text style={{
-                                color: '#64748B',
-                                fontSize: 16,
-                                fontWeight: '500',
-                              }}>Loading Calendar...</Text>
-                            </View>
-                          )}
                         </View>
                       </ScrollView>
 
@@ -2295,56 +2361,42 @@ const SearchFerry = ({ navigation, route }) => {
                           marginBottom: Platform.OS === 'android' ? 8 : 12,
                           minHeight: Platform.OS === 'android' ? 350 : 380,
                         }}>
-                          {calendarReady ? (
-                            <Calendar
-                              current={calendarEndDate}
-                              minDate={calendarStartDate}
-                              onDayPress={onReturnCalendarDayPress}
-                              markedDates={{
-                                [calendarEndDate]: {
-                                  selected: true,
-                                  selectedColor: '#FFD600',
-                                  selectedTextColor: '#1E293B'
-                                }
-                              }}
-                              theme={{
-                                backgroundColor: 'transparent',
-                                calendarBackground: 'transparent',
-                                textSectionTitleColor: '#1E293B',
-                                selectedDayBackgroundColor: '#FFD600',
-                                selectedDayTextColor: '#1E293B',
-                                todayTextColor: '#FFD600',
-                                dayTextColor: '#1E293B',
-                                textDisabledColor: '#94A3B8',
-                                arrowColor: '#FFD600',
-                                monthTextColor: '#1E293B',
-                                textDayFontWeight: '600',
-                                textMonthFontWeight: '700',
-                                textDayHeaderFontWeight: '600',
-                                textDayFontSize: Platform.OS === 'android' ? 14 : 16,
-                                textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
-                                textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
-                              }}
-                              enableSwipeMonths={true}
-                              firstDay={1}
-                              hideExtraDays={false}
-                              disableMonthChange={false}
-                              hideDayNames={false}
-                              showWeekNumbers={false}
-                            />
-                          ) : (
-                            <View style={{
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              minHeight: Platform.OS === 'android' ? 350 : 380,
-                            }}>
-                              <Text style={{
-                                color: '#64748B',
-                                fontSize: 16,
-                                fontWeight: '500',
-                              }}>Loading Calendar...</Text>
-                            </View>
-                          )}
+                          <Calendar
+                            current={calendarEndDate}
+                            minDate={calendarStartDate}
+                            onDayPress={onReturnCalendarDayPress}
+                            markedDates={{
+                              [calendarEndDate]: {
+                                selected: true,
+                                selectedColor: '#FFD600',
+                                selectedTextColor: '#1E293B'
+                              }
+                            }}
+                            theme={{
+                              backgroundColor: 'transparent',
+                              calendarBackground: 'transparent',
+                              textSectionTitleColor: '#1E293B',
+                              selectedDayBackgroundColor: '#FFD600',
+                              selectedDayTextColor: '#1E293B',
+                              todayTextColor: '#FFD600',
+                              dayTextColor: '#1E293B',
+                              textDisabledColor: '#94A3B8',
+                              arrowColor: '#FFD600',
+                              monthTextColor: '#1E293B',
+                              textDayFontWeight: '600',
+                              textMonthFontWeight: '700',
+                              textDayHeaderFontWeight: '600',
+                              textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                              textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                              textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                            }}
+                            enableSwipeMonths={true}
+                            firstDay={1}
+                            hideExtraDays={false}
+                            disableMonthChange={false}
+                            hideDayNames={false}
+                            showWeekNumbers={false}
+                          />
                         </View>
                       </ScrollView>
 
@@ -4133,7 +4185,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: '500',
                                     marginTop: 4,
                                   }}>
-                                    {formatDate(calendarStartDate)}
+                                    {formatDate(calendarEndDate)}
                                   </Text>
                                 </View>
 
@@ -4246,7 +4298,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: '500',
                                     marginTop: 4,
                                   }}>
-                                    {formatDate(calendarStartDate)}
+                                    {formatDate(calendarEndDate)}
                                   </Text>
                                 </View>
                               </View>

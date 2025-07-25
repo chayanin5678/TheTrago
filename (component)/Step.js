@@ -61,7 +61,7 @@ export default function Step({ logoUri }) {
               <Entypo name="check" size={wp('5%')} color="white" />
             </StepCircle>
           </View>
-          <Text style={[styles.step, styles.stepCompleted]}>เลือกเรือของคุณ</Text>
+          <Text style={[styles.step, styles.stepCompleted]}>Choose Your Boat</Text>
         </View>
         
         {/* Step 2 */}
@@ -75,7 +75,7 @@ export default function Step({ logoUri }) {
               {logoUri >= 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>รถรับส่ง</Text>
+          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>Shuttle Transfer</Text>
         </View>
         
         {/* Step 3 */}
@@ -89,7 +89,7 @@ export default function Step({ logoUri }) {
               {logoUri > 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>ข้อมูลลูกค้า</Text>
+          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>Customer Information</Text>
         </View>
         
         {/* Step 4 */}
@@ -100,7 +100,7 @@ export default function Step({ logoUri }) {
               number="4" 
             />
           </View>
-          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>ชำระเงิน</Text>
+          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>Payment</Text>
         </View>
         
         {/* Connector Lines */}

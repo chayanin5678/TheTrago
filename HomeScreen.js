@@ -1454,22 +1454,6 @@ const HomeScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Points System Notice */}
-        <View style={premiumStyles.pointsNoticeContainer}>
-          <LinearGradient
-            colors={['#F59E0B', '#F97316']}
-            style={premiumStyles.pointsNoticeGradient}
-          >
-            <MaterialIcons name="stars" size={wp('5%')} color="#fff" />
-            <Text style={premiumStyles.pointsNoticeText}>
-              {t('earnPointsOnEveryBooking') || 'Earn 1% points on every booking!'}
-            </Text>
-            <Text style={premiumStyles.pointsNoticeSubtext}>
-              {t('loginToStartEarning') || 'Login to start earning points'}
-            </Text>
-          </LinearGradient>
-        </View>
-
 
         {/* <View style={styles.rowtrip}>
           <View style={styles.coltrip}>
@@ -2818,40 +2802,6 @@ const premiumStyles = StyleSheet.create({
   bannerSection: {
     marginTop: hp('1.5%'),
     marginHorizontal: wp('3%'),
-  },
-  pointsNoticeContainer: {
-    marginTop: hp('2%'),
-    marginHorizontal: wp('4%'),
-    borderRadius: wp('3%'),
-    overflow: 'hidden',
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  pointsNoticeGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('1.5%'),
-    paddingHorizontal: wp('4%'),
-  },
-  pointsNoticeText: {
-    flex: 1,
-    color: '#fff',
-    fontSize: wp('3.8%'),
-    fontWeight: '600',
-    marginLeft: wp('2%'),
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  pointsNoticeSubtext: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: wp('3%'),
-    fontWeight: '500',
-    marginLeft: wp('2%'),
-    fontStyle: 'italic',
   },
   bannerSkeleton: {
     height: hp('20%'),

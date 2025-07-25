@@ -15,7 +15,7 @@ import LogoTheTrago from "./../(component)/Logo";
 import headStyles from './../(CSS)/StartingPointScreenStyles';
 
 export default function PromptPayScreen({ route, navigation }) {
-  const { Paymenttotal, selectedOption, pointsUsed = 0, pointsDiscount = 0 } = route.params;
+  const { Paymenttotal ,selectedOption} = route.params;
   const [chargeid, setChargeid] = useState(null);
   const [qrUri, setQrUri] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -121,8 +121,6 @@ let booking_codeGroup = bookingcodeGroup.length > 0
           if (res.data.success && res.data.status === "successful") {
             const bookingCodeToUpdate = actualBookingCode || booking_code;
             updatestatus(bookingCodeToUpdate); // อัปเดตสถานะการชำระเงิน
-            // ส่งคะแนนหลังจากชำระเงินสำเร็จ
-            updateEarnedPoints(bookingCodeToUpdate);
             navigation.navigate("ResultScreen", { success: true });
             if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
           }
@@ -197,7 +195,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         md_booking_paymentid: paymentCode,
         md_booking_boattypeid: customerData.md_booking_boattypeid || customerData.boatypeid,
         md_booking_country: customerData.md_booking_country || customerData.country,
-        md_booking_countrycode: customerData.md_booking_countrycode || (customerData.countrycode && customerData.countrycode.toString().startsWith('+') ? customerData.countrycode : '+' + customerData.countrycode),
+        md_booking_countrycode: customerData.md_booking_countrycode || customerData.countrycode,
         md_booking_round: customerData.md_booking_round || customerData.roud,
         md_booking_timetableid: customerData.md_booking_timetableid || customerData.timeTableDepartId,
         md_booking_tel: customerData.md_booking_tel || customerData.tel,
@@ -234,8 +232,6 @@ let booking_codeGroup = bookingcodeGroup.length > 0
         md_booking_agentprice: customerData.md_booking_agentprice,
         md_booking_promocode: customerData.md_booking_promocode,
         md_booking_promoprice: customerData.md_booking_promoprice || 0,
-        md_booking_pointsused: pointsUsed, // คะแนนที่ใช้
-        md_booking_pointsdiscount: pointsDiscount, // ส่วนลดจากคะแนน
         md_booking_crebyid: customerData.md_booking_crebyid,
         md_booking_updatebyid: customerData.md_booking_updatebyid
       };
@@ -309,54 +305,12 @@ let booking_codeGroup = bookingcodeGroup.length > 0
     }
   };
 
-  // ฟังก์ชันแปลงคำนำหน้าชื่อจากไทยเป็นอังกฤษ
-  const convertTitleToEnglish = (thaiTitle) => {
-    const titleMapping = {
-      'นาย': 'Mr.',
-      'นาง': 'Mrs.',
-      'นางสาว': 'Miss',
-      'ดร.': 'Dr.',
-      'ผศ.ดร.': 'Dr.',
-      'รศ.ดร.': 'Dr.',
-      'ศ.ดร.': 'Dr.',
-      'เด็กชาย': 'Master',
-      'เด็กหญิง': 'Miss'
-    };
-    
-    return titleMapping[thaiTitle] || thaiTitle; // ถ้าไม่เจอให้ใช้ค่าเดิม
-  };
-
-  // ฟังก์ชันส่งคะแนนหลังจากชำระเงินสำเร็จ
-  const updateEarnedPoints = async (bookingCode) => {
-    try {
-      // ส่งคะแนนเฉพาะผู้ใช้ที่ login แล้ว
-      if (customerData.md_booking_memberid && customerData.md_booking_memberid > 0) {
-        console.log("📌 Updating earned points for booking:", bookingCode);
-        console.log("📌 Points to add:", ((Paymenttotal - pointsDiscount) * 0.01));
-        console.log("📌 Points used:", pointsUsed);
-        
-        await axios.post(`${ipAddress}/updatepoints`, {
-          md_booking_code: bookingCode,
-          md_booking_memberid: customerData.md_booking_memberid,
-          md_booking_earnedpoints: ((Paymenttotal - pointsDiscount) * 0.01), // คำนวณจากยอดหลังหักส่วนลด
-          md_booking_pointsused: pointsUsed, // คะแนนที่ใช้ไป
-        });
-
-        console.log("✅ Earned points updated successfully");
-      } else {
-        console.log("📌 User not logged in, skipping points update");
-      }
-    } catch (error) {
-      console.error("❌ Error updating earned points:", error);
-    }
-  };
-
   const createPassenger = async (bookingCode) => {
     try {
       console.log("📌 Creating Booking with:", bookingCode);
       await axios.post(`${ipAddress}/passenger`, {
         md_passenger_bookingcode : bookingCode, 
-        md_passenger_prefix : convertTitleToEnglish(customerData.selectedTitle),
+        md_passenger_prefix : customerData.selectedTitle,
         md_passenger_fname : customerData.Firstname, 
         md_passenger_lname : customerData.Lastname,
         md_passenger_idtype : 0, 
@@ -382,7 +336,7 @@ let booking_codeGroup = bookingcodeGroup.length > 0
 
       const payload = {
         md_passenger_bookingcode: bookingCode || '',
-        md_passenger_prefix: convertTitleToEnglish(p?.prefix || ''),
+        md_passenger_prefix: p?.prefix || '',
         md_passenger_fname: p?.fname || '',
         md_passenger_lname: p?.lname || '',
         md_passenger_idtype: p?.idtype || '',
@@ -618,12 +572,6 @@ let booking_codeGroup = bookingcodeGroup.length > 0
                 <View style={styles.amountContainer}>
                   <Text style={styles.amountLabel}>{t('totalAmount')}</Text>
                   <Text style={styles.amountValue}>{customerData.symbol} {Paymenttotal}</Text>
-                  {/* แสดงคะแนนเฉพาะเมื่อ user login แล้ว หรือแสดงข้อความแจ้งเตือน */}
-                  {customerData.md_booking_memberid && customerData.md_booking_memberid > 0 ? (
-                    <Text style={styles.pointsText}>+{(Paymenttotal * 0.01).toFixed(2)} {t('points') || 'Points'}</Text>
-                  ) : (
-                    <Text style={styles.loginPromptText}>{t('loginToEarnPoints') || 'Login to earn points'}: +{(Paymenttotal * 0.01).toFixed(2)} {t('points') || 'Points'}</Text>
-                  )}
                 </View>
               </>
             )}
@@ -748,21 +696,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(253, 80, 30, 0.2)',
     textShadowRadius: 2,
     textShadowOffset: { width: 1, height: 1 },
-  },
-  pointsText: {
-    fontSize: wp('3.5%'),
-    color: '#F59E0B',
-    fontWeight: '600',
-    marginTop: hp('0.5%'),
-    letterSpacing: 0.3,
-  },
-  loginPromptText: {
-    fontSize: wp('3%'),
-    color: '#9CA3AF',
-    fontWeight: '500',
-    marginTop: hp('0.5%'),
-    letterSpacing: 0.3,
-    fontStyle: 'italic',
   },
   actionSection: {
     flexDirection: 'row',

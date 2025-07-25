@@ -8,17 +8,25 @@ import headStyles from './../(CSS)/StartingPointScreenStyles';
 import ipAddress from "../ipconfig";
 import axios from "axios";
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import * as Print from 'expo-print';
+import * as SecureStore from 'expo-secure-store';
+import moment from 'moment';
 
 
 
 
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
+  const { selectedLanguage, t } = useLanguage();
   const { success, booking_code } = route.params;
   const [orderStatus, setOrderStatus] = useState("Pending");
   const [pdfUri, setPdfUri] = useState(null);
   const [timetableDepart, settimetableDepart] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [token, setToken] = useState(null);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   // ฟังก์ชันจัดการ countrycode ให้มี + เพียงตัวเดียว
   const formatCountryCode = (code) => {
@@ -255,7 +263,7 @@ const ResultScreen = ({ navigation, route }) => {
   align-items: center;
 }
 .ferry-icon {
-  width 50px;
+  width: 50px;
   height: 50px;
   margin-top: 5px;
   object-fit: contain;
@@ -427,6 +435,32 @@ const ResultScreen = ({ navigation, route }) => {
 
 
   useEffect(() => {
+    // ตรวจสอบสถานะการ login และ token เหมือนหน้า Account
+    const checkLoginStatus = async () => {
+      try {
+        const storedToken = await SecureStore.getItemAsync('userToken');
+        setToken(storedToken);
+        setIsLoggedIn(!!storedToken);
+        
+        if (!storedToken) {
+          console.log('ResultScreen: No token found, user is not logged in');
+        } else {
+          console.log('ResultScreen: Token found, user is logged in');
+        }
+      } catch (error) {
+        console.error('ResultScreen: Error checking login status:', error);
+        setIsLoggedIn(false);
+      }
+    };
+    
+    checkLoginStatus();
+    
+    // Debug log สำหรับ customerData
+    console.log("🔍 CustomerData Debug:");
+    console.log("Full customerData:", JSON.stringify(customerData, null, 2));
+    console.log("piccompanyDepart:", customerData.piccompanyDepart);
+    console.log("companyname:", customerData.companyname);
+    
     fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
       .then((response) => {
         if (!response.ok) {
@@ -437,6 +471,7 @@ const ResultScreen = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           settimetableDepart(data.data);
+          console.log("📊 Timetable data:", data.data);
         } else {
           console.error('Data is not an array', data);
           settimetableDepart([]);
@@ -478,7 +513,22 @@ const ResultScreen = ({ navigation, route }) => {
   };
   function formatDate(dateString) {
     const date = new Date(Date.parse(dateString)); // Parses "14 Feb 2025" correctly
-    return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    
+    if (selectedLanguage === 'en') {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    } else {
+      return date.toLocaleDateString('th-TH', { 
+        weekday: 'short', 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    }
   }
 
   function formatPhoneNumber(phoneNumber) {
@@ -616,7 +666,7 @@ const ResultScreen = ({ navigation, route }) => {
                 textShadowOffset: { width: 2, height: 2 },
               }
             ]}>
-              {success ? 'Booking Confirmed' : 'Booking Failed'}
+              {success ? t('bookingConfirmed') : t('bookingFailed')}
             </Text>
             <Text style={{
               color: 'rgba(255,255,255,0.85)',
@@ -628,7 +678,7 @@ const ResultScreen = ({ navigation, route }) => {
               textShadowRadius: 3,
               textShadowOffset: { width: 1, height: 1 },
             }}>
-              {success ? 'Your ticket has been confirmed' : 'Please contact support'}
+              {success ? t('ticketConfirmed') : t('contactSupport')}
             </Text>
           </View>
         </View>
@@ -643,134 +693,388 @@ const ResultScreen = ({ navigation, route }) => {
         >
         {success && (
         <View style={styles.card}>
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <Image
-                source={{ uri: `https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}` }}// Correct way to reference a local image
-                style={styles.logo}
-                resizeMode="contain"
-              />
+          {/* Ultra Premium Company Header */}
+          <View style={styles.companyHeader}>
+            <View style={styles.logoContainer}>
+              {customerData.piccompanyDepart && !imageError ? (
+                <Image
+                  source={{ 
+                    uri: `https://thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}?v=${Date.now()}`,
+                    cache: 'reload'
+                  }}
+                  style={styles.logo}
+                  resizeMode="contain"
+                  onError={(error) => {
+                    console.log("Image failed, trying alternative...");
+                    setImageError(true);
+                  }}
+                  onLoad={() => {
+                    console.log("Image loaded successfully");
+                    setImageError(false);
+                  }}
+                />
+              ) : customerData.piccompanyDepart && imageError ? (
+                <Image
+                  source={{ 
+                    uri: `https://www.thetrago.com/Api/uploads/company/${customerData.piccompanyDepart}`,
+                    cache: 'force-cache'
+                  }}
+                  style={styles.logo}
+                  resizeMode="contain"
+                  onError={() => {
+                    console.log("Alternative URL also failed");
+                  }}
+                  onLoad={() => {
+                    console.log("Alternative image loaded");
+                    setImageError(false);
+                  }}
+                />
+              ) : (
+                <View style={[styles.logo, { 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  backgroundColor: '#ffffff',
+                  borderWidth: 1,
+                  borderColor: '#e0e0e0',
+                }]}>
+                  <Ionicons name="business" size={40} color="#FD501E" />
+                  <Text style={{ 
+                    fontSize: 8, 
+                    color: '#666', 
+                    textAlign: 'center', 
+                    marginTop: 2,
+                    fontWeight: '600' 
+                  }}>
+                    {customerData.companyname || 'บริษัท'}
+                  </Text>
+                </View>
+              )}
             </View>
-            <View style={styles.col}>
-              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, flexWrap: "wrap", width: "90%" }}>{customerData.companyname}</Text>
-              <View style={styles.row}>
+            
+            <View style={styles.companyInfo}>
+              <Text style={styles.companyName}>{customerData.companyname}</Text>
+              
+              <View style={styles.infoRow}>
                 <Ionicons name="location-outline" size={16} color="#FD501E" />
-                <Text> {customerData.startingpoint_name}</Text>
-                <AntDesign name="arrowright" size={10} color="black" />
-                <Text> {customerData.endpoint_name}</Text>
+                <Text style={styles.infoText}> {customerData.startingpoint_name}</Text>
+                <AntDesign name="arrowright" size={12} color="#6B7280" style={{ marginHorizontal: 8 }} />
+                <Text style={styles.infoText}>{customerData.endpoint_name}</Text>
               </View>
-              <View style={styles.row}>
+              
+              <View style={styles.infoRow}>
                 <Ionicons name="calendar-outline" size={16} color="#FD501E" />
-                <Text> {formatDate(customerData.departdate)}</Text>
+                <Text style={styles.infoText}> {formatDate(customerData.departdate)}</Text>
               </View>
-              <View style={styles.row}>
+              
+              <View style={styles.infoRow}>
                 <Ionicons name="person-outline" size={16} color="#FD501E" />
-                <Text> {customerData.adult} Adult, {customerData.child} Child, {customerData.infant} Infant</Text>
-              </View>
-              <View style={styles.row}>
-                <Ionicons name="checkmark-circle-outline" size={16} color="#FD501E" />
-                <Text> Free Cancellation</Text>
+                <Text style={styles.infoText}> {customerData.adult} {t('adult')}, {customerData.child} {t('child')}, {customerData.infant} {t('infant')}</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text style={styles.titel}>Summary</Text>
-            <Text> Booking date: {formatDate(customerData.bookingdate)}</Text>
+          
+          {/* Ultra Premium Summary Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('summary')}</Text>
+            <Text style={styles.dateText}>{t('bookingDate')}: {formatDate(customerData.bookingdate)}</Text>
           </View>
+          
           <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text >Adult </Text>
-            <Text> {customerData.adult} Persons</Text>
+          
+          {/* Ultra Premium Details Grid */}
+          <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>{t('adult')}</Text>
+            <Text style={styles.detailValue}>{customerData.adult} {t('person')}</Text>
           </View>
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text >Passenger name </Text>
-            <Text>{customerData.Firstname} {customerData.Lastname}</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{t('passengerName')}</Text>
+            <Text style={styles.detailValue}>{customerData.Firstname} {customerData.Lastname}</Text>
           </View>
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text >Phone number </Text>
-            <Text>{formatCountryCode(customerData.countrycode)} {formatPhoneNumber(customerData.tel)}</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{t('phoneNumber')}</Text>
+            <Text style={styles.detailValue}>{formatCountryCode(customerData.countrycode)} {formatPhoneNumber(customerData.tel)}</Text>
           </View>
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text >Email address </Text>
-            <Text>{customerData.email}</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{t('email')}</Text>
+            <Text style={styles.detailValue}>{customerData.email}</Text>
           </View>
+          
           <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text style={styles.titel}>Price Details</Text>
+          
+          {/* Ultra Premium Price Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('priceDetails')}</Text>
           </View>
 
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text >Adult x {customerData.adult} </Text>
-            <Text>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{t('adult')} x {customerData.adult}</Text>
+            <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.totaladultDepart)}</Text>
           </View>
-          {customerData.child !== 0 && (
-            <View style={[styles.row, { justifyContent: 'space-between' }]}>
-              <Text>Child x {customerData.child}</Text>
-              <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
+          
+          {customerData.child !== 0 && customerData.totalchildDepart && customerData.totalchildDepart !== "0" && customerData.totalchildDepart !== 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('child')} x {customerData.child}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.totalchildDepart)}</Text>
             </View>
           )}
-          {customerData.infant !== 0 && (
-            <View style={[styles.row, { justifyContent: 'space-between' }]}>
-              <Text>Infant x {customerData.infant}</Text>
-              <Text>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
+          
+          {customerData.infant !== 0 && customerData.totalinfantDepart && customerData.totalinfantDepart !== "0" && customerData.totalinfantDepart !== 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('infant')} x {customerData.infant}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.totalinfantDepart)}</Text>
             </View>
           )}
-            {customerData.pickupPriceDepart !== 0 && (
-            <View style={[styles.row, { justifyContent: 'space-between' }]}>
-              <Text>Pickup {customerData.infant}</Text>
-              <Text>{customerData.symbol} {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
+          
+          {customerData.pickupPriceDepart && customerData.pickupPriceDepart !== "0" && customerData.pickupPriceDepart !== 0 && customerData.pickupPriceDepart !== "0.00" && parseFloat(customerData.pickupPriceDepart) > 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('pickupService')}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.pickupPriceDepart)}</Text>
             </View>
           )}
-            {customerData.dropoffPriceDepart !== 0 && (
-            <View style={[styles.row, { justifyContent: 'space-between' }]}>
-              <Text>Drop off {customerData.infant}</Text>
-              <Text>{customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
+          
+          {customerData.dropoffPriceDepart && customerData.dropoffPriceDepart !== "0" && customerData.dropoffPriceDepart !== 0 && customerData.dropoffPriceDepart !== "0.00" && parseFloat(customerData.dropoffPriceDepart) > 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('dropoffService')}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceDepart)}</Text>
             </View>
           )}
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Discount</Text>
-            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountDepart)}</Text>
-          </View>
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Ticket fare</Text>
-            <Text>{customerData.symbol} {formatNumberWithComma(customerData.subtotalDepart)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Subtotal </Text>
-            <Text>{customerData.symbol} {formatNumberWithComma((parseFloat(customerData.subtotalDepart) + parseFloat(customerData.subtotalReturn)))}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>Payment Fee </Text>
-            <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(customerData.paymentfee)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <Text>total </Text>
-            <Text> {customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.bookingCodeText}>
-            <View style={{ flexDirection: 'column' }}>
-              <Text>Booking Code:</Text>
-              <Text>{customerData.bookingcode || "N/A"}</Text>
+
+          {/* บริการรับส่งสำหรับเที่ยวกลับ */}
+          {customerData.pickupPriceReturn && customerData.pickupPriceReturn !== "0" && customerData.pickupPriceReturn !== 0 && customerData.pickupPriceReturn !== "0.00" && parseFloat(customerData.pickupPriceReturn) > 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('pickupServiceReturn')}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.pickupPriceReturn)}</Text>
             </View>
-            <TouchableOpacity style={styles.BackButton} onPress={printTicket}>
-              <Text style={styles.BackButtonText}>Print Ticket</Text>
+          )}
+          
+          {customerData.dropoffPriceReturn && customerData.dropoffPriceReturn !== "0" && customerData.dropoffPriceReturn !== 0 && customerData.dropoffPriceReturn !== "0.00" && parseFloat(customerData.dropoffPriceReturn) > 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('dropoffServiceReturn')}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.dropoffPriceReturn)}</Text>
+            </View>
+          )}
+
+          {/* เพิ่มราคาข้อมูลตั๋วรถ/เรือ Return ถ้ามี */}
+          {customerData.subtotalReturn && customerData.subtotalReturn !== "0" && customerData.subtotalReturn !== 0 && (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('returnTicket')}</Text>
+                <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalReturn)}</Text>
+              </View>
+              
+              {customerData.totaladultReturn && customerData.totaladultReturn !== "0" && customerData.totaladultReturn !== 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { fontSize: wp('3.5%'), color: '#6B7280', paddingLeft: wp('4%') }]}>
+                    • {t('adultReturn')} x {customerData.adult}
+                  </Text>
+                  <Text style={[styles.detailValue, { fontSize: wp('3.5%'), color: '#6B7280' }]}>
+                    {customerData.symbol} {formatNumberWithComma(customerData.totaladultReturn)}
+                  </Text>
+                </View>
+              )}
+              
+              {customerData.totalchildReturn && customerData.totalchildReturn !== "0" && customerData.totalchildReturn !== 0 && customerData.child !== 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { fontSize: wp('3.5%'), color: '#6B7280', paddingLeft: wp('4%') }]}>
+                    • {t('childReturn')} x {customerData.child}
+                  </Text>
+                  <Text style={[styles.detailValue, { fontSize: wp('3.5%'), color: '#6B7280' }]}>
+                    {customerData.symbol} {formatNumberWithComma(customerData.totalchildReturn)}
+                  </Text>
+                </View>
+              )}
+              
+              {customerData.totalinfantReturn && customerData.totalinfantReturn !== "0" && customerData.totalinfantReturn !== 0 && customerData.infant !== 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { fontSize: wp('3.5%'), color: '#6B7280', paddingLeft: wp('4%') }]}>
+                    • {t('infantReturn')} x {customerData.infant}
+                  </Text>
+                  <Text style={[styles.detailValue, { fontSize: wp('3.5%'), color: '#6B7280' }]}>
+                    {customerData.symbol} {formatNumberWithComma(customerData.totalinfantReturn)}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+          
+          {customerData.discountDepart && customerData.discountDepart !== "0" && customerData.discountDepart !== 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('discount')}</Text>
+              <Text style={styles.discountText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountDepart)}</Text>
+            </View>
+          )}
+          
+          {customerData.discountReturn && customerData.discountReturn !== "0" && customerData.discountReturn !== 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('returnDiscount')}</Text>
+              <Text style={styles.discountText}>- {customerData.symbol} {formatNumberWithComma(customerData.discountReturn)}</Text>
+            </View>
+          )}
+          
+          {customerData.subtotalDepart && customerData.subtotalDepart !== "0" && customerData.subtotalDepart !== 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('ticketPrice')}</Text>
+              <Text style={styles.detailValue}>{customerData.symbol} {formatNumberWithComma(customerData.subtotalDepart)}</Text>
+            </View>
+          )}
+          
+          <View style={styles.divider} />
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{t('subtotal')}</Text>
+            <Text style={styles.detailValue}>
+              {customerData.symbol} {formatNumberWithComma(
+                (parseFloat(customerData.subtotalDepart || 0) + parseFloat(customerData.subtotalReturn || 0))
+              )}
+            </Text>
+          </View>
+          
+          <View style={styles.divider} />
+          
+          {customerData.paymentfee && customerData.paymentfee !== "0" && customerData.paymentfee !== 0 && (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('paymentFee')}</Text>
+                <Text style={styles.feeText}>+ {customerData.symbol} {formatNumberWithComma(customerData.paymentfee)}</Text>
+              </View>
+              <View style={styles.divider} />
+            </>
+          )}
+
+          {/* เพิ่มข้อมูลภาษีหรือค่าธรรมเนียมอื่นๆ ถ้ามี */}
+          {customerData.tax && customerData.tax !== "0" && customerData.tax !== 0 && (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('tax')}</Text>
+                <Text style={styles.feeText}>+ {customerData.symbol} {formatNumberWithComma(customerData.tax)}</Text>
+              </View>
+              <View style={styles.divider} />
+            </>
+          )}
+
+          {customerData.serviceFee && customerData.serviceFee !== "0" && customerData.serviceFee !== 0 && (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('serviceFee')}</Text>
+                <Text style={styles.feeText}>+ {customerData.symbol} {formatNumberWithComma(customerData.serviceFee)}</Text>
+              </View>
+              <View style={styles.divider} />
+            </>
+          )}
+          
+          {/* Ultra Premium Total Section */}
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>{t('total')}</Text>
+            <Text style={styles.totalValue}>{customerData.symbol} {formatNumberWithComma(customerData.total)}</Text>
+          </View>
+          
+          <View style={styles.divider} />
+          
+          {/* Ultra Premium Action Section */}
+          <View style={styles.actionSection}>
+            <View style={styles.bookingCodeSection}>
+              <Text style={styles.bookingLabel}>{t('bookingCode')}</Text>
+              <Text style={styles.bookingCode}>{customerData.bookingcode || "N/A"}</Text>
+            </View>
+            
+            <TouchableOpacity style={styles.printButton} onPress={printTicket}>
+              <LinearGradient
+                colors={['#FD501E', '#FF6B35']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.printButtonGradient}
+              >
+                <Ionicons name="print-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.printButtonText}>{t('printTicket')}</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
+
+          {/* เพิ่มส่วนคะแนนที่ผู้ใช้ได้รับ - แสดงเฉพาะผู้ใช้ที่ login แล้ว */}
+          {isLoggedIn && (
+            <>
+              <View style={styles.divider} />
+              
+              <View style={styles.rewardSection}>
+                <View style={styles.rewardHeader}>
+                  <Ionicons name="trophy" size={24} color="#FFD700" />
+                  <Text style={styles.rewardTitle}>{t('earnedPoints')}</Text>
+                </View>
+                
+                <View style={styles.rewardContainer}>
+                  <LinearGradient
+                    colors={['#FFD700', '#FFA500']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.rewardGradient}
+                  >
+                    <View style={styles.rewardContent}>
+                      <Text style={styles.rewardPoints}>
+                        +{customerData.earnedPoints ? parseFloat(customerData.earnedPoints).toFixed(2) : (() => {
+                          // คำนวณคะแนนจาก subtotal เท่านั้น
+                          const subtotalDepart = parseFloat(customerData.subtotalDepart || 0);
+                          const subtotalReturn = parseFloat(customerData.subtotalReturn || 0);
+                          
+                          // รวม subtotal และคำนวณคะแนน (1 คะแนนต่อ 100 บาท)
+                          const totalSubtotal = subtotalDepart + subtotalReturn;
+                          
+                          return (totalSubtotal / 100).toFixed(2);
+                        })()} 
+                      </Text>
+                      <Text style={styles.rewardLabel}>{t('points')}</Text>
+                    </View>
+                    <Ionicons name="star" size={32} color="#FFFFFF" style={{ opacity: 0.8 }} />
+                  </LinearGradient>
+                </View>
+                
+                <Text style={styles.rewardNote}>
+                  {t('pointsNote')}
+                </Text>
+              </View>
+            </>
+          )}
+
+          {/* แสดงข้อความแนะนำให้ login สำหรับผู้ใช้ที่ยังไม่ได้ login */}
+          {!isLoggedIn && (
+            <>
+              <View style={styles.divider} />
+              
+              <View style={styles.loginPromptSection}>
+                <View style={styles.loginPromptHeader}>
+                  <Ionicons name="person-circle-outline" size={24} color="#6B7280" />
+                  <Text style={styles.loginPromptTitle}>{t('loginForPoints')}</Text>
+                </View>
+                
+                <View style={styles.loginPromptContainer}>
+                  <Text style={styles.loginPromptText}>
+                    {t('loginPrompt')}
+                  </Text>
+                  <Text style={styles.loginPromptSubtext}>
+                    {t('loginSubtext')}
+                  </Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
         )}
         {!success && (
            <View style={styles.card}>
-            <View style={{alignItems: 'center'}}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Your card is not valid. Please check again.</Text>
-          <Text style={{ fontSize: 16}}>Please contact the officer.</Text>
-          <Text style={{ fontSize: 16, marginTop: 20}}>Email : info@thetrago.com</Text>
+                    {!success && (
+          <View style={styles.errorCard}>
+            <View style={styles.errorContent}>
+              <Ionicons name="alert-circle-outline" size={48} color="#DC2626" style={{ marginBottom: hp('2%') }} />
+              <Text style={styles.errorTitle}>{t('invalidCard')}</Text>
+              <Text style={styles.errorSubtitle}>{t('contactUs')}</Text>
+              <Text style={styles.errorContact}>อีเมล: info@thetrago.com</Text>
+            </View>
           </View>
+        )}
           </View>
         )}
         </ScrollView>
@@ -811,6 +1115,9 @@ const styles = StyleSheet.create({
     width: wp('20%'),
     height: wp('20%'),
     borderRadius: wp('2%'),
+    backgroundColor: '#f5f5f5', // เพิ่ม background color กรณีรูปไม่โหลด
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
   },
   companyInfo: {
     flex: 1,
@@ -868,14 +1175,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailValue: {
-    fontSize: wp('4%'),
+    fontSize: wp('3%'),
     color: '#1F2937',
     fontWeight: '600',
     textAlign: 'right',
     flex: 1,
   },
   discountText: {
-    fontSize: wp('4%'),
+    fontSize: wp('3%'),
     color: '#EF4444',
     fontWeight: '600',
     textAlign: 'right',
@@ -990,6 +1297,103 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  // เพิ่ม styles สำหรับส่วนคะแนน
+  rewardSection: {
+    marginTop: hp('2%'),
+  },
+  rewardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('2%'),
+  },
+  rewardTitle: {
+    fontSize: wp('5%'),
+    fontWeight: '800',
+    color: '#002348',
+    marginLeft: wp('2%'),
+    letterSpacing: -0.3,
+  },
+  rewardContainer: {
+    borderRadius: wp('4%'),
+    shadowColor: '#FFD700',
+    shadowOpacity: 0.3,
+    shadowRadius: wp('4%'),
+    shadowOffset: { width: 0, height: hp('0.8%') },
+    elevation: 10,
+    marginBottom: hp('2%'),
+  },
+  rewardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('4%'),
+  },
+  rewardContent: {
+    flex: 1,
+  },
+  rewardPoints: {
+    fontSize: wp('7%'),
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 3,
+    textShadowOffset: { width: 1, height: 1 },
+  },
+  rewardLabel: {
+    fontSize: wp('4%'),
+    fontWeight: '600',
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginTop: hp('0.5%'),
+  },
+  rewardNote: {
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  // เพิ่ม styles สำหรับส่วนแนะนำการ login
+  loginPromptSection: {
+    marginTop: hp('2%'),
+  },
+  loginPromptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('2%'),
+  },
+  loginPromptTitle: {
+    fontSize: wp('5%'),
+    fontWeight: '800',
+    color: '#6B7280',
+    marginLeft: wp('2%'),
+    letterSpacing: -0.3,
+  },
+  loginPromptContainer: {
+    backgroundColor: 'rgba(107, 114, 128, 0.05)',
+    borderRadius: wp('4%'),
+    paddingVertical: hp('2.5%'),
+    paddingHorizontal: wp('6%'),
+    borderWidth: 1.5,
+    borderColor: 'rgba(107, 114, 128, 0.15)',
+    borderStyle: 'dashed',
+  },
+  loginPromptText: {
+    fontSize: wp('4.2%'),
+    color: '#6B7280',
+    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: hp('1%'),
+    lineHeight: wp('5.5%'),
+  },
+  loginPromptSubtext: {
+    fontSize: wp('3.5%'),
+    color: '#9CA3AF',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: wp('4.5%'),
   },
 });
 

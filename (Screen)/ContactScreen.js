@@ -319,11 +319,11 @@ export default function ContactScreen({ navigation }) {
               >
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-            </View>
-            
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>{t('contactUs') || 'Contact Us'}</Text>
-              <Text style={styles.headerSubtitle}>{t('weAreAlwaysInTouch') || 'We are always in touch'}</Text>
+              
+              <View style={styles.headerContent}>
+                <Text style={styles.headerTitle}>{t('contactUs') || 'Contact Us'}</Text>
+                <Text style={styles.headerSubtitle}>{t('weAreAlwaysInTouch') || 'We are always in touch'}</Text>
+              </View>
             </View>
           </SafeAreaView>
         </LinearGradient>
@@ -487,30 +487,29 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   headerTopRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 0,
-    paddingTop: 0,
+    paddingHorizontal: 20,
+    paddingTop: 10, // เพิ่มจาก 45 เป็น 60
+    paddingBottom: 25, // เพิ่มจาก 20 เป็น 25
     position: 'relative',
-    marginTop: Platform.OS === 'android' ? -20 : -50,
-    height: 56,
   },
   headerContent: {
     alignItems: 'center',
-    position: 'relative',
-    zIndex: 3,
+    flex: 1,
+    marginLeft: 0, // ให้อยู่ตรงกลาง
   },
   backButton: {
     position: 'absolute',
-    left: 0,
-    top: Platform.OS === 'android' ? 60 : 60,
+    left: 20,
+    top: 20, // เพิ่มจาก 45 เป็น 60 ให้ตรงกับ paddingTop
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 5,
+    zIndex: 10,
   },
   headerTitle: {
     fontSize: 28,
@@ -531,7 +530,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingTop: 120, // เพิ่ม padding เพื่อไม่ให้เนื้อหาซ้อนกับ header
+    paddingTop: 145, // เพิ่มจาก 125 เป็น 145
   },
   scrollContent: {
     paddingBottom: hp('10%'),

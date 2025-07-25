@@ -19,7 +19,7 @@ import axios from 'axios';
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
   const { t } = useLanguage();
   
-  // Title options for PassengerForm
+  // Define titleOptions inside PassengerForm
   const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
   
   const [selectedTitle, setSelectedTitle] = React.useState(t('pleaseSelect') || 'Please Select');
@@ -500,17 +500,17 @@ const CustomerInfo = ({ navigation }) => {
         Lastname: Lastname,
         tel: mobileNumber,
         email: email,
-        companyname: selectedLanguage === 'th' ? timetableDepart[0].md_company_namethai : timetableDepart[0].md_company_nameeng,
-        startingpoint_name: selectedLanguage === 'th' ? timetableDepart[0].startingpoint_namethai : timetableDepart[0].startingpoint_nameeng,
-        endpoint_name: selectedLanguage === 'th' ? timetableDepart[0].endpoint_namethai : timetableDepart[0].endpoint_nameeng,
+        companyname: timetableDepart[0].md_company_nameeng,
+        startingpoint_name: timetableDepart[0].startingpoint_name,
+        endpoint_name: timetableDepart[0].endpoint_name,
         boatypeid: timetableDepart[0].md_timetable_boattypeid,
         country: country,
-        countrycode: countrycode.toString().startsWith('+') ? countrycode : '+' + countrycode,
+        countrycode: '+' + countrycode,
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
         // booking information
         md_booking_country: country,
-        md_booking_countrycode: countrycode.toString().startsWith('+') ? countrycode : '+' + countrycode,
+        md_booking_countrycode: '+' + countrycode,
         md_booking_tel: mobileNumber,
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
@@ -581,18 +581,18 @@ const CustomerInfo = ({ navigation }) => {
         Lastname: Lastname,
         tel: mobileNumber,
         email: email,
-        companyname: selectedLanguage === 'th' ? timetableDepart[0].md_company_namethai : timetableDepart[0].md_company_nameeng,
-        startingpoint_name: selectedLanguage === 'th' ? timetableDepart[0].startingpoint_namethai : timetableDepart[0].startingpoint_nameeng,
-        endpoint_name: selectedLanguage === 'th' ? timetableDepart[0].endpoint_namethai : timetableDepart[0].endpoint_nameeng,
+        companyname: timetableDepart[0].md_company_nameeng,
+        startingpoint_name: timetableDepart[0].startingpoint_name,
+        endpoint_name: timetableDepart[0].endpoint_name,
         boatypeid: timetableDepart[0].md_timetable_boattypeid,
         country: country,
-        countrycode: countrycode.toString().startsWith('+') ? countrycode : '+' + countrycode,
+        countrycode: '+' + countrycode,
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
         passenger: passengerDataArr,
         // booking information
         md_booking_country: country,
-        md_booking_countrycode: countrycode.toString().startsWith('+') ? countrycode : '+' + countrycode,
+        md_booking_countrycode: '+' + countrycode,
         md_booking_tel: mobileNumber,
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
@@ -654,23 +654,9 @@ const CustomerInfo = ({ navigation }) => {
     return searchText.includes(searchQuery.toLowerCase());
   });
 
-  function formatDate(dateString, language = 'en') {
+  function formatDate(dateString) {
     const date = new Date(Date.parse(dateString)); // Parses "14 Feb 2025" correctly
-    
-    // Define full weekday names
-    const weekdaysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const weekdaysTh = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-    
-    // Define month names
-    const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthsTh = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    
-    const weekday = language === 'th' ? weekdaysTh[date.getDay()] : weekdaysEn[date.getDay()];
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = language === 'th' ? monthsTh[date.getMonth()] : monthsEn[date.getMonth()];
-    const year = language === 'th' ? date.getFullYear() + 543 : date.getFullYear(); // Buddhist era for Thai
-    
-    return `${weekday}, ${day} ${month} ${year}`;
+    return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function formatTimeToHoursAndMinutes(time) {
@@ -1190,22 +1176,32 @@ const CustomerInfo = ({ navigation }) => {
                       <View key={index}>
                         <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
-                        <Text style={{ marginTop: 5, color: '#FD501E' }}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+                        <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                          {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
+                          <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                          {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
+                        </Text>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'} </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                            {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                          </Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                            {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                          </Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'} </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                            {selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_nameth}
+                          </Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureData') || 'Departure Data'}</Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate, selectedLanguage)}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'} : </Text>
@@ -1269,23 +1265,29 @@ const CustomerInfo = ({ navigation }) => {
                           <View key={index}>
                             <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                             <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                              {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}
+                              {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
+                              <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                              {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                             </Text>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                              <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
+                              <Text style={{ color: '#666666' }}>
+                                {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                              </Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                              <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
+                              <Text style={{ color: '#666666' }}>
+                                {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                              </Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
-                              <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
+                              <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('departureData') || 'Departure Data'}</Text>
-                              <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate, selectedLanguage)}</Text>
+                              <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>

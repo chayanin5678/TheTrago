@@ -48,7 +48,15 @@ const PaymentScreen = ({ navigation, route }) => {
  const [booking_codeGroup,setGroup_code] = useState('');
 
   const [totalPayment, settotalPayment] = useState(0);
+  const [totalPaymentNumber, setTotalPaymentNumber] = useState(0);
   const [totalpaymentfee, setTotalPaymentfee] = useState(0);
+  
+  // Points related states
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const [userPoints, setUserPoints] = useState(0);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
+  const [pointsToEarn, setPointsToEarn] = useState(0);
   const [paymentcode, setpaymentcode] = useState('');
   const [paymentfee, setPaymentfee] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState('');
@@ -60,13 +68,6 @@ const PaymentScreen = ({ navigation, route }) => {
   const [priceDepart, setPriceDepart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // ✅ Points System States
-  const [userPoints, setUserPoints] = useState(0);
-  const [usePoints, setUsePoints] = useState(false);
-  const [pointsDiscount, setPointsDiscount] = useState(0);
-  const [pointsUsed, setPointsUsed] = useState(0);
-  const [earnedPoints, setEarnedPoints] = useState(0);
 
   console.log("Year:", year);
   console.log("Booking DateTime:", currentDateTime);
@@ -88,42 +89,6 @@ const PaymentScreen = ({ navigation, route }) => {
 
   // Debug logs เพื่อตรวจสอบ infinite loop
   console.log('🔍 PaymentScreen rendered');
-  console.log('🔍 Member ID:', customerData.md_booking_memberid);
-
-  // ✅ ฟังก์ชันดึงคะแนนผู้ใช้
-  const fetchUserPoints = async () => {
-    const memberId = customerData.md_booking_memberid;
-    console.log('🔍 Fetching points for member ID:', memberId);
-    
-    // ตรวจสอบว่าผู้ใช้ล็อกอินแล้วหรือไม่
-    if (!memberId || memberId === 0 || memberId === '0') {
-      console.log('🔍 User not logged in, no points to fetch');
-      setUserPoints(0);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${ipAddress}/userpoints/${memberId}`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 Points API response:', data);
-        
-        if (data.success && data.points !== undefined) {
-          setUserPoints(data.points);
-          console.log('✅ User points loaded:', data.points);
-        } else {
-          console.log('⚠️ No points data found, setting to 0');
-          setUserPoints(0);
-        }
-      } else {
-        console.error('❌ Failed to fetch points:', response.status);
-        setUserPoints(0);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching user points:', error);
-      setUserPoints(0);
-    }
-  };
 
   useEffect(() => {
     console.log('🔍 Payment fee useEffect triggered', selectedOption);
@@ -151,50 +116,6 @@ const PaymentScreen = ({ navigation, route }) => {
         setPaymentfee(0); // Default to 0 if there is an error fetching the data
       });
   }, [selectedOption]); // ลบ paymentcode และ bookingcode ออกจาก dependencies
-
-  // ✅ useEffect สำหรับโหลดคะแนนผู้ใช้
-  useEffect(() => {
-    console.log('🔍 User points useEffect triggered');
-    fetchUserPoints();
-  }, [customerData.md_booking_memberid]); // โหลดใหม่เมื่อ member ID เปลี่ยน
-
-  // ✅ ฟังก์ชันสำหรับการใช้คะแนนทั้งหมดเป็นส่วนลด
-  const handleUseAllPoints = () => {
-    console.log('🔍 Toggle use all points:', !usePoints);
-    
-    if (!usePoints) {
-      // เปิดการใช้คะแนน - ใช้คะแนนทั้งหมด
-      const pointsToUse = Math.min(userPoints, Math.floor(parseFloat(customerData.total || 0)));
-      const discount = pointsToUse; // 1 คะแนน = 1 บาท
-      
-      setUsePoints(true);
-      setPointsUsed(pointsToUse);
-      setPointsDiscount(discount);
-      
-      console.log('✅ Using all points:', {
-        userPoints,
-        pointsToUse,
-        discount,
-        orderTotal: customerData.total
-      });
-    } else {
-      // ปิดการใช้คะแนน
-      setUsePoints(false);
-      setPointsUsed(0);
-      setPointsDiscount(0);
-      
-      console.log('✅ Stopped using points');
-    }
-  };
-
-  // ✅ ฟังก์ชันคำนวณคะแนนที่จะได้รับ
-  const calculateEarnedPoints = () => {
-    const totalAfterDiscount = parseFloat(customerData.total || 0) - pointsDiscount;
-    const earned = Math.floor(totalAfterDiscount * 0.01); // 1% ของยอดชำระ
-    setEarnedPoints(earned);
-    console.log('🔍 Calculated earned points:', earned, 'from total:', totalAfterDiscount);
-    return earned;
-  };
 
 
 
@@ -314,20 +235,189 @@ const PaymentScreen = ({ navigation, route }) => {
 
     setTotalPaymentfee(totalpaymentfee);
     settotalPayment(formatNumber(totalPayment));
-  }, [customerData.total, paymentfee]); // ลบ dependencies ที่ไม่จำเป็น
+  }, [customerData.total, paymentfee, pointsDiscount]); // เพิ่ม pointsDiscount ใน dependencies
 
-  // ✅ useEffect สำหรับคำนวณคะแนนที่จะได้รับ
+  // Fetch user points
   useEffect(() => {
-    if (customerData.total) {
-      calculateEarnedPoints();
+    if (customerData.customer_id || customerData.md_booking_memberid) {
+      fetchUserPoints();
     }
-  }, [customerData.total, pointsDiscount]);
+  }, [customerData.customer_id, customerData.md_booking_memberid]);
+
+  const fetchUserPoints = async () => {
+    try {
+      console.log("📌 CustomerData available fields:", Object.keys(customerData));
+      console.log("📌 customerData.customer_id:", customerData.customer_id);
+      console.log("📌 customerData.md_booking_memberid:", customerData.md_booking_memberid);
+      
+      // Try to use md_booking_memberid if customer_id is not available
+      const userId = customerData.customer_id || customerData.md_booking_memberid;
+      console.log("📌 Using userId:", userId);
+      
+      if (!userId) {
+        console.error("❌ No user ID found");
+        setUserPoints(0);
+        return;
+      }
+
+      const response = await fetch(`${ipAddress}/userpoints/${userId}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      console.log("📌 Points API Response status:", response.status);
+      const result = await response.json();
+      console.log("📌 Points API Response data:", result);
+      
+      if (response.ok && result.status === "success") {
+        const availablePoints = result.data?.available_points || 0;
+        setUserPoints(availablePoints);
+        console.log(`✅ User points fetched: ${availablePoints}`);
+      } else {
+        console.error("❌ Error fetching points:", result.message);
+        setUserPoints(0);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user points:', error);
+      setUserPoints(0);
+    }
+  };
+
+  // Calculate points discount
+  const calculatePointsDiscount = (points) => {
+    // 1 คะแนน = 1 บาท ส่วนลด (แต่ไม่เกินยอด total)
+    const maxDiscount = parseFloat(customerData.total || 0);
+    const discount = Math.min(points, maxDiscount);
+    setPointsDiscount(discount);
+    console.log(`💡 Points: ${points}, Max discount: ${maxDiscount}, Applied discount: ${discount}`);
+    return discount;
+  };
+
+  // Handle points usage toggle
+  const handlePointsToggle = () => {
+    if (!usePoints) {
+      const maxPoints = Math.min(userPoints, parseFloat(customerData.total || 0));
+      setPointsToUse(maxPoints);
+      calculatePointsDiscount(maxPoints);
+    } else {
+      setPointsToUse(0);
+      setPointsDiscount(0);
+    }
+    setUsePoints(!usePoints);
+  };
+
+  // Calculate points to earn from purchase
+  const calculatePointsToEarn = (subtotalAmount) => {
+    // คำนวณคะแนนจาก subtotal: 1 บาท = 0.01 คะแนน
+    const pointsEarned = (subtotalAmount / 100);
+    setPointsToEarn(pointsEarned);
+    return pointsEarned;
+  };
+
+  // Deduct points from user account after successful payment
+  const deductUserPoints = async (pointsAmount) => {
+    try {
+      const response = await fetch(`${ipAddress}/updatepoints`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          member_id: (customerData.customer_id || customerData.md_booking_memberid).toString(),
+          md_point_bookingno: booking_code || "UNKNOWN", // ใช้ booking code ที่สร้างไว้
+          md_point_deposit: 0, // ไม่ได้เพิ่มคะแนน
+          md_point_withdrawal: pointsAmount, // หักคะแนน
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok || result.status !== "success") {
+        throw new Error(result.message || "Failed to deduct points");
+      }
+
+      // อัปเดตคะแนนในหน้าจอ
+      const newPointsBalance = userPoints - pointsAmount;
+      setUserPoints(newPointsBalance);
+      
+      console.log(`✅ Points deducted successfully: ${pointsAmount} points`);
+      console.log(`✅ New balance: ${newPointsBalance} points`);
+      
+      return result;
+    } catch (error) {
+      console.error("Error deducting points:", error);
+      throw error;
+    }
+  };
+
+  // Add points to user account after successful payment
+  const addPointsToUser = async (pointsAmount) => {
+    try {
+      const response = await fetch(`${ipAddress}/updatepoints`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          member_id: (customerData.customer_id || customerData.md_booking_memberid).toString(),
+          md_point_bookingno: booking_code || "EARNED", // ใช้ booking code หรือ EARNED
+          md_point_deposit: pointsAmount, // เพิ่มคะแนน
+          md_point_withdrawal: 0, // ไม่หักคะแนน
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok || result.status !== "success") {
+        throw new Error(result.message || "Failed to add points");
+      }
+
+      // อัปเดตคะแนนในหน้าจอ (รวมทั้งการหักและเพิ่ม)
+      const newPointsBalance = userPoints - (pointsToUse || 0) + pointsAmount;
+      setUserPoints(newPointsBalance);
+      
+      console.log(`✅ Points added successfully: ${pointsAmount} points`);
+      console.log(`✅ New balance: ${newPointsBalance} points`);
+      
+      return result;
+    } catch (error) {
+      console.error("Error adding points:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    // คำนวณค่าธรรมเนียมและยอดรวมแบบ real-time รวมกับการหักคะแนน
+    const originalTotal = customerData.total ? parseFloat(customerData.total) : 0;
+    const subtotalAfterPoints = originalTotal - pointsDiscount;
+    const totalpaymentfee = subtotalAfterPoints && paymentfee ? (subtotalAfterPoints * (parseFloat(paymentfee) / 100)) : 0;
+    const totalPayment = subtotalAfterPoints + totalpaymentfee;
+
+    console.log(`💰 Calculation:`);
+    console.log(`   Original Total: ${originalTotal}`);
+    console.log(`   Points Discount: ${pointsDiscount}`);
+    console.log(`   Subtotal After Points: ${subtotalAfterPoints}`);
+    console.log(`   Payment Fee: ${totalpaymentfee}`);
+    console.log(`   Final Total: ${totalPayment}`);
+
+    setTotalPaymentfee(totalpaymentfee);
+    setTotalPaymentNumber(totalPayment); // เก็บเป็น number สำหรับการคำนวณ
+    settotalPayment(formatNumber(totalPayment)); // เก็บเป็น string สำหรับแสดงผล
+    
+    // คำนวณคะแนนที่จะได้รับจาก subtotal (ก่อนหักคะแนน)
+    calculatePointsToEarn(originalTotal);
+  }, [customerData.total, paymentfee, pointsDiscount]);
 
 
   useEffect(() => {
     console.log('🔍 fetchPriceferry useEffect triggered');
     fetchPriceferry();
-  }, [paymentfee]); // ระบุ dependencies เฉพาะที่จำเป็นสำหรับ API call
+  }, [paymentfee,usePoints]); // ระบุ dependencies เฉพาะที่จำเป็นสำหรับ API call
 
   const fetchPriceferry = async () => {
     console.log('🔍 fetchPriceferry called');
@@ -350,6 +440,8 @@ const PaymentScreen = ({ navigation, route }) => {
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: paymentfee,
           promotioncode: customerData.md_booking_promocode,
+          credit: usePoints ? 1 : 0, // แปลง boolean เป็น integer
+          member: customerData.md_booking_memberid, 
         },
         {
           headers: {
@@ -485,9 +577,13 @@ const PaymentScreen = ({ navigation, route }) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
-          amount: totalPayment, // ส่งยอดรวมจริง
+          amount: totalPaymentNumber, // ส่งยอดรวมจริงเป็น number
           token: tokenData.token,
           return_uri: `${ipAddress}/redirect`,
+          usePoints: usePoints,
+          pointsUsed: pointsToUse,
+          pointsDiscount: pointsDiscount,
+          userId: customerData.customer_id, // ส่ง customer_id เพื่อหักคะแนน
         }),
       });
 
@@ -532,6 +628,28 @@ const PaymentScreen = ({ navigation, route }) => {
       if (bookingResult.success) {
         console.log("✅ Booking created with code:", bookingResult.bookingCode);
         
+        // หักคะแนนหลังการชำระเงินสำเร็จ
+        if (usePoints && pointsToUse > 0) {
+          try {
+            await deductUserPoints(pointsToUse);
+            console.log(`✅ Points deducted successfully: ${pointsToUse} points`);
+          } catch (pointsError) {
+            console.error("❌ Error deducting points:", pointsError);
+            // ไม่ให้ fail การชำระเงินแค่เพราะปัญหาคะแนน
+          }
+        }
+        
+        // เพิ่มคะแนนจากการซื้อ
+        if (pointsToEarn > 0) {
+          try {
+            await addPointsToUser(pointsToEarn);
+            console.log(`✅ Points added successfully: ${pointsToEarn} points`);
+          } catch (pointsError) {
+            console.error("❌ Error adding points:", pointsError);
+            // ไม่ให้ fail การชำระเงินแค่เพราะปัญหาคะแนน
+          }
+        }
+        
         // ใช้ booking code จาก API response แทนค่าที่ pre-fetch มา
         const actualBookingCode = bookingResult.bookingCode;
         
@@ -564,9 +682,17 @@ const PaymentScreen = ({ navigation, route }) => {
     updateCustomerData({
       paymentfee: totalpaymentfee,
       paymenttype: selectedOption,
+      usePoints: usePoints,
+      pointsUsed: pointsToUse,
+      pointsDiscount: pointsDiscount,
       // ไม่ต้องอัปเดต total
     });
-    navigation.navigate("PromptPayScreen", { Paymenttotal: totalPayment });
+    navigation.navigate("PromptPayScreen", { 
+      Paymenttotal: totalPaymentNumber,
+      usePoints: usePoints,
+      pointsUsed: pointsToUse,
+      pointsDiscount: pointsDiscount,
+    });
     setIsLoading(false);
     console.log("✅ Loading stopped...");
   };
@@ -628,10 +754,9 @@ const PaymentScreen = ({ navigation, route }) => {
         md_booking_promoprice: customerData.md_booking_promoprice,
         md_booking_crebyid: customerData.md_booking_crebyid, //     
         md_booking_updatebyid:customerData.md_booking_updatebyid,//
-        // ✅ เพิ่มข้อมูลคะแนน
-        md_booking_pointsused: pointsUsed,
-        md_booking_pointsdiscount: pointsDiscount,
-        md_booking_earnedpoints: earnedPoints
+        md_booking_usepoints: usePoints ? 1 : 0, // เพิ่มข้อมูลการใช้คะแนน
+        md_booking_pointsused: pointsToUse, // จำนวนคะแนนที่ใช้
+        md_booking_pointsdiscount: pointsDiscount, // ส่วนลดจากคะแนน
       });
 
       console.log("📋 Booking API Response:", response.data);
@@ -662,11 +787,6 @@ const PaymentScreen = ({ navigation, route }) => {
           md_booking_groupcode: groupCode,
         });
         
-        // ✅ อัปเดตคะแนนหลังการจองสำเร็จ
-        if (customerData.md_booking_memberid && customerData.md_booking_memberid !== 0) {
-          await updateUserPoints(bookingCode);
-        }
-        
         return {
           success: true,
           bookingCode: bookingCode,
@@ -680,42 +800,6 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("❌ Error submitting booking:", error.response?.data || error.message);
       throw new Error("Failed to create booking");
-    }
-  };
-
-  // ✅ ฟังก์ชันอัปเดตคะแนนผู้ใช้หลังการจอง
-  const updateUserPoints = async (bookingCode) => {
-    try {
-      console.log('🔍 Updating user points for booking:', bookingCode);
-      
-      const response = await fetch(`${ipAddress}/updatepoints`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          memberId: customerData.md_booking_memberid,
-          bookingCode: bookingCode,
-          pointsUsed: pointsUsed,
-          pointsDiscount: pointsDiscount,
-          earnedPoints: earnedPoints,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Points updated successfully:', data);
-        
-        // อัปเดตคะแนนใหม่ในหน้าจอ
-        if (data.success && data.newBalance !== undefined) {
-          setUserPoints(data.newBalance);
-          console.log('✅ New user points balance:', data.newBalance);
-        }
-      } else {
-        console.error('❌ Failed to update points:', response.status);
-      }
-    } catch (error) {
-      console.error('❌ Error updating user points:', error);
     }
   };
 
@@ -1311,14 +1395,22 @@ const PaymentScreen = ({ navigation, route }) => {
                       {timetableDepart.map((item, index) => (
                         <View key={index}>
                           <Text style={{ fontWeight: 'bold' }}>{t('depart') || 'Depart'}</Text>
-                          <Text style={{ marginTop: 5, color: '#FD501E' }}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}</Text>
+                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                            {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
+                            <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                            {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
+                          </Text>
                           <View style={styles.row}>
                             <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                            <Text style={{ color: '#666666' }}> {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
+                            <Text style={{ color: '#666666' }}>
+                              {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                            </Text>
                           </View>
                           <View style={styles.row}>
                             <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                            <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                            <Text style={{ color: '#666666' }}>
+                              {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                            </Text>
                           </View>
                           <View style={styles.row}>
                             <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
@@ -1385,15 +1477,21 @@ const PaymentScreen = ({ navigation, route }) => {
                             <View key={index}>
                               <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                               <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                                {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {item.endpoint_name}
+                                {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
+                                <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                                {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                               </Text>
                               <View style={styles.row}>
                                 <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                                <Text style={{ color: '#666666' }}>{selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}</Text>
+                                <Text style={{ color: '#666666' }}>
+                                  {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                                </Text>
                               </View>
                               <View style={styles.row}>
                                 <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                                <Text style={{ color: '#666666' }}>{item.md_seat_nameeng}</Text>
+                                <Text style={{ color: '#666666' }}>
+                                  {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                                </Text>
                               </View>
                               <View style={styles.row}>
                                 <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
@@ -1465,6 +1563,92 @@ const PaymentScreen = ({ navigation, route }) => {
                         <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
                       </View>
                       <View style={styles.divider} />
+                      
+                      {/* Points Usage Section */}
+                      <View style={{
+                        backgroundColor: 'rgba(255, 214, 0, 0.05)',
+                        borderRadius: wp('3%'),
+                        padding: wp('3%'),
+                        marginVertical: hp('1%'),
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 214, 0, 0.2)',
+                      }}>
+                        <TouchableOpacity 
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: usePoints ? hp('1%') : 0,
+                          }}
+                          onPress={handlePointsToggle}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons 
+                              name="stars" 
+                              size={wp('5%')} 
+                              color="#FFD600" 
+                              style={{ marginRight: wp('2%') }}
+                            />
+                            <Text style={{ 
+                              fontWeight: '600', 
+                              color: '#1E293B',
+                              fontSize: wp('3.8%') 
+                            }}>
+                              {t('usePoints') || 'Use Points'}
+                            </Text>
+                            <Text style={{ 
+                              color: '#6B7280', 
+                              fontSize: wp('3.2%'),
+                              marginLeft: wp('2%')
+                            }}>
+                              ({userPoints} {t('pointsAvailable') || 'points available'})
+                            </Text>
+                            {userPoints === 0 && (
+                              <TouchableOpacity 
+                                onPress={fetchUserPoints}
+                                style={{
+                                  marginLeft: wp('2%'),
+                                  padding: wp('1%'),
+                                }}
+                              >
+                                <Text style={{ 
+                                  color: '#3B82F6', 
+                                  fontSize: wp('3%'),
+                                  textDecorationLine: 'underline'
+                                }}>
+                                  {t('refresh') || 'Refresh'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                          <View style={{
+                            width: wp('5%'),
+                            height: wp('5%'),
+                            borderRadius: wp('2.5%'),
+                            borderWidth: 2,
+                            borderColor: usePoints ? '#FFD600' : '#D1D5DB',
+                            backgroundColor: usePoints ? '#FFD600' : 'transparent',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                            {usePoints && (
+                              <MaterialIcons name="check" size={wp('3%')} color="#1E293B" />
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                        
+                        {usePoints && (
+                          <View style={styles.row}>
+                            <Text style={{ color: '#6B7280' }}>
+                              {t('pointsUsed') || 'Points Used'}: {pointsToUse} {t('points') || 'points'}
+                            </Text>
+                            <Text style={styles.redText}>
+                              - {customerData.symbol} {formatNumberWithComma(pointsDiscount.toFixed(2))}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      
                       <View style={styles.row}>
                         <Text>{t('paymentFee') || 'Payment Fee'} </Text>
                         <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(all.paymentfee)}</Text>
@@ -1478,70 +1662,30 @@ const PaymentScreen = ({ navigation, route }) => {
                         <Text>{t('total') || 'Total'} </Text>
                         <Text> {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                       </View>
-                    </View>
-
-                    {/* ✅ Points Section - แยกเป็น section ต่างหาก */}
-                    {customerData.md_booking_memberid && customerData.md_booking_memberid !== 0 && (
-                      <View style={[styles.card, { marginTop: 15 }]}>
-                        <Text style={styles.title}>{t('points') || 'Points'}</Text>
-                        <View style={styles.divider} />
-                        
-                        <View style={styles.row}>
-                          <Text style={{ color: '#666666' }}>{t('availablePoints') || 'Available Points'}</Text>
-                          <Text style={{ color: '#666666' }}>{userPoints.toLocaleString()} {t('points') || 'points'}</Text>
-                        </View>
-
-                        {userPoints > 0 && (
-                          <TouchableOpacity
-                            style={[
-                              styles.pointsToggleButton,
-                              { backgroundColor: usePoints ? '#ff4444' : '#4CAF50' }
-                            ]}
-                            onPress={handleUseAllPoints}
-                          >
-                            <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
-                              {usePoints 
-                                ? (t('stopUsingPoints') || 'Stop Using Points')
-                                : (t('useAllPointsDiscount') || 'Use All Points for Discount')
-                              }
+                      
+                      {/* Points to Earn Section */}
+                      {pointsToEarn > 0 && (
+                        <>
+                          <View style={styles.divider} />
+                          <View style={styles.row}>
+                            <Text style={{ 
+                              color: '#10B981', 
+                              fontSize: wp('3.8%'),
+                              fontWeight: '600'
+                            }}>
+                              {t('pointsToEarn') || 'Points to Earn'}
                             </Text>
-                          </TouchableOpacity>
-                        )}
-
-                        {usePoints && (
-                          <>
-                            <View style={styles.row}>
-                              <Text>{t('pointsUsed') || 'Points Used'}</Text>
-                              <Text style={styles.redText}>- {pointsUsed.toLocaleString()}</Text>
-                            </View>
-                            <View style={styles.row}>
-                              <Text>{t('pointsDiscount') || 'Points Discount'}</Text>
-                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(pointsDiscount)}</Text>
-                            </View>
-                            <View style={styles.divider} />
-                          </>
-                        )}
-
-                        <View style={styles.row}>
-                          <Text style={{ color: '#4CAF50' }}>{t('earnPointsOnEveryBooking') || 'Earn 1% points from this booking!'}</Text>
-                          <Text style={{ color: '#4CAF50' }}>+ {earnedPoints}</Text>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Guest Points Information */}
-                    {(!customerData.md_booking_memberid || customerData.md_booking_memberid === 0) && (
-                      <View style={[styles.card, { marginTop: 15, backgroundColor: '#f8f9fa' }]}>
-                        <Text style={styles.title}>{t('points') || 'Points'}</Text>
-                        <View style={styles.divider} />
-                        <Text style={{ textAlign: 'center', color: '#666666', marginVertical: 10 }}>
-                          {t('loginToEarnPoints') || 'Login to earn points'}
-                        </Text>
-                        <Text style={{ textAlign: 'center', color: '#4CAF50', fontSize: 12 }}>
-                          {t('earnPointsOnEveryBooking') || 'Earn 1% points from every booking!'}
-                        </Text>
-                      </View>
-                    )}
+                            <Text style={{ 
+                              color: '#10B981', 
+                              fontSize: wp('3.8%'),
+                              fontWeight: '600'
+                            }}>
+                              +{pointsToEarn.toFixed(2)} {t('points') || 'points'}
+                            </Text>
+                          </View>
+                        </>
+                      )}
+                    </View>
                      <TouchableOpacity
                   style={[styles.buttonContainer]} // Use an array if you want to combine styles
                   onPress={() => {
@@ -1557,7 +1701,7 @@ const PaymentScreen = ({ navigation, route }) => {
                       Alert.alert(t('paymentOption') || 'Payment Option', t('pleaseSelectPayment') || 'Please select a payment option.');
                     }
                   }}>
-                  <Text style={styles.BackButtonText}>{t('payment') || 'Payment'} {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
+                  <Text style={styles.BackButtonText}>{t('payment') || 'Payment'} {customerData.symbol} {totalPayment}</Text>
                 </TouchableOpacity>
                   </View>
                 ))}

@@ -495,7 +495,41 @@ const TripDetail = ({ navigation, route }) => {
 
 
   const formatDate = (dateString) => {
-    return moment(dateString).format("ddd, DD MMM YYYY");
+    const date = new Date(dateString);
+    console.log('🗓️ TripDetail formatDate called:', {
+      dateString,
+      selectedLanguage,
+      parsedDate: date.toISOString()
+    });
+    
+    if (selectedLanguage === 'th') {
+      // วันในสัปดาห์ภาษาไทย
+      const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+      // เดือนภาษาไทย
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      
+      const dayName = dayNames[date.getDay()];
+      const day = date.getDate().toString().padStart(2, '0');
+      const monthName = monthNames[date.getMonth()];
+      const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+      
+      const result = `${dayName} ${day} ${monthName} ${year}`;
+      console.log('🗓️ TripDetail formatDate Thai result:', result);
+      return result;
+    } else {
+      // แสดงวันที่ภาษาอังกฤษ
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = dayNames[date.getDay()];
+      
+      const result = `${dayName}, ${date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`;
+      console.log('🗓️ TripDetail formatDate English result:', result);
+      return result;
+    }
   };
 
 
@@ -885,6 +919,14 @@ const TripDetail = ({ navigation, route }) => {
         console.error('Error fetching data:', error);
       });
   }, [customerData.companyDepartId, customerData.pierEndDepartId, selectedTranSportDropoffDepart]);
+
+  // Force re-render when language changes
+  useEffect(() => {
+    if (selectedLanguage) {
+      console.log('🌐 TripDetail Language changed, forcing date format update:', selectedLanguage);
+      // This will trigger re-render of components that display dates
+    }
+  }, [selectedLanguage]);
 
   const fetchDropoffDataReturn = async () => {
     try {
@@ -1676,7 +1718,7 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
                         </View>
                         <View style={styles.col}>
                           <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
@@ -1708,7 +1750,7 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
                         </View>
                         <View style={styles.col}>
                           <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
@@ -2219,7 +2261,7 @@ const TripDetail = ({ navigation, route }) => {
                           </View>
                           
                           <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Date</Text>
+                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('returnDate') || 'Return Date'}</Text>
                             <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.returndate)}</Text>
                           </View>
                           
