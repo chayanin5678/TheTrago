@@ -440,7 +440,7 @@ const PaymentScreen = ({ navigation, route }) => {
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: paymentfee,
           promotioncode: customerData.md_booking_promocode,
-          credit: usePoints ? 1 : 0, // แปลง boolean เป็น integer
+          credit: usePoints ? parseInt(pointsToUse) : 0, // แปลง boolean เป็น integer
           member: customerData.md_booking_memberid, 
         },
         {
