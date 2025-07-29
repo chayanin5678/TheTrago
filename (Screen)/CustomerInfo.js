@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LogoTheTrago from './../(component)/Logo';
 import Step from './../(component)/Step';
@@ -14,6 +14,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import headStyles from './../(CSS)/StartingPointScreenStyles';
 import axios from 'axios';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
@@ -314,11 +316,143 @@ const CustomerInfo = ({ navigation }) => {
   const [showAllErrors, setShowAllErrors] = useState(false);
   const [PriceDepart, setPriceDepart] = useState([]);
   const [PriceReturn, setPriceReturn] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [setError] = useState('');
+
+  // Ultra Premium Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Floating particles animation
+  const floatingAnims = useRef(
+    [...Array(6)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2),
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
 
   function formatTime(timeString) {
     if (!timeString) return ""; // Handle empty input
     return timeString.slice(0, 5); // Extracts "HH:mm"
   }
+
+  // Premium animations initialization
+  useEffect(() => {
+    // Premium entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        delay: 300,
+        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 500,
+        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.3,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.2,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.8,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 500);
+    });
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Continuous rotation for decorative elements
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
   console.log('customerData:', customerData.Firstname);
   console.log('customerData:', customerData.Lastname);
@@ -389,7 +523,7 @@ const CustomerInfo = ({ navigation }) => {
       setPriceReturn([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -470,7 +604,7 @@ const CustomerInfo = ({ navigation }) => {
       setPriceReturn([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -670,27 +804,6 @@ const CustomerInfo = ({ navigation }) => {
   }
 
 
-  useEffect(() => {
-    fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          settimetableDepart(data.data);
-        } else {
-          console.error('Data is not an array', data);
-          settimetableDepart([]);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
-  }, []);
-
   const fetchTimetableReturn = async () => {
     try {
       const response = await fetch(`${ipAddress}/timetable/${customerData.timeTableReturnId}`);
@@ -712,39 +825,279 @@ const CustomerInfo = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    fetchPrice();
-    if (customerData.roud === 2) {
-      fetchTimetableReturn();
-    }
-  }, [customerData.timeTableReturnId]);
-
 
 
   useEffect(() => {
-    fetch(`${ipAddress}/telephone`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          // เพิ่ม "Please Select" ที่ด้านบนของรายการ
+    const loadData = async () => {
+      try {
+        // Load telephone data
+        const teleResponse = await fetch(`${ipAddress}/telephone`);
+        const teleData = await teleResponse.json();
+        if (teleData && Array.isArray(teleData.data)) {
           const countryList = [
             {
               sys_countries_telephone: '',
               sys_countries_nameeng: 'Please Select',
               sys_countries_code: ''
             },
-            ...data.data
+            ...teleData.data
           ];
           setTelePhone(countryList);
-
         } else {
-          console.error('Data is not an array', data);
+          console.error('Data is not an array', teleData);
           setTelePhone([]);
         }
-      })
-      .catch((error) => console.error('Error fetching data:', error));
-  }, []);
 
+        // Load timetable data
+        const timetableResponse = await fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`);
+        if (!timetableResponse.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const timetableData = await timetableResponse.json();
+        if (timetableData && Array.isArray(timetableData.data)) {
+          settimetableDepart(timetableData.data);
+        } else {
+          console.error('Data is not an array', timetableData);
+          settimetableDepart([]);
+        }
+
+        // Load price data
+        await fetchPrice();
+        
+        // Load return timetable if needed
+        if (customerData.roud === 2) {
+          await fetchTimetableReturn();
+        }
+
+        // All data loaded, hide loading
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [customerData.timeTableReturnId]);
+
+  if (isLoading) {
+    // Premium Skeleton Loader UI
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
+        
+        {/* Premium Gradient Background */}
+        <LinearGradient
+          colors={['#001233', '#002A5C', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1.2 }}
+          style={{ flex: 1 }}
+        >
+          {/* Floating Particles Background */}
+          <View style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            zIndex: 1,
+          }}>
+            {floatingAnims.map((anim, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  {
+                    position: 'absolute',
+                    width: 4,
+                    height: 4,
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    borderRadius: 2,
+                  },
+                  {
+                    transform: [
+                      { translateX: anim.x },
+                      { translateY: anim.y },
+                      { scale: anim.scale },
+                    ],
+                    opacity: anim.opacity,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Enhanced Premium Header */}
+          <LinearGradient
+            colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+            style={[
+              headStyles.headerBg,
+              {
+                width: '100%',
+                marginLeft: '0%',
+                marginTop: Platform.OS === 'ios' ? 0 : -20,
+                borderBottomLeftRadius: 40,
+                borderBottomRightRadius: 40,
+                paddingBottom: 8,
+                shadowColor: '#001233',
+                shadowOpacity: 0.15,
+                shadowRadius: 25,
+                shadowOffset: { width: 0, height: 8 },
+                padding: 10,
+                minHeight: hp('12%'),
+                borderWidth: 1,
+                borderColor: 'rgba(0, 18, 51, 0.08)',
+                backdropFilter: 'blur(30px)',
+              },
+            ]}
+          >
+            <View
+              style={[
+                headStyles.headerRow,
+                {
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 0,
+                  paddingTop: 0,
+                  position: 'relative',
+                  marginTop: Platform.OS === 'android' ? 70 : -10,
+                  height: 56,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{
+                  position: 'absolute',
+                  left: 16,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: 25,
+                  padding: 8,
+                  zIndex: 2,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 4 },
+                  borderWidth: 1,
+                  borderColor: 'rgba(253, 80, 30, 0.1)',
+                }}
+              >
+                <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              </TouchableOpacity>
+
+              <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+                <LogoTheTrago />
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Enhanced Ultra Premium Title Section */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: hp('1%'),
+            marginHorizontal: wp('6%'),
+            marginBottom: hp('2%'),
+            paddingHorizontal: wp('2%'),
+            paddingVertical: hp('1.5%'),
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            borderRadius: wp('4%'),
+            backdropFilter: 'blur(10px)',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.2)',
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[
+                headStyles.headerTitle,
+                {
+                  color: '#FFFFFF',
+                  fontSize: wp('7%'),
+                  fontWeight: '800',
+                  letterSpacing: -0.5,
+                  textAlign: 'left',
+                  marginLeft: 0,
+                  lineHeight: wp('8%'),
+                  textShadowColor: 'rgba(0,0,0,0.3)',
+                  textShadowRadius: 4,
+                  textShadowOffset: { width: 1, height: 1 },
+                }
+              ]}>
+                {t('customerInformation') || 'Customer Information'}
+              </Text>
+              <Text style={{
+                color: 'rgba(255,255,255,0.8)',
+                fontSize: wp('3.5%'),
+                fontWeight: '500',
+                marginTop: hp('0.5%'),
+                letterSpacing: 0.3,
+                textShadowColor: 'rgba(0,0,0,0.2)',
+                textShadowRadius: 2,
+              }}>
+                {t('findYourPerfectJourney') || 'Find your perfect journey'}
+              </Text>
+            </View>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: hp('12%') }}
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
+          >
+            {/* Step Component Skeleton */}
+            <View style={{
+              alignItems: 'center',
+              marginTop: hp('1%'),
+              marginBottom: hp('2%'),
+            }}>
+              <View style={{
+                width: wp('80%'),
+                height: hp('6%'),
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderRadius: wp('3%'),
+                marginBottom: hp('2%'),
+              }} />
+            </View>
+
+            {/* Skeleton Content */}
+            <View style={{
+              paddingHorizontal: wp('6%'),
+            }}>
+              {/* Skeleton for form cards */}
+              {[1,2,3].map((_, index) => (
+                <View key={index} style={{
+                  backgroundColor: 'rgba(255,255,255,0.95)',
+                  borderRadius: wp('5%'),
+                  padding: wp('5%'),
+                  marginBottom: hp('3%'),
+                  shadowColor: '#001233',
+                  shadowOpacity: 0.08,
+                  shadowRadius: 20,
+                  shadowOffset: { width: 0, height: 8 },
+                  borderWidth: 1,
+                  borderColor: 'rgba(200, 200, 200, 0.2)',
+                }}>
+                  <View style={{
+                    width: wp('40%'),
+                    height: hp('3%'),
+                    backgroundColor: 'rgba(200, 200, 200, 0.3)',
+                    borderRadius: wp('2%'),
+                    marginBottom: hp('2%'),
+                  }} />
+                  {[1,2,3,4].map((_,i) => (
+                    <View key={i} style={{
+                      width: '100%',
+                      height: hp('6%'),
+                      backgroundColor: 'rgba(200, 200, 200, 0.2)',
+                      borderRadius: wp('3%'),
+                      marginBottom: hp('2%'),
+                    }} />
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

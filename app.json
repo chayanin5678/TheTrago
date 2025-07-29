@@ -1,8 +1,11 @@
 {
   "expo": {
-    "name": "TheTrago",
+    "name": "TheTrago - Ferry Booking App",
     "slug": "TheTrago",
     "scheme": "thetrago",
+    "description": "Book ferry tickets easily with TheTrago. Find the best ferry routes, compare prices, and make reservations for your island hopping adventures in Thailand.",
+    "keywords": ["ferry", "booking", "travel", "thailand", "island", "transportation", "tickets"],
+    "privacy": "public",
     "extra": {
       "deeplink": {
         "host": "thetrago",
@@ -13,7 +16,7 @@
         "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
       }
     },
-    "version": "1.0.2",
+    "version": "1.4.8",
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
@@ -24,10 +27,12 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 48,
       "package": "com.chayanin5678.TheTrago",
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ]
     },
     "plugins": [
@@ -43,13 +48,22 @@
       ]
     ],
     "ios": {
-      "buildNumber": "2",
+      "buildNumber": "48",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "supportsTablet": true,
+      "requireFullScreen": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "We need camera access to scan your ID card",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting and uploading images.",
-        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
+        "NSCameraUsageDescription": "TheTrago needs camera access to scan QR codes for ticket verification and to upload ID documents for booking verification.",
+        "NSPhotoLibraryUsageDescription": "TheTrago needs access to your photo library to upload profile pictures and ID documents for account verification.",
+        "NSSpeechRecognitionUsageDescription": "TheTrago may use speech recognition to enhance voice input features for better user experience.",
+        "NSLocationWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
+        "UIBackgroundModes": ["background-fetch", "remote-notification"],
+        "CFBundleDisplayName": "TheTrago",
+        "CFBundleName": "TheTrago",
+        "CFBundleVersion": "48",
+        "CFBundleShortVersionString": "1.4.8"
       }
     },
     "jsEngine": "jsc"

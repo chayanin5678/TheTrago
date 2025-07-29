@@ -91,9 +91,9 @@ android {
     defaultConfig {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion 24
-        targetSdkVersion 34
-        versionCode 46
-        versionName "1.4.6"
+        targetSdkVersion 35
+        versionCode 47
+        versionName "1.4.7"
         
         // ระบุว่าไม่ใช้โฆษณาสำหรับ Google Play Console
         manifestPlaceholders = [

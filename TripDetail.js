@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ipAddress from './ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, StatusBar, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, StatusBar, Platform, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,8 +15,28 @@ import { useCustomer } from './(Screen)/CustomerContext';
 import axios from 'axios';
 import headStyles from './(CSS)/StartingPointScreenStyles';
 import { useLanguage } from './(Screen)/LanguageContext';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 const TripDetail = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
+
+  // Animation States - เหมือนหน้า SearchFerry
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const shimmerAnim = useRef(new Animated.Value(-300)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Floating particles animation
+  const floatingAnims = useRef(
+    [...Array(6)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
 
   const [tripType, setTripType] = useState("One Way Trip");
   const [pickupPriceDepart, setpickupPriceDepart] = useState();
@@ -776,6 +796,114 @@ const TripDetail = ({ navigation, route }) => {
 
   }, [customerData.roud, timetableReturn, timetableDepart, customerData.adult, customerData.child, adultPriceDepart, adultPriceReturn, childPriceDepart, childPriceReturn, infantPriceDepart, infantPriceReturn, pickupPriceDepart, pickupPriceReturn, dropoffPriceDepart, dropoffPriceReturn, subtotalDepart, subtotalReturn]);
 
+  // Premium Animation Initialization - เหมือนหน้า SearchFerry
+  useEffect(() => {
+    // Premium entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        delay: 300,
+        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 500,
+        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.3,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.2,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.8,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 500);
+    });
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Shimmer animation for loading skeleton
+    Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: screenWidth + 100,
+        duration: 1500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
   useEffect(() => {
     fetch(`${ipAddress}/pickup/${customerData.companyDepartId}/${customerData.pierStartDepartId}`)
       .then((response) => {
@@ -1032,6 +1160,40 @@ const TripDetail = ({ navigation, route }) => {
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
+        {/* Floating Particles Background - เหมือนหน้า SearchFerry */}
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}>
+          {floatingAnims.map((anim, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                {
+                  position: 'absolute',
+                  width: 8,
+                  height: 8,
+                  backgroundColor: '#FD501E',
+                  borderRadius: 4,
+                },
+                {
+                  transform: [
+                    { translateX: anim.x },
+                    { translateY: anim.y },
+                    { scale: anim.scale },
+                  ],
+                  opacity: anim.opacity,
+                },
+              ]}
+            />
+          ))}
+        </View>
+
         {/* Enhanced Premium Header */}
         <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
@@ -1112,7 +1274,51 @@ const TripDetail = ({ navigation, route }) => {
           backdropFilter: 'blur(10px)',
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.2)',
+          position: 'relative',
         }}>
+          {/* Floating decorative elements */}
+          <Animated.View 
+            style={[
+              {
+                position: 'absolute',
+                top: -10,
+                right: 20,
+                zIndex: 1,
+              },
+              { 
+                transform: [{
+                  rotate: pulseAnim.interpolate({
+                    inputRange: [1, 1.05],
+                    outputRange: ['0deg', '180deg'],
+                  })
+                }]
+              }
+            ]}
+          >
+            <MaterialIcons name="directions-boat" size={20} color="rgba(255,255,255,0.3)" />
+          </Animated.View>
+
+          <Animated.View 
+            style={[
+              {
+                position: 'absolute',
+                bottom: -5,
+                left: 30,
+                zIndex: 1,
+              },
+              { 
+                transform: [{
+                  rotate: pulseAnim.interpolate({
+                    inputRange: [1, 1.05],
+                    outputRange: ['0deg', '-90deg'],
+                  })
+                }]
+              }
+            ]}
+          >
+            <MaterialIcons name="waves" size={16} color="rgba(255,255,255,0.2)" />
+          </Animated.View>
+
           <Text style={{
             color: '#FFFFFF',
             fontSize: wp('7%'),
@@ -1140,21 +1346,34 @@ const TripDetail = ({ navigation, route }) => {
           </Text>
         </View>
 
-        <ScrollView 
-          contentContainerStyle={[
-            styles.container,
+        {/* Main Content with Animations */}
+        <Animated.View
+          style={[
+            { flex: 1 },
             {
-              backgroundColor: 'transparent',
-              paddingHorizontal: 24,
-              paddingTop: 8,
-              paddingBottom: hp('12%'),
-              flexGrow: 1,
-            }
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim },
+              ],
+            },
           ]}
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
-          contentInsetAdjustmentBehavior="automatic"
         >
+          <ScrollView 
+            contentContainerStyle={[
+              styles.container,
+              {
+                backgroundColor: 'transparent',
+                paddingHorizontal: 24,
+                paddingTop: 8,
+                paddingBottom: hp('12%'),
+                flexGrow: 1,
+              }
+            ]}
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
+            contentInsetAdjustmentBehavior="automatic"
+          >
           {/* Step Component */}
           <View style={{
             alignItems: 'center',
@@ -1165,12 +1384,397 @@ const TripDetail = ({ navigation, route }) => {
           </View>
 
           {loading && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#FD501E" />
-            </View>
+            <Animated.View style={[
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              }
+            ]}>
+              {/* Enhanced Ultra Premium Loading Skeleton */}
+              <View style={{ paddingHorizontal: wp('2%') }}>
+                {/* Enhanced Booking Section Skeleton */}
+                <View style={{
+                  width: '100%',
+                  marginTop: hp('2%'),
+                  marginBottom: hp('2%'),
+                  backgroundColor: 'rgba(255,255,255,0.95)',
+                  borderRadius: wp('6%'),
+                  padding: wp('4%'),
+                  shadowColor: '#001233',
+                  shadowOpacity: 0.08,
+                  shadowRadius: wp('3%'),
+                  elevation: 8,
+                  borderWidth: wp('0.2%'),
+                  borderColor: 'rgba(0, 18, 51, 0.06)',
+                  overflow: 'hidden',
+                }}>
+                  {/* Trip Type Buttons Skeleton */}
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: hp('2%'),
+                    backgroundColor: 'rgba(248,250,252,0.8)',
+                    borderRadius: wp('3%'),
+                    padding: wp('0.8%'),
+                  }}>
+                    <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                      <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      </Animated.View>
+                    </View>
+                    <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                      <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      </Animated.View>
+                    </View>
+                  </View>
+
+                  {/* Location Selection Skeleton */}
+                  <View style={{
+                    width: '100%',
+                    height: hp('12%'),
+                    borderRadius: wp('3%'),
+                    backgroundColor: '#f0f0f0',
+                    overflow: 'hidden',
+                    marginBottom: hp('1.5%'),
+                    padding: wp('3%'),
+                  }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: hp('1%')
+                    }}>
+                      <View style={{
+                        width: wp('8%'),
+                        height: wp('8%'),
+                        borderRadius: wp('4%'),
+                        backgroundColor: '#e0e0e0',
+                        marginRight: wp('3%')
+                      }} />
+                      <View style={{ flex: 1 }}>
+                        <View style={{
+                          width: '60%',
+                          height: hp('1.5%'),
+                          backgroundColor: '#e5e5e5',
+                          borderRadius: hp('0.75%'),
+                          marginBottom: hp('0.5%')
+                        }} />
+                        <View style={{
+                          width: '40%',
+                          height: hp('1.2%'),
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: hp('0.6%')
+                        }} />
+                      </View>
+                    </View>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: hp('1%')
+                    }}>
+                      <View style={{
+                        width: wp('8%'),
+                        height: wp('8%'),
+                        borderRadius: wp('4%'),
+                        backgroundColor: '#e0e0e0',
+                        marginRight: wp('3%')
+                      }} />
+                      <View style={{ flex: 1 }}>
+                        <View style={{
+                          width: '70%',
+                          height: hp('1.5%'),
+                          backgroundColor: '#e5e5e5',
+                          borderRadius: hp('0.75%'),
+                          marginBottom: hp('0.5%')
+                        }} />
+                        <View style={{
+                          width: '50%',
+                          height: hp('2%'),
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: hp('1%')
+                        }} />
+                      </View>
+                    </View>
+                    <Animated.View style={{ width: wp('50%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                    </Animated.View>
+                  </View>
+
+                  {/* Passenger Selection Skeleton */}
+                  <View style={{
+                    width: '100%',
+                    height: hp('7%'),
+                    borderRadius: wp('3%'),
+                    backgroundColor: '#f0f0f0',
+                    overflow: 'hidden',
+                    marginBottom: hp('1.5%'),
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
+                      <View style={{
+                        width: wp('6%'),
+                        height: wp('6%'),
+                        borderRadius: wp('3%'),
+                        backgroundColor: '#e0e0e0',
+                        marginRight: wp('3%')
+                      }} />
+                      <View style={{
+                        width: '65%',
+                        height: hp('2%'),
+                        backgroundColor: '#e5e5e5',
+                        borderRadius: hp('1%')
+                      }} />
+                    </View>
+                    <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                    </Animated.View>
+                  </View>
+
+                  {/* Date Selection Skeleton */}
+                  <View style={{
+                    width: '100%',
+                    height: hp('7%'),
+                    borderRadius: wp('3%'),
+                    backgroundColor: '#f0f0f0',
+                    overflow: 'hidden',
+                    marginBottom: hp('2%'),
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
+                      <View style={{
+                        width: wp('6%'),
+                        height: wp('6%'),
+                        borderRadius: wp('3%'),
+                        backgroundColor: '#e0e0e0',
+                        marginRight: wp('3%')
+                      }} />
+                      <View style={{
+                        width: '70%',
+                        height: hp('2%'),
+                        backgroundColor: '#e5e5e5',
+                        borderRadius: hp('1%')
+                      }} />
+                    </View>
+                    <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                    </Animated.View>
+                  </View>
+                </View>
+
+                {/* Enhanced Ferry Cards Skeleton */}
+                {Array(2).fill(0).map((_, idx) => (
+                  <View key={idx} style={{
+                    marginTop: hp('2%'),
+                    minHeight: hp('25%'),
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: wp('6%'),
+                    overflow: 'hidden',
+                    width: '100%',
+                    borderWidth: wp('0.2%'),
+                    borderColor: 'rgba(0,35,72,0.05)',
+                    shadowColor: '#001233',
+                    shadowOpacity: 0.08,
+                    shadowRadius: wp('3%'),
+                    elevation: 8,
+                    position: 'relative',
+                  }}>
+                    {/* Card Header Skeleton */}
+                    <View style={{
+                      height: hp('8%'),
+                      backgroundColor: '#FD501E',
+                      borderTopLeftRadius: wp('6%'),
+                      borderTopRightRadius: wp('6%'),
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: wp('4%'),
+                      justifyContent: 'space-between',
+                    }}>
+                      <View style={{
+                        width: '60%',
+                        height: hp('2.5%'),
+                        backgroundColor: 'rgba(255,255,255,0.3)',
+                        borderRadius: hp('1.25%')
+                      }} />
+                      <View style={{ flexDirection: 'row', gap: wp('1.5%') }}>
+                        <View style={{
+                          width: wp('12%'),
+                          height: hp('2.5%'),
+                          backgroundColor: 'rgba(255,255,255,0.3)',
+                          borderRadius: hp('1.25%')
+                        }} />
+                        <View style={{
+                          width: wp('15%'),
+                          height: hp('2.5%'),
+                          backgroundColor: 'rgba(255,255,255,0.3)',
+                          borderRadius: hp('1.25%')
+                        }} />
+                      </View>
+                      <Animated.View style={{ width: wp('60%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#d5d5d5aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      </Animated.View>
+                    </View>
+
+                    {/* Card Body Skeleton */}
+                    <View style={{ padding: wp('4%') }}>
+                      {/* Trip Info Skeleton */}
+                      <View style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: hp('2%')
+                      }}>
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={{
+                            width: wp('15%'),
+                            height: hp('3%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('1.5%'),
+                            marginBottom: hp('0.5%')
+                          }} />
+                          <View style={{
+                            width: wp('12%'),
+                            height: hp('1.5%'),
+                            backgroundColor: '#e5e5e5',
+                            borderRadius: hp('0.75%')
+                          }} />
+                        </View>
+                        
+                        {/* Line Skeleton */}
+                        <View style={{
+                          width: wp('20%'),
+                          height: hp('0.3%'),
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: hp('0.15%')
+                        }} />
+                        
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={{
+                            width: wp('15%'),
+                            height: hp('3%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('1.5%'),
+                            marginBottom: hp('0.5%')
+                          }} />
+                          <View style={{
+                            width: wp('12%'),
+                            height: hp('1.5%'),
+                            backgroundColor: '#e5e5e5',
+                            borderRadius: hp('0.75%')
+                          }} />
+                        </View>
+                      </View>
+
+                      {/* Price Skeleton */}
+                      <View style={{ alignItems: 'center', marginBottom: hp('2%') }}>
+                        <View style={{
+                          width: wp('25%'),
+                          height: hp('3%'),
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: hp('1.5%'),
+                          marginBottom: hp('0.5%')
+                        }} />
+                        <View style={{
+                          width: wp('20%'),
+                          height: hp('1.5%'),
+                          backgroundColor: '#e5e5e5',
+                          borderRadius: hp('0.75%')
+                        }} />
+                      </View>
+
+                      {/* Action Button Skeleton */}
+                      <View style={{
+                        width: '100%',
+                        height: hp('5%'),
+                        backgroundColor: '#e0e0e0',
+                        borderRadius: wp('4%')
+                      }} />
+                    </View>
+
+                    {/* Shimmer Animation Overlay */}
+                    <Animated.View style={{
+                      width: wp('70%'),
+                      height: '100%',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      transform: [{ translateX: shimmerAnim }]
+                    }}>
+                      <LinearGradient
+                        colors={['#f5f5f500', '#e0e0e0aa', '#f5f5f500']}
+                        start={[0, 0]}
+                        end={[1, 0]}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Animated.View>
+                  </View>
+                ))}
+
+                {/* Enhanced Central Loading Animation */}
+                <View style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginVertical: hp('5%'),
+                  paddingVertical: hp('4%'),
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: 24,
+                  padding: 32,
+                  shadowColor: '#FD501E',
+                  shadowOpacity: 0.1,
+                  shadowRadius: 20,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 8,
+                  borderWidth: 1,
+                  borderColor: 'rgba(253, 80, 30, 0.08)',
+                  marginHorizontal: wp('4%')
+                }}>
+                  {/* Animated Loading Icon */}
+                  <Animated.View style={{
+                    transform: [
+                      { scale: pulseAnim },
+                      {
+                        rotate: pulseAnim.interpolate({
+                          inputRange: [1, 1.05],
+                          outputRange: ['0deg', '10deg'],
+                        })
+                      }
+                    ]
+                  }}>
+                    <MaterialIcons name="directions-boat" size={60} color="#FD501E" />
+                  </Animated.View>
+                  
+                  <Text style={{
+                    marginTop: 24,
+                    color: '#1E293B',
+                    fontWeight: '800',
+                    fontSize: 18,
+                    letterSpacing: -0.3,
+                    textAlign: 'center'
+                  }}>
+                    {t('loadingTripDetails') || 'Loading Trip Details...'}
+                  </Text>
+                  <Text style={{
+                    marginTop: 8,
+                    color: '#64748B',
+                    fontWeight: '500',
+                    fontSize: 14,
+                    textAlign: 'center',
+                    lineHeight: 20,
+                  }}>
+                    {t('preparingBestOptions') || 'Preparing the best options for your journey'}
+                  </Text>
+                </View>
+              </View>
+            </Animated.View>
           )}
           {!loading && timetableDepart && timetableReturn && (
-            <>
+            <Animated.View style={[
+              {
+                opacity: fadeAnim,
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim },
+                ],
+              },
+            ]}>
               {
                 timetableDepart.map((item) => (
 
@@ -2131,6 +2735,8 @@ const TripDetail = ({ navigation, route }) => {
                   backgroundColor: 'rgba(255,255,255,0.95)',
                   borderRadius: wp('5%'),
                   width: '100%',
+                  maxWidth: wp('92%'),
+                  alignSelf: 'center',
                   padding: wp('4%'),
                   marginVertical: hp('1%'),
                   shadowColor: '#001233',
@@ -2334,7 +2940,8 @@ const TripDetail = ({ navigation, route }) => {
                   </View>
                 </View>
               ))}
-            </>)}
+            </Animated.View>
+          )}
           {Array.isArray(priceDepart) &&
             priceDepart
               .filter(item => item.totalDepart) // ป้องกัน undefined
@@ -2350,6 +2957,7 @@ const TripDetail = ({ navigation, route }) => {
               ))}
 
         </ScrollView>
+        </Animated.View>
       </LinearGradient>
     </SafeAreaView>
 

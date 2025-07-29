@@ -1,86 +1,409 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView, Animated, Easing, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView, Animated, Easing, Dimensions, Platform, StatusBar } from 'react-native';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useLanguage } from './LanguageContext';
+import { useCustomer } from './CustomerContext';
+import axios from 'axios';
+import ipAddress from '../ipconfig';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
 const Dashboard = ({ navigation }) => {
   const { t } = useLanguage();
+  const { customerData, updateCustomerData } = useCustomer();
   const [token, setToken] = useState(null);
   const [bookings, setBookings] = useState({ upcoming: 0, cancelled: 0, completed: 0 });
-  const [accumulatedPoints, setAccumulatedPoints] = useState(0);
+  const [userPoints, setUserPoints] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Ultra Premium Animations
+  // Ultra Premium Animations like ProfileScreen
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  
+  // Floating particles animation
+  const floatingAnims = useRef(
+    [...Array(6)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2),
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
 
+  // Card staggered animations
+  const cardAnims = useRef(
+    [...Array(3)].map(() => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(30),
+      scale: new Animated.Value(0.9),
+    }))
+  ).current;
+
+  // Premium animations initialization
   useEffect(() => {
     // Premium entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 1000,
         easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
-        delay: 200,
-        easing: Easing.out(Easing.quad),
+        duration: 800,
+        delay: 300,
+        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 700,
-        delay: 400,
-        easing: Easing.out(Easing.quad),
+        duration: 1200,
+        delay: 500,
+        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Continuous pulse animation for points
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.3,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.2,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.8,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 500);
+    });
 
-    // Rotation animation for premium elements
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 20000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
+    // Card staggered animations
+    cardAnims.forEach((anim, index) => {
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: 0,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.scale, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, index * 200 + 800);
+    });
   }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
+  // Fetch user points function
+  const fetchUserPoints = async () => {
+    try {
+      if (!customerData?.md_booking_memberid) {
+        console.log("❌ No customer data found for points. CustomerData:", customerData);
+        setUserPoints(0);
+        return;
+      }
 
- 
+      console.log("🎯 Fetching user points for member:", customerData.md_booking_memberid);
+
+      // ใช้ endpoint เดียวกันกับ PaymentScreen
+      const response = await fetch(`${ipAddress}/userpoints/${customerData.md_booking_memberid}`, {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      console.log("✅ Points API response status:", response.status);
+      const result = await response.json();
+      console.log("✅ Points API response data:", result);
+
+      if (response.ok && result.status === "success") {
+        const availablePoints = result.data?.available_points || result.points || 0;
+        setUserPoints(availablePoints);
+        console.log(`✅ Points fetched successfully: ${availablePoints}`);
+      } else {
+        console.log("❌ Failed to fetch points:", result.message);
+        setUserPoints(0);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching points:", error);
+      setUserPoints(0);
+    }
+  };
+
+  // Fetch bookings data function
+  const fetchBookingsData = async () => {
+    try {
+      if (!customerData?.md_booking_memberid) {
+        console.log("❌ No customer data found for bookings. CustomerData:", customerData);
+        return;
+      }
+
+      // ใช้ userEmail จาก SecureStore เหมือน BookingScreen
+      let customerEmail = null;
+      try {
+        const storedUserEmail = await SecureStore.getItemAsync('userEmail');
+        const storedBookingEmail = await SecureStore.getItemAsync('bookingEmail');
+        customerEmail = storedUserEmail || storedBookingEmail || customerData?.email || customerData?.md_booking_email;
+        
+        console.log("📧 Email sources:");
+        console.log("   - storedUserEmail:", storedUserEmail);
+        console.log("   - storedBookingEmail:", storedBookingEmail);
+        console.log("   - customerData.email:", customerData?.email);
+        console.log("   - customerData.md_booking_email:", customerData?.md_booking_email);
+        console.log("   - Selected email:", customerEmail);
+      } catch (error) {
+        console.error("❌ Error getting email from SecureStore:", error);
+        customerEmail = customerData?.email || customerData?.md_booking_email;
+      }
+      
+      if (!customerEmail) {
+        console.log("❌ No email found anywhere for bookings");
+        console.log("📊 Customer data available fields:", Object.keys(customerData || {}));
+        setBookings({ upcoming: 0, cancelled: 0, completed: 0 });
+        return;
+      }
+
+      console.log("📊 Fetching bookings for email:", customerEmail);
+      console.log("📊 Customer data available fields:", Object.keys(customerData || {}));
+      console.log("📊 Full customer data:", {
+        email: customerData?.email,
+        md_booking_email: customerData?.md_booking_email,
+        md_booking_memberid: customerData?.md_booking_memberid,
+        Firstname: customerData?.Firstname,
+        Lastname: customerData?.Lastname
+      });
+
+      // ดึงข้อมูล bookings ทุกสถานะ
+      const statuses = [0, 2, 1]; // confirmed, cancelled, completed
+      const allBookings = [];
+
+      for (const status of statuses) {
+        try {
+          console.log(`📋 Fetching bookings for status ${status}...`);
+          
+          const requestBody = {
+            md_booking_email: customerEmail.trim(),
+            md_booking_status: status.toString()
+          };
+          console.log(`📋 Request body for status ${status}:`, requestBody);
+          
+          const response = await fetch(`${ipAddress}/checkbooking`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          console.log(`📋 Response status for ${status}:`, response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`📋 Data for status ${status}:`, data);
+            if (data && Array.isArray(data.data)) {
+              allBookings.push(...data.data.map(booking => ({ ...booking, status })));
+              console.log(`📋 Added ${data.data.length} bookings for status ${status}`);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error fetching bookings for status ${status}:`, error);
+        }
+      }
+
+      console.log("✅ All bookings fetched:", allBookings.length);
+      console.log("📋 All bookings details:", allBookings);
+
+      // นับจำนวนการจองตามสถานะ (ตรงกับ BookingScreen - ไม่กรองตามวันที่)
+      const counts = {
+        upcoming: allBookings.filter(booking => {
+          const isConfirmed = booking.status === 0; // Status 0 = Confirmed (ทั้งหมดไม่ว่าวันไหน)
+          console.log(`📋 Upcoming check - Status: ${booking.status}, Is confirmed: ${isConfirmed}`);
+          return isConfirmed; // ไม่กรองตามวันที่ ให้แสดงทั้งหมด
+        }).length,
+        cancelled: allBookings.filter(booking => {
+          console.log(`📋 Cancelled check - Status: ${booking.status}`);
+          return booking.status === 2; // Status 2 = Cancelled
+        }).length,
+        completed: allBookings.filter(booking => {
+          const isCompleted = booking.status === 1; // Status 1 = Completed
+          console.log(`📋 Completed check - Status: ${booking.status}, Is completed: ${isCompleted}`);
+          return isCompleted;
+        }).length
+      };
+
+      setBookings(counts);
+      console.log("✅ Bookings data processed:", counts);
+      console.log("📊 Final booking counts:");
+      console.log("   - Upcoming:", counts.upcoming);
+      console.log("   - Cancelled:", counts.cancelled);
+      console.log("   - Completed:", counts.completed);
+    } catch (error) {
+      console.error("❌ Error fetching bookings:", error);
+      setBookings({ upcoming: 0, cancelled: 0, completed: 0 });
+    }
+  };
+
+  // Load data on component mount and when customer data changes
+  useEffect(() => {
+    const loadData = async () => {
+      console.log("🔄 Loading dashboard data...");
+      console.log("📋 Full customerData:", JSON.stringify(customerData, null, 2));
+      console.log("🆔 md_booking_memberid:", customerData?.md_booking_memberid);
+      console.log("📧 email:", customerData?.email);
+      
+      // ถ้าไม่มี customer data แต่มี token อยู่ ให้พยายาม fetch profile ก่อน
+      if (!customerData?.md_booking_memberid) {
+        console.log("⚠️ No customer data found, trying to fetch profile...");
+        
+        try {
+          const storedToken = await SecureStore.getItemAsync('userToken');
+          if (storedToken) {
+            console.log("🎫 Token found, fetching profile...");
+            const response = await fetch(`${ipAddress}/profile`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${storedToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data && Array.isArray(data.data) && data.data.length > 0) {
+                console.log("✅ Profile fetched successfully, updating customer data");
+                const profileData = data.data[0];
+                
+                // Update customer data จาก profile
+                updateCustomerData({
+                  Firstname: profileData.md_member_fname,
+                  Lastname: profileData.md_member_lname,
+                  email: profileData.md_member_email,
+                  tel: profileData.md_member_phone,
+                  md_booking_memberid: profileData.md_member_id,
+                });
+                
+                // Profile data จะถูก set แล้ว useEffect จะรันอีกครั้งโดยอัตโนมัติ
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.error("❌ Error fetching profile:", error);
+        }
+        
+        console.log("⚠️ Waiting for customer data... md_booking_memberid is:", customerData?.md_booking_memberid);
+        setLoading(false);
+        return;
+      }
+
+      if (!customerData?.email && !customerData?.md_booking_email) {
+        // ตรวจสอบ SecureStore ด้วยว่ามี email หรือไม่
+        try {
+          const storedUserEmail = await SecureStore.getItemAsync('userEmail');
+          const storedBookingEmail = await SecureStore.getItemAsync('bookingEmail');
+          
+          if (!storedUserEmail && !storedBookingEmail) {
+            console.log("⚠️ No email found anywhere (CustomerData or SecureStore)");
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error("❌ Error checking SecureStore for email:", error);
+          setLoading(false);
+          return;
+        }
+      }
+
+      console.log("✅ Customer data found! Starting to load dashboard data...");
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchUserPoints(),
+          fetchBookingsData()
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [customerData?.md_booking_memberid, customerData?.email, customerData?.md_booking_email]);
+
+  // Refresh function
+  const handleRefresh = async () => {
+    if (!loading && customerData?.md_booking_memberid) {
+      console.log("🔄 Refreshing dashboard data...");
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchUserPoints(),
+          fetchBookingsData()
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Set StatusBar for cross-platform consistency */}
@@ -90,14 +413,14 @@ const Dashboard = ({ navigation }) => {
         translucent={Platform.OS === 'android'}
       />
       
-      {/* Ultra Premium Header with Gradient - Full Screen */}
-      <Animated.View
+      {/* Premium Header with Gradient */}
+      <Animated.View 
         style={[
           styles.headerContainer,
-          {
+          { 
             opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
+            transform: [{ translateY: slideAnim }]
+          }
         ]}
       >
         <LinearGradient
@@ -108,16 +431,29 @@ const Dashboard = ({ navigation }) => {
         >
           <SafeAreaView style={styles.safeAreaHeader}>
             {/* Floating particles effect */}
-            <Animated.View style={[styles.particle1, { transform: [{ rotate: spin }] }]} />
-            <Animated.View style={[styles.particle2, { transform: [{ rotate: spin }] }]} />
-            <Animated.View style={[styles.particle3, { transform: [{ rotate: spin }] }]} />
+            {floatingAnims.map((anim, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.floatingParticle,
+                  {
+                    transform: [
+                      { translateX: anim.x },
+                      { translateY: anim.y },
+                      { scale: anim.scale }
+                    ],
+                    opacity: anim.opacity,
+                  }
+                ]}
+              />
+            ))}
             
             <Animated.View 
               style={[
                 styles.headerContent,
                 {
                   opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }]
+                  transform: [{ scale: scaleAnim }]
                 }
               ]}
             >
@@ -125,7 +461,12 @@ const Dashboard = ({ navigation }) => {
                 <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
                 <Text style={styles.headerTitle}>{t('dashboard') || 'Dashboard'}</Text>
               </View>
-              <Text style={styles.headerSubtitle}>{t('ultraPremiumAnalytics') || 'Ultra Premium Analytics'}</Text>
+              <Text style={styles.headerSubtitle}>
+                {customerData?.md_booking_memberid ? 
+                  `${t('ultraPremiumAnalytics') || 'Ultra Premium Analytics'} - ID: ${customerData.md_booking_memberid}` :
+                  `${t('pleaseLogin') || 'Please Login'}`
+                }
+              </Text>
               <View style={styles.headerDivider} />
             </Animated.View>
           </SafeAreaView>
@@ -138,13 +479,60 @@ const Dashboard = ({ navigation }) => {
         bounces={true}
         style={styles.scrollView}
       >
-        {/* Ultra Premium Bookings Section */}
+        <Animated.View style={{ 
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }}>
+        {/* Show login prompt if no customer data */}
+        {!customerData?.md_booking_memberid && (
+          <Animated.View 
+            style={[
+              styles.sectionContainer,
+              {
+                opacity: cardAnims[0].opacity,
+                transform: [
+                  { translateY: cardAnims[0].translateY },
+                  { scale: cardAnims[0].scale }
+                ]
+              }
+            ]}
+          >
+            <View style={styles.loginPromptCard}>
+              <LinearGradient
+                colors={['#FF6B6B', '#FF8E53']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.loginPromptGradient}
+              >
+                <MaterialCommunityIcons name="account-alert" size={48} color="#FFFFFF" />
+                <Text style={styles.loginPromptTitle}>{t('loginRequired') || 'Login Required'}</Text>
+                <Text style={styles.loginPromptText}>
+                  {t('pleaseLoginToViewDashboard') || 'Please login to view your dashboard and points'}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.loginPromptButton}
+                  onPress={() => navigation.navigate('LoginScreen')}
+                >
+                  <Text style={styles.loginPromptButtonText}>{t('login') || 'Login'}</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Show content only if customer data exists */}
+        {customerData?.md_booking_memberid && (
+          <>
+        {/* Premium Bookings Section */}
         <Animated.View 
           style={[
             styles.sectionContainer,
             {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }, { scale: scaleAnim }]
+              opacity: cardAnims[0].opacity,
+              transform: [
+                { translateY: cardAnims[0].translateY },
+                { scale: cardAnims[0].scale }
+              ]
             }
           ]}
         >
@@ -169,7 +557,7 @@ const Dashboard = ({ navigation }) => {
                   <View style={styles.cardLeft}>
                     <View style={styles.cardIndicator} />
                     <View style={styles.cardTextContainer}>
-                      <Text style={styles.bookingCount}>{bookings.upcoming}</Text>
+                      <Text style={styles.bookingCount}>{loading ? '...' : bookings.upcoming}</Text>
                       <Text style={styles.bookingStatus}>{t('upcoming') || 'Upcoming'}</Text>
                     </View>
                   </View>
@@ -193,7 +581,7 @@ const Dashboard = ({ navigation }) => {
                   <View style={styles.cardLeft}>
                     <View style={[styles.cardIndicator, { backgroundColor: '#F73202' }]} />
                     <View style={styles.cardTextContainer}>
-                      <Text style={styles.bookingCount}>{bookings.cancelled}</Text>
+                      <Text style={styles.bookingCount}>{loading ? '...' : bookings.cancelled}</Text>
                       <Text style={styles.bookingStatus}>{t('cancelled') || 'Cancelled'}</Text>
                     </View>
                   </View>
@@ -217,7 +605,7 @@ const Dashboard = ({ navigation }) => {
                   <View style={styles.cardLeft}>
                     <View style={[styles.cardIndicator, { backgroundColor: '#28A745' }]} />
                     <View style={styles.cardTextContainer}>
-                      <Text style={styles.bookingCount}>{bookings.completed}</Text>
+                      <Text style={styles.bookingCount}>{loading ? '...' : bookings.completed}</Text>
                       <Text style={styles.bookingStatus}>{t('completed') || 'Completed'}</Text>
                     </View>
                   </View>
@@ -231,19 +619,33 @@ const Dashboard = ({ navigation }) => {
           </View>
         </Animated.View>
 
-        {/* Ultra Premium Points Section */}
+        {/* Premium Points Section */}
         <Animated.View 
           style={[
             styles.sectionContainer,
             {
-              opacity: fadeAnim,
-              transform: [{ scale: pulseAnim }]
+              opacity: cardAnims[1].opacity,
+              transform: [
+                { translateY: cardAnims[1].translateY },
+                { scale: cardAnims[1].scale }
+              ]
             }
           ]}
         >
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="star-circle" size={24} color="#FD501E" />
             <Text style={styles.sectionTitle}>{t('rewardsAndPoints') || 'Rewards & Points'}</Text>
+            <TouchableOpacity
+              onPress={handleRefresh}
+              disabled={loading}
+              style={[styles.refreshButton, loading && styles.refreshButtonDisabled]}
+            >
+              <MaterialCommunityIcons 
+                name="refresh" 
+                size={20} 
+                color={loading ? "#888" : "#FD501E"} 
+              />
+            </TouchableOpacity>
             <View style={[styles.premiumBadge, { backgroundColor: '#FFD700' }]}>
               <Text style={[styles.badgeText, { color: '#000' }]}>{t('vip') || 'VIP'}</Text>
             </View>
@@ -256,10 +658,6 @@ const Dashboard = ({ navigation }) => {
               end={{ x: 1, y: 1 }}
               style={styles.pointsGradient}
             >
-              {/* Floating elements */}
-              <Animated.View style={[styles.floatingElement1, { transform: [{ rotate: spin }] }]} />
-              <Animated.View style={[styles.floatingElement2, { transform: [{ rotate: spin }] }]} />
-              
               <View style={styles.pointsContent}>
                 <View style={styles.pointsHeader}>
                   <MaterialCommunityIcons name="medal" size={28} color="#ffffff" />
@@ -274,29 +672,31 @@ const Dashboard = ({ navigation }) => {
                     <View style={styles.progressBar}>
                       <LinearGradient
                         colors={['#FFFFFF', '#FFE0B2']}
-                        style={styles.progressFill}
+                        style={[styles.progressFill, { 
+                          width: `${Math.min((userPoints / 1000) * 100, 100)}%` 
+                        }]}
                       />
                     </View>
-                    <Text style={styles.progressText}>{t('nextLevel') || 'Next Level: 1000 points'}</Text>
+                    <Text style={styles.progressText}>
+                      {userPoints >= 1000 
+                        ? (t('maxLevel') || 'คะแนนสูงสุดแล้ว!') 
+                        : `${t('maxPoints') || 'คะแนนสูงสุด:'} 1,000 ${t('points') || 'คะแนน'} (${t('remaining') || 'เหลือ'} ${Math.round((1000 - userPoints) * 10) / 10})`
+                      }
+                    </Text>
                   </View>
                 </View>
 
                 <View style={styles.pointsDisplay}>
-                  <Animated.View 
-                    style={[
-                      styles.pointsCircle,
-                      { transform: [{ scale: pulseAnim }] }
-                    ]}
-                  >
+                  <View style={styles.pointsCircle}>
                     <LinearGradient
                       colors={['#FFD700', '#FFC107']}
                       style={styles.circleGradient}
                     >
                       <MaterialCommunityIcons name="star" size={36} color="#FD501E" />
                     </LinearGradient>
-                  </Animated.View>
+                  </View>
                   <View style={styles.pointsTextContainer}>
-                    <Text style={styles.pointsNumber}>0</Text>
+                    <Text style={styles.pointsNumber}>{loading ? '...' : userPoints.toLocaleString()}</Text>
                     <Text style={styles.pointsLabel}>{t('totalPoints') || 'Total Points'}</Text>
                     <Text style={styles.pointsSubtext}>{t('earnMoreByTraveling') || 'Earn more by traveling'}</Text>
                   </View>
@@ -306,16 +706,37 @@ const Dashboard = ({ navigation }) => {
           </View>
         </Animated.View>
 
-        {/* Ultra Premium Back Button */}
-        <Animated.View
+        {/* Premium Back Button */}
+        <Animated.View 
           style={[
             styles.buttonContainer,
             {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }]
+              opacity: cardAnims[2].opacity,
+              transform: [
+                { translateY: cardAnims[2].translateY },
+                { scale: cardAnims[2].scale }
+              ]
             }
           ]}
         >
+          <TouchableOpacity 
+            style={styles.refreshButton} 
+            onPress={async () => {
+              setLoading(true);
+              await Promise.all([
+                fetchUserPoints(),
+                fetchBookingsData()
+              ]);
+              setLoading(false);
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.refreshButtonSolid}>
+              <MaterialIcons name="refresh" size={24} color="#FFFFFF" />
+              <Text style={styles.refreshButtonText}>{t('refresh') || 'Refresh Data'}</Text>
+            </View>
+          </TouchableOpacity>
+          
           <TouchableOpacity 
             style={styles.backButton} 
             onPress={() => navigation.goBack()}
@@ -326,6 +747,9 @@ const Dashboard = ({ navigation }) => {
               <Text style={styles.backButtonText}>{t('backToProfile') || 'Back to Profile'}</Text>
             </View>
           </TouchableOpacity>
+        </Animated.View>
+        </>
+        )}
         </Animated.View>
 
       </ScrollView>
@@ -399,35 +823,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   // Floating Particles
-  particle1: {
+  floatingParticle: {
     position: 'absolute',
-    top: 20,
-    right: 30,
-    width: 15,
-    height: 15,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  particle2: {
-    position: 'absolute',
-    top: 50,
-    left: 40,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  particle3: {
-    position: 'absolute',
-    bottom: 30,
-    right: 50,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   scrollView: {
-    marginTop: 150, // ลด margin top ตาม padding bottom ที่ลดลง
+    marginTop: 150,
   },
   scrollContent: {
     paddingBottom: 140,
@@ -467,8 +871,66 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
   },
+  refreshButton: {
+    marginLeft: 8,
+    marginRight: 8,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(253, 80, 30, 0.1)',
+  },
+  refreshButtonDisabled: {
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+  },
   bookingSection: {
     marginBottom: 15,
+  },
+  // Login Prompt Card Styles
+  loginPromptCard: {
+    borderRadius: 30,
+    overflow: 'hidden',
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.4,
+    shadowRadius: 25,
+    elevation: 15,
+    marginBottom: 25,
+  },
+  loginPromptGradient: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginPromptTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 20,
+    marginBottom: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 30,
+  },
+  loginPromptButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  loginPromptButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
   },
   // Premium Booking Card Styles
   bookingCard: {
@@ -565,24 +1027,6 @@ const styles = StyleSheet.create({
     padding: 30,
     position: 'relative',
   },
-  floatingElement1: {
-    position: 'absolute',
-    top: 20,
-    right: 25,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  floatingElement2: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    width: 15,
-    height: 15,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
   pointsContent: {
     position: 'relative',
   },
@@ -633,7 +1077,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    width: '0%',
+    minWidth: '2%', // ให้มีขนาดขั้นต่ำเพื่อให้เห็นแถบ
     borderRadius: 6,
   },
   progressText: {
@@ -696,6 +1140,35 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 25,
     paddingHorizontal: 20,
+  },
+  refreshButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#28A745',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
+    marginBottom: 15,
+  },
+  refreshButtonSolid: {
+    backgroundColor: '#28A745',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+  },
+  refreshButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    marginLeft: 12,
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   backButton: {
     borderRadius: 20,

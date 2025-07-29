@@ -460,6 +460,15 @@ const translations = {
     nextLevel: 'เลเวลถัดไป: 1000 คะแนน',
     totalPoints: 'คะแนนรวม',
     earnMoreByTraveling: 'สะสมคะแนนเพิ่มจากการเดินทาง',
+    
+    // Points System
+    usePoints: 'ใช้คะแนน',
+    points: 'คะแนน',
+    pointsAvailable: 'คะแนนที่มี',
+    pointsUsed: 'คะแนนที่ใช้',
+    pointsToEarn: 'คะแนนที่จะได้รับ',
+    refresh: 'รีเฟรช',
+    
     backToProfile: 'กลับไปยังโปรไฟล์',
     
     // TripDetail Screen
@@ -585,6 +594,7 @@ const translations = {
     pickup: 'รับ',
     dropoff: 'ส่ง',
     discount: 'ส่วนลด',
+    credit: 'เครดิต',
     promotionCode: 'โค้ดส่งเสริมการขาย',
     ticketFare: 'ค่าตั๋ว',
     subtotal: 'ยอดรวม',
@@ -1163,6 +1173,15 @@ const translations = {
     nextLevel: 'Next Level: 1000 points',
     totalPoints: 'Total Points',
     earnMoreByTraveling: 'Earn more by traveling',
+    
+    // Points System
+    usePoints: 'Use Points',
+    points: 'points',
+    pointsAvailable: 'points available',
+    pointsUsed: 'Points Used',
+    pointsToEarn: 'Points to Earn',
+    refresh: 'Refresh',
+    
     backToProfile: 'Back to Profile',
     
     // TripDetail Screen
@@ -1288,6 +1307,7 @@ const translations = {
     pickup: 'Pick up',
     dropoff: 'Drop off',
     discount: 'Discount',
+    credit: 'Credit',
     promotionCode: 'Promotion Code',
     ticketFare: 'Ticket fare',
     subtotal: 'Subtotal',

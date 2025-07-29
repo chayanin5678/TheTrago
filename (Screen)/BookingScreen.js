@@ -400,13 +400,13 @@ const BookingScreen = () => {
       let status;
       switch (activeTab) {
         case 'upcoming':
-          status = 0;
+          status = 0; // Confirmed
           break;
         case 'cancelled':
-          status = 2;
+          status = 2; // Cancelled
           break;
         case 'past':
-          status = 1;
+          status = 1; // Completed
           break;
         default:
           status = 0;
@@ -1051,7 +1051,7 @@ const BookingScreen = () => {
       0: { 
         icon: 'clock-outline', 
         color: '#FD501E', 
-        text: selectedLanguage === 'th' ? 'รอยืนยัน' : 'Pending'
+        text: selectedLanguage === 'th' ? 'รอยืนยัน' : 'Confirmed'
       },
       1: { 
         icon: 'check-circle', 

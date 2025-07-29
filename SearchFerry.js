@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,10 +21,29 @@ import LottieView from 'lottie-react-native';
 import axios from 'axios';
 const itemsPerPage = 5;
 
+// Get screen dimensions for animations
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const SearchFerry = ({ navigation, route }) => {
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
+
+  // Premium Animation States - เหมือนหน้า Profile
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Floating particles animation - เหมือนหน้า Profile
+  const floatingAnims = useRef(
+    [...Array(6)].map(() => ({
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
+      y: new Animated.Value(Math.random() * screenHeight * 0.8),
+      opacity: new Animated.Value(0.1),
+      scale: new Animated.Value(1),
+    }))
+  ).current;
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
@@ -98,6 +117,119 @@ const SearchFerry = ({ navigation, route }) => {
   const animatedHeights = useRef({}).current;
   const [discount, setDiscount] = useState(0);
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
+
+  // Premium Animation Initialization - เหมือนหน้า Profile
+  useEffect(() => {
+    // Premium entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        delay: 300,
+        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 500,
+        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating particles animation
+    floatingAnims.forEach((anim, index) => {
+      const animateParticle = () => {
+        Animated.loop(
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(anim.y, {
+                toValue: -50,
+                duration: 4000 + index * 400,
+                easing: Easing.inOut(Easing.sin),
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.y, {
+                toValue: screenHeight * 0.8,
+                duration: 0,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(anim.opacity, {
+                toValue: 0.3,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(anim.opacity, {
+                toValue: 0.1,
+                duration: 2000,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(anim.scale, {
+                  toValue: 1.2,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+                Animated.timing(anim.scale, {
+                  toValue: 0.8,
+                  duration: 2500,
+                  easing: Easing.inOut(Easing.sin),
+                  useNativeDriver: true,
+                }),
+              ])
+            ),
+          ])
+        ).start();
+      };
+      
+      setTimeout(() => animateParticle(), index * 500);
+    });
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Continuous rotation for decorative elements
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
   const [departTrips, setDepartTrips] = useState([]);
   const [returnTrips, setReturnTrips] = useState([]);
@@ -882,28 +1014,70 @@ const SearchFerry = ({ navigation, route }) => {
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-        {/* Enhanced Premium Header */}
-        <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+        {/* Floating Particles Background - เหมือนหน้า Profile */}
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}>
+          {floatingAnims.map((anim, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                {
+                  position: 'absolute',
+                  width: 8,
+                  height: 8,
+                  backgroundColor: '#FD501E',
+                  borderRadius: 4,
+                },
+                {
+                  transform: [
+                    { translateX: anim.x },
+                    { translateY: anim.y },
+                    { scale: anim.scale },
+                  ],
+                  opacity: anim.opacity,
+                },
+              ]}
+            />
+          ))}
+        </View>
+
+        {/* Enhanced Premium Header with Animation */}
+        <Animated.View
           style={[
-            headStyles.headerBg,
             {
-              width: '100%',
-              marginLeft: '0%',
-              marginTop: -10, // ใช้ค่าเฉลี่ย
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              paddingBottom: 8,
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 18,
-              padding: 10,
-              minHeight: hp('12%'),
-              borderWidth: 1,
-              borderColor: 'rgba(0, 18, 51, 0.08)',
-              // Ultra premium glass morphism
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+            style={[
+              headStyles.headerBg,
+              {
+                width: '100%',
+                marginLeft: '0%',
+                marginTop: -10, // ใช้ค่าเฉลี่ย
+                borderBottomLeftRadius: 40,
+                borderBottomRightRadius: 40,
+                paddingBottom: 8,
+                shadowColor: '#001233',
+                shadowOpacity: 0.15,
+                shadowRadius: 25,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 18,
+                padding: 10,
+                minHeight: hp('12%'),
+                borderWidth: 1,
+                borderColor: 'rgba(0, 18, 51, 0.08)',
+                // Ultra premium glass morphism
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1072,8 +1246,52 @@ const SearchFerry = ({ navigation, route }) => {
           </View>
 
         </LinearGradient>
-        {/* Enhanced Ultra Premium Title and Filters Section */}
-        <View style={{
+        </Animated.View>
+
+        {/* Main Content with Animations */}
+        <Animated.View
+          style={[
+            { flex: 1 },
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim },
+              ],
+            },
+          ]}
+        >
+          {/* Floating decorative elements */}
+          <Animated.View 
+            style={[
+              {
+                position: 'absolute',
+                top: 20,
+                right: 20,
+                zIndex: 1,
+              },
+              { transform: [{ rotate: spin }] }
+            ]}
+          >
+            <MaterialIcons name="anchor" size={24} color="rgba(255,255,255,0.2)" />
+          </Animated.View>
+
+          <Animated.View 
+            style={[
+              {
+                position: 'absolute',
+                top: 60,
+                left: 30,
+                zIndex: 1,
+              },
+              { transform: [{ rotate: spin }] }
+            ]}
+          >
+            <MaterialIcons name="waves" size={20} color="rgba(255,255,255,0.15)" />
+          </Animated.View>
+
+          {/* Enhanced Ultra Premium Title and Filters Section */}
+          <View style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -1407,18 +1625,17 @@ const SearchFerry = ({ navigation, route }) => {
             marginHorizontal: wp('1%'),
           }]}>
             {/* Enhanced Premium Trip Type Selection - Compact */}
-            <View style={[styles.tripTypeContainer, {
-              backgroundColor: 'rgba(248,250,252,0.8)',
-              borderRadius: wp('3%'),
-              padding: wp('0.8%'),
-              marginBottom: hp('2%'),
-              shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-              shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-              shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-              elevation: Platform.OS === 'android' ? 0 : 4,
-              borderWidth: 0.5,
-              borderColor: 'rgba(0, 18, 51, 0.04)',
-            }]}>
+            <Animated.View
+              style={[
+                styles.tripTypeContainer,
+                {
+                  backgroundColor: 'rgba(248,250,252,0.8)',
+                  borderRadius: wp('3%'),
+                  padding: wp('0.8%'),
+                  transform: [{ scale: pulseAnim }],
+                },
+              ]}
+            >
               <TouchableOpacity
                 style={[
                   styles.tripTypeOneWayButton,
@@ -1499,10 +1716,18 @@ const SearchFerry = ({ navigation, route }) => {
                   { t('roundTrip') }
                 </Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             {/* --- Enhanced Premium passenger selection row - Compact --- */}
-            <View style={[styles.inputRow, { marginBottom: hp('1.5%') }]}>
+            <Animated.View
+              style={[
+                styles.inputRow,
+                {
+                  marginBottom: hp('1.5%'),
+                  transform: [{ scale: pulseAnim }],
+                },
+              ]}
+            >
               <TouchableOpacity
                 style={[styles.inputBoxSearch, {
                   maxWidth: '100%',
@@ -1556,7 +1781,7 @@ const SearchFerry = ({ navigation, route }) => {
                   >{adults} { t('adult') }, {children} { t('child') }, {infant} { t('infant') }</Text>
                 </View>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
             <Modal
               visible={isPassengerModalVisible}
               transparent
@@ -4835,6 +5060,7 @@ const SearchFerry = ({ navigation, route }) => {
 
 
         </ScrollView>
+        </Animated.View>
       </LinearGradient>
     </SafeAreaView>
   );
