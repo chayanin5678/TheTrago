@@ -7,6 +7,8 @@ export default {
     screens: {
       HomeScreen: "home",
       LoginScreen: "login",
+      RegisterScreen: "register",
+      ForgotPasswordScreen: "forgot-password",
       PaymentScreen: "payment",
       ResultScreen: "payment/success",
     }

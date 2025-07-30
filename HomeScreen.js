@@ -1461,8 +1461,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.texcol}>{t('popular')}</Text>
             <Text style={styles.texcol}><Text style={styles.highlight}>{t('destination')}</Text></Text>
             <Text style={styles.Detail}>
-              Lorem ipsum odor amet, consectetuer adipiscing elit. Curabitur lectus sodales suspendisse hendrerit eu taciti quis.
-              Metus turpis nullam mattis hac orci hendrerit eu phasellus maximus.
+              Discover amazing islands and stunning beaches across Thailand. Book your ferry tickets and explore the most beautiful destinations with TheTrago's convenient booking platform.
             </Text>
 
             <TouchableOpacity style={styles.PxploreButton}>

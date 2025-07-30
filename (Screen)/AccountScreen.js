@@ -766,13 +766,12 @@ const AccountScreen = ({ navigation }) => {
             ))}
           </View>
 
-          {/* <Text style={styles.sectionTitle}>Account Management</Text>
+          <Text style={styles.sectionTitle}>{t('accountManagement') || 'Account Management'}</Text>
           
           <View style={styles.listSection}>
             {[
-              { title: 'Privacy & Security', subtitle: 'Manage your privacy settings', icon: 'security', color: '#6B7280' },
-              { title: 'Notifications', subtitle: 'Configure alert preferences', icon: 'notifications', color: '#6B7280' },
-              { title: 'Delete Account', subtitle: 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' }
+              { title: t('affiliateProgram') || 'Affiliate Program', subtitle: t('earnCommission') || 'Earn commission on bookings', icon: 'group', color: '#10B981', nav: 'AffiliateScreen' },
+              { title: t('deleteAccount') || 'Delete Account', subtitle: t('deleteAccountDesc') || 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' }
             ].map((item, index) => (
               <Animated.View
                 key={index}
@@ -805,7 +804,7 @@ const AccountScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </Animated.View>
             ))}
-          </View> */}
+          </View>
 
           {/* Premium Logout Button */}
           <Animated.View

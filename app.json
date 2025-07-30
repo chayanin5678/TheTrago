@@ -16,8 +16,8 @@
         "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
       }
     },
-    "version": "1.4.8",
-    "orientation": "portrait",
+    "version": "1.4.9",
+    "orientation": "default",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -27,7 +27,7 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 48,
+      "versionCode": 49,
       "package": "com.chayanin5678.TheTrago",
       "permissions": [
         "CAMERA",
@@ -48,10 +48,11 @@
       ]
     ],
     "ios": {
-      "buildNumber": "48",
+      "buildNumber": "49",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,
       "requireFullScreen": false,
+      "userInterfaceStyle": "automatic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "TheTrago needs camera access to scan QR codes for ticket verification and to upload ID documents for booking verification.",
@@ -62,8 +63,19 @@
         "UIBackgroundModes": ["background-fetch", "remote-notification"],
         "CFBundleDisplayName": "TheTrago",
         "CFBundleName": "TheTrago",
-        "CFBundleVersion": "48",
-        "CFBundleShortVersionString": "1.4.8"
+        "CFBundleVersion": "49",
+        "CFBundleShortVersionString": "1.4.9",
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "jsEngine": "jsc"

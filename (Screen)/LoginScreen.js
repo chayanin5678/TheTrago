@@ -407,7 +407,7 @@ export default function LoginScreen({ navigation }) {
                   <MaterialIcons name={remember ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
                   <Text style={styles.rememberText}>{t('rememberMe')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('ForgotPasswordScreen')}>
                   <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
                 </TouchableOpacity>
               </View>

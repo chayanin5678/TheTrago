@@ -26,6 +26,7 @@ import LinkingConfiguration from './(Screen)/linking';
 import PromptPayScreen from './(Screen)/PromptPayQR';
 //import SplashScreenComponent from './(Screen)/SplashScreenComponent';
 import LoginScreen from './(Screen)/LoginScreen';
+import ForgotPasswordScreen from './(Screen)/ForgotPasswordScreen';
 import RegisterScreen from './(Screen)/RegisterScreen';
 import AccountScreen from './(Screen)/AccountScreen';
 import Dashboard from './(Screen)/Dashboard';
@@ -44,6 +45,8 @@ import TermsScreen from './(Screen)/TermsScreen';
 import PrivacyPolicyScreen from './(Screen)/PrivacyPolicyScreen';
 import ContactScreen from './(Screen)/ContactScreen';
 import BookingScreen from './(Screen)/BookingScreen';
+import DeleteProfileScreen from './(Screen)/DeleteProfileScreen';
+import AffiliateScreen from './(Screen)/AffiliateScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -123,6 +126,7 @@ const AccountTabNavigator = () => {
       {!isLoggedIn ? (
         <>
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
@@ -139,6 +143,8 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
           <Stack.Screen name="ContactScreen" component={ContactScreen} />
+          <Stack.Screen name="DeleteProfile" component={DeleteProfileScreen} />
+          <Stack.Screen name="AffiliateScreen" component={AffiliateScreen} />
         </>
       )}
     </Stack.Navigator>
