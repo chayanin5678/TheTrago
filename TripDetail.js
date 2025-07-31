@@ -802,21 +802,21 @@ const TripDetail = ({ navigation, route }) => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 500,
         easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
-        delay: 300,
+        duration: 400,
+        delay: 150,
         easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 1200,
-        delay: 500,
+        duration: 600,
+        delay: 250,
         easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
         useNativeDriver: true,
       }),
@@ -880,13 +880,13 @@ const TripDetail = ({ navigation, route }) => {
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
-          duration: 2000,
+          duration: 1000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 1000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
@@ -897,7 +897,7 @@ const TripDetail = ({ navigation, route }) => {
     Animated.loop(
       Animated.timing(shimmerAnim, {
         toValue: screenWidth + 100,
-        duration: 1500,
+        duration: 800,
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -2732,19 +2732,20 @@ const TripDetail = ({ navigation, route }) => {
 
               {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
                 <View key={index} style={[styles.promo, {
+                  marginTop: 20,
                   backgroundColor: 'rgba(255,255,255,0.95)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(0, 18, 51, 0.08)',
                   borderRadius: wp('5%'),
-                  width: '100%',
-                  maxWidth: wp('92%'),
-                  alignSelf: 'center',
                   padding: wp('4%'),
-                  marginVertical: hp('1%'),
+                  width: '100%',
+                  alignSelf: 'center',
+                  overflow: 'visible',
+                  position: 'relative',
                   shadowColor: '#001233',
                   shadowOpacity: 0.15,
                   shadowRadius: wp('4%'),
                   shadowOffset: { width: 0, height: hp('0.5%') },
-                  borderWidth: 1,
-                  borderColor: 'rgba(0, 18, 51, 0.08)',
                   backdropFilter: 'blur(20px)',
                 }]}>
                   <Text style={{
@@ -3279,7 +3280,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.5%') },
     shadowOpacity: 0.1,
     shadowRadius: wp('2%'),
-    elevation: 5,
     borderWidth: wp('0.1%'),
     borderColor: 'rgba(253, 80, 30, 0.06)',
   },

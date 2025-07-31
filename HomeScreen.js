@@ -22,7 +22,7 @@ import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
 import { useLanguage } from './(Screen)/LanguageContext';
 
 const HomeScreen = ({ navigation }) => {
-  const { language, t } = useLanguage();
+  const { language, t, changeLanguage } = useLanguage();
 
   const placeholders = [
     [
@@ -866,29 +866,33 @@ const HomeScreen = ({ navigation }) => {
                   }]}>
                     <LogoTheTrago />
                   </Animated.View>
-                  
-                  {/* Subtle Premium Badge */}
-                  <Animated.View style={[premiumStyles.premiumBadge, {
-                    transform: [{ translateY: bounceAnim2.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, -3],
-                    })}]
-                  }]}>
-                    <LinearGradient
-                      colors={['#FFD700', '#FF8C42']}
-                      style={premiumStyles.badgeGradient}
-                    >
-                      <MaterialIcons name="star" size={wp('2.5%')} color="#fff" />
-                      <Text style={premiumStyles.badgeText}>Elite</Text>
-                    </LinearGradient>
-                  </Animated.View>
                 </View>
 
-                {/* Profile Action - moved to right */}
+                {/* Settings Action - moved to right */}
                 <View style={premiumStyles.headerActionsRight}>
-                  <TouchableOpacity style={premiumStyles.profileButton}>
+                  <TouchableOpacity 
+                    style={premiumStyles.profileButton}
+                    onPress={() => {
+                      const newLanguage = language === 'th' ? 'en' : 'th';
+                      changeLanguage(newLanguage);
+                    }}
+                  >
                     <BlurView intensity={40} style={premiumStyles.actionButtonBlur}>
-                      <MaterialIcons name="account-circle" size={wp('5.5%')} color="#FD501E" />
+                      <View style={{ 
+                        flexDirection: 'row', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                      }}>
+                        <MaterialIcons name="language" size={wp('4.5%')} color="#FD501E" />
+                        <Text style={{ 
+                          fontSize: wp('2.8%'), 
+                          color: '#FD501E', 
+                          fontWeight: '600',
+                          marginLeft: wp('1%')
+                        }}>
+                          {language === 'th' ? 'ไทย' : 'EN'}
+                        </Text>
+                      </View>
                     </BlurView>
                   </TouchableOpacity>
                 </View>

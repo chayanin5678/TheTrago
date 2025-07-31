@@ -23,7 +23,6 @@ const StartingPointScreen = ({ navigation, route }) => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const searchBarAnim = useRef(new Animated.Value(30)).current;
 
   // Floating particles animation
   const floatingAnims = useRef(
@@ -46,29 +45,22 @@ const StartingPointScreen = ({ navigation, route }) => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 400, // เร็วขึ้นจาก 1000
         easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
-        delay: 300,
+        duration: 300, // เร็วขึ้นจาก 800
+        delay: 100, // เร็วขึ้นจาก 300
         easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 1200,
-        delay: 500,
+        duration: 500, // เร็วขึ้นจาก 1200
+        delay: 200, // เร็วขึ้นจาก 500
         easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
-        useNativeDriver: true,
-      }),
-      Animated.timing(searchBarAnim, {
-        toValue: 0,
-        duration: 900,
-        delay: 700,
-        easing: Easing.out(Easing.back(1.7)),
         useNativeDriver: true,
       }),
     ]).start();
@@ -81,7 +73,7 @@ const StartingPointScreen = ({ navigation, route }) => {
             Animated.sequence([
               Animated.timing(anim.y, {
                 toValue: -50,
-                duration: 4000 + index * 400,
+                duration: 2000 + index * 200, // เร็วขึ้นจาก 4000 + index * 400
                 easing: Easing.inOut(Easing.sin),
                 useNativeDriver: true,
               }),
@@ -94,12 +86,12 @@ const StartingPointScreen = ({ navigation, route }) => {
             Animated.sequence([
               Animated.timing(anim.opacity, {
                 toValue: 0.3,
-                duration: 2000,
+                duration: 800, // เร็วขึ้นจาก 2000
                 useNativeDriver: true,
               }),
               Animated.timing(anim.opacity, {
                 toValue: 0.1,
-                duration: 2000,
+                duration: 800, // เร็วขึ้นจาก 2000
                 useNativeDriver: true,
               }),
             ]),
@@ -107,13 +99,13 @@ const StartingPointScreen = ({ navigation, route }) => {
               Animated.sequence([
                 Animated.timing(anim.scale, {
                   toValue: 1.2,
-                  duration: 2500,
+                  duration: 1000, // เร็วขึ้นจาก 2500
                   easing: Easing.inOut(Easing.sin),
                   useNativeDriver: true,
                 }),
                 Animated.timing(anim.scale, {
                   toValue: 0.8,
-                  duration: 2500,
+                  duration: 1000, // เร็วขึ้นจาก 2500
                   easing: Easing.inOut(Easing.sin),
                   useNativeDriver: true,
                 }),
@@ -123,7 +115,7 @@ const StartingPointScreen = ({ navigation, route }) => {
         ).start();
       };
       
-      setTimeout(() => animateParticle(), index * 500);
+      setTimeout(() => animateParticle(), index * 200); // เร็วขึ้นจาก index * 500
     });
 
     // Continuous pulse animation
@@ -131,13 +123,13 @@ const StartingPointScreen = ({ navigation, route }) => {
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
-          duration: 2000,
+          duration: 800, // เร็วขึ้นจาก 2000
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 800, // เร็วขึ้นจาก 2000
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
@@ -148,7 +140,7 @@ const StartingPointScreen = ({ navigation, route }) => {
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
-        duration: 20000,
+        duration: 8000, // เร็วขึ้นจาก 20000
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -200,12 +192,12 @@ const StartingPointScreen = ({ navigation, route }) => {
       setTimeout(() => {
         Animated.timing(anim, {
           toValue: 1,
-          duration: 600,
-          delay: index * 100,
+          duration: 300, // เร็วขึ้นจาก 600
+          delay: index * 50, // เร็วขึ้นจาก index * 100
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }).start();
-      }, 100);
+      }, 50); // เร็วขึ้นจาก 100
     });
   }, [searchText, allStartingPoints, selectedLanguage]);
 
@@ -370,28 +362,18 @@ const StartingPointScreen = ({ navigation, route }) => {
             <Text style={startingPointScreenStyles.headerTitle}>{ t('selectStartingPoint') }</Text>
           </View>
           
-          {/* Animated Search Bar */}
-          <Animated.View
-            style={{
-              transform: [
-                { translateY: searchBarAnim },
-                { scale: pulseAnim }
-              ],
-              opacity: fadeAnim,
-            }}
-          >
-            <View style={startingPointScreenStyles.searchBarWrap}>
-              <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
-              <TextInput
-                style={startingPointScreenStyles.searchInput}
-                placeholder={ t('searchCityOrAirport') }
-                placeholderTextColor="#B7B7B7"
-                value={searchText}
-                onChangeText={setSearchText}
-                underlineColorAndroid="transparent"
-              />
-            </View>
-          </Animated.View>
+          {/* Search Bar - ไม่มี animation */}
+          <View style={startingPointScreenStyles.searchBarWrap}>
+            <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
+            <TextInput
+              style={startingPointScreenStyles.searchInput}
+              placeholder={ t('searchCityOrAirport') }
+              placeholderTextColor="#B7B7B7"
+              value={searchText}
+              onChangeText={setSearchText}
+              underlineColorAndroid="transparent"
+            />
+          </View>
         </LinearGradient>
       </Animated.View>
 

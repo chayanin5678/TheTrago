@@ -778,7 +778,7 @@ const PaymentScreen = ({ navigation, route }) => {
         try {
           // ส่งคำขอตรวจสอบการชำระเงิน
           const res = await axios.post(`${ipAddress}/check-charge`, {
-            charge_id: paymentcode,
+            charge_id: customerData.md_booking_paymentid,
           });
           console.log("LOG  Payment Status Response:", JSON.stringify(res.data));
           // ถ้า authorize_uri เป็น null และไม่ได้อยู่ PromptPayScreen ให้หยุด

@@ -7,11 +7,17 @@ import { useLanguage } from './LanguageContext';
 import ipAddress from "../ipconfig";
 import axios from 'axios';
 
-export default function ForgotPasswordScreen({ navigation }) {
+export default function OTPVerificationScreen({ route, navigation }) {
   const { t } = useLanguage();
-  const [email, setEmail] = useState('');
+  const { email, type } = route.params; // type: 'password_reset' or 'registration'
+  
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
 
   // Premium animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -40,92 +46,87 @@ export default function ForgotPasswordScreen({ navigation }) {
     ]).start();
   }, []);
 
-  const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      Alert.alert(t('error'), t('pleaseEnterEmail'));
+  const handleResetPassword = async () => {
+    if (!otp.trim()) {
+      Alert.alert(t('error'), t('pleaseEnterOTP'));
       return;
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert(t('error'), t('pleaseEnterValidEmail'));
+    if (!newPassword.trim()) {
+      Alert.alert(t('error'), t('pleaseEnterNewPassword'));
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Alert.alert(t('error'), t('passwordMinLength'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert(t('error'), t('passwordsDoNotMatch'));
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const response = await axios.post(`${ipAddress}/forgot-password`, {
-        email: email.trim(),
-        language: 'th' // ส่งภาษาไปด้วย
+      const response = await axios.post(`${ipAddress}/reset-password`, {
+        email: email,
+        otp: otp.trim(),
+        newPassword: newPassword,
+        language: 'th'
       });
 
       if (response.data.success) {
-        setIsEmailSent(true);
         Alert.alert(
           t('success'),
-          t('otpSentToEmail'), // เปลี่ยนเป็น OTP message
+          t('passwordResetSuccess'),
           [
             {
               text: t('ok'),
               onPress: () => {
-                // นำทางไปหน้า OTP verification แทนกลับไปหน้า login
-                navigation.navigate('OTPVerificationScreen', { 
-                  email: email.trim(),
-                  type: 'password_reset'
-                });
+                // Navigate back to login screen
+                navigation.navigate('LoginScreen');
               }
             }
           ]
         );
       } else {
-        Alert.alert(t('error'), response.data.message || t('emailNotFound'));
+        Alert.alert(t('error'), response.data.message || t('resetPasswordFailed'));
       }
     } catch (error) {
-      console.log('Forgot password error:', error);
+      console.log('Reset password error:', error);
       
-      if (error.response) {
-        const status = error.response.status;
-        const message = error.response.data?.message;
-        
-        if (status === 404) {
-          Alert.alert(
-            t('error'), 
-            t('emailNotRegistered'),
-            [
-              {
-                text: t('registerNow'),
-                onPress: () => navigation.navigate('RegisterScreen')
-              },
-              {
-                text: t('ok'),
-                style: 'cancel'
-              }
-            ]
-          );
-        } else if (status === 400) {
-          Alert.alert(t('error'), message || t('invalidEmailFormat'));
-        } else if (status === 429) {
-          Alert.alert(t('error'), t('tooManyRequests'));
-        } else if (message) {
-          Alert.alert(t('error'), message);
-        } else {
-          Alert.alert(t('error'), t('serverError'));
-        }
-      } else if (error.request) {
-        Alert.alert(t('error'), t('connectionError'));
+      if (error.response && error.response.data && error.response.data.message) {
+        Alert.alert(t('error'), error.response.data.message);
       } else {
-        Alert.alert(t('error'), t('unexpectedError'));
+        Alert.alert(t('error'), t('connectionError'));
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resendEmail = () => {
-    setIsEmailSent(false);
-    handleForgotPassword();
+  const resendOTP = async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.post(`${ipAddress}/forgot-password`, {
+        email: email,
+        language: 'th'
+      });
+
+      if (response.data.success) {
+        Alert.alert(t('success'), t('otpResent'));
+      } else {
+        Alert.alert(t('error'), response.data.message || t('failedToResendOTP'));
+      }
+    } catch (error) {
+      console.log('Resend OTP error:', error);
+      Alert.alert(t('error'), t('connectionError'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,7 +150,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
-              <Text style={styles.loadingText}>{t('sendingOTP')}</Text>
+              <Text style={styles.loadingText}>{t('resettingPassword')}</Text>
             </View>
           </BlurView>
         )}
@@ -181,16 +182,13 @@ export default function ForgotPasswordScreen({ navigation }) {
                 colors={['#FF6B35', '#FD501E', '#E8441C']}
                 style={styles.iconGradient}
               >
-                <MaterialIcons name="lock-reset" size={48} color="#FFFFFF" />
+                <MaterialIcons name="security" size={48} color="#FFFFFF" />
               </LinearGradient>
             </View>
             
-            <Text style={styles.headerTitle}>{t('forgotPassword')}</Text>
+            <Text style={styles.headerTitle}>{t('verifyOTP')}</Text>
             <Text style={styles.headerSubtitle}>
-              {isEmailSent 
-                ? t('otpSentCheckEmail') 
-                : t('enterEmailToGetOTP')
-              }
+              {t('enterOTPSentTo')} {email}
             </Text>
           </Animated.View>
 
@@ -209,84 +207,105 @@ export default function ForgotPasswordScreen({ navigation }) {
                 colors={['rgba(255,255,255,0.98)', 'rgba(255,252,248,0.99)', 'rgba(255,249,242,0.97)', 'rgba(255,255,255,0.95)']}
                 style={styles.cardGradient}
               >
-                {!isEmailSent ? (
-                  <>
-                    {/* Email Input */}
-                    <View style={styles.inputContainer}>
-                      <View style={styles.inputIconContainer}>
-                        <MaterialIcons name="email" size={22} color="#FD501E" style={styles.inputIcon} />
-                      </View>
-                      <TextInput
-                        style={styles.input}
-                        placeholder={t('emailAddress')}
-                        placeholderTextColor="#aaa"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                      <View style={styles.inputFocusLine} />
-                    </View>
+                {/* OTP Input */}
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputIconContainer}>
+                    <MaterialIcons name="verified-user" size={22} color="#FD501E" />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('enterOTPCode')}
+                    placeholderTextColor="#aaa"
+                    value={otp}
+                    onChangeText={setOtp}
+                    keyboardType="numeric"
+                    maxLength={6}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <View style={styles.inputFocusLine} />
+                </View>
 
-                    {/* Instructions */}
-                    <View style={styles.instructionsContainer}>
-                      <Text style={styles.instructionsText}>
-                        {t('forgotPasswordOTPInstructions')}
-                      </Text>
-                    </View>
+                {/* New Password Input */}
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputIconContainer}>
+                    <MaterialIcons name="lock" size={22} color="#FD501E" />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('newPassword')}
+                    placeholderTextColor="#aaa"
+                    secureTextEntry={!showPassword}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <MaterialIcons name={showPassword ? 'visibility' : 'visibility-off'} size={22} color="#999" />
+                  </TouchableOpacity>
+                  <View style={styles.inputFocusLine} />
+                </View>
 
-                    {/* Send Reset Email Button */}
-                    <TouchableOpacity
-                      style={styles.resetButton}
-                      onPress={handleForgotPassword}
-                      disabled={isLoading}
-                    >
-                      <LinearGradient
-                        colors={['#FF6B35', '#FD501E', '#E8441C']}
-                        style={styles.buttonGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      >
-                        <View style={styles.buttonContent}>
-                          <Text style={styles.resetText}>{t('sendOTP')}</Text>
-                          <MaterialIcons name="send" size={20} color="#fff" style={styles.buttonIcon} />
-                        </View>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    {/* Success State */}
-                    <View style={styles.successContainer}>
-                      <View style={styles.successIconContainer}>
-                        <MaterialIcons name="mark-email-read" size={64} color="#10B981" />
-                      </View>
-                      
-                      <Text style={styles.successTitle}>{t('otpSent')}</Text>
-                      <Text style={styles.successMessage}>
-                        {t('otpSentToEmail')} {email}
-                      </Text>
-                      
-                      <Text style={styles.checkSpamText}>
-                        {t('otpExpiresIn10Minutes')}
-                      </Text>
-                    </View>
+                {/* Confirm Password Input */}
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputIconContainer}>
+                    <MaterialIcons name="lock-outline" size={22} color="#FD501E" />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('confirmNewPassword')}
+                    placeholderTextColor="#aaa"
+                    secureTextEntry={!showConfirmPassword}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                    <MaterialIcons name={showConfirmPassword ? 'visibility' : 'visibility-off'} size={22} color="#999" />
+                  </TouchableOpacity>
+                  <View style={styles.inputFocusLine} />
+                </View>
 
-                    {/* Resend Email Button */}
-                    <TouchableOpacity
-                      style={styles.resendButton}
-                      onPress={resendEmail}
-                    >
-                      <Text style={styles.resendText}>{t('resendOTP')}</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+                {/* Instructions */}
+                <View style={styles.instructionsContainer}>
+                  <Text style={styles.instructionsText}>
+                    {t('otpPasswordResetInstructions')}
+                  </Text>
+                </View>
+
+                {/* Reset Password Button */}
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={handleResetPassword}
+                  disabled={isLoading}
+                >
+                  <LinearGradient
+                    colors={['#FF6B35', '#FD501E', '#E8441C']}
+                    style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.resetText}>{t('resetPassword')}</Text>
+                      <MaterialIcons name="check" size={20} color="#fff" style={styles.buttonIcon} />
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Resend OTP */}
+                <View style={styles.resendContainer}>
+                  <Text style={styles.resendText}>{t('didntReceiveOTP')}</Text>
+                  <TouchableOpacity onPress={resendOTP}>
+                    <Text style={styles.resendLink}>{t('resendOTP')}</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {/* Back to Login */}
                 <View style={styles.backToLoginContainer}>
                   <Text style={styles.backToLoginText}>{t('rememberPassword')}</Text>
-                  <TouchableOpacity onPress={() => navigation.goBack()}>
+                  <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
                     <Text style={styles.backToLoginLink}>{t('backToLogin')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -404,13 +423,13 @@ const styles = StyleSheet.create({
   },
   cardGradient: {
     padding: 35,
-    minHeight: 300,
+    minHeight: 400,
   },
   inputContainer: {
     position: 'relative',
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 18,
-    marginBottom: 25,
+    marginBottom: 20,
     paddingHorizontal: 20,
     paddingVertical: 6,
     borderWidth: 2,
@@ -446,6 +465,11 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: 'rgba(253,80,30,0.2)',
     borderRadius: 1,
+  },
+  eyeIcon: {
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   instructionsContainer: {
     backgroundColor: 'rgba(253,80,30,0.05)',
@@ -487,47 +511,22 @@ const styles = StyleSheet.create({
   buttonIcon: {
     marginLeft: 10,
   },
-  successContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  successIconContainer: {
-    marginBottom: 20,
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#10B981',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  successMessage: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  checkSpamText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 25,
-  },
-  resendButton: {
-    backgroundColor: 'rgba(253,80,30,0.1)',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 15,
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 25,
   },
   resendText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  resendLink: {
     color: '#FD501E',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    marginLeft: 5,
   },
   backToLoginContainer: {
     flexDirection: 'row',

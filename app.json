@@ -16,7 +16,7 @@
         "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
       }
     },
-    "version": "1.4.9",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
@@ -48,7 +48,7 @@
       ]
     ],
     "ios": {
-      "buildNumber": "49",
+      "buildNumber": "3",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,
       "requireFullScreen": false,
@@ -63,8 +63,8 @@
         "UIBackgroundModes": ["background-fetch", "remote-notification"],
         "CFBundleDisplayName": "TheTrago",
         "CFBundleName": "TheTrago",
-        "CFBundleVersion": "49",
-        "CFBundleShortVersionString": "1.4.9",
+        "CFBundleVersion": "3",
+        "CFBundleShortVersionString": "1.0.3",
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationLandscapeLeft",

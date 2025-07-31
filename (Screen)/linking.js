@@ -9,6 +9,7 @@ export default {
       LoginScreen: "login",
       RegisterScreen: "register",
       ForgotPasswordScreen: "forgot-password",
+      OTPVerificationScreen: "verify-otp",
       PaymentScreen: "payment",
       ResultScreen: "payment/success",
     }
