@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing } from 'react-native';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,29 +21,10 @@ import LottieView from 'lottie-react-native';
 import axios from 'axios';
 const itemsPerPage = 5;
 
-// Get screen dimensions for animations
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const SearchFerry = ({ navigation, route }) => {
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
-
-  // Premium Animation States - เหมือนหน้า Profile
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  // Floating particles animation - เหมือนหน้า Profile
-  const floatingAnims = useRef(
-    [...Array(6)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
-      y: new Animated.Value(Math.random() * screenHeight * 0.8),
-      opacity: new Animated.Value(0.1),
-      scale: new Animated.Value(1),
-    }))
-  ).current;
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
@@ -118,58 +99,6 @@ const SearchFerry = ({ navigation, route }) => {
   const [discount, setDiscount] = useState(0);
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
 
-  // Premium Animation Initialization - เฉพาะ entrance animations
-  useEffect(() => {
-    // Premium entrance animations only - ลดเวลาลง 50%
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 250,
-        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 200,
-        delay: 75,
-        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 300,
-        delay: 125,
-        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Set static values for floating particles (no movement)
-    floatingAnims.forEach((anim) => {
-      anim.opacity.setValue(0.1);
-      anim.scale.setValue(1);
-    });
-
-    // Set static values for other animations
-    pulseAnim.setValue(1);
-    rotateAnim.setValue(0);
-
-    // Shimmer animation for loading skeleton only - ลดเวลาลง
-    Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: screenWidth + 100,
-        duration: 400,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
-
   const [departTrips, setDepartTrips] = useState([]);
   const [returnTrips, setReturnTrips] = useState([]);
   const [error, setError] = useState(null);
@@ -177,6 +106,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [selectedSysmbol, setSelectedSysmbol] = useState('฿');
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [currencyList, setCurrencyList] = useState([]);
+
 
   const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
   const day = calendarStartDate?.substring(8, 10) || "";
@@ -289,41 +219,41 @@ const SearchFerry = ({ navigation, route }) => {
     }
   }, []);
 
-  // ลบการบังคับ re-render ที่ไม่จำเป็น - ปรับใช้ useMemo แทน
-  const formattedDates = useMemo(() => {
-    return {
-      startDate: calendarStartDate,
-      endDate: calendarEndDate
-    };
-  }, [calendarStartDate, calendarEndDate, selectedLanguage]);
-
-  // เพิ่ม dependency เพื่อลดการ fetch ซ้ำ
+  // Force re-render when calendar dates change
   useEffect(() => {
-    let isMounted = true; // เพิ่ม cleanup สำหรับ memory leak
+    if (calendarEndDate || calendarStartDate) {
+      // This will trigger re-render of components that depend on these dates
+    }
+  }, [calendarEndDate, calendarStartDate]);
 
-    const fetchCurrency = async () => {
-      try {
-        const response = await fetch(`${ipAddress}/currency`);
-        const data = await response.json();
-        
-        if (isMounted && data.status === 'success') {
+  // Force re-render when language changes
+  useEffect(() => {
+    if (selectedLanguage) {
+      // Force re-render to update date format when language changes
+      console.log('🌐 Language changed, forcing ticket update for dates:', selectedLanguage);
+      // Force state updates to trigger re-rendering of tickets
+      setCalendarStartDate(prev => prev);
+      setCalendarEndDate(prev => prev);
+    }
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    fetch(`${ipAddress}/currency`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === 'success') {
           setCurrencyList(data.data);
+        } else {
+          // console.error('Unexpected response:', data);
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         // console.error('Fetch error:', err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchCurrency();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []); // ลบ dependency ที่ไม่จำเป็น
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
 
 
@@ -360,74 +290,73 @@ const SearchFerry = ({ navigation, route }) => {
 
 
 
-  // ใช้ useMemo เพื่อลด re-calculation
-  const formatDateInput = useMemo(() => {
-    return (date) => {
-      if (!date) return "";
+  const formatDateInput = (date) => {
+    if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
+    
+    const dateObj = new Date(date);
+    
+    if (selectedLanguage === 'th') {
+      // เดือนภาษาไทยแบบย่อ
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
       
-      const dateObj = new Date(date);
+      const day = dateObj.getDate().toString().padStart(2, '0');
+      const monthName = monthNames[dateObj.getMonth()];
+      const year = dateObj.getFullYear() + 543; // แปลงเป็น พ.ศ.
       
-      if (selectedLanguage === 'th') {
-        // เดือนภาษาไทยแบบย่อ
-        const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
-                           'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        
-        const day = dateObj.getDate().toString().padStart(2, '0');
-        const monthName = monthNames[dateObj.getMonth()];
-        const year = dateObj.getFullYear() + 543;
-        
-        return `${day} ${monthName} ${year}`;
-      } else {
-        return dateObj.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-      }
-    };
-  }, [selectedLanguage]);
+      return `${day} ${monthName} ${year}`;
+    } else {
+      // แสดงวันที่ภาษาอังกฤษ
+      return dateObj.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
+  };
 
 
 
 
-  // ใช้ useCallback เพื่อลด re-creation
-  const formatNumberWithComma = useCallback((value) => {
+  function formatNumberWithComma(value) {
     if (!value) return "0.00";
-    return Number(value).toLocaleString("en-US", {
+    const formattedValue = Number(value).toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-  }, []);
-  // ใช้ useCallback เพื่อลด re-creation
-  const removeHtmlTags = useCallback((html) => {
-    if (!html) return "";
+
+
+    return formattedValue;
+  }
+  const removeHtmlTags = (html) => {
+    if (!html) return ""; // ตรวจสอบว่ามีค่าหรือไม่
 
     return html
-      .replace(/<ul>/g, "")
-      .replace(/<\/ul>/g, "")
-      .replace(/<\/li>/g, "")
-      .replace(/<li>/g, "\n• ")
-      .replace(/<br\s*\/?>/g, "\n\n")
-      .replace(/<\/p>/g, "\n\n")
-      .replace(/<p>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/<strong>/g, "")
-      .replace(/<\/strong>/g, "");
-  }, []);
+      .replace(/<ul>/g, "")                     // ลบ <ul>
+      .replace(/<\/ul>/g, "")                   // ลบ </ul>
+      .replace(/<\/li>/g, "")                   // ลบ </li>
+      .replace(/<li>/g, "\n• ")                 // แทนที่ <li> ด้วย bullet
+      .replace(/<br\s*\/?>/g, "\n\n")           // แทนที่ <br> ด้วยเว้นบรรทัด
+      .replace(/<\/p>/g, "\n\n")                // แทนที่ </p> ด้วยเว้นวรรค
+      .replace(/<p>/g, "")                      // ลบ <p>
+      .replace(/&nbsp;/g, " ")                  // แทน &nbsp; ด้วยช่องว่าง
+      .replace(/<strong>/g, "")                 // ลบ <strong>
+      .replace(/<\/strong>/g, "");              // ลบ </strong>
+  };
 
-  // ใช้ useCallback เพื่อลด re-creation
-  const swapPoints = useCallback(() => {
+
+
+  const swapPoints = () => {
     setStartingPoint((prev) => endPoint);
     setEndPoint((prev) => startingPoint);
-  }, [endPoint, startingPoint]);
+  };
 
-  // ใช้ useCallback เพื่อลด re-creation
-  const truncateText = useCallback((text, maxLength = 8) => {
+  const truncateText = (text, maxLength = 8) => {
     if (text.length > maxLength) {
       return text.slice(0, maxLength) + '...';
     }
     return text;
-  }, []);
+  };
 
   const toggleAdultModal = () => {
     setAdultModalVisible(!isAdultModalVisible);
@@ -550,19 +479,14 @@ const SearchFerry = ({ navigation, route }) => {
       return result;
     }
   };
-  // ลด frequency ของ useEffect เพื่อปรับปรุง performance
   useEffect(() => {
-    // เพิ่ม debounce เพื่อลดการ call API บ่อยเกินไป
-    const debounceTimer = setTimeout(() => {
-      handleSearchStart();
-      handleSearchEnd();
-      setDetaDepart(departureDate);
-      setDetaReturn(returnDate);
-      setTripTypeSearch(tripType);
-    }, 300); // รอ 300ms หลังจาก state เปลี่ยน
+    handleSearchStart();
+    handleSearchEnd();
 
-    return () => clearTimeout(debounceTimer);
-  }, [startingPoint?.id, endPoint?.id, departureDate, returnDate, tripType, adults, children, calendarStartDate, calendarEndDate]);
+    setDetaDepart(departureDate);
+    setDetaReturn(returnDate);
+    setTripTypeSearch(tripType);
+  }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children, calendarStartDate, calendarEndDate]);
 
   useEffect(() => {
     if (
@@ -933,13 +857,13 @@ const SearchFerry = ({ navigation, route }) => {
       Animated.sequence([
         Animated.timing(boatAnim, {
           toValue: -24, // เพิ่มระยะขยับ
-          duration: 700, // เพิ่มระยะเวลาให้สมูทขึ้น
+          duration: 1400, // เพิ่มระยะเวลาให้สมูทขึ้น
           useNativeDriver: true,
           easing: Easing.inOut(Easing.sin), // ใช้ easing แบบ sin ให้ลื่นไหล
         }),
         Animated.timing(boatAnim, {
           toValue: 0,
-          duration: 700,
+          duration: 1400,
           useNativeDriver: true,
           easing: Easing.inOut(Easing.sin),
         }),
@@ -958,216 +882,198 @@ const SearchFerry = ({ navigation, route }) => {
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-        {/* Floating Particles Background - เหมือนหน้า Profile */}
-        <View style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}>
-          {floatingAnims.map((anim, index) => (
-            <Animated.View
-              key={index}
-              style={[
-                {
-                  position: 'absolute',
-                  width: 8,
-                  height: 8,
-                  backgroundColor: '#FD501E',
-                  borderRadius: 4,
-                },
-                {
-                  transform: [
-                    { translateX: anim.x },
-                    { translateY: anim.y },
-                    { scale: anim.scale },
-                  ],
-                  opacity: anim.opacity,
-                },
-              ]}
-            />
-          ))}
-        </View>
-
-        {/* Currency Modal - ย้ายออกมาจาก header */}
-        <Modal visible={isCurrencyModalVisible} transparent animationType="fade">
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.35)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: '#fff',
-                borderRadius: 24,
-                paddingVertical: 24,
-                paddingHorizontal: 20,
-                width: '100%',
-                maxWidth: 360,
-                shadowColor: '#000',
-                shadowOpacity: 0.2,
-                shadowRadius: 16,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 10,
-                position: 'relative',
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => setCurrencyModalVisible(false)}
-                style={{
-                  position: 'absolute',
-                  top: 12,
-                  right: 12,
-                  zIndex: 10,
-                  backgroundColor: '#FFF3ED',
-                  padding: 6,
-                  borderRadius: 20,
-                }}
-              >
-                <AntDesign name="close" size={20} color="#FD501E" />
-              </TouchableOpacity>
-
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  color: '#FD501E',
-                  textAlign: 'center',
-                  marginBottom: 16,
-                }}
-              >
-                Select Your Currency
-              </Text>
-
-              <ScrollView style={{ maxHeight: 300 }}>
-                {currencyList.map((currency) => (
-                  <TouchableOpacity
-                    key={currency.md_currency_id}
-                    onPress={() => {
-                      setSelectedCurrency(currency.md_currency_code);
-                      setSelectedSysmbol(currency.md_currency_symbol);
-                      setCurrencyModalVisible(false);
-                    }}
-                    style={{
-                      paddingVertical: 14,
-                      paddingHorizontal: 10,
-                      borderRadius: 12,
-                      backgroundColor:
-                        selectedCurrency === currency.md_currency_code ? '#FFF3ED' : '#F9F9F9',
-                      marginBottom: 10,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      shadowColor:
-                        selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
-                      shadowOpacity: 0.08,
-                      shadowRadius: 6,
-                      shadowOffset: { width: 0, height: 2 },
-                      elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
-                    }}
-                  >
-                    <Text style={{ fontSize: 16, color: '#333' }}>
-                      {currency.md_currency_symbol} {currency.md_currency_name} (
-                      {currency.md_currency_code})
-                    </Text>
-                    {selectedCurrency === currency.md_currency_code && (
-                      <AntDesign name="checkcircle" size={18} color="#FD501E" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Currency Button - ปุ่มเลือก Currency */}
-        <View style={{
-          position: 'absolute',
-          top: 60,
-          right: 20,
-          zIndex: 1000,
-        }}>
-          <TouchableOpacity
-            onPress={() => setCurrencyModalVisible(true)}
-            style={{
-              backgroundColor: 'rgba(253, 80, 30, 0.95)',
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              borderRadius: 25,
-              flexDirection: 'row',
-              alignItems: 'center',
-              shadowColor: '#FD501E',
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              shadowOffset: { width: 0, height: 4 },
-              elevation: 8,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            <Text style={{
-              color: '#FFFFFF',
-              fontSize: 14,
-              fontWeight: 'bold',
-              marginRight: 6,
-            }}>
-              {selectedSysmbol} {selectedCurrency}
-            </Text>
-            <AntDesign name="caretdown" size={12} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Main Content with Animations */}
-        <Animated.View
+        {/* Enhanced Premium Header */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
-            { flex: 1 },
+            headStyles.headerBg,
             {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim },
-              ],
+              width: '100%',
+              marginLeft: '0%',
+              marginTop: -10, // ใช้ค่าเฉลี่ย
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              paddingBottom: 8,
+              shadowColor: '#001233',
+              shadowOpacity: 0.15,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 18,
+              padding: 10,
+              minHeight: hp('12%'),
+              borderWidth: 1,
+              borderColor: 'rgba(0, 18, 51, 0.08)',
+              // Ultra premium glass morphism
+              backdropFilter: 'blur(30px)',
             },
           ]}
         >
-          {/* Floating decorative elements */}
-          <Animated.View 
+          <View
             style={[
+              headStyles.headerRow,
               {
-                position: 'absolute',
-                top: 20,
-                right: 20,
-                zIndex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 0,
+                paddingTop: 0,
+                position: 'relative',
+                marginTop: 30, // ใช้ค่าเฉลี่ย
+                height: 56,
               },
-              { transform: [{ rotate: spin }] }
             ]}
           >
-            <MaterialIcons name="anchor" size={24} color="rgba(255,255,255,0.2)" />
-          </Animated.View>
-
-          <Animated.View 
-            style={[
-              {
+            {/* Back Button - Left */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
                 position: 'absolute',
-                top: 60,
-                left: 30,
-                zIndex: 1,
-              },
-              { transform: [{ rotate: spin }] }
-            ]}
-          >
-            <MaterialIcons name="waves" size={20} color="rgba(255,255,255,0.15)" />
-          </Animated.View>
+                left: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 25,
+                padding: 8,
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
+              }}
+            >
+              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+            </TouchableOpacity>
 
-          {/* Enhanced Ultra Premium Title and Filters Section */}
-          <View style={{
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+              <LogoTheTrago />
+            </View>
+
+            {/* Currency Button - Right */}
+            <TouchableOpacity
+              onPress={() => setCurrencyModalVisible(true)}
+              style={{
+                position: 'absolute',
+                right: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                padding: 10,
+                borderRadius: 18,
+                flexDirection: 'row',
+                alignItems: 'center',
+                zIndex: 2,
+                shadowColor: '#FD501E',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(253, 80, 30, 0.1)',
+                minWidth: 70,
+              }}
+            >
+              <Icon name="cash-outline" size={18} color="#FD501E" style={{ marginRight: 8 }} />
+              <Text style={{ fontWeight: 'bold', color: '#FD501E', fontSize: 14, letterSpacing: 0.5 }}>{selectedCurrency}</Text>
+            </TouchableOpacity>
+
+            {/* Currency Modal */}
+            <Modal visible={isCurrencyModalVisible} transparent animationType="fade">
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 20,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 24,
+                    paddingVertical: 24,
+                    paddingHorizontal: 20,
+                    width: '100%',
+                    maxWidth: 360,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.2,
+                    shadowRadius: 16,
+                    shadowOffset: { width: 0, height: 6 },
+                    elevation: 10,
+                    position: 'relative',
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => setCurrencyModalVisible(false)}
+                    style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      zIndex: 10,
+                      backgroundColor: '#FFF3ED',
+                      padding: 6,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <AntDesign name="close" size={20} color="#FD501E" />
+                  </TouchableOpacity>
+
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: '#FD501E',
+                      textAlign: 'center',
+                      marginBottom: 16,
+                    }}
+                  >
+                    Select Your Currency
+                  </Text>
+
+                  <ScrollView style={{ maxHeight: 300 }}>
+                    {currencyList.map((currency) => (
+                      <TouchableOpacity
+                        key={currency.md_currency_id}
+                        onPress={() => {
+                          setSelectedCurrency(currency.md_currency_code);
+                          setSelectedSysmbol(currency.md_currency_symbol);
+                          setCurrencyModalVisible(false);
+                        }}
+                        style={{
+                          paddingVertical: 14,
+                          paddingHorizontal: 10,
+                          borderRadius: 12,
+                          backgroundColor:
+                            selectedCurrency === currency.md_currency_code ? '#FFF3ED' : '#F9F9F9',
+                          marginBottom: 10,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          shadowColor:
+                            selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
+                          shadowOpacity: 0.08,
+                          shadowRadius: 6,
+                          shadowOffset: { width: 0, height: 2 },
+                          elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
+                        }}
+                      >
+                        <Text style={{ fontSize: 16, color: '#333' }}>
+                          {currency.md_currency_symbol} {currency.md_currency_name} (
+                          {currency.md_currency_code})
+                        </Text>
+                        {selectedCurrency === currency.md_currency_code && (
+                          <AntDesign name="checkcircle" size={18} color="#FD501E" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
+          </View>
+
+        </LinearGradient>
+        {/* Enhanced Ultra Premium Title and Filters Section */}
+        <View style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -1501,17 +1407,18 @@ const SearchFerry = ({ navigation, route }) => {
             marginHorizontal: wp('1%'),
           }]}>
             {/* Enhanced Premium Trip Type Selection - Compact */}
-            <Animated.View
-              style={[
-                styles.tripTypeContainer,
-                {
-                  backgroundColor: 'rgba(248,250,252,0.8)',
-                  borderRadius: wp('3%'),
-                  padding: wp('0.8%'),
-                  transform: [{ scale: pulseAnim }],
-                },
-              ]}
-            >
+            <View style={[styles.tripTypeContainer, {
+              backgroundColor: 'rgba(248,250,252,0.8)',
+              borderRadius: wp('3%'),
+              padding: wp('0.8%'),
+              marginBottom: hp('2%'),
+              shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
+              shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
+              shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+              elevation: Platform.OS === 'android' ? 0 : 4,
+              borderWidth: 0.5,
+              borderColor: 'rgba(0, 18, 51, 0.04)',
+            }]}>
               <TouchableOpacity
                 style={[
                   styles.tripTypeOneWayButton,
@@ -1592,18 +1499,10 @@ const SearchFerry = ({ navigation, route }) => {
                   { t('roundTrip') }
                 </Text>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
 
             {/* --- Enhanced Premium passenger selection row - Compact --- */}
-            <Animated.View
-              style={[
-                styles.inputRow,
-                {
-                  marginBottom: hp('1.5%'),
-                  transform: [{ scale: pulseAnim }],
-                },
-              ]}
-            >
+            <View style={[styles.inputRow, { marginBottom: hp('1.5%') }]}>
               <TouchableOpacity
                 style={[styles.inputBoxSearch, {
                   maxWidth: '100%',
@@ -1657,7 +1556,7 @@ const SearchFerry = ({ navigation, route }) => {
                   >{adults} { t('adult') }, {children} { t('child') }, {infant} { t('infant') }</Text>
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
             <Modal
               visible={isPassengerModalVisible}
               transparent
@@ -4936,7 +4835,6 @@ const SearchFerry = ({ navigation, route }) => {
 
 
         </ScrollView>
-        </Animated.View>
       </LinearGradient>
     </SafeAreaView>
   );

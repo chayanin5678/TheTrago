@@ -67,73 +67,9 @@ const SettingsScreen = () => {
 const AppNavigator = () => (
   <Stack.Navigator initialRouteName="HomeScreen">
     <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: true }} />
+    <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
-    <Stack.Screen 
-      name="SearchFerry" 
-      component={SearchFerry} 
-      options={({ route }) => ({ 
-        headerShown: true,
-        title: 'ค้นหาเรือโดยสาร',
-        headerStyle: {
-          backgroundColor: '#FD501E',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTitleStyle: {
-          color: '#FFFFFF',
-          fontSize: 18,
-          fontWeight: '600',
-        },
-        headerTintColor: '#FFFFFF',
-        headerTitleAlign: 'center',
-        headerRight: () => {
-          // สร้าง ref สำหรับเรียกใช้ function ใน SearchFerry
-          const CurrencyButton = () => {
-            const [currentCurrency, setCurrentCurrency] = React.useState('THB');
-            
-            // Listen for currency changes from SearchFerry
-            React.useEffect(() => {
-              if (route.params?.selectedCurrency) {
-                setCurrentCurrency(route.params.selectedCurrency);
-              }
-            }, [route.params?.selectedCurrency]);
-
-            return (
-              <TouchableOpacity
-                style={{
-                  marginRight: 15,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  borderRadius: 15,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-                onPress={() => {
-                  // ส่งสัญญาณให้ SearchFerry เปิด currency modal
-                  if (route.params?.openCurrencyModal) {
-                    route.params.openCurrencyModal();
-                  }
-                }}
-              >
-                <Text style={{
-                  color: '#FFFFFF',
-                  fontSize: 12,
-                  fontWeight: '600',
-                  marginRight: 4,
-                }}>
-                  {currentCurrency}
-                </Text>
-                <Icon name="chevron-down" size={14} color="#FFFFFF" />
-              </TouchableOpacity>
-            );
-          };
-
-          return <CurrencyButton />;
-        },
-      })} 
-    />
+    <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
@@ -153,71 +89,7 @@ const AppNavigator = () => (
 const BookingNavigator = () => (
   <Stack.Navigator initialRouteName="BookingScreenMain">
     <Stack.Screen name="BookingScreenMain" component={BookingScreen} options={{ headerShown: false }} />
-    <Stack.Screen 
-      name="SearchFerry" 
-      component={SearchFerry} 
-      options={({ route }) => ({ 
-        headerShown: true,
-        title: 'ค้นหาเรือโดยสาร',
-        headerStyle: {
-          backgroundColor: '#FD501E',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTitleStyle: {
-          color: '#FFFFFF',
-          fontSize: 18,
-          fontWeight: '600',
-        },
-        headerTintColor: '#FFFFFF',
-        headerTitleAlign: 'center',
-        headerRight: () => {
-          // สร้าง ref สำหรับเรียกใช้ function ใน SearchFerry
-          const CurrencyButton = () => {
-            const [currentCurrency, setCurrentCurrency] = React.useState('THB');
-            
-            // Listen for currency changes from SearchFerry
-            React.useEffect(() => {
-              if (route.params?.selectedCurrency) {
-                setCurrentCurrency(route.params.selectedCurrency);
-              }
-            }, [route.params?.selectedCurrency]);
-
-            return (
-              <TouchableOpacity
-                style={{
-                  marginRight: 15,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  borderRadius: 15,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-                onPress={() => {
-                  // ส่งสัญญาณให้ SearchFerry เปิด currency modal
-                  if (route.params?.openCurrencyModal) {
-                    route.params.openCurrencyModal();
-                  }
-                }}
-              >
-                <Text style={{
-                  color: '#FFFFFF',
-                  fontSize: 12,
-                  fontWeight: '600',
-                  marginRight: 4,
-                }}>
-                  {currentCurrency}
-                </Text>
-                <Icon name="chevron-down" size={14} color="#FFFFFF" />
-              </TouchableOpacity>
-            );
-          };
-
-          return <CurrencyButton />;
-        },
-      })} 
-    />
+    <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
     <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />

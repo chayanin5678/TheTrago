@@ -10,9 +10,6 @@
       "android": {
         "buildType": "apk",
         "releaseChannel": "default"
-      },
-      "ios": {
-        "simulator": true
       }
     },
     "preview": {
@@ -20,9 +17,6 @@
       "android": {
         "buildType": "apk",
         "releaseChannel": "default"
-      },
-      "ios": {
-        "buildConfiguration": "Release"
       }
     },
     "production": {
@@ -30,12 +24,6 @@
       "android": {
         "buildType": "app-bundle",
         "releaseChannel": "default"
-      },
-      "ios": {
-        "buildConfiguration": "Release",
-        "cache": {
-          "disabled": true
-        }
       }
     }
   },

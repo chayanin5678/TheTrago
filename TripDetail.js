@@ -802,21 +802,21 @@ const TripDetail = ({ navigation, route }) => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 1000,
         easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 400,
-        delay: 150,
+        duration: 800,
+        delay: 300,
         easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 600,
-        delay: 250,
+        duration: 1200,
+        delay: 500,
         easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
         useNativeDriver: true,
       }),
@@ -880,13 +880,13 @@ const TripDetail = ({ navigation, route }) => {
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
-          duration: 1000,
+          duration: 2000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 2000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
@@ -897,7 +897,7 @@ const TripDetail = ({ navigation, route }) => {
     Animated.loop(
       Animated.timing(shimmerAnim, {
         toValue: screenWidth + 100,
-        duration: 800,
+        duration: 1500,
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -2733,12 +2733,12 @@ const TripDetail = ({ navigation, route }) => {
               {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
                 <View key={index} style={[styles.promo, {
                   marginTop: 20,
-                  backgroundColor: 'rgba(255,255,255,0.95)',
+                  backgroundColor: 'rgba(255,255,255,0.98)',
                   borderWidth: 1,
-                  borderColor: 'rgba(0, 18, 51, 0.08)',
-                  borderRadius: wp('5%'),
+                  borderColor: 'rgba(253,80,30,0.10)',
+                  borderRadius: 24,
                   padding: wp('4%'),
-                  width: '100%',
+                  maxWidth: wp('100%'),
                   alignSelf: 'center',
                   overflow: 'visible',
                   position: 'relative',

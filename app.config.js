@@ -40,10 +40,7 @@ export default {
         {
           "ios": {
             "newArchEnabled": false,
-            "deploymentTarget": "15.1",
-            "podfilePropertiesConfiguration": {
-              "use_frameworks": "dynamic"
-            }
+            "deploymentTarget": "15.1"
           },
           "android": {
             "newArchEnabled": false
