@@ -13,7 +13,11 @@
         "subdomain": "thetrago"
       },
       "eas": {
-        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
+        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b",
+         "build": {
+          "version": "1.0.3",
+          "buildNumber": "3"
+        }
       }
     },
     "version": "1.0.3",
@@ -48,6 +52,8 @@
       ]
     ],
     "ios": {
+      "versionCode": 3,
+      "version": "1.0.3",
       "buildNumber": "3",
       "bundleIdentifier": "com.chayanin5678.TheTrago",
       "supportsTablet": true,
@@ -76,7 +82,8 @@
           "UIInterfaceOrientationLandscapeLeft",
           "UIInterfaceOrientationLandscapeRight"
         ]
-      }
+      },
+      "buildNumber": "2"
     },
     "jsEngine": "jsc"
   }

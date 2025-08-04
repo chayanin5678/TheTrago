@@ -72,7 +72,8 @@ const SearchFerry = ({ navigation, route }) => {
   const [returnDate, setReturnDate] = useState(detaReturn);
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false - show loading only when searching
+  const [hasSearched, setHasSearched] = useState(false); // Track if search has been performed
 
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -173,9 +174,9 @@ const SearchFerry = ({ navigation, route }) => {
       // Force trigger re-render
       setTimeout(() => {
         setCalendarStartDate(calendarStartDate);
-        // Trigger comprehensive ferry route search with updated date
-        console.log('🔄 Triggering ferry route search with new departure date:', calendarStartDate);
-        fetchFerryRoute();
+        // Remove automatic search - user must click search button
+        console.log('🔄 Date updated:', calendarStartDate, '- Click search to find routes');
+        // fetchFerryRoute(); // Disabled automatic search
       }, 50);
     } else {
       alert('กรุณาเลือกวันที่ไป');
@@ -190,9 +191,9 @@ const SearchFerry = ({ navigation, route }) => {
       // Force trigger re-render
       setTimeout(() => {
         setCalendarEndDate(calendarEndDate);
-        // Trigger comprehensive ferry route search with updated date
-        console.log('🔄 Triggering ferry route search with new return date:', calendarEndDate);
-        fetchFerryRoute();
+        // Remove automatic search - user must click search button
+        console.log('🔄 Return date updated:', calendarEndDate, '- Click search to find routes');
+        // fetchFerryRoute(); // Disabled automatic search
       }, 50);
     } else {
       alert('กรุณาเลือกวันที่กลับ');
@@ -480,8 +481,9 @@ const SearchFerry = ({ navigation, route }) => {
     }
   };
   useEffect(() => {
-    handleSearchStart();
-    handleSearchEnd();
+    // Remove automatic search - only update state variables
+    // handleSearchStart();
+    // handleSearchEnd();
 
     setDetaDepart(departureDate);
     setDetaReturn(returnDate);
@@ -489,14 +491,15 @@ const SearchFerry = ({ navigation, route }) => {
   }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children, calendarStartDate, calendarEndDate]);
 
   useEffect(() => {
-    if (
-      customerData?.roud !== undefined &&
-      startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
-      calendarStartDate &&
-      (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
-    ) {
-      fetchFerryRoute();
-    }
+    // Disable automatic search - search only when button is clicked
+    // if (
+    //   customerData?.roud !== undefined &&
+    //   startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
+    //   calendarStartDate &&
+    //   (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
+    // ) {
+    //   fetchFerryRoute();
+    // }
   }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate, selectedCurrency]);
 
 
@@ -2098,6 +2101,58 @@ const SearchFerry = ({ navigation, route }) => {
                 )}
               </View>
 
+              {/* Enhanced Search Button - Inside Booking Section */}
+              <TouchableOpacity
+                style={[styles.searchButton, {
+                  marginTop: hp('2%'),
+                  marginBottom: hp('1%'),
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }]}
+                onPress={() => {
+                  // Manual search trigger with comprehensive validation
+                  const missingFields = [];
+                  
+                  // Validate required fields
+                  if (!startingPoint.id) missingFields.push(t('from') || 'จุดเริ่มต้น');
+                  if (!endPoint.id) missingFields.push(t('to') || 'จุดหมาย');
+                  if (!calendarStartDate) missingFields.push(t('departureDate') || 'วันที่เดินทาง');
+                  
+                  // Validate return date for round trip
+                  if (tripType === TRIP_TYPES.ROUND_TRIP && !calendarEndDate) {
+                    missingFields.push(t('returnDate') || 'วันที่กลับ');
+                  }
+                  
+                  if (missingFields.length > 0) {
+                    alert(`${t('pleaseSelect') || 'กรุณาเลือก'}: ${missingFields.join(', ')}`);
+                    return;
+                  }
+                  
+                  // All validation passed - trigger search
+                  console.log('🔍 Manual search triggered by user');
+                  setLoading(true);
+                  setHasSearched(true); // Mark that search has been performed
+                  
+                  // Update state variables
+                  setDetaDepart(departureDate);
+                  setDetaReturn(returnDate);
+                  setTripTypeSearch(tripType);
+                  
+                  // Trigger all search functions
+                  handleSearchStart();
+                  if (tripType === TRIP_TYPES.ROUND_TRIP) {
+                    handleSearchEnd();
+                  }
+                  fetchFerryRoute();
+                }}
+              >
+                <Icon name="search" size={20} color="#FFF" style={{ marginRight: wp('2%') }} />
+                <Text style={styles.searchButtonText}>
+                  {selectedLanguage === 'th' ? 'ค้นหา' : 'Search'}
+                </Text>
+              </TouchableOpacity>
+
               {/* Enhanced Departure Date Calendar Modal */}
               <Modal
                 visible={showDepartModal}
@@ -2442,19 +2497,6 @@ const SearchFerry = ({ navigation, route }) => {
 
             </View>
           </View>
-
-
-
-
-          {/* <TouchableOpacity
-          style={[styles.searchButton]} // Use an array if you want to combine styles
-          onPress={() => {
-           
-
-           
-          }}>
-          <Text style={styles.searchButtonText}>Search</Text>
-        </TouchableOpacity> */}
 
           {/* Enhanced Ultra Premium Loading Skeleton */}
           {loading && (
@@ -2819,7 +2861,7 @@ const SearchFerry = ({ navigation, route }) => {
               ))}
             </View>
           )}
-          {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
+          {!loading && hasSearched && pagedDataDepart && pagedDataDepart.length === 0 && (
             <View style={{
               flex: 1,
               alignItems: 'center',
@@ -2838,35 +2880,41 @@ const SearchFerry = ({ navigation, route }) => {
               borderColor: 'rgba(253, 80, 30, 0.08)',
               marginVertical: 20
             }}>
-              <LottieView
-                source={require('./assets/animations/ferry-animation.json')}
-                autoPlay
-                loop
+              <Animated.View
                 style={{
-                  width: 240,
-                  height: 240,
+                  transform: [{ translateY: boatAnim }],
+                  alignItems: 'center',
                 }}
-              />
-              <Text style={{
-                marginTop: 32,
-                color: '#1E293B',
-                fontWeight: '800',
-                fontSize: 22,
-                letterSpacing: -0.3,
-                textAlign: 'center'
-              }}>
-                {t('searchingForFerries')}
-              </Text>
-              <Text style={{
-                marginTop: 8,
-                color: '#64748B',
-                fontWeight: '500',
-                fontSize: 16,
-                letterSpacing: 0.2,
-                textAlign: 'center'
-              }}>
-                {t('findingBestRoutes')}
-              </Text>
+              >
+                <MaterialIcons 
+                  name="directions-boat" 
+                  size={120} 
+                  color="#94A3B8" 
+                  style={{ marginBottom: 20 }}
+                />
+                <Text style={{
+                  color: '#1E293B',
+                  fontWeight: '800',
+                  fontSize: 22,
+                  letterSpacing: -0.3,
+                  textAlign: 'center',
+                  marginBottom: 8,
+                }}>
+                  {selectedLanguage === 'th' ? 'ไม่มีรอบเรือ' : 'No Ferry Schedule'}
+                </Text>
+                <Text style={{
+                  color: '#64748B',
+                  fontWeight: '500',
+                  fontSize: 16,
+                  letterSpacing: 0.2,
+                  textAlign: 'center'
+                }}>
+                  {selectedLanguage === 'th' 
+                    ? 'ไม่พบเส้นทางเรือในวันที่เลือก' 
+                    : 'No ferry routes found for selected date'
+                  }
+                </Text>
+              </Animated.View>
             </View>
           )}
           {!loading && pagedDataDepart && pagedDataReturn && (
@@ -4558,6 +4606,65 @@ const SearchFerry = ({ navigation, route }) => {
                     ))}
 
                   </>)}
+
+                  {/* Empty state for Return Trip when no data found */}
+                  {tripTypeSearchResult === 'Return Trip' && !loading && hasSearched && pagedDataReturn && pagedDataReturn.length === 0 && (
+                    <View style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: 360,
+                      width: '100%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderRadius: 24,
+                      padding: 32,
+                      shadowColor: '#FD501E',
+                      shadowOpacity: 0.1,
+                      shadowRadius: 20,
+                      shadowOffset: { width: 0, height: 8 },
+                      elevation: 8,
+                      borderWidth: 1,
+                      borderColor: 'rgba(253, 80, 30, 0.08)',
+                      marginVertical: 20
+                    }}>
+                      <Animated.View
+                        style={{
+                          transform: [{ translateY: boatAnim }],
+                          alignItems: 'center',
+                        }}
+                      >
+                        <MaterialIcons 
+                          name="directions-boat" 
+                          size={120} 
+                          color="#94A3B8" 
+                          style={{ marginBottom: 20 }}
+                        />
+                        <Text style={{
+                          color: '#1E293B',
+                          fontWeight: '800',
+                          fontSize: 22,
+                          letterSpacing: -0.3,
+                          textAlign: 'center',
+                          marginBottom: 8,
+                        }}>
+                          {selectedLanguage === 'th' ? 'ไม่มีรอบเรือกลับ' : 'No Return Ferry Schedule'}
+                        </Text>
+                        <Text style={{
+                          color: '#64748B',
+                          fontWeight: '500',
+                          fontSize: 16,
+                          letterSpacing: 0.2,
+                          textAlign: 'center'
+                        }}>
+                          {selectedLanguage === 'th' 
+                            ? 'ไม่พบเส้นทางเรือกลับในวันที่เลือก' 
+                            : 'No return ferry routes found for selected date'
+                          }
+                        </Text>
+                      </Animated.View>
+                    </View>
+                  )}
+
                 </>)}
             </>
           )}

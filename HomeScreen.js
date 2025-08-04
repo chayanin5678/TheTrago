@@ -22,7 +22,7 @@ import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
 import { useLanguage } from './(Screen)/LanguageContext';
 
 const HomeScreen = ({ navigation }) => {
-  const { language, t } = useLanguage();
+  const { language, t, selectedLanguage, changeLanguage } = useLanguage();
 
   const placeholders = [
     [
@@ -866,30 +866,24 @@ const HomeScreen = ({ navigation }) => {
                   }]}>
                     <LogoTheTrago />
                   </Animated.View>
-                  
-                  {/* Subtle Premium Badge */}
-                  <Animated.View style={[premiumStyles.premiumBadge, {
-                    transform: [{ translateY: bounceAnim2.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, -3],
-                    })}]
-                  }]}>
-                    <LinearGradient
-                      colors={['#FFD700', '#FF8C42']}
-                      style={premiumStyles.badgeGradient}
-                    >
-                      <MaterialIcons name="star" size={wp('2.5%')} color="#fff" />
-                      <Text style={premiumStyles.badgeText}>Elite</Text>
-                    </LinearGradient>
-                  </Animated.View>
                 </View>
 
-                {/* Profile Action - moved to right */}
+                {/* Language Toggle Text Only */}
                 <View style={premiumStyles.headerActionsRight}>
-                  <TouchableOpacity style={premiumStyles.profileButton}>
-                    <BlurView intensity={40} style={premiumStyles.actionButtonBlur}>
-                      <MaterialIcons name="account-circle" size={wp('5.5%')} color="#FD501E" />
-                    </BlurView>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      const newLanguage = selectedLanguage === 'th' ? 'en' : 'th';
+                      console.log('Toggling language from', selectedLanguage, 'to', newLanguage);
+                      changeLanguage(newLanguage);
+                    }}
+                  >
+                    <Text style={{
+                      color: '#FD501E',
+                      fontSize: wp('4.5%'),
+                      fontWeight: 'bold',
+                    }}>
+                      {selectedLanguage === 'th' ? 'TH' : 'EN'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
