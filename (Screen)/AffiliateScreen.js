@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Clipboard, Alert, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Clipboard, Alert, Platform, Linking, Modal, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from './LanguageContext';
@@ -22,6 +22,9 @@ const AffiliateScreen = ({ navigation }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [referralLink, setReferralLink] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [qrModalLink, setQrModalLink] = useState('');
+  const [qrModalTitle, setQrModalTitle] = useState('');
 
   useEffect(() => {
     loadUserProfile();
@@ -34,7 +37,7 @@ const AffiliateScreen = ({ navigation }) => {
       if (!token) return;
 
       // Try new API first
-      const response = await axios.get(`${ipAddress}/AppApi/profile`, {
+      const response = await axios.get(`${ipAddress}/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -139,9 +142,13 @@ const AffiliateScreen = ({ navigation }) => {
     try {
       const memberIdToUse = memberId || userProfile?.memberId || 'M033048';
       
-      setReferralLink(`https://www.thetrago.com/refer/${memberIdToUse}`);
-      // Deep link ที่เปิดแอป TheTrago พร้อม referral parameter
-      setInviteLink(`thetrago://register?ref=${memberIdToUse}`);
+      // สร้าง deep link สำหรับเปิดแอปไปหน้า home พร้อม referral parameter
+      const appReferralLink = `thetrago://home?ref=${memberIdToUse}`;
+      // สร้าง deep link สำหรับเปิดแอปไปหน้าสมัครสมาชิก พร้อม referral parameter
+      const appInviteLink = `thetrago://register?ref=${memberIdToUse}`;
+      
+      setReferralLink(appReferralLink);
+      setInviteLink(appInviteLink);
     } catch (error) {
       console.error('Generate links error:', error);
     }
@@ -157,27 +164,9 @@ const AffiliateScreen = ({ navigation }) => {
   };
 
   const showQRCode = (link, title) => {
-    // สร้าง QR Code ผ่าน Google Charts API
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}`;
-    
-    Alert.alert(
-      title,
-      'เลือกการดำเนินการ',
-      [
-        {
-          text: 'ดู QR Code',
-          onPress: () => Linking.openURL(qrCodeUrl)
-        },
-        {
-          text: 'คัดลอกลิงก์',
-          onPress: () => copyToClipboard(link, title)
-        },
-        {
-          text: 'ยกเลิก',
-          style: 'cancel'
-        }
-      ]
-    );
+    setQrModalLink(link);
+    setQrModalTitle(title);
+    setQrModalVisible(true);
   };
 
   const StatusCard = ({ title, count, icon, color, bgColor }) => (
@@ -231,6 +220,38 @@ const AffiliateScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* QR Code Modal */}
+      <Modal
+        visible={qrModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setQrModalVisible(false)}
+      >
+        <View style={styles.qrModalOverlay}>
+          <View style={styles.qrModalContent}>
+            <Text style={styles.qrModalTitle}>{qrModalTitle}</Text>
+            <Image
+              source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrModalLink)}` }}
+              style={styles.qrModalImage}
+            />
+            <Text style={styles.qrModalLink}>{qrModalLink}</Text>
+            <View style={{ flexDirection: 'row', marginTop: 16 }}>
+              <TouchableOpacity
+                style={[styles.qrModalButton, { backgroundColor: '#F97316' }]}
+                onPress={() => { copyToClipboard(qrModalLink, qrModalTitle); }}
+              >
+                <Text style={styles.qrModalButtonText}>{t('copy') || 'Copy!'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.qrModalButton, { backgroundColor: '#0891B2', marginLeft: 12 }]}
+                onPress={() => setQrModalVisible(false)}
+              >
+                <Text style={styles.qrModalButtonText}>{t('close') || 'Close'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
       
       {/* Premium Header */}
@@ -325,9 +346,59 @@ const AffiliateScreen = ({ navigation }) => {
       </ScrollView>
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
+  qrModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    width: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  qrModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  qrModalImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 12,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+  },
+  qrModalLink: {
+    fontSize: 13,
+    color: '#4B5563',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  qrModalButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  qrModalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',

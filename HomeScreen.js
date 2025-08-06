@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, use } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView, Platform, Linking } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from './(component)/Banner';
@@ -21,7 +21,7 @@ import SafeAreaDebugger from './(component)/SafeAreaDebugger';
 import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
 import { useLanguage } from './(Screen)/LanguageContext';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const { language, t, selectedLanguage, changeLanguage } = useLanguage();
 
   const placeholders = [
@@ -117,6 +117,42 @@ const HomeScreen = ({ navigation }) => {
     const timer = setTimeout(() => setIsLoadingTitle(false), 1500); // จำลองโหลด
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle referral parameter from deep link
+  useEffect(() => {
+    const handleReferral = async () => {
+      // Check route params first
+      if (route?.params?.ref) {
+        console.log('Referral ID from route params:', route.params.ref);
+        await SecureStore.setItemAsync('referralId', route.params.ref);
+        return;
+      }
+
+      // Check initial URL for deep linking
+      try {
+        const url = await Linking.getInitialURL();
+        if (url) {
+          // Manual query string parsing
+          const queryString = url.split('?')[1];
+          if (queryString) {
+            const params = {};
+            queryString.split('&').forEach(pair => {
+              const [key, value] = pair.split('=');
+              params[key] = decodeURIComponent(value || '');
+            });
+            if (params.ref) {
+              console.log('Referral ID from deep link:', params.ref);
+              await SecureStore.setItemAsync('referralId', params.ref);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error handling referral:', error);
+      }
+    };
+
+    handleReferral();
+  }, [route?.params]);
 
   useEffect(() => {
     Animated.loop(

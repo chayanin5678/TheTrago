@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -9,10 +9,11 @@ import axios from 'axios';
 import moment from "moment-timezone";
 import { useAuth } from '../AuthContext';
 import { useLanguage } from './LanguageContext';
+import * as SecureStore from 'expo-secure-store';
 
 const { width, height } = Dimensions.get('window');
 
-const RegisterScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation, route }) => {
   const { login } = useAuth();
   const { t } = useLanguage();
   const [firstName, setFirstName] = useState('');
@@ -26,6 +27,7 @@ const RegisterScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [memberid, setMemberId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [referralId, setReferralId] = useState('');
 
   // Premium animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -82,6 +84,46 @@ const RegisterScreen = ({ navigation }) => {
     }
   }, [email]);
 
+  // Handle referral parameter from deep link
+  useEffect(() => {
+    const handleReferral = async () => {
+      // Check route params first
+      if (route?.params?.ref) {
+        console.log('Referral ID from route params:', route.params.ref);
+        setReferralId(route.params.ref);
+        await SecureStore.setItemAsync('referralId', route.params.ref);
+        return;
+      }
+
+      // Check initial URL for deep linking
+      try {
+        const url = await Linking.getInitialURL();
+        if (url) {
+          const { queryParams } = Linking.parse(url);
+          if (queryParams?.ref) {
+            console.log('Referral ID from deep link:', queryParams.ref);
+            setReferralId(queryParams.ref);
+            await SecureStore.setItemAsync('referralId', queryParams.ref);
+          }
+        }
+      } catch (error) {
+        console.error('Error handling referral:', error);
+      }
+
+      // Check stored referral ID
+      try {
+        const storedReferralId = await SecureStore.getItemAsync('referralId');
+        if (storedReferralId) {
+          setReferralId(storedReferralId);
+        }
+      } catch (error) {
+        console.error('Error getting stored referral ID:', error);
+      }
+    };
+
+    handleReferral();
+  }, [route?.params]);
+
   const validateEmail = (email) => {
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return regex.test(email);
@@ -93,7 +135,7 @@ const RegisterScreen = ({ navigation }) => {
         md_member_no: memberid,//1
         md_member_user: email,//2
         md_member_pass : password,//3
-        md_member_upline: 0,//4
+        md_member_upline: referralId || 0,//4 - Use referral ID if available
         md_member_fname : firstName,//5
         md_member_lname : lastName,//6
         md_member_email : email,//7
@@ -103,12 +145,14 @@ const RegisterScreen = ({ navigation }) => {
         md_member_status : 1,//11
         md_member_affiliate_status : 0,
         md_member_logintype :0,
+        md_member_referral_id: referralId || '', // เพิ่ม referral ID field
         md_member_credate:  moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"),
         md_member_update: moment().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss")
 
       });
 
       console.log("✅ Member created successfully");
+      console.log("📧 Referral ID used:", referralId || 'None');
       
       // Auto login after successful registration
       try {
@@ -204,6 +248,10 @@ const RegisterScreen = ({ navigation }) => {
       console.log("New ID:", newId);
 
       await createMember(newId);
+      
+      // Clear referral ID after successful registration
+      await SecureStore.deleteItemAsync('referralId');
+      
       setIsLoading(false);
       Alert.alert(t('success'), t('registrationSuccessful'));
     } catch (error) {
@@ -281,6 +329,19 @@ const RegisterScreen = ({ navigation }) => {
                     <Text style={styles.link}> {t('signIn')}</Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* Referral Information */}
+                {referralId && (
+                  <View style={styles.referralCard}>
+                    <MaterialIcons name="card-giftcard" size={20} color="#10B981" />
+                    <View style={styles.referralInfo}>
+                      <Text style={styles.referralTitle}>🎁 {t('referralBonus') || 'Referral Bonus'}</Text>
+                      <Text style={styles.referralText}>
+                        {t('referredBy') || 'Referred by'}: {referralId}
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
                 {/* Premium Input Fields */}
                 <View style={styles.inputSection}>
@@ -735,6 +796,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
     textDecorationLine: 'underline',
+  },
+  // Referral Card Styles
+  referralCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  referralInfo: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  referralTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
+    marginBottom: 2,
+  },
+  referralText: {
+    fontSize: 12,
+    color: '#059669',
+    fontWeight: '500',
   },
 });
 

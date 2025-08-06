@@ -824,6 +824,7 @@ const translations = {
     copied: 'คัดลอกแล้ว!',
     linkCopied: 'ลิงก์ถูกคัดลอกไปยังคลิปบอร์ดแล้ว',
     qrCode: 'คิวอาร์โค้ด',
+    shareAppLink: 'แชร์ลิงก์นี้เพื่อเปิดแอป TheTrago!',
     
     // Account Management
     accountManagement: 'การจัดการบัญชี',
