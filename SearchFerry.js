@@ -877,105 +877,101 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Premium Gradient Background */}
-      <LinearGradient
-        colors={['#001233', '#002A5C', '#FD501E']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1.2 }}
-        style={{ flex: 1 }}
-      >
-        {/* Enhanced Premium Header */}
-        <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
-          style={[
-            headStyles.headerBg,
-            {
-              width: '100%',
-              marginLeft: '0%',
-              marginTop: -10, // ใช้ค่าเฉลี่ย
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              paddingBottom: 8,
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 18,
-              padding: 10,
-              minHeight: hp('12%'),
-              borderWidth: 1,
-              borderColor: 'rgba(0, 18, 51, 0.08)',
-              // Ultra premium glass morphism
-              backdropFilter: 'blur(30px)',
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {/* Clean Background */}
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+        {/* Clean Header */}
+        <View
+          style={{
+            backgroundColor: '#FFFFFF',
+            paddingTop: Platform.OS === 'ios' ? 0 : 10,
+            paddingBottom: 16,
+            paddingHorizontal: 20,
+            shadowColor: '#000000',
+            shadowOffset: {
+              width: 0,
+              height: 2,
             },
-          ]}
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
+            elevation: 5,
+            borderBottomWidth: 1,
+            borderBottomColor: 'rgba(0, 0, 0, 0.04)',
+          }}
         >
           <View
-            style={[
-              headStyles.headerRow,
-              {
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 0,
-                paddingTop: 0,
-                position: 'relative',
-                marginTop: 30, // ใช้ค่าเฉลี่ย
-                height: 56,
-              },
-            ]}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 0,
+              paddingTop: 20,
+              height: 56,
+            }}
           >
-            {/* Back Button - Left */}
+            {/* Back Button */}
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={{
-                position: 'absolute',
-                left: 16,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 25,
-                padding: 8,
-                zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 8,
+                width: 44,
+                height: 44,
+                backgroundColor: '#F8FAFC',
+                borderRadius: 22,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 4,
                 borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)',
+                borderColor: 'rgba(0, 0, 0, 0.04)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <Icon name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
 
-            {/* Logo - Center */}
-            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
-              <LogoTheTrago />
+            {/* Title */}
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: '700',
+                  color: '#1F2937',
+                  letterSpacing: -0.3,
+                }}
+              >
+                {t('searchFerry')}
+              </Text>
             </View>
 
-            {/* Currency Button - Right */}
+            {/* Currency Button */}
             <TouchableOpacity
               onPress={() => setCurrencyModalVisible(true)}
               style={{
-                position: 'absolute',
-                right: 16,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                padding: 10,
+                backgroundColor: '#F8FAFC',
                 borderRadius: 18,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                shadowColor: '#000000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 4,
+                borderWidth: 1,
+                borderColor: 'rgba(0, 0, 0, 0.04)',
                 flexDirection: 'row',
                 alignItems: 'center',
-                zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 8,
-                borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)',
-                minWidth: 70,
               }}
             >
-              <Icon name="cash-outline" size={18} color="#FD501E" style={{ marginRight: 8 }} />
-              <Text style={{ fontWeight: 'bold', color: '#FD501E', fontSize: 14, letterSpacing: 0.5 }}>{selectedCurrency}</Text>
+              <Icon name="cash-outline" size={18} color="#FD501E" style={{ marginRight: 6 }} />
+              <Text style={{ fontWeight: '600', color: '#FD501E', fontSize: 14 }}>{selectedCurrency}</Text>
             </TouchableOpacity>
 
             {/* Currency Modal */}
@@ -983,7 +979,7 @@ const SearchFerry = ({ navigation, route }) => {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
                   justifyContent: 'center',
                   alignItems: 'center',
                   paddingHorizontal: 20,
@@ -991,45 +987,48 @@ const SearchFerry = ({ navigation, route }) => {
               >
                 <View
                   style={{
-                    backgroundColor: '#fff',
-                    borderRadius: 24,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 20,
                     paddingVertical: 24,
                     paddingHorizontal: 20,
                     width: '100%',
                     maxWidth: 360,
-                    shadowColor: '#000',
+                    shadowColor: '#000000',
+                    shadowOffset: {
+                      width: 0,
+                      height: 8,
+                    },
                     shadowOpacity: 0.2,
                     shadowRadius: 16,
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: 10,
-                    position: 'relative',
+                    elevation: 16,
                   }}
                 >
                   <TouchableOpacity
                     onPress={() => setCurrencyModalVisible(false)}
                     style={{
                       position: 'absolute',
-                      top: 12,
-                      right: 12,
+                      top: 16,
+                      right: 16,
                       zIndex: 10,
-                      backgroundColor: '#FFF3ED',
-                      padding: 6,
+                      backgroundColor: '#F9FAFB',
+                      padding: 8,
                       borderRadius: 20,
                     }}
                   >
-                    <AntDesign name="close" size={20} color="#FD501E" />
+                    <Icon name="close" size={20} color="#6B7280" />
                   </TouchableOpacity>
 
                   <Text
                     style={{
                       fontSize: 20,
-                      fontWeight: 'bold',
-                      color: '#FD501E',
+                      fontWeight: '700',
+                      color: '#1F2937',
                       textAlign: 'center',
                       marginBottom: 16,
+                      letterSpacing: -0.3,
                     }}
                   >
-                    Select Your Currency
+                    Select Currency
                   </Text>
 
                   <ScrollView style={{ maxHeight: 300 }}>
@@ -1042,29 +1041,27 @@ const SearchFerry = ({ navigation, route }) => {
                           setCurrencyModalVisible(false);
                         }}
                         style={{
-                          paddingVertical: 14,
-                          paddingHorizontal: 10,
-                          borderRadius: 12,
-                          backgroundColor:
-                            selectedCurrency === currency.md_currency_code ? '#FFF3ED' : '#F9F9F9',
-                          marginBottom: 10,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          shadowColor:
-                            selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.08,
-                          shadowRadius: 6,
-                          shadowOffset: { width: 0, height: 2 },
-                          elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
+                          paddingVertical: 12,
+                          paddingHorizontal: 16,
+                          borderRadius: 12,
+                          marginBottom: 8,
+                          backgroundColor: selectedCurrency === currency.md_currency_code ? '#FEF3F2' : '#FFFFFF',
+                          borderWidth: selectedCurrency === currency.md_currency_code ? 1 : 0,
+                          borderColor: selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
                         }}
                       >
-                        <Text style={{ fontSize: 16, color: '#333' }}>
-                          {currency.md_currency_symbol} {currency.md_currency_name} (
-                          {currency.md_currency_code})
+                        <Text style={{ 
+                          fontSize: 16, 
+                          color: selectedCurrency === currency.md_currency_code ? '#FD501E' : '#1F2937',
+                          fontWeight: selectedCurrency === currency.md_currency_code ? '600' : '400',
+                        }}>
+                          {currency.md_currency_symbol} {currency.md_currency_name} ({currency.md_currency_code})
                         </Text>
                         {selectedCurrency === currency.md_currency_code && (
-                          <AntDesign name="checkcircle" size={18} color="#FD501E" />
+                          <Icon name="checkmark-circle" size={20} color="#FD501E" />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -1074,7 +1071,7 @@ const SearchFerry = ({ navigation, route }) => {
             </Modal>
           </View>
 
-        </LinearGradient>
+        </View>
         {/* Enhanced Ultra Premium Title and Filters Section */}
         <View style={{
           flexDirection: 'row',
@@ -4942,7 +4939,7 @@ const SearchFerry = ({ navigation, route }) => {
 
 
         </ScrollView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 };
