@@ -4,50 +4,51 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
-import { navigationRef } from './navigationRef';
-import { AuthProvider, useAuth } from './AuthContext';
-import { LanguageProvider, useLanguage } from './(Screen)/LanguageContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { navigationRef } from './src/config/navigationRef';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { LanguageProvider, useLanguage } from './src/screens/Screen/LanguageContext';
 // Import หน้าต่างๆ
-import StartingPointScreen from './StartingPointScreen';
-import EndPointScreen from './EndPointScreen';
-import SearchFerry from './SearchFerry';
-import HomeScreen from './HomeScreen';
-import TripDetail from './TripDetail';
-import CustomerInfo from './(Screen)/CustomerInfo';
-import PaymentScreen from './(Screen)/PaymentScreen';
-import ResultScreen from './(Screen)/ResultScreen';
-import { CustomerProvider } from './(Screen)/CustomerContext';
-import LinkingConfiguration from './(Screen)/linking';
-import PromptPayScreen from './(Screen)/PromptPayQR';
-//import SplashScreenComponent from './(Screen)/SplashScreenComponent';
-import LoginScreen from './(Screen)/LoginScreen';
-import ForgotPasswordScreen from './(Screen)/ForgotPasswordScreen';
-import OTPVerificationScreen from './(Screen)/OTPVerificationScreen';
-import RegisterScreen from './(Screen)/RegisterScreen';
-import AccountScreen from './(Screen)/AccountScreen';
-import Dashboard from './(Screen)/Dashboard';
-import ProfileScreen from './(Screen)/ProfileScreen';
-import IDCardCameraScreen from './(Screen)/IDCardCameraScreen';
-import BankVerificationScreen from './(Screen)/BankVerificationScreen';
-import OCRResultScreen from './(Screen)/OCRResultScreen';
-import SplashScreenComponent from './(component)/SplashScreenComponent';
-import PopularDestination from './(Screen)/populardestination';
-import LocationDetail from './(Screen)/LocationDetail';
+import StartingPointScreen from './src/screens/StartingPointScreen';
+import EndPointScreen from './src/screens/EndPointScreen';
+import SearchFerry from './src/screens/SearchFerry';
+import HomeScreen from './src/screens/HomeScreen';
+import TripDetail from './src/screens/TripDetail';
+import CustomerInfo from './src/screens/Screen/CustomerInfo';
+import PaymentScreen from './src/screens/Screen/PaymentScreen';
+import ResultScreen from './src/screens/Screen/ResultScreen';
+import { CustomerProvider } from './src/screens/Screen/CustomerContext';
+import LinkingConfiguration from './src/screens/Screen/linking';
+import PromptPayScreen from './src/screens/Screen/PromptPayQR';
+//import SplashScreenComponent from './src/screens/Screen/SplashScreenComponent';
+import LoginScreen from './src/screens/Screen/LoginScreen';
+import ForgotPasswordScreen from './src/screens/Screen/ForgotPasswordScreen';
+import OTPVerificationScreen from './src/screens/Screen/OTPVerificationScreen';
+import RegisterScreen from './src/screens/Screen/RegisterScreen';
+import AccountScreen from './src/screens/Screen/AccountScreen';
+import Dashboard from './src/screens/Screen/Dashboard';
+import ProfileScreen from './src/screens/Screen/ProfileScreen';
+import IDCardCameraScreen from './src/screens/Screen/IDCardCameraScreen';
+import BankVerificationScreen from './src/screens/Screen/BankVerificationScreen';
+import OCRResultScreen from './src/screens/Screen/OCRResultScreen';
+import SplashScreenComponent from './src/components/component/SplashScreenComponent';
+import PopularDestination from './src/screens/Screen/populardestination';
+import LocationDetail from './src/screens/Screen/LocationDetail';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AddCardScreen from './(Screen)/AddCardScreen';
-import ipAddress from './ipconfig';
-import { PromotionProvider } from './PromotionProvider';
-import TermsScreen from './(Screen)/TermsScreen';
-import PrivacyPolicyScreen from './(Screen)/PrivacyPolicyScreen';
-import ContactScreen from './(Screen)/ContactScreen';
-import BookingScreen from './(Screen)/BookingScreen';
-import DeleteProfileScreen from './(Screen)/DeleteProfileScreen';
-import AffiliateScreen from './(Screen)/AffiliateScreen';
+import AddCardScreen from './src/screens/Screen/AddCardScreen';
+import ipAddress from './src/config/ipconfig';
+import { PromotionProvider } from './src/contexts/PromotionProvider';
+import TermsScreen from './src/screens/Screen/TermsScreen';
+import PrivacyPolicyScreen from './src/screens/Screen/PrivacyPolicyScreen';
+import ContactScreen from './src/screens/Screen/ContactScreen';
+import BookingScreen from './src/screens/Screen/BookingScreen';
+import DeleteProfileScreen from './src/screens/Screen/DeleteProfileScreen';
+import AffiliateScreen from './src/screens/Screen/AffiliateScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -392,21 +393,23 @@ export default function App() {
   };
 
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <PromotionProvider>
-          {!isReady ? (
-            <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
-          ) : (
-            <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
-              <CustomerProvider>
-                <MainNavigator />
-              </CustomerProvider>
-            </NavigationContainer>
-          )}
-        </PromotionProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <SafeAreaProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <PromotionProvider>
+            {!isReady ? (
+              <SplashScreenComponent onAnimationEnd={handleSplashEnd} />
+            ) : (
+              <NavigationContainer linking={LinkingConfiguration} ref={navigationRef}>
+                <CustomerProvider>
+                  <MainNavigator />
+                </CustomerProvider>
+              </NavigationContainer>
+            )}
+          </PromotionProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -31,16 +31,64 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 49,
+      "versionCode": 50,
       "package": "com.chayanin5678.TheTrago",
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "minSdkVersion": 24,
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ],
+      "allowBackup": true,
+      "softwareKeyboardLayoutMode": "pan",
+      "enableDangerousExperimentalLeanBuilds": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icontrago.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "plugins": [
       "expo-secure-store",
+      [
+        "expo-status-bar"
+      ],
+      [
+        "@react-native-async-storage/async-storage"
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24,
+            "buildToolsVersion": "35.0.0",
+            "newArchEnabled": true,
+            "enableHermes": true,
+            "manifestPlaceholders": {
+              "android16AdaptiveLayouts": true
+            },
+            "packagingOptions": {
+              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"],
+              "exclude": ["META-INF/DEPENDENCIES", "META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/license.txt", "META-INF/NOTICE", "META-INF/notice.txt", "META-INF/ASL2.0", "META-INF/LICENSE.md", "META-INF/NOTICE.md"]
+            },
+            "proguardVersion": "7.4.0",
+            "enableProguardInReleaseBuilds": true,
+            "useLegacyPackaging": false,
+            "enableSeparateBuildPerCPUArchitecture": false,
+            "enableR8": true
+          },
+          "ios": {
+            "deploymentTarget": "13.0"
+          }
+        }
+      ],
       [
         "react-native-fbsdk-next",
         {
@@ -48,6 +96,20 @@
           "clientToken": "50846de8bdf0e0ee492a60a041633298",
           "displayName": "TheTrago",
           "scheme": "1326238592032941"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow TheTrago to access your camera to scan QR codes and capture ID documents."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow TheTrago to use your location to find nearby ferry terminals.",
+          "locationAlwaysPermission": "Allow TheTrago to use your location to find nearby ferry terminals.",
+          "locationWhenInUsePermission": "Allow TheTrago to use your location to find nearby ferry terminals."
         }
       ]
     ],
@@ -82,9 +144,15 @@
           "UIInterfaceOrientationLandscapeLeft",
           "UIInterfaceOrientationLandscapeRight"
         ]
-      },
-      "buildNumber": "2"
+      }
     },
-    "jsEngine": "jsc"
+    "jsEngine": "hermes",
+    "experiments": {
+      "tsconfigPaths": true,
+      "typedRoutes": false
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
   }
 }

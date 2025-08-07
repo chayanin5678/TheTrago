@@ -9,21 +9,35 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "releaseChannel": "default"
+        "releaseChannel": "default",
+        "compileSdkVersion": 35,
+        "targetSdkVersion": 35,
+        "minSdkVersion": 24
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "releaseChannel": "default"
+        "releaseChannel": "default",
+        "compileSdkVersion": 35,
+        "targetSdkVersion": 35,
+        "minSdkVersion": 24
       }
     },
     "production": {
       "autoIncrement": false,
       "android": {
         "buildType": "app-bundle",
-        "releaseChannel": "default"
+        "releaseChannel": "default",
+        "compileSdkVersion": 35,
+        "targetSdkVersion": 35,
+        "minSdkVersion": 24,
+        "gradleCommand": ":app:bundleRelease",
+        "image": "latest",
+        "env": {
+          "EXPO_USE_FAST_RESOLVER": "1"
+        }
       },
       "ios": {
         "autoIncrement": false

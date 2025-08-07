@@ -1,25 +1,25 @@
-import React, { useRef, useState, useEffect, use } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView, Platform, Linking } from 'react-native';
 
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Banner from './(component)/Banner';
-import Toptrending from './(component)/toptrending';
-import LogoTheTrago from './(component)/Logo';
+import Banner from '../components/component/Banner';
+import Toptrending from '../components/component/toptrending';
+import LogoTheTrago from '../components/component/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { useCustomer } from './(Screen)/CustomerContext';
+import { useCustomer } from './Screen/CustomerContext';
 import { CalendarList } from 'react-native-calendars';
-import styles from './(CSS)/HomeScreenStyles';
+import styles from '../styles/CSS/HomeScreenStyles';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
-import ipAddress from './ipconfig';
+import ipAddress from '../config/ipconfig';
 import { Easing } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 import { BlurView } from 'expo-blur';
-import CrossPlatformStatusBar from './(component)/CrossPlatformStatusBar';
-import SafeAreaDebugger from './(component)/SafeAreaDebugger';
-import { DesignTokens, CrossPlatformUtils } from './(CSS)/CrossPlatformStyles';
-import { useLanguage } from './(Screen)/LanguageContext';
+import CrossPlatformStatusBar from '../components/component/CrossPlatformStatusBar';
+import SafeAreaDebugger from '../components/component/SafeAreaDebugger';
+import { DesignTokens, CrossPlatformUtils } from '../styles/CSS/CrossPlatformStyles';
+import { useLanguage } from './Screen/LanguageContext';
 
 const HomeScreen = ({ navigation, route }) => {
   const { language, t, selectedLanguage, changeLanguage } = useLanguage();
@@ -1194,7 +1194,7 @@ const HomeScreen = ({ navigation, route }) => {
               style={styles.inputBox}
             >
               <Image
-                source={require('./assets/directions_boat.png')}
+                source={require\('../../assets/directions_boat.png')}
                 style={styles.logoDate}
                 resizeMode="contain"
               />
@@ -1209,7 +1209,7 @@ const HomeScreen = ({ navigation, route }) => {
     
             <TouchableOpacity onPress={swapPoints}>
               <Image
-                source={require('./assets/mage_exchange-a.png')}
+                source={require\('../../assets/mage_exchange-a.png')}
                 style={styles.logoSwap}
                 resizeMode="contain"
               />
@@ -1223,7 +1223,7 @@ const HomeScreen = ({ navigation, route }) => {
               }}
               style={styles.inputBox} >
               <Image
-                source={require('./assets/location_on.png')}
+                source={require\('../../assets/location_on.png')}
                 style={styles.logoDate}
                 resizeMode="contain"
               />
@@ -1246,7 +1246,7 @@ const HomeScreen = ({ navigation, route }) => {
                 ]}>
 
                 <Image
-                  source={require('./assets/solar_calendar-bold.png')}
+                  source={require\('../../assets/solar_calendar-bold.png')}
 
                   style={styles.logoDate}
                   resizeMode="contain"
@@ -1264,7 +1264,7 @@ const HomeScreen = ({ navigation, route }) => {
                 <>
 
                   <Image
-                    source={require('./assets/Line 2.png')}
+                    source={require\('../../assets/Line 2.png')}
                     style={styles.logoLine}
                     resizeMode="contain"
                   />
@@ -1272,7 +1272,7 @@ const HomeScreen = ({ navigation, route }) => {
                     style={styles.rowdepart}>
 
                     <Image
-                      source={require('./assets/solar_calendar-yellow.png')}
+                      source={require\('../../assets/solar_calendar-yellow.png')}
                       style={styles.logoDate}
                       resizeMode="contain"
                     />
@@ -1508,8 +1508,8 @@ const HomeScreen = ({ navigation, route }) => {
               <Image source={item.image} style={styles.cardImage} />
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardLocation}><Image source={require('./assets/Iconlocation.png')} /> {item.location}</Text>
-                <Text style={styles.cardDuration}><Image source={require('./assets/Icontime.png')} /> {item.duration}</Text>
+                <Text style={styles.cardLocation}><Image source={require\('../../assets/Iconlocation.png')} /> {item.location}</Text>
+                <Text style={styles.cardDuration}><Image source={require\('../../assets/Icontime.png')} /> {item.duration}</Text>
                 <Text style={styles.cardPrice}>{t('startFrom')} <Text style={styles.cardPriceColor}>{item.price}</Text></Text>
               </View>
             </View>
