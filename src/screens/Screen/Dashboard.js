@@ -10,6 +10,7 @@ import { useLanguage } from './LanguageContext';
 import { useCustomer } from './CustomerContext';
 import axios from 'axios';
 import ipAddress from '../../config/ipconfig';
+import CrossPlatformStatusBar from '../../components/component/CrossPlatformStatusBar';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -340,6 +341,7 @@ const Dashboard = ({ navigation }) => {
                   email: profileData.md_member_email,
                   tel: profileData.md_member_phone,
                   md_booking_memberid: profileData.md_member_id,
+                  md_member_photo: profileData.md_member_photo, // เพิ่มรูปโปรไฟล์
                 });
                 
                 // Profile data จะถูก set แล้ว useEffect จะรันอีกครั้งโดยอัตโนมัติ
@@ -407,11 +409,10 @@ const Dashboard = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Set StatusBar for cross-platform consistency */}
-      <StatusBar 
+      {/* Cross-Platform Status Bar */}
+      <CrossPlatformStatusBar 
         barStyle="light-content" 
         backgroundColor="#FD501E" 
-        translucent={Platform.OS === 'android'}
       />
       
       {/* Premium Header with Gradient */}
@@ -431,6 +432,29 @@ const Dashboard = ({ navigation }) => {
           style={styles.headerGradient}
         >
           <SafeAreaView style={styles.safeAreaHeader}>
+            <View style={styles.headerTopRow}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              
+              <View style={styles.headerContent}>
+                <View style={styles.titleContainer}>
+                  <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
+                  <Text style={styles.headerTitle}>{t('dashboard') || 'Dashboard'}</Text>
+                </View>
+                <Text style={styles.headerSubtitle}>
+                  {customerData?.md_booking_memberid ? 
+                    `${t('ultraPremiumAnalytics') || 'Ultra Premium Analytics'} - ID: ${customerData.md_booking_memberid}` :
+                    `${t('pleaseLogin') || 'Please Login'}`
+                  }
+                </Text>
+              </View>
+            </View>
+            
             {/* Floating particles effect */}
             {floatingAnims.map((anim, index) => (
               <Animated.View
@@ -448,28 +472,6 @@ const Dashboard = ({ navigation }) => {
                 ]}
               />
             ))}
-            
-            <Animated.View 
-              style={[
-                styles.headerContent,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ scale: scaleAnim }]
-                }
-              ]}
-            >
-              <View style={styles.titleContainer}>
-                <MaterialCommunityIcons name="view-dashboard" size={32} color="#FFFFFF" />
-                <Text style={styles.headerTitle}>{t('dashboard') || 'Dashboard'}</Text>
-              </View>
-              <Text style={styles.headerSubtitle}>
-                {customerData?.md_booking_memberid ? 
-                  `${t('ultraPremiumAnalytics') || 'Ultra Premium Analytics'} - ID: ${customerData.md_booking_memberid}` :
-                  `${t('pleaseLogin') || 'Please Login'}`
-                }
-              </Text>
-              <View style={styles.headerDivider} />
-            </Animated.View>
           </SafeAreaView>
         </LinearGradient>
       </Animated.View>
@@ -500,7 +502,7 @@ const Dashboard = ({ navigation }) => {
           >
             <View style={styles.loginPromptCard}>
               <LinearGradient
-                colors={['#FF6B6B', '#FF8E53']}
+                colors={['#FD501E', '#FF6B40']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.loginPromptGradient}
@@ -770,31 +772,47 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
-    ...Platform.select({
-      android: {
-        paddingTop: 0 || 0,
-      },
-    }),
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'android' ? 40 : 0,
-    paddingBottom: 25,
-    paddingHorizontal: 25,
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
+    paddingTop: 0,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
     shadowRadius: 20,
     position: 'relative',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    overflow: 'hidden',
   },
   safeAreaHeader: {
     paddingTop: 0,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 25,
+    position: 'relative',
+  },
   headerContent: {
     alignItems: 'center',
+    flex: 1,
+    marginLeft: 0,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    top: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -802,28 +820,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#FFFFFF',
     marginLeft: 12,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  headerDivider: {
-    width: 60,
-    height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 2,
-    marginTop: 0,
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   // Floating Particles
   floatingParticle: {
@@ -834,7 +845,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   scrollView: {
-    marginTop: 150,
+    marginTop: 145,
   },
   scrollContent: {
     paddingBottom: 140,
@@ -889,71 +900,71 @@ const styles = StyleSheet.create({
   },
   // Login Prompt Card Styles
   loginPromptCard: {
-    borderRadius: 30,
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.4,
-    shadowRadius: 25,
-    elevation: 15,
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
     marginBottom: 25,
   },
   loginPromptGradient: {
-    padding: 40,
+    padding: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   loginPromptTitle: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginTop: 20,
-    marginBottom: 15,
+    marginTop: 15,
+    marginBottom: 10,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   loginPromptText: {
-    fontSize: 16,
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 30,
+    lineHeight: 22,
+    marginBottom: 20,
   },
   loginPromptButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    borderWidth: 2,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   loginPromptButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
   },
   // Premium Booking Card Styles
   bookingCard: {
-    marginBottom: 18,
-    borderRadius: 25,
+    marginBottom: 15,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   cardGradient: {
-    borderRadius: 25,
+    borderRadius: 20,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 25,
-    borderRadius: 25,
+    padding: 20,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.8)',
   },
@@ -963,71 +974,71 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardIndicator: {
-    width: 6,
-    height: 50,
+    width: 4,
+    height: 40,
     backgroundColor: '#FFCC00',
-    borderRadius: 3,
-    marginRight: 20,
+    borderRadius: 2,
+    marginRight: 15,
     shadowColor: '#FFCC00',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 2,
   },
   cardTextContainer: {
     flex: 1,
   },
   bookingCount: {
-    fontSize: 36,
-    fontWeight: '900',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#1F2937',
-    marginBottom: 6,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.05)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 1,
   },
   bookingStatus: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#6B7280',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   iconContainer: {
-    width: 75,
-    height: 75,
-    borderRadius: 37.5,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
     position: 'relative',
   },
   iconGlow: {
     position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    top: -7.5,
-    left: -7.5,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    top: -5,
+    left: -5,
   },
   // Premium Points Card Styles
   pointsCard: {
-    borderRadius: 30,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.4,
-    shadowRadius: 25,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
     marginBottom: 25,
     position: 'relative',
   },
   pointsGradient: {
-    padding: 30,
+    padding: 25,
     position: 'relative',
   },
   pointsContent: {
@@ -1039,15 +1050,15 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   pointsHeaderText: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#FFFFFF',
-    fontWeight: '800',
-    marginLeft: 12,
-    letterSpacing: 0.8,
+    fontWeight: '700',
+    marginLeft: 10,
+    letterSpacing: 0.5,
     flex: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   levelBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',

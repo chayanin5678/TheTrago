@@ -125,12 +125,12 @@ export default function LoginScreen({ navigation }) {
         console.log('Login successful. AuthContext will handle navigation automatically.');
       } else {
         setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
-        Alert.alert(t('error'), t('invalidCredentials'));
+        Alert.alert('เตือน', t('invalidCredentials'));
       }
     } catch (error) {
       setIsLoading(false); // หยุดโหลดเมื่อเกิดข้อผิดพลาด
       console.log('Error:', error);  // Log the error for debugging
-      Alert.alert(t('error'), t('emailOrPasswordIncorrect'));
+      Alert.alert('เตือน', t('emailOrPasswordIncorrect'));
     }
   };
 
@@ -174,7 +174,7 @@ export default function LoginScreen({ navigation }) {
         await login(socialLoginResponse.data.token);
         Alert.alert(t('success'), t('googleSignInSuccess'));
       } else {
-        Alert.alert(t('error'), t('googleSignInError'));
+        Alert.alert('เตือน', t('googleSignInError'));
       }
     } catch (error) {
       console.log('Google Sign-In Error:', error);
@@ -196,7 +196,7 @@ export default function LoginScreen({ navigation }) {
         errorMessage = `${t('errorPrefix')} ${error.message}`;
       }
       
-      Alert.alert(t('googleSignInErrorTitle'), errorMessage);
+      Alert.alert('เตือน', errorMessage);
     } finally {
       setSocialLoading(prev => ({ ...prev, google: false }));
     }
@@ -248,7 +248,7 @@ export default function LoginScreen({ navigation }) {
 
       // ตรวจสอบว่ามี email หรือไม่
       if (!facebookUserInfo.email) {
-        Alert.alert(t('error'), t('cannotAccessFacebookEmail'));
+        Alert.alert('เตือน', t('cannotAccessFacebookEmail'));
         return;
       }
 
@@ -270,7 +270,7 @@ export default function LoginScreen({ navigation }) {
         await login(socialLoginResponse.data.token);
         Alert.alert(t('success'), t('facebookSignInSuccess'));
       } else {
-        Alert.alert(t('error'), t('facebookSignInError'));
+        Alert.alert('เตือน', t('facebookSignInError'));
       }
     } catch (error) {
       console.log('Facebook Login Error:', error);
@@ -278,12 +278,12 @@ export default function LoginScreen({ navigation }) {
       
       if (error.response) {
         console.log('API Error Response:', error.response.data);
-        Alert.alert(t('error'), `${t('apiError')}: ${error.response.data.message || t('unknownReason')}`);
+        Alert.alert('เตือน', `${t('apiError')}: ${error.response.data.message || t('unknownReason')}`);
       } else if (error.request) {
         console.log('Network Error:', error.request);
-        Alert.alert(t('error'), t('cannotConnectToServer'));
+        Alert.alert('เตือน', t('cannotConnectToServer'));
       } else {
-        Alert.alert(t('error'), t('facebookLoginErrorGeneral'));
+        Alert.alert('เตือน', t('facebookLoginErrorGeneral'));
       }
     } finally {
       setSocialLoading(prev => ({ ...prev, facebook: false }));

@@ -59,9 +59,14 @@ const AccountScreen = ({ navigation }) => {
   ).current;
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoadingProfile(false), 1500);
+    // ลดเวลา loading และเชื่อมโยงกับ user data
+    const timer = setTimeout(() => {
+      if (user.length > 0 || !token) {
+        setIsLoadingProfile(false);
+      }
+    }, 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [user, token]);
 
   // โหลดการตั้งค่าภาษาจาก SecureStore
   useEffect(() => {
@@ -311,31 +316,31 @@ const AccountScreen = ({ navigation }) => {
   // ตรวจสอบสถานะการล็อกอินและโหลดข้อมูลเมื่อเริ่มต้น
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const storedToken = await SecureStore.getItemAsync('userToken'); // ตรวจสอบ token
-      setToken(storedToken); // อัปเดตสถานะ token
+      console.log('🔍 Checking login status...');
+      const storedToken = await SecureStore.getItemAsync('userToken');
+      setToken(storedToken);
 
       if (!storedToken) {
-        // หากไม่มี token, แค่ไม่ต้องทำอะไร ไม่ต้องไปหน้า login
-        console.log('No token found, staying on account screen');
+        console.log('❌ No token found');
+        setIsLoading(false);
+        setIsLoadingProfile(false);
       } else {
-        console.log('Token found, user is logged in');
+        console.log('✅ Token found, user is logged in');
+        // Token จะถูกส่งไป useEffect ด้านล่างเพื่อ fetch ข้อมูล
       }
-      setIsLoading(false); // หยุดการโหลดหลังจากตรวจสอบเสร็จ
     };
-    checkLoginStatus(); // เรียกใช้เมื่อหน้าโหลด
-
-
-  }, []); // ใช้ navigation เป็น dependency เพื่อให้ useEffect ทำงานเมื่อคอมโพเนนต์โหลด
+    checkLoginStatus();
+  }, []);
 
   useEffect(() => {
-
     const fetchData = async () => {
       try {
+        console.log('🔄 Fetching profile data...');
         const response = await fetch(`${ipAddress}/profile`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`, // ส่ง Token ใน Authorization header
-            'Content-Type': 'application/json', // ระบุประเภทของข้อมูลที่ส่ง (ถ้าจำเป็น)
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         });
 
@@ -344,29 +349,49 @@ const AccountScreen = ({ navigation }) => {
         }
 
         const data = await response.json();
+        console.log('✅ Profile data received:', data);
 
-        if (data && Array.isArray(data.data)) {
+        if (data && Array.isArray(data.data) && data.data.length > 0) {
           setUser(data.data);
           updateCustomerData({
             Firstname: data.data[0].md_member_fname,
             Lastname: data.data[0].md_member_lname,
             email: data.data[0].md_member_email,
+            tel: data.data[0].md_member_phone,
+            md_booking_memberid: data.data[0].md_member_id,
           });
-          console.log('name:' + customerData.Firstname);
+          
+          // ตั้งค่ารูป profile จาก API ถ้ามี
+          if (data.data[0].md_member_photo) {
+            const photoUrl = data.data[0].md_member_photo.startsWith('http') 
+              ? data.data[0].md_member_photo 
+              : `https://www.thetrago.com/${data.data[0].md_member_photo}`;
+            setProfileImage(photoUrl);
+            console.log('📸 Profile image set:', photoUrl);
+          }
+          
+          console.log('✅ Customer data updated:', {
+            name: `${data.data[0].md_member_fname} ${data.data[0].md_member_lname}`,
+            email: data.data[0].md_member_email
+          });
         } else {
-          console.error('Data is not an array', data);
+          console.error('❌ Data is not an array or empty:', data);
           setUser([]);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('❌ Error fetching profile data:', error);
       } finally {
-        setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+        setIsLoading(false);
+        setIsLoadingProfile(false);
       }
     };
+
     if (token) {
       fetchData();
+    } else {
+      setIsLoading(false);
+      setIsLoadingProfile(false);
     }
-
   }, [token]);
 
   // Sync selectedLanguageLocal with selectedLanguage context
@@ -597,7 +622,7 @@ const AccountScreen = ({ navigation }) => {
             },
           ]}
         >
-          {(user.length === 0 || isLoadingProfile) ? (
+          {(user.length === 0 || isLoadingProfile || isLoading) ? (
             // 🔸 Enhanced Skeleton Loading
             <View style={styles.skeletonContainer}>
               {/* Profile Image Skeleton */}
@@ -679,14 +704,21 @@ const AccountScreen = ({ navigation }) => {
                               ? { 
                                   uri: item.md_member_photo.startsWith('http') 
                                     ? item.md_member_photo 
-                                    : `https://www.thetrago.com/$ {item.md_member_photo}` 
+                                    : `https://www.thetrago.com/${item.md_member_photo}` 
                                 }
                               : require('../../../assets/icontrago.png')
                         }
                         style={styles.profileImage}
-                        onLoadStart={() => console.log('Image loading started')}
-                        onLoadEnd={() => console.log('Image loading finished')}
-                        onError={(error) => console.log('Image loading error:', error)}
+                        onLoadStart={() => console.log('📸 Image loading started for:', profileImage || item.md_member_photo)}
+                        onLoadEnd={() => console.log('✅ Image loading finished successfully')}
+                        onError={(error) => {
+                          console.log('❌ Image loading error:', error);
+                          // ถ้าโหลดรูปไม่สำเร็จ ให้ใช้รูป default
+                          if (profileImage && profileImage !== require('../../../assets/icontrago.png')) {
+                            setProfileImage(null);
+                          }
+                        }}
+                        defaultSource={require('../../../assets/icontrago.png')}
                       />
                       {/* Pulse animation on edit button */}
                       <Animated.View style={[styles.editPulse, {

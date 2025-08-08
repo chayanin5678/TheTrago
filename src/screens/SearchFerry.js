@@ -1,9 +1,8 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Platform } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
+import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 import ipAddress from '../config/ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -20,13 +19,23 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import headStyles from '../styles/CSS/StartingPointScreenStyles';
 import LottieView from 'lottie-react-native';
 import axios from 'axios';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const itemsPerPage = 5;
+
+// iPad detection and responsive utilities
+const isTablet = screenWidth >= 768;
+const isLargeTablet = screenWidth >= 1024;
+const getResponsiveSize = (phone, tablet, largeTablet) => {
+  if (isLargeTablet && largeTablet) return largeTablet;
+  if (isTablet && tablet) return tablet;
+  return phone;
+};
 
 
 const SearchFerry = ({ navigation, route }) => {
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
-  const insets = useSafeAreaInsets(); // สำหรับ Android 15 Edge-to-Edge
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
@@ -74,8 +83,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [returnDate, setReturnDate] = useState(detaReturn);
   const [showDepartPicker, setShowDepartPicker] = useState(false);
   const [showReturnPicker, setShowReturnPicker] = useState(false);
-  const [loading, setLoading] = useState(false); // Start with false - show loading only when searching
-  const [hasSearched, setHasSearched] = useState(false); // Track if search has been performed
+  const [loading, setLoading] = useState(true);
 
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -91,16 +99,6 @@ const SearchFerry = ({ navigation, route }) => {
   }); // string
   const [selectedCompaniesDepart, setSelectedCompaniesDepart] = useState([]);
   const [selectedCompaniesReturn, setSelectedCompaniesReturn] = useState([]);
-  
-  // Animation for swap button
-  const swapButtonScale = useRef(new Animated.Value(1)).current;
-  const swapButtonRotation = useRef(new Animated.Value(0)).current;
-  
-  // Animation for text swap
-  const fromTextOpacity = useRef(new Animated.Value(1)).current;
-  const toTextOpacity = useRef(new Animated.Value(1)).current;
-  const fromTextTranslateY = useRef(new Animated.Value(0)).current;
-  const toTextTranslateY = useRef(new Animated.Value(0)).current;
   const [isFilterModalVisibleDepart, setIsFilterModalVisibleDepart] = useState(false);
   const [isFilterModalVisibleReturn, setIsFilterModalVisibleReturn] = useState(false);
   const [availableCompaniesDepart, setAvailableCompaniesDepart] = useState([]);
@@ -183,12 +181,10 @@ const SearchFerry = ({ navigation, route }) => {
     if (calendarStartDate) {
       setDepartureDate(new Date(calendarStartDate));
       setShowDepartModal(false);
-      // Force trigger re-render
+      // Force trigger re-render without search
       setTimeout(() => {
         setCalendarStartDate(calendarStartDate);
-        // Remove automatic search - user must click search button
-        console.log('🔄 Date updated:', calendarStartDate, '- Click search to find routes');
-        // fetchFerryRoute(); // Disabled automatic search
+        console.log('✅ Departure date updated without triggering search:', calendarStartDate);
       }, 50);
     } else {
       alert('กรุณาเลือกวันที่ไป');
@@ -200,12 +196,10 @@ const SearchFerry = ({ navigation, route }) => {
     if (calendarEndDate) {
       setReturnDate(new Date(calendarEndDate));
       setShowReturnModal(false);
-      // Force trigger re-render
+      // Force trigger re-render without search
       setTimeout(() => {
         setCalendarEndDate(calendarEndDate);
-        // Remove automatic search - user must click search button
-        console.log('🔄 Return date updated:', calendarEndDate, '- Click search to find routes');
-        // fetchFerryRoute(); // Disabled automatic search
+        console.log('✅ Return date updated without triggering search:', calendarEndDate);
       }, 50);
     } else {
       alert('กรุณาเลือกวันที่กลับ');
@@ -360,86 +354,8 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   const swapPoints = () => {
-    // Text fade out animation
-    Animated.parallel([
-      Animated.timing(fromTextOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }),
-      Animated.timing(toTextOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }),
-      Animated.timing(fromTextTranslateY, {
-        toValue: -10,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }),
-      Animated.timing(toTextTranslateY, {
-        toValue: 10,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }),
-    ]).start(() => {
-      // Swap the points
-      setStartingPoint((prev) => endPoint);
-      setEndPoint((prev) => startingPoint);
-      
-      // Reset text positions
-      fromTextTranslateY.setValue(0);
-      toTextTranslateY.setValue(0);
-      
-      // Text fade in animation
-      Animated.parallel([
-        Animated.timing(fromTextOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-          easing: Easing.ease,
-        }),
-        Animated.timing(toTextOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-          easing: Easing.ease,
-        }),
-      ]).start();
-    });
-
-    // Button animation
-    Animated.parallel([
-      // Scale animation
-      Animated.sequence([
-        Animated.timing(swapButtonScale, {
-          toValue: 0.8,
-          duration: 150,
-          useNativeDriver: true,
-          easing: Easing.ease,
-        }),
-        Animated.timing(swapButtonScale, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-          easing: Easing.ease,
-        }),
-      ]),
-      // Rotation animation
-      Animated.timing(swapButtonRotation, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.ease,
-      }),
-    ]).start(() => {
-      // Reset rotation after animation completes
-      swapButtonRotation.setValue(0);
-    });
+    setStartingPoint((prev) => endPoint);
+    setEndPoint((prev) => startingPoint);
   };
 
   const truncateText = (text, maxLength = 8) => {
@@ -570,27 +486,39 @@ const SearchFerry = ({ navigation, route }) => {
       return result;
     }
   };
+  
+  // Disabled automatic search on data change - search only when button is pressed
+  /*
   useEffect(() => {
-    // Remove automatic search - only update state variables
-    // handleSearchStart();
-    // handleSearchEnd();
+    handleSearchStart();
+    handleSearchEnd();
 
     setDetaDepart(departureDate);
     setDetaReturn(returnDate);
     setTripTypeSearch(tripType);
   }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children, calendarStartDate, calendarEndDate]);
+  */
 
+  // Manual data update without triggering search
   useEffect(() => {
-    // Disable automatic search - search only when button is clicked
-    // if (
-    //   customerData?.roud !== undefined &&
-    //   startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
-    //   calendarStartDate &&
-    //   (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
-    // ) {
-    //   fetchFerryRoute();
-    // }
+    setDetaDepart(departureDate);
+    setDetaReturn(returnDate);
+    setTripTypeSearch(tripType);
+  }, [departureDate, returnDate, tripType]);
+
+  // Disabled automatic search - now search only happens when search button is pressed
+  /*
+  useEffect(() => {
+    if (
+      customerData?.roud !== undefined &&
+      startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
+      calendarStartDate &&
+      (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
+    ) {
+      fetchFerryRoute();
+    }
   }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate, selectedCurrency]);
+  */
 
 
 
@@ -604,13 +532,14 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   const handleSearchStart = () => {
-
-
+    // Disabled automatic search - keeping function for compatibility
+    // This function used to fetch data automatically but now search only happens on button press
+    console.log('handleSearchStart called - but no auto-search will happen');
+    
+    /*
     fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}/${selectedCurrency}`)
       .then((response) => {
         if (!response.ok) {
-          // Logging response status for more details
-          // console.error(`HTTP error! status: ${response.status}`);
           throw new Error('Network response was not ok');
         }
         return response.json();
@@ -618,28 +547,25 @@ const SearchFerry = ({ navigation, route }) => {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setTimetableDepart(data.data);
-          // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
         } else {
-          // console.error('Data is not in expected format', data);
           setTimetableDepart([]);
         }
       })
       .catch((error) => {
-        // console.error('Error fetching data:', error.message);
-        // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
+        console.error('Error fetching data:', error.message);
       })
       .finally(() => {
-        setLoading(false); // Ensure loading is turned off after request is complete
+        setLoading(false);
       });
-
+    */
   };
 
   const fetchFerryRoute = async () => {
-    setLoading(true);
-    setHasSearched(true);
-    setError(null);
-    
     try {
+      // เริ่ม loading state
+      setLoading(true);
+      setError(''); // ล้าง error ก่อน
+      
       // แสดงค่า selectedLanguage
       // console.log('🌐 Selected Language:', selectedLanguage);
       // console.log('🌐 Selected Language type:', typeof selectedLanguage);
@@ -756,6 +682,11 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   const handleSearchEnd = () => {
+    // Disabled automatic search - keeping function for compatibility  
+    // This function used to fetch return trip data automatically but now search only happens on button press
+    console.log('handleSearchEnd called - but no auto-search will happen');
+    
+    /*
     // Debug: ตรวจสอบวันที่ที่ใช้
     console.log('🔍 handleSearchEnd Debug:');
     console.log('  - calendarEndDate:', calendarEndDate);
@@ -774,7 +705,6 @@ const SearchFerry = ({ navigation, route }) => {
         if (data && Array.isArray(data.data)) {
           settimetableReturn(data.data);
           console.log('✅ Return trip data loaded:', data.data.length, 'items');
-          // รายการบริษัทสำหรับ filter จะมาจาก fetchFerryRoute แทน
         } else {
           console.error('Data is not an array', data);
           settimetableReturn([]);
@@ -784,8 +714,9 @@ const SearchFerry = ({ navigation, route }) => {
         console.error('Error fetching return data:', error);
         settimetableReturn([]);
       }).finally(() => {
-        setLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+        setLoading(false);
       });
+    */
   };
 
   useEffect(() => {
@@ -820,102 +751,6 @@ const SearchFerry = ({ navigation, route }) => {
     fecthdiscount(startingPoint.countryId);
   }, [startingPoint.countryId]);
 
-
-  // Memoized handlers to prevent re-creation
-  const handleTripTypeOneWay = useCallback(() => {
-    if (loading) return;
-    setTripType(TRIP_TYPES.ONE_WAY);
-    updateCustomerData({ roud: 1 });
-  }, [loading, updateCustomerData]);
-
-  const handleTripTypeRoundTrip = useCallback(() => {
-    if (loading) return;
-    setTripType(TRIP_TYPES.ROUND_TRIP);
-    updateCustomerData({ roud: 0 });
-  }, [loading, updateCustomerData]);
-
-  // Memoized TouchableOpacity components
-  const OneWayButton = useMemo(() => (
-    <TouchableOpacity
-      key="oneway-button"
-      style={[
-        styles.tripTypeOneWayButton,
-        {
-          backgroundColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
-          borderRadius: wp('2.5%'),
-          paddingVertical: hp('1.2%'),
-          paddingHorizontal: wp('4%'),
-          shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "One Way Trip" ? '#FD501E' : 'transparent'),
-          shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 0.2 : 0),
-          shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-          shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-          elevation: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 6 : 0),
-          borderWidth: 0.5,
-          borderColor: tripType === "One Way Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
-        }
-      ]}
-      onPress={handleTripTypeOneWay}
-      disabled={loading}
-      activeOpacity={0.8}
-    >
-      <Text
-        style={[
-          styles.tripTypeText,
-          {
-            color: tripType === TRIP_TYPES.ONE_WAY ? '#FFFFFF' : '#64748B',
-            fontWeight: tripType === TRIP_TYPES.ONE_WAY ? '700' : '600',
-            fontSize: wp('3.5%'),
-            letterSpacing: 0.2,
-            textShadowColor: tripType === TRIP_TYPES.ONE_WAY ? 'rgba(0,0,0,0.1)' : 'transparent',
-            textShadowRadius: 1,
-          }
-        ]}
-      >
-        {t('oneWayTrip')}
-      </Text>
-    </TouchableOpacity>
-  ), [tripType, loading, handleTripTypeOneWay, t]);
-
-  const RoundTripButton = useMemo(() => (
-    <TouchableOpacity
-      key="roundtrip-button"
-      style={[
-        styles.tripTypeRoundButton,
-        {
-          backgroundColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
-          borderRadius: wp('2.5%'),
-          paddingVertical: hp('1.2%'),
-          paddingHorizontal: wp('4%'),
-          shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "Return Trip" ? '#FD501E' : 'transparent'),
-          shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 0.2 : 0),
-          shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-          shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-          elevation: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 6 : 0),
-          borderWidth: 0.5,
-          borderColor: tripType === "Return Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
-        }
-      ]}
-      onPress={handleTripTypeRoundTrip}
-      disabled={loading}
-      activeOpacity={0.8}
-    >
-      <Text
-        style={[
-          styles.tripTypeText,
-          {
-            color: tripType === TRIP_TYPES.ROUND_TRIP ? '#FFFFFF' : '#64748B',
-            fontWeight: tripType === TRIP_TYPES.ROUND_TRIP ? '700' : '600',
-            fontSize: wp('3.5%'),
-            letterSpacing: 0.2,
-            textShadowColor: tripType === TRIP_TYPES.ROUND_TRIP ? 'rgba(0,0,0,0.1)' : 'transparent',
-            textShadowRadius: 1,
-          }
-        ]}
-      >
-        {t('roundTrip')}
-      </Text>
-    </TouchableOpacity>
-  ), [tripType, loading, handleTripTypeRoundTrip, t]);
 
   const calculateDiscountedPrice = (price) => {
     if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
@@ -1044,24 +879,30 @@ const SearchFerry = ({ navigation, route }) => {
 
 
   // --- Boat loading animation for empty pagedDataDepart ---
-  // No boat/floating/particle animation
+  const boatAnim = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(boatAnim, {
+          toValue: -24, // เพิ่มระยะขยับ
+          duration: 1400, // เพิ่มระยะเวลาให้สมูทขึ้น
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin), // ใช้ easing แบบ sin ให้ลื่นไหล
+        }),
+        Animated.timing(boatAnim, {
+          toValue: 0,
+          duration: 1400,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+      ])
+    ).start();
+  }, [boatAnim]);
 
 
 
   return (
-    <SafeAreaView 
-      style={[
-        { flex: 1 },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใน Android 15 จะจัดการ insets เอง
-        }
-      ]}
-    >
-      <StatusBar 
-        style="light" 
-        backgroundColor="transparent" 
-        translucent={true}
-      />
+    <SafeAreaView style={{ flex: 1 }}>
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -1069,7 +910,7 @@ const SearchFerry = ({ navigation, route }) => {
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-        {/* Enhanced Premium Header - รองรับ Android 15 Edge-to-Edge */}
+        {/* Enhanced Premium Header */}
         <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
@@ -1077,19 +918,17 @@ const SearchFerry = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'android' ? hp('-1%') : 0, // ใช้ insets สำหรับ Android 15
-              paddingTop: Platform.OS === 'android' ? hp('1%') : hp('2%'),
-              minHeight: Platform.OS === 'android' ? hp('15%') + insets.top : hp('12%'),
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              paddingBottom: 8,
+              marginTop: -10,
+              borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
+              borderBottomRightRadius: getResponsiveSize(40, 35, 30),
+              paddingBottom: getResponsiveSize(8, 6, 5),
               shadowColor: '#001233',
               shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
+              shadowRadius: getResponsiveSize(25, 20, 15),
+              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
               elevation: 18,
-              padding: 10,
-          
+              padding: getResponsiveSize(10, 8, 6),
+              minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
               // Ultra premium glass morphism
@@ -1103,11 +942,14 @@ const SearchFerry = ({ navigation, route }) => {
               {
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingHorizontal: 0,
+                paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: 30, // ใช้ค่าเฉลี่ย
-                height: 56,
+                marginTop: getResponsiveSize(30, 25, 20),
+                height: getResponsiveSize(56, 50, 45),
+                maxWidth: isTablet ? 1200 : '100%',
+                alignSelf: 'center',
+                width: '100%',
               },
             ]}
           >
@@ -1116,15 +958,15 @@ const SearchFerry = ({ navigation, route }) => {
               onPress={() => navigation.goBack()}
               style={{
                 position: 'absolute',
-                left: 16,
+                left: getResponsiveSize(16, 20, 30),
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 25,
-                padding: 8,
+                borderRadius: getResponsiveSize(25, 22, 20),
+                padding: getResponsiveSize(8, 10, 12),
                 zIndex: 2,
                 shadowColor: '#FD501E',
                 shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: getResponsiveSize(12, 10, 8),
+                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
                 elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
@@ -1143,25 +985,37 @@ const SearchFerry = ({ navigation, route }) => {
               onPress={() => setCurrencyModalVisible(true)}
               style={{
                 position: 'absolute',
-                right: 16,
+                right: getResponsiveSize(16, 20, 30),
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                padding: 10,
-                borderRadius: 18,
+                padding: getResponsiveSize(10, 12, 14),
+                borderRadius: getResponsiveSize(18, 16, 14),
                 flexDirection: 'row',
                 alignItems: 'center',
                 zIndex: 2,
                 shadowColor: '#FD501E',
                 shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: getResponsiveSize(12, 10, 8),
+                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
                 elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
-                minWidth: 70,
+                minWidth: getResponsiveSize(70, 80, 90),
               }}
             >
-              <Icon name="cash-outline" size={18} color="#FD501E" style={{ marginRight: 8 }} />
-              <Text style={{ fontWeight: 'bold', color: '#FD501E', fontSize: 14, letterSpacing: 0.5 }}>{selectedCurrency}</Text>
+              <Icon 
+                name="cash-outline" 
+                size={getResponsiveSize(18, 20, 22)} 
+                color="#FD501E" 
+                style={{ marginRight: getResponsiveSize(8, 10, 12) }} 
+              />
+              <Text style={{ 
+                fontWeight: 'bold', 
+                color: '#FD501E', 
+                fontSize: getResponsiveSize(14, 16, 18), 
+                letterSpacing: 0.5 
+              }}>
+                {selectedCurrency}
+              </Text>
             </TouchableOpacity>
 
             {/* Currency Modal */}
@@ -1187,7 +1041,7 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowOpacity: 0.2,
                     shadowRadius: 16,
                     shadowOffset: { width: 0, height: 6 },
-                 //   elevation: 10,
+                    elevation: 10,
                     position: 'relative',
                   }}
                 >
@@ -1242,7 +1096,7 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowOpacity: 0.08,
                           shadowRadius: 6,
                           shadowOffset: { width: 0, height: 2 },
-                        //  elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
+                          elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
                         }}
                       >
                         <Text style={{ fontSize: 16, color: '#333' }}>
@@ -1262,10 +1116,6 @@ const SearchFerry = ({ navigation, route }) => {
 
         </LinearGradient>
         {/* Enhanced Ultra Premium Title and Filters Section */}
-        {/* Add search button */}
-        {/* Use your existing search button here, do not add a new one */}
-        {/* Loading indicator */}
-        {/* Show loading and no data only in the result section */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -1318,7 +1168,7 @@ const SearchFerry = ({ navigation, route }) => {
               shadowOpacity: 0.1,
               shadowRadius: wp('1.5%'),
               shadowOffset: { width: 0, height: hp('0.25%') },
-            //  elevation: 4,
+              elevation: 4,
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.3)',
               backdropFilter: 'blur(15px)',
@@ -1358,7 +1208,7 @@ const SearchFerry = ({ navigation, route }) => {
               shadowOpacity: Platform.OS === 'android' ? 0 : 0.15,
               shadowRadius: Platform.OS === 'android' ? 0 : wp('6%'),
               shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('1%') },
-            //  elevation: Platform.OS === 'android' ? 0 : 20,
+              elevation: Platform.OS === 'android' ? 0 : 20,
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
               backdropFilter: 'blur(25px)',
@@ -1386,7 +1236,7 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
                     shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
                     shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                 //   elevation: Platform.OS === 'android' ? 0 : 4,
+                    elevation: Platform.OS === 'android' ? 0 : 4,
                   }}
                   activeOpacity={0.7}
                 >
@@ -1409,7 +1259,7 @@ const SearchFerry = ({ navigation, route }) => {
                   shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.05,
                   shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-               //   elevation: Platform.OS === 'android' ? 0 : 2,
+                  elevation: Platform.OS === 'android' ? 0 : 2,
                 }}
                 activeOpacity={0.8}
               >
@@ -1453,7 +1303,7 @@ const SearchFerry = ({ navigation, route }) => {
                         shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 0.1 : 0.05),
                         shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                         shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
-                     //   elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 4 : 2),
+                        elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 4 : 2),
                       }}
                       activeOpacity={0.7}
                     >
@@ -1491,7 +1341,7 @@ const SearchFerry = ({ navigation, route }) => {
                         shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 0.1 : 0.05),
                         shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                         shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
-                      //  elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 4 : 2),
+                        elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 4 : 2),
                       }}
                       activeOpacity={0.7}
                     >
@@ -1572,53 +1422,146 @@ const SearchFerry = ({ navigation, route }) => {
             styles.containerSearch,
             {
               backgroundColor: 'transparent',
-              paddingHorizontal: 24,
-              paddingTop: 8,
-              paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('10%') : hp('10%')) : hp('8%'), // Android 15 Edge-to-Edge รองรับ
+              paddingHorizontal: getResponsiveSize(24, wp('8%'), wp('12%')),
+              paddingTop: getResponsiveSize(8, 12, 16),
+              paddingBottom: Platform.OS === 'android' ? 
+                getResponsiveSize(hp('10%'), hp('8%'), hp('6%')) : 
+                getResponsiveSize(hp('8%'), hp('6%'), hp('4%')),
+              maxWidth: isTablet ? 1200 : '100%',
+              alignSelf: 'center',
+              width: '100%',
               flexGrow: 1,
             }
           ]}
-          style={[
-            { flex: 1 },
-            Platform.OS === 'android' && Platform.Version >= 31 && {
-              paddingBottom: 0, // ใช้ contentContainerStyle แทน
-            }
-          ]}
           showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
         >
-          {/* Enhanced Premium Booking Section - Optimized Size */}
+          {/* Enhanced Premium Booking Section - iPad Optimized */}
           <View style={[styles.bookingSection, {
             backgroundColor: 'rgba(255,255,255,0.95)',
-            borderRadius: wp('4%'),
-            padding: wp('4%'),
-            marginBottom: hp('2%'),
-            // Reduced shadows for smaller appearance
+            borderRadius: getResponsiveSize(wp('4%'), wp('3%'), wp('2%')),
+            padding: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
+            marginBottom: getResponsiveSize(hp('2%'), hp('1.5%'), hp('1%')),
+            // iPad-optimized shadows
             shadowColor: '#001233',
-            shadowOffset: { width: 0, height: hp('0.6%') },
+            shadowOffset: { width: 0, height: getResponsiveSize(hp('0.6%'), hp('0.4%'), hp('0.3%')) },
             shadowOpacity: 0.08,
-            shadowRadius: wp('3%'),
+            shadowRadius: getResponsiveSize(wp('3%'), wp('2%'), wp('1.5%')),
             elevation: 8,
-            borderWidth: wp('0.2%'),
+            borderWidth: getResponsiveSize(wp('0.2%'), wp('0.15%'), wp('0.1%')),
             borderColor: 'rgba(0, 18, 51, 0.06)',
             backdropFilter: 'blur(20px)',
-            // Reduced margins for compact design
-            marginHorizontal: wp('1%'),
+            // iPad-specific margins and max width
+            marginHorizontal: getResponsiveSize(wp('1%'), wp('5%'), wp('10%')),
+            maxWidth: isTablet ? 800 : '100%',
+            alignSelf: 'center',
           }]}>
-            {/* Enhanced Premium Trip Type Selection - Compact */}
+            {/* Enhanced Premium Trip Type Selection - iPad Optimized */}
             <View style={[styles.tripTypeContainer, {
               backgroundColor: 'rgba(248,250,252,0.8)',
-              borderRadius: wp('3%'),
-              padding: wp('0.8%'),
-              marginBottom: hp('2%'),
+              borderRadius: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')),
+              padding: getResponsiveSize(wp('0.8%'), wp('0.6%'), wp('0.5%')),
+              marginBottom: getResponsiveSize(hp('2%'), hp('1.5%'), hp('1%')),
               shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
               shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-              shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
+              shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
               elevation: Platform.OS === 'android' ? 0 : 4,
               borderWidth: 0.5,
               borderColor: 'rgba(0, 18, 51, 0.04)',
+              // iPad-specific layout
+              flexDirection: isTablet ? 'row' : 'row',
+              justifyContent: 'space-between',
             }]}>
-              {OneWayButton}
-              {RoundTripButton}
+              <TouchableOpacity
+                style={[
+                  styles.tripTypeOneWayButton,
+                  {
+                    backgroundColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
+                    borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
+                    paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
+                    paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "One Way Trip" ? '#FD501E' : 'transparent'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 0.2 : 0),
+                    shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
+                    elevation: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 6 : 0),
+                    borderWidth: 0.5,
+                    borderColor: tripType === "One Way Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                    // iPad-specific button sizing
+                    flex: isTablet ? 1 : 1,
+                    marginRight: isTablet ? wp('1%') : wp('1%'),
+                    minHeight: getResponsiveSize(hp('5%'), hp('4%'), hp('3.5%')),
+                  }
+                ]}
+                onPress={() => {
+                  setTripType(TRIP_TYPES.ONE_WAY);
+                  updateCustomerData({
+                    roud: 1
+                  })
+                }}
+              >
+                <Text
+                  style={[
+                    styles.tripTypeText,
+                    {
+                      color: tripType === TRIP_TYPES.ONE_WAY ? '#FFFFFF' : '#64748B',
+                      fontWeight: tripType === TRIP_TYPES.ONE_WAY ? '700' : '600',
+                      fontSize: getResponsiveSize(wp('3.5%'), wp('2.8%'), wp('2.2%')),
+                      letterSpacing: 0.2,
+                      textShadowColor: tripType === TRIP_TYPES.ONE_WAY ? 'rgba(0,0,0,0.1)' : 'transparent',
+                      textShadowRadius: 1,
+                      textAlign: 'center',
+                    }
+                  ]}
+                >
+                  {t('oneWayTrip')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.tripTypeRoundButton,
+                  {
+                    backgroundColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
+                    borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
+                    paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
+                    paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "Return Trip" ? '#FD501E' : 'transparent'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 0.2 : 0),
+                    shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
+                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
+                    elevation: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 6 : 0),
+                    borderWidth: 0.5,
+                    borderColor: tripType === "Return Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                    // iPad-specific button sizing
+                    flex: isTablet ? 1 : 1,
+                    marginLeft: isTablet ? wp('1%') : wp('1%'),
+                    minHeight: getResponsiveSize(hp('5%'), hp('4%'), hp('3.5%')),
+                  }
+                ]}
+                onPress={() => {
+                  setTripType("Return Trip");
+                  updateCustomerData({
+                    roud: 2
+                  })
+                }}
+              >
+                <Text
+                  style={[
+                    styles.tripTypeText,
+                    {
+                      color: tripType === "Return Trip" ? '#FFFFFF' : '#64748B',
+                      fontWeight: tripType === "Return Trip" ? '700' : '600',
+                      fontSize: getResponsiveSize(wp('3.5%'), wp('2.8%'), wp('2.2%')),
+                      letterSpacing: 0.2,
+                      textShadowColor: tripType === "Return Trip" ? 'rgba(0,0,0,0.1)' : 'transparent',
+                      textShadowRadius: 1,
+                      textAlign: 'center',
+                    }
+                  ]}
+                >
+                  { t('roundTrip') }
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* --- Enhanced Premium passenger selection row - Compact --- */}
@@ -1677,6 +1620,7 @@ const SearchFerry = ({ navigation, route }) => {
                 </View>
               </TouchableOpacity>
             </View>
+
             <Modal
               visible={isPassengerModalVisible}
               transparent
@@ -2000,25 +1944,23 @@ const SearchFerry = ({ navigation, route }) => {
                       letterSpacing: 0.2,
                       marginBottom: 2,
                     }]}>{t('from')}</Text>
-                    <Animated.Text
+                    <Text
                       style={[styles.inputText, {
                         color: '#1E293B',
                         fontSize: wp('3.2%'),
                         fontWeight: '700',
                         letterSpacing: -0.1,
-                        opacity: fromTextOpacity,
-                        transform: [{ translateY: fromTextTranslateY }],
                       }]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
-                    > {truncateText(startingPoint.name, 12)}</Animated.Text>
+                    > {truncateText(startingPoint.name, 12)}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
 
-              {/* Enhanced Premium Swap icon - Compact with Animation */}
-              <TouchableOpacity onPress={swapPoints} activeOpacity={0.7}>
-                <Animated.View style={{
+              {/* Enhanced Premium Swap icon - Compact */}
+              <TouchableOpacity onPress={swapPoints}>
+                <View style={{
                   backgroundColor: '#FD501E',
                   borderRadius: wp('4%'),
                   marginHorizontal: wp('2%'),
@@ -2037,18 +1979,9 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 0 : 6,
                   borderWidth: 0.5,
                   borderColor: 'rgba(255, 255, 255, 0.2)',
-                  transform: [
-                    { scale: swapButtonScale },
-                    {
-                      rotate: swapButtonRotation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    },
-                  ],
                 }}>
                   <MaterialIcons name="swap-horiz" size={wp('5%')} color="#FFFFFF" />
-                </Animated.View>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2089,18 +2022,16 @@ const SearchFerry = ({ navigation, route }) => {
                     letterSpacing: 0.2,
                     marginBottom: 2,
                   }]}>{t('to')}</Text>
-                  <Animated.Text
+                  <Text
                     style={[styles.inputText, {
                       color: '#1E293B',
                       fontSize: wp('3.2%'),
                       fontWeight: '700',
                       letterSpacing: -0.1,
-                      opacity: toTextOpacity,
-                      transform: [{ translateY: toTextTranslateY }],
                     }]}
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                  > {truncateText(endPoint.name, 12)}</Animated.Text>
+                  > {truncateText(endPoint.name, 12)}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -2201,7 +2132,7 @@ const SearchFerry = ({ navigation, route }) => {
                         shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFD600',
                         shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
                         shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                    
+                        elevation: Platform.OS === 'android' ? 0 : 2,
                         marginRight: wp('2%'),
                       }]}>
                         <MaterialIcons name="event" size={wp('5%')} color="#FFD600" />
@@ -2231,57 +2162,7 @@ const SearchFerry = ({ navigation, route }) => {
                 )}
               </View>
 
-              {/* Enhanced Search Button - Inside Booking Section */}
-              <TouchableOpacity
-                style={[styles.searchButton, {
-                  marginTop: hp('2%'),
-                  marginBottom: hp('1%'),
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }]}
-                onPress={() => {
-                  // Manual search trigger with comprehensive validation
-                  const missingFields = [];
-                  
-                  // Validate required fields
-                  if (!startingPoint.id) missingFields.push(t('from') || 'จุดเริ่มต้น');
-                  if (!endPoint.id) missingFields.push(t('to') || 'จุดหมาย');
-                  if (!calendarStartDate) missingFields.push(t('departureDate') || 'วันที่เดินทาง');
-                  
-                  // Validate return date for round trip
-                  if (tripType === TRIP_TYPES.ROUND_TRIP && !calendarEndDate) {
-                    missingFields.push(t('returnDate') || 'วันที่กลับ');
-                  }
-                  
-                  if (missingFields.length > 0) {
-                    alert(`${t('pleaseSelect') || 'กรุณาเลือก'}: ${missingFields.join(', ')}`);
-                    return;
-                  }
-                  
-                  // All validation passed - trigger search
-                  console.log('🔍 Manual search triggered by user');
-                  setLoading(true);
-                  setHasSearched(true); // Mark that search has been performed
-                  
-                  // Update state variables
-                  setDetaDepart(departureDate);
-                  setDetaReturn(returnDate);
-                  setTripTypeSearch(tripType);
-                  
-                  // Trigger all search functions
-                  handleSearchStart();
-                  if (tripType === TRIP_TYPES.ROUND_TRIP) {
-                    handleSearchEnd();
-                  }
-                  fetchFerryRoute();
-                }}
-              >
-                <Icon name="search" size={20} color="#FFF" style={{ marginRight: wp('2%') }} />
-                <Text style={styles.searchButtonText}>
-                  {selectedLanguage === 'th' ? 'ค้นหา' : 'Search'}
-                </Text>
-              </TouchableOpacity>
+            
 
               {/* Enhanced Departure Date Calendar Modal */}
               <Modal
@@ -2289,7 +2170,7 @@ const SearchFerry = ({ navigation, route }) => {
                 transparent
                 animationType="fade"
                 onRequestClose={() => setShowDepartModal(false)}
-                statusBarTranslucent={Platform.OS === 'ios'}
+                statusBarTranslucent
               >
                 <View style={{
                   flex: 1,
@@ -2348,7 +2229,7 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
                           shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
                           shadowRadius: Platform.OS === 'android' ? 0 : 8,
-                  
+                          elevation: Platform.OS === 'android' ? 2 : 4,
                         }}
                         activeOpacity={0.7}
                       >
@@ -2411,7 +2292,10 @@ const SearchFerry = ({ navigation, route }) => {
                               showWeekNumbers={false}
                             />
                         </View>
+
+                        
                       </ScrollView>
+
 
                       {/* Enhanced Confirm Button - Fixed at bottom */}
                       <View style={{
@@ -2429,7 +2313,7 @@ const SearchFerry = ({ navigation, route }) => {
                             shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
                             shadowRadius: Platform.OS === 'android' ? 0 : 12,
                             shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
-                        
+                            elevation: Platform.OS === 'android' ? 4 : 12,
                             borderWidth: 1,
                             borderColor: 'rgba(255, 255, 255, 0.25)',
                           }}
@@ -2455,13 +2339,14 @@ const SearchFerry = ({ navigation, route }) => {
                 </View>
               </Modal>
 
+
               {/* Enhanced Return Date Calendar Modal */}
               <Modal
                 visible={showReturnModal}
                 transparent
                 animationType="fade"
                 onRequestClose={() => setShowReturnModal(false)}
-                statusBarTranslucent={Platform.OS === 'ios'}
+                statusBarTranslucent
               >
                 <View style={{
                   flex: 1,
@@ -2484,7 +2369,7 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
                     shadowRadius: Platform.OS === 'android' ? 0 : 20,
                     shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 8 },
-           
+                    elevation: Platform.OS === 'android' ? 8 : 20,
                     borderWidth: 1,
                     borderColor: 'rgba(255, 214, 0, 0.15)',
                     transform: [{ scale: showReturnModal ? 1 : 0.9 }],
@@ -2520,7 +2405,7 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
                           shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
                           shadowRadius: Platform.OS === 'android' ? 0 : 8,
-                       
+                          elevation: Platform.OS === 'android' ? 2 : 4,
                         }}
                         activeOpacity={0.7}
                       >
@@ -2584,6 +2469,7 @@ const SearchFerry = ({ navigation, route }) => {
                           />
                         </View>
                       </ScrollView>
+                      
 
                       {/* Enhanced Confirm Button - Fixed at bottom */}
                       <View style={{
@@ -2601,7 +2487,7 @@ const SearchFerry = ({ navigation, route }) => {
                             shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
                             shadowRadius: Platform.OS === 'android' ? 0 : 12,
                             shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
-                         //   elevation: Platform.OS === 'android' ? 4 : 12,
+                            elevation: Platform.OS === 'android' ? 4 : 12,
                             borderWidth: 1,
                             borderColor: 'rgba(0, 0, 0, 0.1)',
                           }}
@@ -2625,9 +2511,89 @@ const SearchFerry = ({ navigation, route }) => {
                 </View>
               </Modal>
 
+              {/* Enhanced Premium Search Button - iPad Optimized */}
+              <View style={{ 
+                marginTop: getResponsiveSize(hp('3%'), hp('2%'), hp('1.5%')), 
+                marginBottom: getResponsiveSize(hp('1%'), hp('0.8%'), hp('0.5%')),
+                width: '100%',
+                alignItems: 'center',
+                paddingHorizontal: getResponsiveSize(wp('2%'), wp('3%'), wp('5%'))
+              }}>
+                <TouchableOpacity
+                  disabled={loading}
+                  style={[
+                    styles.searchButton,
+                    {
+                      backgroundColor: loading ? 'rgba(253, 80, 30, 0.6)' : '#FD501E',
+                      borderRadius: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
+                      paddingVertical: getResponsiveSize(hp('2%'), hp('1.5%'), hp('1.2%')),
+                      paddingHorizontal: getResponsiveSize(wp('8%'), wp('6%'), wp('5%')),
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
+                      shadowOpacity: Platform.OS === 'android' ? 0 : (loading ? 0.1 : 0.3),
+                      shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')),
+                      shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.5%'), hp('0.4%'), hp('0.3%')) },
+                      elevation: Platform.OS === 'android' ? 8 : 12,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      width: '100%',
+                      maxWidth: getResponsiveSize(wp('90%'), wp('70%'), wp('60%')),
+                      minHeight: getResponsiveSize(hp('6%'), hp('5%'), hp('4.5%')),
+                      opacity: loading ? 0.8 : 1,
+                    }
+                  ]}
+                  onPress={() => {
+                    if (loading) return; // ป้องกันการกดซ้ำขณะ loading
+                    
+                    // ตรวจสอบข้อมูลก่อนค้นหา
+                    if (!startingPoint?.id || !endPoint?.id) {
+                      alert(t('pleaseSelectStartEndPoints') || 'กรุณาเลือกจุดเริ่มต้นและจุดปลายทาง');
+                      return;
+                    }
+                    
+                    if (!calendarStartDate) {
+                      alert(t('pleaseSelectDepartureDate') || 'กรุณาเลือกวันที่เดินทาง');
+                      return;
+                    }
+                    
+                    if (customerData.roud === 2 && !calendarEndDate) {
+                      alert(t('pleaseSelectReturnDate') || 'กรุณาเลือกวันที่กลับ');
+                      return;
+                    }
+                    
+                    // เรียกใช้ฟังก์ชันค้นหา (loading state จัดการใน fetchFerryRoute)
+                    fetchFerryRoute();
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Icon 
+                    name={loading ? "hourglass-outline" : "search"} 
+                    size={getResponsiveSize(wp('5%'), wp('4%'), wp('3.5%'))} 
+                    color="#FFFFFF" 
+                    style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }} 
+                  />
+                  <Text style={[
+                    styles.searchButtonText,
+                    {
+                      color: '#FFFFFF',
+                      fontWeight: '700',
+                      fontSize: getResponsiveSize(wp('4.5%'), wp('3.5%'), wp('2.8%')),
+                      letterSpacing: 0.8,
+                      textShadowColor: 'rgba(0,0,0,0.1)',
+                      textShadowRadius: 1,
+                    }
+                  ]}>
+                    {loading ? (t('searching') || 'กำลังค้นหา...') : (t('search') || 'ค้นหาเรือเฟอร์รี่')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
             </View>
           </View>
 
+                            
           {/* Enhanced Ultra Premium Loading Skeleton */}
           {loading && (
             <View style={{ paddingHorizontal: wp('2%') }}>
@@ -2642,7 +2608,7 @@ const SearchFerry = ({ navigation, route }) => {
                 shadowColor: '#001233',
                 shadowOpacity: 0.08,
                 shadowRadius: wp('3%'),
-              //  elevation: 8,
+                elevation: 8,
                 borderWidth: wp('0.2%'),
                 borderColor: 'rgba(0, 18, 51, 0.06)',
                 overflow: 'hidden',
@@ -2830,7 +2796,7 @@ const SearchFerry = ({ navigation, route }) => {
                   shadowColor: '#001233',
                   shadowOpacity: 0.08,
                   shadowRadius: wp('3%'),
-                //  elevation: 6,
+                  elevation: 6,
                 }}>
                   {/* Card Header Skeleton */}
                   <View style={{
@@ -2991,7 +2957,7 @@ const SearchFerry = ({ navigation, route }) => {
               ))}
             </View>
           )}
-          {!loading && hasSearched && pagedDataDepart && pagedDataDepart.length === 0 && (
+          {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
             <View style={{
               flex: 1,
               alignItems: 'center',
@@ -3005,46 +2971,40 @@ const SearchFerry = ({ navigation, route }) => {
               shadowOpacity: 0.1,
               shadowRadius: 20,
               shadowOffset: { width: 0, height: 8 },
-            //  elevation: 8,
+              elevation: 8,
               borderWidth: 1,
               borderColor: 'rgba(253, 80, 30, 0.08)',
               marginVertical: 20
             }}>
-              <Animated.View
+              <LottieView
+                source={require('../../assets/animations/ferry-animation.json')}
+                autoPlay
+                loop
                 style={{
-                  // transform: [{ translateY: boatAnim }],
-                  alignItems: 'center',
+                  width: 240,
+                  height: 240,
                 }}
-              >
-                <MaterialIcons 
-                  name="directions-boat" 
-                  size={120} 
-                  color="#94A3B8" 
-                  style={{ marginBottom: 20 }}
-                />
-                <Text style={{
-                  color: '#1E293B',
-                  fontWeight: '800',
-                  fontSize: 22,
-                  letterSpacing: -0.3,
-                  textAlign: 'center',
-                  marginBottom: 8,
-                }}>
-                  {selectedLanguage === 'th' ? 'ไม่มีรอบเรือ' : 'No Ferry Schedule'}
-                </Text>
-                <Text style={{
-                  color: '#64748B',
-                  fontWeight: '500',
-                  fontSize: 16,
-                  letterSpacing: 0.2,
-                  textAlign: 'center'
-                }}>
-                  {selectedLanguage === 'th' 
-                    ? 'ไม่พบเส้นทางเรือในวันที่เลือก' 
-                    : 'No ferry routes found for selected date'
-                  }
-                </Text>
-              </Animated.View>
+              />
+              <Text style={{
+                marginTop: 32,
+                color: '#1E293B',
+                fontWeight: '800',
+                fontSize: 22,
+                letterSpacing: -0.3,
+                textAlign: 'center'
+              }}>
+                {t('noFerriesAvailable') || 'ไม่มีรอบเรือ'}
+              </Text>
+              <Text style={{
+                marginTop: 8,
+                color: '#64748B',
+                fontWeight: '500',
+                fontSize: 16,
+                letterSpacing: 0.2,
+                textAlign: 'center'
+              }}>
+                {t('tryAnotherDateOrRoute') || 'ลองเปลี่ยนวันที่หรือเส้นทางอื่น'}
+              </Text>
             </View>
           )}
           {!loading && pagedDataDepart && pagedDataReturn && (
@@ -3070,7 +3030,7 @@ const SearchFerry = ({ navigation, route }) => {
                         shadowOpacity: 0.15,
                         shadowRadius: 20,
                         shadowOffset: { width: 0, height: 8 },
-                      //  elevation: 15,
+                        elevation: 15,
                         position: 'relative',
                       }}>
                         {/* Ticket Header with Company Info */}
@@ -3251,7 +3211,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     borderColor: '#FD501E',
                                   }}>
                                     <Image
-                                      source={require('../../.../../assets/boat.png')}
+                                      source={require('../../assets/boat.png')}
                                       style={{ width: 16, height: 16 }}
                                       resizeMode="contain"
                                     />
@@ -3402,7 +3362,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
                                   shadowRadius: Platform.OS === 'android' ? 0 : 8,
                                   shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 4 },
-                                //  elevation: Platform.OS === 'android' ? 6 : 8,
+                                  elevation: Platform.OS === 'android' ? 6 : 8,
                                   minWidth: Platform.OS === 'android' ? 110 : 120,
                                 }}
                                 onPress={() => {
@@ -3560,7 +3520,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 shadowOffset: { width: 0, height: 2 },
                                 shadowOpacity: 0.1,
                                 shadowRadius: 4,
-                              //  elevation: 3,
+                                elevation: 3,
                               }}>
                                 <Image
                                   source={{
@@ -3670,7 +3630,7 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowOpacity: 0.15,
                           shadowRadius: 20,
                           shadowOffset: { width: 0, height: 8 },
-                        //  elevation: 15,
+                          elevation: 15,
                           position: 'relative',
                         }}>
                           {/* Ticket Header with Company Info */}
@@ -3989,7 +3949,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     shadowOpacity: 0.3,
                                     shadowRadius: 8,
                                     shadowOffset: { width: 0, height: 4 },
-                                 //   elevation: 8,
+                                    elevation: 8,
                                   }}
                                   onPress={() => {
                                     setIsonewaystatus(true);
@@ -4152,7 +4112,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   shadowOffset: { width: 0, height: 2 },
                                   shadowOpacity: 0.1,
                                   shadowRadius: 4,
-                                //  elevation: 3,
+                                  elevation: 3,
                                 }}>
                                   <Image
                                     source={{
@@ -4221,7 +4181,7 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowOpacity: 0.15,
                           shadowRadius: 20,
                           shadowOffset: { width: 0, height: 8 },
-                        //  elevation: 15,
+                          elevation: 15,
                           position: 'relative',
                           borderWidth: 2,
                           borderColor: 'rgba(255, 214, 0, 0.2)',
@@ -4550,7 +4510,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     shadowOpacity: 0.3,
                                     shadowRadius: 8,
                                     shadowOffset: { width: 0, height: 4 },
-                                  //  elevation: 8,
+                                    elevation: 8,
                                     borderWidth: 1,
                                     borderColor: 'rgba(184, 134, 11, 0.2)',
                                   }}
@@ -4687,7 +4647,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   shadowOffset: { width: 0, height: 2 },
                                   shadowOpacity: 0.1,
                                   shadowRadius: 4,
-                               //   elevation: 3,
+                                  elevation: 3,
                                 }}>
                                   <Image
                                     source={{
@@ -4736,65 +4696,6 @@ const SearchFerry = ({ navigation, route }) => {
                     ))}
 
                   </>)}
-
-                  {/* Empty state for Return Trip when no data found */}
-                  {tripTypeSearchResult === 'Return Trip' && !loading && hasSearched && pagedDataReturn && pagedDataReturn.length === 0 && (
-                    <View style={{
-                      flex: 1,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minHeight: 360,
-                      width: '100%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: 24,
-                      padding: 32,
-                      shadowColor: '#FD501E',
-                      shadowOpacity: 0.1,
-                      shadowRadius: 20,
-                      shadowOffset: { width: 0, height: 8 },
-                    //  elevation: 8,
-                      borderWidth: 1,
-                      borderColor: 'rgba(253, 80, 30, 0.08)',
-                      marginVertical: 20
-                    }}>
-                      <Animated.View
-                        style={{
-                          // transform: [{ translateY: boatAnim }],
-                          alignItems: 'center',
-                        }}
-                      >
-                        <MaterialIcons 
-                          name="directions-boat" 
-                          size={120} 
-                          color="#94A3B8" 
-                          style={{ marginBottom: 20 }}
-                        />
-                        <Text style={{
-                          color: '#1E293B',
-                          fontWeight: '800',
-                          fontSize: 22,
-                          letterSpacing: -0.3,
-                          textAlign: 'center',
-                          marginBottom: 8,
-                        }}>
-                          {selectedLanguage === 'th' ? 'ไม่มีรอบเรือกลับ' : 'No Return Ferry Schedule'}
-                        </Text>
-                        <Text style={{
-                          color: '#64748B',
-                          fontWeight: '500',
-                          fontSize: 16,
-                          letterSpacing: 0.2,
-                          textAlign: 'center'
-                        }}>
-                          {selectedLanguage === 'th' 
-                            ? 'ไม่พบเส้นทางเรือกลับในวันที่เลือก' 
-                            : 'No return ferry routes found for selected date'
-                          }
-                        </Text>
-                      </Animated.View>
-                    </View>
-                  )}
-
                 </>)}
             </>
           )}
@@ -4821,7 +4722,7 @@ const SearchFerry = ({ navigation, route }) => {
                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
                   shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
                   shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
-               //   elevation: Platform.OS === 'android' ? 0 : 15,
+                  elevation: Platform.OS === 'android' ? 0 : 15,
                   minWidth: wp('50%'),
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
@@ -4843,7 +4744,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
                       shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-                   //   elevation: Platform.OS === 'android' ? 0 : (currentPageDepart === 1 ? 0 : 8),
+                      elevation: Platform.OS === 'android' ? 0 : (currentPageDepart === 1 ? 0 : 8),
                       opacity: currentPageDepart === 1 ? 0.5 : 1,
                       borderWidth: currentPageDepart === 1 ? 1 : 0,
                       borderColor: currentPageDepart === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -4871,7 +4772,7 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
                     shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
                     shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                  //  elevation: Platform.OS === 'android' ? 0 : 2,
+                    elevation: Platform.OS === 'android' ? 0 : 2,
                   }}>
                     <Text style={{
                       fontSize: wp('5.5%'),
@@ -4902,7 +4803,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
                       shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-                   //   elevation: Platform.OS === 'android' ? 0 : ((currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0 : 8),
+                      elevation: Platform.OS === 'android' ? 0 : ((currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0 : 8),
                       opacity: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 0.5 : 1,
                       borderWidth: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 1 : 0,
                       borderColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -4957,7 +4858,7 @@ const SearchFerry = ({ navigation, route }) => {
                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
                   shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
                   shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
-                //  elevation: Platform.OS === 'android' ? 0 : 15,
+                  elevation: Platform.OS === 'android' ? 0 : 15,
                   minWidth: wp('50%'),
                   borderWidth: 1,
                   borderColor: 'rgba(255, 214, 0, 0.12)',
@@ -4979,7 +4880,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
                       shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-                  //    elevation: Platform.OS === 'android' ? 0 : (currentPageReturn === 1 ? 0 : 8),
+                      elevation: Platform.OS === 'android' ? 0 : (currentPageReturn === 1 ? 0 : 8),
                       opacity: currentPageReturn === 1 ? 0.5 : 1,
                       borderWidth: currentPageReturn === 1 ? 1 : 0,
                       borderColor: currentPageReturn === 1 ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
@@ -5007,7 +4908,7 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowColor: Platform.OS === 'android' ? 'transparent' : '#FFD600',
                     shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
                     shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                  //  elevation: Platform.OS === 'android' ? 0 : 2,
+                    elevation: Platform.OS === 'android' ? 0 : 2,
                   }}>
                     <Text style={{
                       fontSize: wp('5.5%'),
@@ -5038,7 +4939,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
                       shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-                   //   elevation: Platform.OS === 'android' ? 0 : ((currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0 : 8),
+                      elevation: Platform.OS === 'android' ? 0 : ((currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0 : 8),
                       opacity: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 0.5 : 1,
                       borderWidth: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 1 : 0,
                       borderColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'rgba(148, 163, 184, 0.3)' : 'transparent',
