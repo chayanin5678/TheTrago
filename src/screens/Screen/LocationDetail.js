@@ -7,11 +7,13 @@ import LogoTheTrago from './../../components/component/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 import styles from '../../styles/CSS/HomeScreenStyles';
 
 const LocationDetail = ({ navigation, route }) => {
     const { customerData, updateCustomerData } = useCustomer();
+    const { t } = useLanguage();
     const { width: screenWidth } = useWindowDimensions();
     const [popdestination, setPopdestination] = useState([]);
 
@@ -60,7 +62,9 @@ const LocationDetail = ({ navigation, route }) => {
                 style={styles.background}> */}
             <LogoTheTrago />
             <View style={[styles.row, { alignSelf: '', width: '85%', marginLeft: '7%' }]}>
-                <Text style={[styles.titleSearch, { fontWeight: 'bold', fontSize: wp('6%') }]}> {customerData.country} - {customerData.startingpoint_name}</Text>
+                <Text style={[styles.titleSearch, { fontWeight: 'bold', fontSize: wp('6%') }]}>
+                    {t('popularDestinationsFrom')} {customerData.country} - {customerData.startingpoint_name}
+                </Text>
             </View>
             <View style={[styles.carouselContainerTop, { alignSelf: 'center' }]}>
                 {isLoading ? (

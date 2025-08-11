@@ -38,6 +38,7 @@ const translations = {
 
     // Contact Screen
     contactUs: 'ติดต่อเรา',
+    invalidCard: 'บัตรไม่ถูกต้อง',
     alwaysInTouch: 'เราพร้อมให้บริการอยู่เสมอ',
     readyToServe: 'พร้อมให้บริการคุณ',
     teamReady: 'ทีม TheTrago พร้อมตอบคำถามและให้คำปรึกษา',
@@ -140,15 +141,30 @@ const translations = {
     searchCityOrAirport: 'ค้นหาเมืองหรือสนามบิน',
     selectDestination: 'เลือกจุดหมาย',
     bookNow: 'จองตอนนี้',
+    noFerriesAvailable: 'ไม่พบรอบเรือที่ตรงกับเงื่อนไข',
+    tryAnotherDateOrRoute: 'ลองเปลี่ยนวันที่หรือเส้นทางอื่น',
+    ferryService: 'บริการเรือเฟอร์รี่',
+    returnFerry: 'เรือกลับ',
+    pricePerPerson: 'ราคาต่อคน',
 
     // Date and Selection
     selectDate: 'เลือกวันที่',
     pleaseSelectStartEndPoints: 'กรุณาเลือกจุดเริ่มต้นและจุดหมายปลายทาง',
+    pleaseSelectDepartureDate: 'กรุณาเลือกวันที่ไป',
+    pleaseSelectReturnDate: 'กรุณาเลือกวันที่กลับ',
+    warning: 'คำเตือน',
+    error: 'ข้อผิดพลาด',
+    failedToSaveSettings: 'ไม่สามารถบันทึกการตั้งค่าได้',
+    failedToLogout: 'ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง',
     booked: 'จองแล้ว',
     popular: 'ยอดนิยม',
     popularDestination: 'จุดหมายยอดนิยม',
     exploreTheBestAttractions: 'สำรวจสถานที่ท่องเที่ยวที่ดีที่สุด',
     trending: 'แนวโน้ม',
+
+    // LocationDetail Screen
+    loading: 'กำลังโหลด...',
+    popularDestinationsFrom: 'จุดหมายยอดนิยมจาก',
 
     // Account Screen
     myAccount: 'บัญชีของฉัน',
@@ -190,6 +206,7 @@ const translations = {
     phoneNumber: 'หมายเลขโทรศัพท์',
     enterPhoneNumber: 'กรอกหมายเลขโทรศัพท์ของคุณ',
     emailAddress: 'ที่อยู่อีเมล',
+    usernameOrEmail: 'ชื่อผู้ใช้หรืออีเมล',
     nationality: 'สัญชาติ',
     dateOfBirth: 'วันเกิด',
     selectBirthday: 'เลือกวันเกิดของคุณ',
@@ -252,6 +269,7 @@ const translations = {
     next: 'ถัดไป',
     previous: 'ก่อนหน้า',
     search: 'ค้นหา',
+    searching: 'กำลังค้นหา...',
     filter: 'กรอง',
     sort: 'เรียง',
     apply: 'ใช้',
@@ -707,9 +725,11 @@ const translations = {
     otpPasswordResetInstructions: 'กรอกรหัส OTP ที่ได้รับทางอีเมล และตั้งรหัสผ่านใหม่ของคุณ',
     orContinueWith: 'หรือดำเนินการต่อด้วย',
     google: 'Google',
+    apple: 'Apple',
     facebook: 'Facebook',
     signingYouIn: 'กำลังเข้าสู่ระบบ...',
     signInWithGoogle: 'เข้าสู่ระบบด้วย Google...',
+    signInWithApple: 'เข้าสู่ระบบด้วย Apple...',
     signInWithFacebook: 'เข้าสู่ระบบด้วย Facebook...',
     byContinuing: 'การดำเนินการต่อถือเป็นการยอมรับ',
     termsOfUse: 'ข้อกำหนดการใช้งาน',
@@ -722,6 +742,8 @@ const translations = {
     emailOrPasswordIncorrect: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
     googleSignInSuccess: 'เข้าสู่ระบบด้วย Google สำเร็จ',
     googleSignInError: 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้',
+    appleSignInSuccess: 'เข้าสู่ระบบด้วย Apple ID สำเร็จ',
+    appleSignInError: 'ไม่สามารถเข้าสู่ระบบด้วย Apple ID ได้',
     facebookSignInSuccess: 'เข้าสู่ระบบด้วย Facebook สำเร็จ',
     facebookSignInError: 'ไม่สามารถเข้าสู่ระบบด้วย Facebook ได้',
     googleSignInNotAvailable: 'Google Sign-In ไม่พร้อมใช้งาน',
@@ -874,6 +896,7 @@ const translations = {
     phoneNumber: 'Phone Number',
     enterPhoneNumber: 'Enter your phone number',
     emailAddress: 'Email Address',
+    usernameOrEmail: 'Username or Email',
     nationality: 'Nationality',
     dateOfBirth: 'Date of Birth',
     selectBirthday: 'Select your birthday',
@@ -904,6 +927,7 @@ const translations = {
 
     // Contact Screen
     contactUs: 'Contact Us',
+    invalidCard: 'Invalid Card',
     alwaysInTouch: 'We are always in touch',
     readyToServe: 'Ready to Serve You',
     teamReady: 'TheTrago team is ready to answer all questions and provide consultation',
@@ -1006,6 +1030,11 @@ const translations = {
     searchCityOrAirport: 'Search city or airport',
     selectDestination: 'Select Destination',
     bookNow: 'Book Now',
+    noFerriesAvailable: 'No ferries available for the selected criteria',
+    tryAnotherDateOrRoute: 'Try another date or route',
+    ferryService: 'Ferry Service',
+    returnFerry: 'Return Ferry',
+    pricePerPerson: 'Price per person',
 
     // Date and Selection
     selectDate: 'Select Date',
@@ -1056,6 +1085,18 @@ const translations = {
     exploreTheBestAttractions: 'Explore the best attractions',
     trending: 'Trending',
 
+    // Date and Selection Messages
+    pleaseSelectDepartureDate: 'Please select departure date',
+    pleaseSelectReturnDate: 'Please select return date',
+    warning: 'Warning',
+    error: 'Error',
+    failedToSaveSettings: 'Failed to save settings',
+    failedToLogout: 'Failed to logout. Please try again.',
+
+    // LocationDetail Screen
+    loading: 'Loading...',
+    popularDestinationsFrom: 'Popular destinations from',
+
     // Profile Screen Updates
     completeProfile: 'Complete your premium profile',
     profileUpdatedSuccess: 'Profile updated successfully',
@@ -1074,6 +1115,7 @@ const translations = {
     next: 'Next',
     previous: 'Previous',
     search: 'Search',
+    searching: 'Searching...',
     filter: 'Filter',
     sort: 'Sort',
     apply: 'Apply',
@@ -1539,9 +1581,11 @@ const translations = {
     forgotPasswordInstructions: 'Enter the email address associated with your account and we\'ll send you a link to reset your password.',
     orContinueWith: 'Or continue with',
     google: 'Google',
+    apple: 'Apple',
     facebook: 'Facebook',
     signingYouIn: 'Signing you in...',
     signInWithGoogle: 'Signing in with Google...',
+    signInWithApple: 'Signing in with Apple...',
     signInWithFacebook: 'Signing in with Facebook...',
     byContinuing: 'By continuing, you agree to The Trago\'s',
     termsOfUse: 'Terms of Use',
@@ -1554,6 +1598,8 @@ const translations = {
     emailOrPasswordIncorrect: 'Email or password is incorrect',
     googleSignInSuccess: 'Successfully signed in with Google',
     googleSignInError: 'Could not sign in with Google',
+    appleSignInSuccess: 'Successfully signed in with Apple ID',
+    appleSignInError: 'Could not sign in with Apple ID',
     facebookSignInSuccess: 'Successfully signed in with Facebook',
     facebookSignInError: 'Could not sign in with Facebook',
     googleSignInNotAvailable: 'Google Sign-In not available',

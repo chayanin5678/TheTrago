@@ -5,16 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import ipAddress from '../config/ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import DateTimePicker from "@react-native-community/datetimepicker";
 import LogoTheTrago from '../components/component/Logo';
 import { useCustomer } from './Screen/CustomerContext';
-import moment from 'moment';
+
 import 'moment/locale/th'; // เพิ่ม locale ภาษาไทย
 import { useLanguage } from './Screen/LanguageContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { CalendarList, Calendar } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 import styles from '../styles/CSS/HomeScreenStyles';
-import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจาก expo
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import headStyles from '../styles/CSS/StartingPointScreenStyles';
 import LottieView from 'lottie-react-native';
@@ -39,12 +37,12 @@ const SearchFerry = ({ navigation, route }) => {
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
-    ONE_WAY: 'One Way Trip',
-    ROUND_TRIP: 'Round Trip'
+    ONE_WAY: t('oneWayTrip'),
+    ROUND_TRIP: t('roundTrip')
   };
 
-  const [tripType, setTripType] = useState(TRIP_TYPES.ONE_WAY);
-  const [tripTypeSearch, setTripTypeSearch] = useState(TRIP_TYPES.ONE_WAY);
+  const [tripType, setTripType] = useState(t('oneWayTrip'));
+  const [tripTypeSearch, setTripTypeSearch] = useState(t('oneWayTrip'));
 
   // Date states
   const [detaDepart, setDetaDepart] = useState(() => {
@@ -62,14 +60,13 @@ const SearchFerry = ({ navigation, route }) => {
   // Location states
   const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name, countryId: customerData.countrycode });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
-  const [searchQuery, setSearchQuery] = useState('');
+
   const [tripTypeSearchResult, settripTypeSearchResult] = useState("Depart Trip");
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infant, setInfant] = useState(0);
   const [isPassengerModalVisible, setPassengerModalVisible] = useState(false);
-  const [timetableDepart, setTimetableDepart] = useState([]);
-  const [timetableReturn, settimetableReturn] = useState([]);
+
   const [currentPageDepart, setcurrentPageDepart] = useState(1);
   const [currentPageReturn, setcurrentPageReturn] = useState(1);
 
@@ -81,8 +78,7 @@ const SearchFerry = ({ navigation, route }) => {
 
   const [departureDate, setDepartureDate] = useState(detaDepart);
   const [returnDate, setReturnDate] = useState(detaReturn);
-  const [showDepartPicker, setShowDepartPicker] = useState(false);
-  const [showReturnPicker, setShowReturnPicker] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const [showDepartModal, setShowDepartModal] = useState(false);
@@ -119,7 +115,6 @@ const SearchFerry = ({ navigation, route }) => {
   const [currencyList, setCurrencyList] = useState([]);
 
 
-  const [calendarMarkedDates, setCalendarMarkedDates] = useState({});
   const day = calendarStartDate?.substring(8, 10) || "";
   // console.log("day", day);
   const month = calendarStartDate?.substring(5, 7) || "";
@@ -133,17 +128,44 @@ const SearchFerry = ({ navigation, route }) => {
     setCalendarStartDate(day.dateString);
     setDepartureDate(new Date(day.dateString));
     
-    // สำหรับ Round Trip: ถ้าวันที่กลับน้อยกว่าหรือเท่ากับวันที่ไป ให้เซ็ตเป็นวันถัดไป
-    if (tripType === TRIP_TYPES.ROUND_TRIP) {
+    // สำหรับ Round Trip: ถ้าวันที่ออกเดินทางมากกว่าวันที่กลับ ให้เซ็ตวันที่กลับเป็นวันที่ออกเดินทาง
+    if (tripType === t('roundTrip') || tripType === t('returnTrip')) {
       const selectedDepartDate = new Date(day.dateString);
-      const currentReturnDate = new Date(calendarEndDate);
       
-      if (currentReturnDate <= selectedDepartDate) {
-        const nextDay = new Date(selectedDepartDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextDayString = nextDay.toISOString().split('T')[0];
-        setCalendarEndDate(nextDayString);
-        setReturnDate(nextDay);
+      console.log('🔍 Debug Departure Date Selection (Round Trip):');
+      console.log('  - Selected departure date:', day.dateString);
+      console.log('  - Current return date:', calendarEndDate);
+      
+      // ตรวจสอบว่ามีวันที่กลับหรือไม่ และวันที่ออกเดินทางมากกว่าวันที่กลับหรือไม่
+      if (calendarEndDate) {
+        const currentReturnDate = new Date(calendarEndDate);
+        console.log('  - Departure > Return?', selectedDepartDate > currentReturnDate);
+        
+        if (selectedDepartDate > currentReturnDate) {
+          const sameDayString = selectedDepartDate.toISOString().split('T')[0];
+          
+          console.log('⚠️ Adjusting return date from', calendarEndDate, 'to', sameDayString);
+          
+          // Force update states และ re-render
+          setTimeout(() => {
+            setCalendarEndDate(sameDayString);
+            setReturnDate(new Date(sameDayString));
+            console.log('✅ Return date state updated to:', sameDayString);
+          }, 10);
+          
+          console.log('⚠️ Return date adjusted to match departure date:', sameDayString);
+        }
+      } else {
+        // ถ้าไม่มีวันที่กลับ ให้ตั้งวันที่กลับเท่ากับวันที่ออกเดินทาง
+        const sameDayString = selectedDepartDate.toISOString().split('T')[0];
+        
+        console.log('⚠️ No return date set, setting return date to:', sameDayString);
+        
+        setTimeout(() => {
+          setCalendarEndDate(sameDayString);
+          setReturnDate(new Date(sameDayString));
+          console.log('✅ Return date initialized to:', sameDayString);
+        }, 10);
       }
     }
     
@@ -153,27 +175,35 @@ const SearchFerry = ({ navigation, route }) => {
   // ฟังก์ชันสำหรับเลือกวันที่กลับ
   const onReturnCalendarDayPress = (day) => {
     console.log('📅 Return date clicked:', day.dateString);
-    setCalendarEndDate(day.dateString);
-    setReturnDate(new Date(day.dateString));
-    console.log('✅ Return date updated:', day.dateString);
-  };
-
-  const getMarkedDatesRange = (start, end) => {
-    let dates = {};
-    let current = new Date(start);
-    const last = new Date(end);
-
-    while (current <= last) {
-      const dateStr = current.toISOString().split('T')[0];
-      dates[dateStr] = {
-        color: '#FD501E',
-        textColor: 'white',
-      };
-      if (dateStr === start) dates[dateStr].startingDay = true;
-      if (dateStr === end) dates[dateStr].endingDay = true;
-      current.setDate(current.getDate() + 1);
+    
+    // ตรวจสอบว่าวันที่กลับไม่น้อยกว่าวันที่ออกเดินทาง
+    const selectedReturnDate = new Date(day.dateString);
+    const currentDepartDate = new Date(calendarStartDate);
+    
+    console.log('🔍 Debug Return Date Selection:');
+    console.log('  - Selected return date:', day.dateString);
+    console.log('  - Current departure date:', calendarStartDate);
+    console.log('  - Return < Departure?', selectedReturnDate < currentDepartDate);
+    
+    if (selectedReturnDate < currentDepartDate) {
+      // ถ้าวันที่กลับน้อยกว่าวันที่ออกเดินทาง ให้ใช้วันที่ออกเดินทางแทน
+      const departDateString = calendarStartDate;
+      
+      console.log('⚠️ Adjusting return date from', day.dateString, 'to', departDateString);
+      
+      // Force update states และ re-render
+      setTimeout(() => {
+        setCalendarEndDate(departDateString);
+        setReturnDate(new Date(departDateString));
+        console.log('✅ Return date state updated to:', departDateString);
+      }, 10);
+      
+      console.log('⚠️ Return date adjusted to match departure date:', departDateString);
+    } else {
+      setCalendarEndDate(day.dateString);
+      setReturnDate(selectedReturnDate);
+      console.log('✅ Return date updated:', day.dateString);
     }
-    return dates;
   };
 
   // ยืนยันการเลือกวันที่ไป
@@ -187,7 +217,7 @@ const SearchFerry = ({ navigation, route }) => {
         console.log('✅ Departure date updated without triggering search:', calendarStartDate);
       }, 50);
     } else {
-      alert('กรุณาเลือกวันที่ไป');
+      Alert.alert(t('warning') || 'Warning', t('pleaseSelectDepartureDate') || 'Please select departure date');
     }
   };
 
@@ -202,7 +232,7 @@ const SearchFerry = ({ navigation, route }) => {
         console.log('✅ Return date updated without triggering search:', calendarEndDate);
       }, 50);
     } else {
-      alert('กรุณาเลือกวันที่กลับ');
+      Alert.alert(t('warning') || 'Warning', t('pleaseSelectReturnDate') || 'Please select return date');
     }
   };
 
@@ -365,65 +395,9 @@ const SearchFerry = ({ navigation, route }) => {
     return text;
   };
 
-  const toggleAdultModal = () => {
-    setAdultModalVisible(!isAdultModalVisible);
-  };
 
-  const handleAdultSelect = (value) => {
-    setAdults(value);
-    toggleAdultModal(); // Close the modal after selection
-  };
 
-  const renderAdultOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleAdultSelect(item)}
-    >
-      <Text style={styles.modalOptionText}>{item}</Text>
-    </TouchableOpacity>
-  );
 
-  const adultOptions = Array.from({ length: 10 }, (_, i) => i + 1); // Generates numbers from 1 to 10
-
-  const toggleChildModal = () => {
-    setChildModalVisible(!isChildModalVisible);
-  };
-
-  const handleChildSelect = (value) => {
-    setChildren(value);
-    toggleChildModal(); // Close the modal after selection
-  };
-
-  const renderChildOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleChildSelect(item)}
-    >
-      <Text style={styles.modalOptionText}>{item}</Text>
-    </TouchableOpacity>
-  );
-
-  const childOptions = Array.from({ length: 11 }, (_, i) => i);
-
-  const toggleInfantModal = () => {
-    setinfantModalVisible(!isinfantodalVisible);
-  };
-
-  const handleInfantSelect = (value) => {
-    setinfant(value);
-    toggleInfantModal(); // Close the modal after selection
-  };
-
-  const renderInfantOption = ({ item }) => (
-    <TouchableOpacity
-      style={styles.modalOption}
-      onPress={() => handleInfantSelect(item)}
-    >
-      <Text style={styles.modalOptionText}>{item}</Text>
-    </TouchableOpacity>
-  );
-
-  const infantOptions = Array.from({ length: 11 }, (_, i) => i);
 
   function formatTime(time) {
     // แยกเวลาเป็นชั่วโมง นาที และวินาที
@@ -439,15 +413,6 @@ const SearchFerry = ({ navigation, route }) => {
     return `${hour}:${minutes} ${period}`;
   }
 
-  function formatTimeToHoursAndMinutes(time) {
-    let [hours, minutes] = time.split(':');
-
-    // กำจัด 0 ด้านหน้า
-    hours = parseInt(hours, 10);
-    minutes = parseInt(minutes, 10);
-
-    return `${hours} h ${minutes} min`;
-  }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -487,38 +452,12 @@ const SearchFerry = ({ navigation, route }) => {
     }
   };
   
-  // Disabled automatic search on data change - search only when button is pressed
-  /*
-  useEffect(() => {
-    handleSearchStart();
-    handleSearchEnd();
 
-    setDetaDepart(departureDate);
-    setDetaReturn(returnDate);
-    setTripTypeSearch(tripType);
-  }, [startingPoint, endPoint, departureDate, returnDate, tripType, adults, children, calendarStartDate, calendarEndDate]);
-  */
-
-  // Manual data update without triggering search
   useEffect(() => {
     setDetaDepart(departureDate);
     setDetaReturn(returnDate);
     setTripTypeSearch(tripType);
   }, [departureDate, returnDate, tripType]);
-
-  // Disabled automatic search - now search only happens when search button is pressed
-  /*
-  useEffect(() => {
-    if (
-      customerData?.roud !== undefined &&
-      startingPoint?.id && startingPoint.id != 0 && endPoint?.id && endPoint.id != 0 &&
-      calendarStartDate &&
-      (customerData.roud === 0 || calendarEndDate) // ถ้าเป็น roundtrip ต้องมี return date
-    ) {
-      fetchFerryRoute();
-    }
-  }, [customerData, startingPoint, endPoint, calendarStartDate, calendarEndDate, selectedCurrency]);
-  */
 
 
 
@@ -530,35 +469,6 @@ const SearchFerry = ({ navigation, route }) => {
     }, [])
   );
 
-
-  const handleSearchStart = () => {
-    // Disabled automatic search - keeping function for compatibility
-    // This function used to fetch data automatically but now search only happens on button press
-    console.log('handleSearchStart called - but no auto-search will happen');
-    
-    /*
-    fetch(`${ipAddress}/search/${startingPoint.id}/${endPoint.id}/${calendarStartDate}/${selectedCurrency}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setTimetableDepart(data.data);
-        } else {
-          setTimetableDepart([]);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-    */
-  };
 
   const fetchFerryRoute = async () => {
     try {
@@ -681,44 +591,7 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
 
-  const handleSearchEnd = () => {
-    // Disabled automatic search - keeping function for compatibility  
-    // This function used to fetch return trip data automatically but now search only happens on button press
-    console.log('handleSearchEnd called - but no auto-search will happen');
-    
-    /*
-    // Debug: ตรวจสอบวันที่ที่ใช้
-    console.log('🔍 handleSearchEnd Debug:');
-    console.log('  - calendarEndDate:', calendarEndDate);
-    console.log('  - returnDate:', returnDate);
-    console.log('  - endPoint.id:', endPoint.id);
-    console.log('  - startingPoint.id:', startingPoint.id);
-    
-    fetch(`${ipAddress}/search/${endPoint.id}/${startingPoint.id}/${calendarEndDate}/${selectedCurrency}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          settimetableReturn(data.data);
-          console.log('✅ Return trip data loaded:', data.data.length, 'items');
-        } else {
-          console.error('Data is not an array', data);
-          settimetableReturn([]);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching return data:', error);
-        settimetableReturn([]);
-      }).finally(() => {
-        setLoading(false);
-      });
-    */
-  };
-
+ 
   useEffect(() => {
 
     const fecthdiscount = async (countrieid) => {
@@ -751,13 +624,6 @@ const SearchFerry = ({ navigation, route }) => {
     fecthdiscount(startingPoint.countryId);
   }, [startingPoint.countryId]);
 
-
-  const calculateDiscountedPrice = (price) => {
-    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-    const discountRate = parseFloat(discount / 100); // 5% = 5/100
-    const discountedPrice = price * (1 - discountRate); // ลด 5%
-    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
-  };
 
 
   // ฟังก์ชันในการเปลี่ยนหน้า
@@ -869,11 +735,6 @@ const SearchFerry = ({ navigation, route }) => {
     (currentPageReturn - 1) * itemsPerPage,
     currentPageReturn * itemsPerPage
   );
-
-  // console.log('📄 Paged Data:');
-  // console.log('  - pagedDataDepart length:', pagedDataDepart.length);
-  // console.log('  - currentPageDepart:', currentPageDepart);
-  // console.log('  - itemsPerPage:', itemsPerPage);
 
 
 
@@ -1406,17 +1267,6 @@ const SearchFerry = ({ navigation, route }) => {
 
 
 
-        {/* <View style={styles.searcContain}>
-          <TextInput
-            style={styles.searchBox}
-            placeholder="Search Here..."
-            placeholderTextColor="#999"
-            backgroundColor="white"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <Image source={require('../../assets/BTN1.png')} />
-        </View> */}
         <ScrollView
           contentContainerStyle={[
             styles.containerSearch,
@@ -1476,17 +1326,17 @@ const SearchFerry = ({ navigation, route }) => {
                 style={[
                   styles.tripTypeOneWayButton,
                   {
-                    backgroundColor: tripType === "One Way Trip" ? '#FD501E' : 'transparent',
+                    backgroundColor: tripType === t('oneWayTrip') ? '#FD501E' : 'transparent',
                     borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
                     paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
                     paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
-                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "One Way Trip" ? '#FD501E' : 'transparent'),
-                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 0.2 : 0),
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === t('oneWayTrip') ? '#FD501E' : 'transparent'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === t('oneWayTrip') ? 0.2 : 0),
                     shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
                     shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
-                    elevation: Platform.OS === 'android' ? 0 : (tripType === "One Way Trip" ? 6 : 0),
+                    elevation: Platform.OS === 'android' ? 0 : (tripType === t('oneWayTrip') ? 6 : 0),
                     borderWidth: 0.5,
-                    borderColor: tripType === "One Way Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                    borderColor: tripType === t('oneWayTrip') ? 'rgba(255,255,255,0.2)' : 'transparent',
                     // iPad-specific button sizing
                     flex: isTablet ? 1 : 1,
                     marginRight: isTablet ? wp('1%') : wp('1%'),
@@ -1521,17 +1371,17 @@ const SearchFerry = ({ navigation, route }) => {
                 style={[
                   styles.tripTypeRoundButton,
                   {
-                    backgroundColor: tripType === "Return Trip" ? '#FD501E' : 'transparent',
+                    backgroundColor: tripType === t('returnTrip') ? '#FD501E' : 'transparent',
                     borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
                     paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
                     paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
-                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === "Return Trip" ? '#FD501E' : 'transparent'),
-                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 0.2 : 0),
+                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === t('returnTrip') ? '#FD501E' : 'transparent'),
+                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === t('returnTrip') ? 0.2 : 0),
                     shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
                     shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
-                    elevation: Platform.OS === 'android' ? 0 : (tripType === "Return Trip" ? 6 : 0),
+                    elevation: Platform.OS === 'android' ? 0 : (tripType === t('returnTrip') ? 6 : 0),
                     borderWidth: 0.5,
-                    borderColor: tripType === "Return Trip" ? 'rgba(255,255,255,0.2)' : 'transparent',
+                    borderColor: tripType === t('returnTrip') ? 'rgba(255,255,255,0.2)' : 'transparent',
                     // iPad-specific button sizing
                     flex: isTablet ? 1 : 1,
                     marginLeft: isTablet ? wp('1%') : wp('1%'),
@@ -1539,7 +1389,7 @@ const SearchFerry = ({ navigation, route }) => {
                   }
                 ]}
                 onPress={() => {
-                  setTripType("Return Trip");
+                  setTripType(t('returnTrip'));
                   updateCustomerData({
                     roud: 2
                   })
@@ -1549,11 +1399,11 @@ const SearchFerry = ({ navigation, route }) => {
                   style={[
                     styles.tripTypeText,
                     {
-                      color: tripType === "Return Trip" ? '#FFFFFF' : '#64748B',
-                      fontWeight: tripType === "Return Trip" ? '700' : '600',
+                      color: tripType === t('returnTrip') ? '#FFFFFF' : '#64748B',
+                      fontWeight: tripType === t('returnTrip') ? '700' : '600',
                       fontSize: getResponsiveSize(wp('3.5%'), wp('2.8%'), wp('2.2%')),
                       letterSpacing: 0.2,
-                      textShadowColor: tripType === "Return Trip" ? 'rgba(0,0,0,0.1)' : 'transparent',
+                      textShadowColor: tripType === t('returnTrip') ? 'rgba(0,0,0,0.1)' : 'transparent',
                       textShadowRadius: 1,
                       textAlign: 'center',
                     }
@@ -2059,7 +1909,7 @@ const SearchFerry = ({ navigation, route }) => {
                   style={[
                     styles.rowdepart,
                     {
-                      width: tripType === "One Way Trip" ? wp('100%') : 'auto',
+                      width: tripType === t('oneWayTrip') ? wp('100%') : 'auto',
                       flexDirection: 'row',
                       alignItems: 'center',
                       paddingVertical: hp('0.5%'),
@@ -2103,7 +1953,7 @@ const SearchFerry = ({ navigation, route }) => {
                   </View>
                 </TouchableOpacity>
 
-                {tripType === "Return Trip" && (
+                {tripType === t('returnTrip') && (
                   <>
                     <View style={{
                       height: 0.5,
@@ -2513,8 +2363,8 @@ const SearchFerry = ({ navigation, route }) => {
 
               {/* Enhanced Premium Search Button - iPad Optimized */}
               <View style={{ 
-                marginTop: getResponsiveSize(hp('3%'), hp('2%'), hp('1.5%')), 
-                marginBottom: getResponsiveSize(hp('1%'), hp('0.8%'), hp('0.5%')),
+                marginTop: getResponsiveSize(hp('1.5%'), hp('1%'), hp('0.8%')), 
+             //   marginBottom: getResponsiveSize(hp('-1%'), hp('0.5%'), hp('0.4%')),
                 width: '100%',
                 alignItems: 'center',
                 paddingHorizontal: getResponsiveSize(wp('2%'), wp('3%'), wp('5%'))
@@ -2535,7 +2385,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : (loading ? 0.1 : 0.3),
                       shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.5%'), hp('0.4%'), hp('0.3%')) },
-                      elevation: Platform.OS === 'android' ? 8 : 12,
+                     // elevation: Platform.OS === 'android' ? 8 : 12,
                       borderWidth: 1,
                       borderColor: 'rgba(255, 255, 255, 0.2)',
                       width: '100%',
@@ -2993,7 +2843,7 @@ const SearchFerry = ({ navigation, route }) => {
                 letterSpacing: -0.3,
                 textAlign: 'center'
               }}>
-                {t('noFerriesAvailable') || 'ไม่มีรอบเรือ'}
+                {t('noFerriesAvailable')}
               </Text>
               <Text style={{
                 marginTop: 8,
@@ -3009,7 +2859,7 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {!loading && pagedDataDepart && pagedDataReturn && (
             <>
-              {tripTypeSearch === 'One Way Trip' && (
+              {tripTypeSearch === t('oneWayTrip') && (
                 <>
                   {pagedDataDepart.map((item, index) => (
                     <TouchableOpacity
@@ -3075,7 +2925,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 fontSize: 12,
                                 fontWeight: '500',
                               }}>
-                                Ferry Service
+                                {t('ferryService')}
                               </Text>
                             </View>
                           </View>
@@ -3241,7 +3091,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   paddingVertical: 2,
                                   borderRadius: 8,
                                 }}>
-                                  {item.md_timetable_count} booked
+                                  {item.md_timetable_count} {t('booked')}
                                 </Text>
                               </View>
 
@@ -3313,7 +3163,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   fontWeight: '500',
                                   marginBottom: Platform.OS === 'android' ? 6 : 4,
                                 }}>
-                                  Price per person
+                                  {t('pricePerPerson')}
                                 </Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                                   <Text style={{
@@ -3573,7 +3423,7 @@ const SearchFerry = ({ navigation, route }) => {
                 </>)}
 
 
-              {tripTypeSearch === 'Return Trip' && (
+              {tripTypeSearch === t('returnTrip') && (
                 <>
                   <View style={styles.tripTypeContainer}>
                     <TouchableOpacity
@@ -3595,14 +3445,14 @@ const SearchFerry = ({ navigation, route }) => {
                     <TouchableOpacity
                       style={[
                         styles.tripTypeRoundButton,
-                        tripTypeSearchResult === "Return Trip" && styles.activeButton,
+                        tripTypeSearchResult === t('returnTrip') && styles.activeButton,
                       ]}
-                      onPress={() => settripTypeSearchResult("Return Trip")}
+                      onPress={() => settripTypeSearchResult(t('returnTrip'))}
                     >
                       <Text
                         style={[
                           styles.tripTypeText,
-                          tripTypeSearchResult === "Return Trip" && styles.activeText,
+                          tripTypeSearchResult === t('returnTrip') && styles.activeText,
                         ]}
                       >
                         { t('returnTrip') }
@@ -3675,7 +3525,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   fontSize: 12,
                                   fontWeight: '500',
                                 }}>
-                                  Ferry Service
+                                  {t('ferryService')}
                                 </Text>
                               </View>
                             </View>
@@ -3697,7 +3547,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 fontSize: 11,
                                 fontWeight: '600',
                               }}>
-                                {tripTypeSearch}
+                                {t('departTrip')}
                               </Text>
                             </View>
                           </LinearGradient>
@@ -3831,7 +3681,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     paddingVertical: 2,
                                     borderRadius: 8,
                                   }}>
-                                    {item.md_timetable_count} booked
+                                    {item.md_timetable_count} {t('booked')}
                                   </Text>
                                 </View>
 
@@ -3900,7 +3750,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: '500',
                                     marginBottom: 4,
                                   }}>
-                                    Price per person
+                                    {t('pricePerPerson')}
                                   </Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                                     <Text style={{
@@ -3996,7 +3846,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     if (isroudstatus) {
                                       navigation.navigate('TripDetail');
                                     } else {
-                                      settripTypeSearchResult("Return Trip");
+                                      settripTypeSearchResult(t('returnTrip'));
                                     }
                                   }}
                                 >
@@ -4161,7 +4011,7 @@ const SearchFerry = ({ navigation, route }) => {
                     ))}
 
                   </>)}
-                  {tripTypeSearchResult === 'Return Trip' && (<>
+                  {tripTypeSearchResult === t('returnTrip') && (<>
                     {pagedDataReturn.map((item, index) => (
                       <TouchableOpacity
                         key={index}
@@ -4232,7 +4082,7 @@ const SearchFerry = ({ navigation, route }) => {
                                   fontSize: 12,
                                   fontWeight: '500',
                                 }}>
-                                  Return Ferry
+                                  {t('returnFerry')}
                                 </Text>
                               </View>
                             </View>
@@ -4392,7 +4242,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     paddingVertical: 2,
                                     borderRadius: 8,
                                   }}>
-                                    {item.md_timetable_count} booked
+                                    {item.md_timetable_count} {t('booked')}
                                   </Text>
                                 </View>
 
@@ -4461,7 +4311,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: '500',
                                     marginBottom: 4,
                                   }}>
-                                    Price per person
+                                    {t('pricePerPerson')}
                                   </Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                                     <Text style={{

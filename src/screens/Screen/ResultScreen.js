@@ -19,7 +19,7 @@ import moment from 'moment';
 
 const ResultScreen = ({ navigation, route }) => {
   const { customerData } = useCustomer();
-  const { t } = useLanguage();
+  const { selectedLanguage, t } = useLanguage();
   const insets = useSafeAreaInsets();
   const { success, booking_code } = route.params;
   const [orderStatus, setOrderStatus] = useState("Pending");
@@ -1073,7 +1073,7 @@ const ResultScreen = ({ navigation, route }) => {
               <Ionicons name="alert-circle-outline" size={48} color="#DC2626" style={{ marginBottom: hp('2%') }} />
               <Text style={styles.errorTitle}>{t('invalidCard')}</Text>
               <Text style={styles.errorSubtitle}>{t('contactUs')}</Text>
-              <Text style={styles.errorContact}>อีเมล: info@thetrago.com</Text>
+              <Text style={styles.errorContact}>{t('email')}: info@thetrago.com</Text>
             </View>
           </View>
         )}

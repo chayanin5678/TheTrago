@@ -303,7 +303,7 @@ const MainNavigator = () => {
         name="Booking" 
         component={BookingNavigator} 
         options={{ 
-          title: selectedLanguage === 'th' ? 'จองตั๋ว' : 'Booking',
+          title: selectedLanguage === 'th' ? 'ตั๋ว' : 'Booking',
         }} 
       />
       <Tab.Screen 

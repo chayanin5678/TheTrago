@@ -97,7 +97,7 @@ const AccountScreen = ({ navigation }) => {
       setShowSettingsModal(false);
     } catch (error) {
       console.log('Error saving language settings:', error);
-      Alert.alert('Error', 'Failed to save settings');
+      Alert.alert(t('error') || 'Error', t('failedToSaveSettings') || 'Failed to save settings');
     }
   };
 
@@ -309,7 +309,7 @@ const AccountScreen = ({ navigation }) => {
       console.log('AuthContext: User logged out, app will automatically navigate to login screen');
     } catch (error) {
       console.error('Error during logout:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
+      Alert.alert(t('error') || 'Error', t('failedToLogout') || 'Failed to logout. Please try again.');
     }
   };
 

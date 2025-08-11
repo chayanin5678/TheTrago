@@ -11,6 +11,13 @@ import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contex../../contexts/AuthContext';
+// Apple Authentication - conditional import
+let AppleAuthentication;
+try {
+  AppleAuthentication = require('expo-apple-authentication');
+} catch (error) {
+  console.log('Apple Authentication not available');
+}
 // Social login imports - conditional for Expo Go compatibility
 let GoogleSignin, statusCodes, LoginManager, AccessToken;
 try {
@@ -44,7 +51,7 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(customerData.remember || false);
   const [isLoading, setIsLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState({ google: false, facebook: false });
+  const [socialLoading, setSocialLoading] = useState({ google: false, facebook: false, apple: false });
 
   // Premium animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -159,15 +166,19 @@ export default function LoginScreen({ navigation }) {
       
       console.log('Google User Info:', userInfo);
       
+      // ตรวจสอบว่ามีอีเมลหรือไม่ (กรณีผู้ใช้เลือกซ่อนอีเมล)
+      const userEmail = userInfo.user.email || `${userInfo.user.id}@privaterelay.appleid.com`;
+      
       // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
       const socialLoginResponse = await axios.post(`${ipAddress}/AppApi/social-login`, {
         provider: 'google',
         providerId: userInfo.user.id,
-        email: userInfo.user.email,
+        email: userEmail,
         name: userInfo.user.name,
         firstName: userInfo.user.givenName || null,
         lastName: userInfo.user.familyName || null,
         photo: userInfo.user.photo,
+        isEmailPrivate: !userInfo.user.email, // บอกว่าอีเมลถูกซ่อนหรือไม่
       });
 
       if (socialLoginResponse.data.token) {
@@ -289,6 +300,65 @@ export default function LoginScreen({ navigation }) {
       setSocialLoading(prev => ({ ...prev, facebook: false }));
     }
   };
+
+  // Apple Sign-In Handler
+  const handleAppleSignIn = async () => {
+    // Check if Apple Authentication is available
+    if (!AppleAuthentication) {
+      Alert.alert(
+        'Apple Sign-In ไม่พร้อมใช้งান', 
+        'Apple Sign-In ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้',
+        [{ text: t('understood') }]
+      );
+      return;
+    }
+
+    try {
+      setSocialLoading(prev => ({ ...prev, apple: true }));
+      
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      console.log('Apple Credential:', credential);
+
+      // จัดการกับอีเมลที่อาจจะถูกซ่อน
+      const userEmail = credential.email || `${credential.user}@privaterelay.appleid.com`;
+      
+      // ส่งข้อมูลไปยัง API
+      const socialLoginResponse = await axios.post(`${ipAddress}/AppApi/social-login`, {
+        provider: 'apple',
+        providerId: credential.user,
+        email: userEmail,
+        name: credential.fullName ? 
+          `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null,
+        firstName: credential.fullName?.givenName || null,
+        lastName: credential.fullName?.familyName || null,
+        isEmailPrivate: !credential.email, // บอกว่าอีเมลถูกซ่อนหรือไม่
+      });
+
+      if (socialLoginResponse.data.token) {
+        await login(socialLoginResponse.data.token);
+        Alert.alert(t('success'), t('appleSignInSuccess'));
+      } else {
+        Alert.alert('เตือน', t('appleSignInError'));
+      }
+    } catch (error) {
+      console.log('Apple Sign-In Error:', error);
+      
+      if (error.code === 'ERR_CANCELED') {
+        // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
+        return;
+      }
+      
+      Alert.alert('เตือน', t('appleSignInError'));
+    } finally {
+      setSocialLoading(prev => ({ ...prev, apple: false }));
+    }
+  };
   
 
 
@@ -383,7 +453,7 @@ export default function LoginScreen({ navigation }) {
                   </View>
                   <TextInput
                     style={styles.input}
-                    placeholder={t('emailAddress')}
+                    placeholder={t('usernameOrEmail')}
                     placeholderTextColor="#aaa"
                     value={email}
                     onChangeText={setEmail}
@@ -450,48 +520,60 @@ export default function LoginScreen({ navigation }) {
               </View>
 
               <View style={styles.socialContainer}>
+                {/* Apple Sign-In Button สำหรับ iOS */}
+                {Platform.OS === 'ios' && (
+                  <TouchableOpacity 
+                    style={styles.appleButtonCustom} 
+                    onPress={handleAppleSignIn}
+                    disabled={socialLoading.apple || isLoading}
+                  >
+                    <View style={styles.socialButtonContent}>
+                      {socialLoading.apple ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <FontAwesome name="apple" size={20} color="#FFFFFF" />
+                      )}
+                      <Text style={styles.appleButtonText}>
+                        {socialLoading.apple ? t('signInWithApple') : `Continue with Apple`}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {/* Google Sign-In Button */}
                 <TouchableOpacity 
-                  style={styles.socialButton} 
+                  style={styles.googleButtonCustom} 
                   onPress={handleGoogleSignIn}
                   disabled={socialLoading.google || isLoading}
                 >
-                  <BlurView intensity={30} tint="light" style={styles.socialBlur}>
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.9)', 'rgba(250,250,250,0.95)']}
-                      style={styles.socialGradient}
-                    >
-                      {socialLoading.google ? (
-                        <ActivityIndicator size="small" color="#EA4335" />
-                      ) : (
-                        <FontAwesome name="google" size={22} color="#EA4335" />
-                      )}
-                      <Text style={styles.socialText}>
-                        {socialLoading.google ? t('signInWithGoogle') : t('google')}
-                      </Text>
-                    </LinearGradient>
-                  </BlurView>
+                  <View style={styles.socialButtonContent}>
+                    {socialLoading.google ? (
+                      <ActivityIndicator size="small" color="#757575" />
+                    ) : (
+                      <FontAwesome name="google" size={20} color="#EA4335" />
+                    )}
+                    <Text style={styles.socialButtonText}>
+                      {socialLoading.google ? t('signInWithGoogle') : `Continue with Google`}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
                 
+                {/* Facebook Sign-In Button */}
                 <TouchableOpacity 
-                  style={styles.socialButton} 
+                  style={styles.facebookButtonCustom} 
                   onPress={handleFacebookLogin}
                   disabled={socialLoading.facebook || isLoading}
                 >
-                  <BlurView intensity={30} tint="light" style={styles.socialBlur}>
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.9)', 'rgba(250,250,250,0.95)']}
-                      style={styles.socialGradient}
-                    >
-                      {socialLoading.facebook ? (
-                        <ActivityIndicator size="small" color="#3b5998" />
-                      ) : (
-                        <FontAwesome name="facebook" size={22} color="#3b5998" />
-                      )}
-                      <Text style={styles.socialText}>
-                        {socialLoading.facebook ? t('signInWithFacebook') : t('facebook')}
-                      </Text>
-                    </LinearGradient>
-                  </BlurView>
+                  <View style={styles.socialButtonContent}>
+                    {socialLoading.facebook ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <FontAwesome name="facebook-f" size={20} color="#FFFFFF" />
+                    )}
+                    <Text style={styles.facebookButtonText}>
+                      {socialLoading.facebook ? t('signInWithFacebook') : `Continue with Facebook`}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               </View>
 
@@ -755,10 +837,82 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   socialContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 30,
-    gap: 15,
+    gap: 12,
+  },
+  thirdPartyContainer: {
+    flexDirection: 'column',
+    gap: 12,
+    marginTop: Platform.OS === 'ios' ? 15 : 0,
+  },
+  appleButton: {
+    height: 50,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  appleButtonCustom: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#000000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  appleButtonContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  appleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  googleButtonCustom: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DADCE0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  facebookButtonCustom: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#1877F2',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  socialButtonContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  socialButtonText: {
+    color: '#3C4043',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  facebookButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   socialButton: {
     flex: 1,

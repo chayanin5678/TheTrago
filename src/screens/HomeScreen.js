@@ -50,13 +50,14 @@ const HomeScreen = ({ navigation, route }) => {
 
   const data = [
     { id: '1', title: t('ferry'), icon: 'boat', navigate: 'SearchFerry', item: 'new' },
-    { id: '2', title: t('flights'), icon: 'airplane', navigate: 'SearchFerryDemo', item: '' },
-    { id: '3', title: t('trains'), icon: 'train', navigate: '', item: '' },
-    { id: '4', title: t('cars'), icon: 'car', navigate: '', item: '' },
-    { id: '5', title: t('hotel'), icon: 'bed', navigate: '', item: '' },
-    { id: '6', title: t('tours'), icon: 'map', navigate: '', item: '' },
-    { id: '7', title: t('attraction'), icon: 'star', navigate: '', item: '' },
-    { id: '8', title: t('ticket'), icon: 'ticket', navigate: '', item: '' },
+    // Temporarily disable unfinished features for App Store compliance
+    // { id: '2', title: t('flights'), icon: 'airplane', navigate: 'SearchFerryDemo', item: '' },
+    // { id: '3', title: t('trains'), icon: 'train', navigate: '', item: '' },
+    // { id: '4', title: t('cars'), icon: 'car', navigate: '', item: '' },
+    // { id: '5', title: t('hotel'), icon: 'bed', navigate: '', item: '' },
+    // { id: '6', title: t('tours'), icon: 'map', navigate: '', item: '' },
+    // { id: '7', title: t('attraction'), icon: 'star', navigate: '', item: '' },
+    // { id: '8', title: t('ticket'), icon: 'ticket', navigate: '', item: '' },
   ];
 
   const [activeCountry, setActiveCountry] = useState(null);
@@ -1057,15 +1058,8 @@ const HomeScreen = ({ navigation, route }) => {
                                 endpoint_name: t('destination'),
                               });
                             }
-                            if (item.id === '2') {
-                              // Flights button - navigation disabled
-                              alert('Coming soon...');
-                              return;
-                            }
                             if (item.navigate) {
                               navigation.navigate(item.navigate);
-                            } else {
-                              alert('Coming soon...');
                             }
                           }}
                         >

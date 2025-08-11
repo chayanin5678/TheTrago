@@ -35,6 +35,7 @@ export default {
     "plugins": [
       "expo-secure-store",
       "expo-mail-composer",
+      "expo-apple-authentication",
       [
         "expo-build-properties",
         {
