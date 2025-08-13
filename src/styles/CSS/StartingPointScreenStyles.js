@@ -1,6 +1,6 @@
 import { Platform, StyleSheet } from 'react-native';
 
-const startingPointScreenStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   headerBg: {
     paddingTop: 0,
     paddingBottom: 32,
@@ -105,4 +105,4 @@ const startingPointScreenStyles = StyleSheet.create({
   },
 });
 
-export default startingPointScreenStyles;
+export default styles;

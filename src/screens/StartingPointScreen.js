@@ -5,7 +5,7 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import axios from 'axios';
 import ipAddress from '../config/ipconfig';
-import startingPointScreenStyles from '../styles/CSS/StartingPointScreenStyles';
+import styles from '../styles/CSS/StartingPointScreenStyles';
 import { useLanguage } from './Screen/LanguageContext';
 
 const StartingPointScreen = ({ navigation, route }) => {
@@ -85,16 +85,16 @@ const StartingPointScreen = ({ navigation, route }) => {
     
     return (
       <TouchableOpacity
-        style={startingPointScreenStyles.suggestionItem}
+        style={styles.suggestionItem}
         onPress={() => handleSelectStartingPoint(item)}
         activeOpacity={0.8}
       >
-        <View style={startingPointScreenStyles.suggestionIconBox}>
+        <View style={styles.suggestionIconBox}>
           <MaterialIcons name="location-on" size={22} color="#FD501E" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={startingPointScreenStyles.suggestionTitle}>{item[locationNameField]} - {item[countryNameField]}</Text>
-          <Text style={startingPointScreenStyles.suggestionSub}>{getSubText(item)}</Text>
+          <Text style={styles.suggestionTitle}>{item[locationNameField]} - {item[countryNameField]}</Text>
+          <Text style={styles.suggestionSub}>{getSubText(item)}</Text>
         </View>
         <AntDesign name="right" size={18} color="#B7B7B7" />
       </TouchableOpacity>
@@ -114,24 +114,24 @@ const StartingPointScreen = ({ navigation, route }) => {
       <LinearGradient 
         colors={["#FD501E", "#FF7B3E"]} 
         style={[
-          startingPointScreenStyles.headerBg,
+          styles.headerBg,
           Platform.OS === 'android' && Platform.Version >= 31 && {
             paddingTop: insets.top, // เพิ่ม padding สำหรับ status bar
           }
         ]}
       >
-        <View style={startingPointScreenStyles.headerRow}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={startingPointScreenStyles.backBtn}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <AntDesign name="arrowleft" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={startingPointScreenStyles.headerTitle}>{ t('selectStartingPoint') }</Text>
+          <Text style={styles.headerTitle}>{ t('selectStartingPoint') }</Text>
         </View>
         
         {/* Search Bar */}
-        <View style={startingPointScreenStyles.searchBarWrap}>
+        <View style={styles.searchBarWrap}>
           <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
-            style={startingPointScreenStyles.searchInput}
+            style={styles.searchInput}
             placeholder={ t('searchCityOrAirport') }
             placeholderTextColor="#B7B7B7"
             value={searchQuery}
@@ -143,7 +143,7 @@ const StartingPointScreen = ({ navigation, route }) => {
 
       {/* Main Content */}
       <View style={{ flex: 1, backgroundColor: '#F7F7FA', borderTopLeftRadius: 32, borderTopRightRadius: 32, marginTop: 44, paddingTop: 32 }}>
-        <Text style={startingPointScreenStyles.suggestionLabel}>
+        <Text style={styles.suggestionLabel}>
           { t('suggestion') }
         </Text>
         {loading ? (

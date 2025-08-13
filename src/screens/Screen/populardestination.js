@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowD
 import LogoTheTrago from './../../components/component/Logo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useCustomer } from './CustomerContext';
+import { useLanguage } from './LanguageContext';
 
 import styles from '../../styles/CSS/HomeScreenStyles';
 
@@ -18,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons'; // ใช้ไอคอนจา
 
 const PopularDestination = ({ navigation, route }) => {
   const { customerData, updateCustomerData } = useCustomer();
+  const { language, t, selectedLanguage } = useLanguage();
   const { width: screenWidth } = useWindowDimensions();
   const [popdestination, setPopdestination] = useState([]);
   const [loadedIndexes, setLoadedIndexes] = useState([]);
@@ -76,13 +78,17 @@ useEffect(() => {
   const isLoading = popdestination.length === 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView 
+      contentContainerStyle={[styles.container, { paddingBottom: hp('10%') }]}
+      showsVerticalScrollIndicator={false}
+      bounces={true}
+    >
       <LogoTheTrago />
       <View style={[styles.row, { alignSelf: '', width: '85%', marginLeft: '7%' }]}>
         <Text style={[styles.titleSearch, { fontWeight: 'bold', fontSize: wp('6%') }]}> {customerData.country}</Text>
       </View>
       <Text style={[styles.titleSearch, { color: '#', fontSize: wp('4%'), marginLeft: '8%', flexWrap: 'wrap', maxWidth: '90%', marginTop: 15, marginBottom: 30 }]}>
-        Discover detailed information about your ferry destination, including routes, schedules, and ticket booking options. Simply click the links below or select your desired destination from the menu to get started on your journey.
+        {t('discoverDestinationInfo') || 'Discover detailed information about your ferry destination, including routes, schedules, and ticket booking options. Simply click the links below or select your desired destination from the menu to get started on your journey.'}
       </Text>
       <View style={[styles.carouselContainerTop, { alignSelf: 'center' }]}>
         {isLoading ? (
@@ -126,9 +132,10 @@ useEffect(() => {
               <View key={index} style={styles.itemContainer}>
                 <TouchableOpacity
                   onPress={() => {
+                    const startingPointName = selectedLanguage === 'th' ? (item.md_location_namethai || item.md_location_nameeng) : item.md_location_nameeng;
                     updateCustomerData({
                       startingPointId: item.md_location_id,
-                      startingpoint_name: item.md_location_nameeng,
+                      startingpoint_name: startingPointName,
                     });
                     navigation.navigate('LocationDetail');
                   }}
@@ -192,9 +199,11 @@ useEffect(() => {
                         </Text>
                       </View>
 
-                      <Text style={styles.locationName}>{item.md_location_nameeng}</Text>
+                      <Text style={styles.locationName}>
+                        {selectedLanguage === 'th' ? (item.md_location_namethai || item.md_location_nameeng) : item.md_location_nameeng}
+                      </Text>
                       <Text style={[styles.locationName, { color: '#c5c5c7' }]}>
-                        {item.timetable_count} route
+                        {item.timetable_count} {t('route') || 'route'}
                       </Text>
                     </>
                   ) : (

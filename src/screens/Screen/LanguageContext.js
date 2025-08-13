@@ -156,11 +156,18 @@ const translations = {
     error: 'ข้อผิดพลาด',
     failedToSaveSettings: 'ไม่สามารถบันทึกการตั้งค่าได้',
     failedToLogout: 'ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง',
+    comingSoon: 'เร็วๆ นี้',
+    searchResults: 'ผลการค้นหา',
+    searching: 'กำลังค้นหา...',
+    noResults: 'ไม่พบผลลัพธ์',
     booked: 'จองแล้ว',
     popular: 'ยอดนิยม',
     popularDestination: 'จุดหมายยอดนิยม',
+    country: 'ประเทศ',
+    route: 'เส้นทาง',
     exploreTheBestAttractions: 'สำรวจสถานที่ท่องเที่ยวที่ดีที่สุด',
     trending: 'แนวโน้ม',
+    discoverDestinationInfo: 'ค้นหาข้อมูลรายละเอียดเกี่ยวกับจุดหมายปลายทางของคุณ รวมถึงเส้นทาง ตารางเวลา และตัวเลือกการจองตั๋ว เพียงคลิกลิงก์ด้านล่างหรือเลือกจุดหมายปลายทางที่คุณต้องการจากเมนูเพื่อเริ่มต้นการเดินทางของคุณ',
 
     // LocationDetail Screen
     loading: 'กำลังโหลด...',
@@ -1042,6 +1049,9 @@ const translations = {
     booked: 'booked',
     popular: 'Destination',
     popularDestination: 'Popular Destination',
+    country: 'Country',
+    route: 'route',
+    discoverDestinationInfo: 'Discover detailed information about your ferry destination, including routes, schedules, and ticket booking options. Simply click the links below or select your desired destination from the menu to get started on your journey.',
 
     // Account Screen
     myAccount: 'My Account',
@@ -1092,6 +1102,10 @@ const translations = {
     error: 'Error',
     failedToSaveSettings: 'Failed to save settings',
     failedToLogout: 'Failed to logout. Please try again.',
+    comingSoon: 'Coming Soon',
+    searchResults: 'Search Results',
+    searching: 'Searching...',
+    noResults: 'No results found',
 
     // LocationDetail Screen
     loading: 'Loading...',

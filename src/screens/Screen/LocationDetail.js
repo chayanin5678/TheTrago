@@ -13,7 +13,7 @@ import styles from '../../styles/CSS/HomeScreenStyles';
 
 const LocationDetail = ({ navigation, route }) => {
     const { customerData, updateCustomerData } = useCustomer();
-    const { t } = useLanguage();
+    const { t, selectedLanguage } = useLanguage();
     const { width: screenWidth } = useWindowDimensions();
     const [popdestination, setPopdestination] = useState([]);
 
@@ -56,7 +56,11 @@ const LocationDetail = ({ navigation, route }) => {
     const isLoading = popdestination.length === 0;
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView 
+            contentContainerStyle={[styles.container, { paddingBottom: hp('10%') }]}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+        >
             {/* <ImageBackground
                 source={{ uri: 'https://www.thetrago.com/assets/images/bg/Aliments.png' }}
                 style={styles.background}> */}
@@ -84,7 +88,8 @@ const LocationDetail = ({ navigation, route }) => {
                         <TouchableOpacity
                             key={`pop-${item.md_timetable_endid || index}`}
                             onPress={() => {
-                                updateCustomerData({ endPointId: item.md_timetable_endid, endpoint_name: item.endeng });
+                                const endpointName = selectedLanguage === 'th' ? (item.endth || item.endeng) : item.endeng;
+                                updateCustomerData({ endPointId: item.md_timetable_endid, endpoint_name: endpointName });
                                 navigation.navigate('SearchFerry');
                             }}>
                             <View
@@ -109,11 +114,11 @@ const LocationDetail = ({ navigation, route }) => {
                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
                                     <Ionicons name="location-outline" size={20} color='rgb(12, 188, 135)' style={{ marginRight: 5 }} />
                                     <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
-                                        {item.starteng}
+                                        {selectedLanguage === 'th' ? (item.startth || item.starteng) : item.starteng}
                                     </Text>
                                     <Ionicons name="arrow-forward" size={16} color="black" style={{ marginHorizontal: 5 }} />
                                     <Text style={[styles.titleSearch, { fontSize: wp('4.5%'), color: '#000' }]}>
-                                        {item.endeng}
+                                        {selectedLanguage === 'th' ? (item.endth || item.endeng) : item.endeng}
                                     </Text>
                                 </View>
                             </View>

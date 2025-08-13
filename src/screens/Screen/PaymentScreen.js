@@ -17,6 +17,7 @@ import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
+import styles from '../../styles/CSS/PaymentScreenStyles';
 
 const brandIcons = {
   Visa: require("../../../assets/visa.png"),
@@ -214,7 +215,16 @@ const PaymentScreen = ({ navigation, route }) => {
       });
 
       console.log("📌 Points API Response status:", response.status);
-      const result = await response.json();
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (jsonError) {
+        console.error("❌ API did not return JSON:", text);
+        setError('API error: response is not JSON');
+        setUserPoints(0);
+        return;
+      }
       console.log("📌 Points API Response data:", result);
       
       if (response.ok && result.status === "success") {
@@ -1303,7 +1313,31 @@ const PaymentScreen = ({ navigation, route }) => {
                       <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '90%', maxHeight: '85%' }}>
                         <ScrollView>
                           <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#FD501E', textAlign: 'center' }}>{t('privacyPolicy') || 'Privacy Policy'}</Text>
-                          <Text style={{ fontSize: 15, color: '#222' }}>{`The Trago is committed to respecting and protecting your privacy and complying with data protection and privacy laws. We have provided this Privacy Policy to help you understand how we collect, use, store, and protect your information as one of our customers. Please take a few moments to read the sections below and learn how we may use your personal information.\n\nFor all our services, the data controller, the company responsible for your privacy is The Trago\n\nYou should read this notice in conjunction with our cookies policy and the terms & conditions of use for The Trago websites and any separate terms & conditions issued with your booking of Thetrago or other products and services.\n\nOur Legal Basis for Using Your Personal Information\nWe will only process your personal information where we have a legal basis to do so. The legal basis will depend on the reason or reasons The Trago has collected and needs to use your information. Under EU and UK data protection laws, in almost all cases the legal basis will be:\n\nBecause we need to use your information to process your booking, fulfill your travel arrangements, and otherwise perform the contract we have with you.\nBecause it is in The Trago’s legitimate interests as a company to use your personal information to operate and improve our business as a travel provider.\nBecause we need to use your personal information to comply with a legal obligation.\n>To protect the vital interests of you or another person.\nBecause you have consented to The Trago using your information for a particular purpose.\nIf processing of your data is subject to any other laws, then the basis of processing your data may be different to that set out above and may in those circumstances be based on your consent in all cases.\n\nWhat Types of Personal Information Do We Collect From You?\nWe endeavor to collect and use your personal information only with your knowledge and consent. We collect information when you use the The Trago website, one of our products or services, or communicate with us. This information and the details of anyone traveling with you are necessary for the adequate performance of our contract with you and to allow us to comply with our legal obligations. Without it, we may not be able to provide you with all requested services.\n\nWe collect the following categories of personal information:\n\nyou provide to us to complete and manage your booking or another service you have requested from us: For example, your name, address, email, contact details, date of birth, gender, passport number, your vehicle details, and payment information. The exact information required will depend on the requirements of the ferry operator.\nInformation about your travel arrangements: For example, your travel itinerary and other information related to your booking.\nInformation about the services we have provided to you in the past: Details of any past bookings you have made with us, including any customer feedback you may have provided.\nInformation about your use of our websites, contact centers, and mobile applications: To help us to personalize your experience and improve our website, we collect information about your searches and the content you have viewed on our website using cookies and similar technologies.\nWhat Do We Use Your Personal Information For?\nTo fulfill and manage your bookings and deliver any other services you have asked for.\nTo send you status updates, if requested, and service communications.\nTo provide services tailored to your requirements and to treat you in a more personal way.\nTo carry out analysis and market research.\nTo improve our websites, products, and services.\nFor management and administrative purposes.\nTo carry out marketing and keep you informed of The Trago ’s products and services.\nWhen Will We Send You Marketing?\nWe may send you marketing messages via email to keep you up to date with the latest and best offers, ferry timetable releases, and to help you find Thetrago prices.\n\nYou can stop receiving marketing messages from us at any time by:\n\nClicking the unsubscribe link found in any email marketing message\nReplying to an email marketing message with a request to be unsubscribed\nContacting our Customer Service Team\nOnce you do this, we will update your account details so you don’t receive any more marketing messages. While we will update your details as quickly as possible, please allow for up to 2 business days for this to take effect. Unsubscribing from marketing messages will not stop service communications, such as booking confirmations and updates.\n\nWhen Will We Share Your Information With Others?\nWhen you make a booking, we may need to share your personal information with the providers (e.g., ferry operators, insurance providers, product distributors) of the services and products you’re purchasing. This information may also be shared with other third parties, including port authorities, customs, and passport offices, where this is necessary to fulfill the ferry service contract.\n\nWe may disclose information about you, your account, and booking history to:\n\nCompanies within the The Trago Group for the purposes and subject to the terms of this Privacy Policy.\nIn the event that we undergo re-organization or are sold to a third party, in which case you agree that any personal information we hold about you may be transferred to that re-organized entity or third party for the purposes and subject to the terms of this Privacy Policy.\nWe will not sell or pass your personal information to third parties (other than as set out above) unless you have given us permission or unless it is necessary to deliver and improve upon the products and services ordered or used by you. For example, we may disclose your data to a credit card company to validate your credit card details and obtain payment when you buy a product or service. It may also be necessary to pass your data to the organization from whom you have ordered any products or services.\n\nThe Trago may also be obliged to disclose your personal information to meet any legal or regulatory requirements or obligations in accordance with applicable law.\n\nHow We Use Cookies?\nWe may use cookies to record details such as a user identity and general registration details on your PC. This helps us recognize you on subsequent visits so that you do not have to re-enter your registration details each time you visit us and allows us to personalize your experience and improve our website.\n\nDepending upon the type of browser you are using, you may be able to configure your browser so that:\n\nYou are prompted to accept or reject cookies on an individual basis\nYou may be able to prevent your browser from accepting any cookies at all.\nYou should refer to the supplier or manufacturer of your web browser for specific details about cookie security.\n\nYou can read more about our cookie policy here.\n\nYour Rights Regarding Your Personal Information\nto Access & Transfer Data: You have the right to request a copy of any personal information that we hold about you or to have it transferred to a third party. We may ask you to supply appropriate evidence to verify your identity before responding to your request.\n\nOnce your identity has been verified, we will respond as quickly as possible and in any event within 30 business days.\n\nIf you have an online account, you can log in to your account at any time to view any personal information stored there.\n\nRight to Update & Amend: If any of the personal information we hold on you is inaccurate, you have the right to have that information corrected or completed where it is incomplete.\n\nRight to Complain: If you feel at any point that we have mishandled your data or infringed upon your rights set out under data protection laws, you can let us know by getting in touch with our customer service team or lodge a complaint with the supervisory authority responsible for data protection in the country you live in or the place of the alleged infringement.\n\nRight to be Forgotten: You can request to have your personal information erased when it is no longer required to process a transaction or we are not legally required to retain the information. Where your personal information is no longer required, any request to have the information erased will be carried out without undue delay.\n\nRight to Withdraw Consent: You can withdraw or restrict your consent to marketing or the processing of your personal information completely or partially, where it is no longer required.\n\nHow to Access, Amend or Transfer Your Information\nTrident Master Company Limited (www.thetrago.com)\n\nEmail : info@thetrago.com , sale@thetrago.com , info@worldferry.com\n\nPlease quote your name together with your booking reference and/or account number. We would be grateful if you could also provide brief details of what information you want a copy of (this helps us to more readily locate your data). We will take all reasonable steps to confirm your identity before providing you with details of any personal information we may hold about you.\n\nYour Personal Information and Countries Outside the EU\nAll our customer data is stored on servers held within the EU. To perform our contract with you, we may need to send some of your personal details to our partner ferry operators outside of the EU. Where this is necessary, we take steps to restrict the data transferred to only the data that is required to perform the contract.\n\nWe protect your privacy and your rights through the use of the European Commission’s standard data protection clauses.\n\nRetaining and Anonymizing Personal Data\nWe keep your personal information for either 3 years from the date of your last booking or interaction or, if longer, for any period for which we are required to keep personal information to comply with our legal and regulatory requirements. After this time has passed, we anonymize all data so that it is no longer personally identifiable.\n\nInformation Security\nThe Trago recognizes that its customers are increasingly concerned about how companies protect personal information from misuse and abuse and about privacy in general. The Trago is constantly reviewing and enhancing its technical, physical and managerial procedures and rules to protect your personal data from unauthorised access, accidental loss and/or destruction.\n\nChanges to this Policy\nWe may occasionally make changes to this page and our Privacy Policy to reflect changes in how we are processing your data.\n\nIf there are any significant changes, we make these clear either through the website or through another means of contact such as email.\n\nPrivacy Support\nTrident Master Co,. Ltd,. (www.thetrago.com) reserves the right to amend or modify this Privacy Policy Statement at any time and in response to changes in applicable data protection and privacy legislation.`}</Text>
+                          <Text style={{ fontSize: 15, color: '#222' }}>{`The Trago is committed to respecting and protecting your privacy and complying with data protection and privacy laws. We have provided this Privacy Policy to help you understand how we collect, use, store, and protect your information as one of our customers. Please take a few moments to read the sections below and learn how we may use your personal information.\n\nFor all our services, the data controller, the company responsible for your privacy is The Trago\n\nYou should read this notice in conjunction with our cookies policy and the terms & conditions of use for The Trago websites and any separate terms & conditions issued with your booking of Thetrago or other products and services.\n\nOur Legal Basis for Using Your Personal Information\nWe will only process your personal information where we have a legal basis to do so. The legal basis will depend on the reason or reasons The Trago has collected and needs to use your information. Under EU and UK data protection laws, in almost all cases the legal basis will be:\n\nBecause we need to use your information to process your booking, fulfill your travel arrangements, and otherwise perform the contract we have with you.\nBecause it is in The Trago’s legitimate interests as a company to use your personal information to operate and improve our business as a travel provider.\nBecause we need to use your personal information to comply with a legal obligation.\n>To protect the vital interests of you or another person.\nBecause you have consented to The Trago using your information for a particular purpose.\nIf processing of your data is subject to any other laws, then the basis of processing your data may be different to that set out above and may in those circumstances be based on your consent in all cases.\n\nWhat Types of Personal Information Do We Collect From You?\nWe endeavor to collect and use your personal information only with your knowledge and consent. We collect information when you use the The Trago website, one of our products or services, or communicate with us. This information and the details of anyone traveling with you are necessary for the adequate performance of our contract with you and to allow us to comply with our legal obligations. Without it, we may not be able to provide you with all requested services.\n\nWe collect the following categories of personal information:\n\nyou provide to us to complete and manage your booking or another service you have requested from us: For example, your name, address, email, contact details, date of birth, gender, passport number, your vehicle details, and payment information. The exact information required will depend on the requirements of the ferry operator.\nInformation about your travel arrangements: For example, your travel itinerary and other information related to your booking.\nInformation about the services we have provided to you in the past: Details of any past bookings you have made with us, including any customer feedback you may have provided.\nInformation about your use of our websites, contact centers, and mobile applications: To help us to personalize your experience and improve our website, we collect information about your searches and the content you have viewed on our website using cookies and similar technologies.\nWhat Do We Use Your Personal Information For?\nTo fulfill and manage your bookings and deliver any other services you have asked for.\nTo send you status updates, if requested, and service communications.\nTo provide services tailored to your requirements and to treat you in a more personal way.\nTo carry out analysis and market research.\nTo improve our websites, products, and services.\nFor management and administrative purposes.\nTo carry out marketing and keep you informed of The Trago ’s products and services.\nWhen Will We Send You Marketing?\nWe may send you marketing messages via email to keep you up to date with the latest and best offers, ferry timetable releases, and to help you find Thetrago prices.\n\nYou can stop receiving marketing messages from us at any time by:\n\nClicking the unsubscribe link found in any email marketing message\nReplying to an email marketing message with a request to be unsubscribed\nContacting our Customer Service Team\nOnce you do this, we will update your account details so you don’t receive any more marketing messages. While we will update your details as quickly as possible, please allow for up to 2 business days for this to take effect. Unsubscribing from marketing messages will not stop service communications, such as booking confirmations and updates.\n\nWhen Will We Share Your Information With Others?\nWhen you make a booking, we may need to share your personal information with the providers (e.g., ferry operators, insurance providers, product distributors) of the services and products you’re purchasing. This information may also be shared with other third parties, including port authorities, customs, and passport offices, where this is necessary to fulfill the ferry service contract.\n\nWe may disclose information about you, your account, and booking history to:\n\nCompanies within the The Trago Group for the purposes and subject to the terms of this Privacy Policy.\nIn the event that we undergo re-organization or are sold to a third party, in which case you agree that any personal information we hold about you may be transferred to that re-organized entity or third party for the purposes and subject to the terms of this Privacy Policy.\nWe will not sell or pass your personal information to third parties (other than as set out above) unless you have given us permission or unless it is necessary to deliver and improve upon the products and services ordered or used by you. For example, we may disclose your data to a credit card company to validate your credit card details and obtain payment when you buy a product or service. It may also be necessary to pass your data to the organization from whom you have ordered any products or services.\n\nThe Trago may also be obliged to disclose your personal information to meet any legal or regulatory requirements or obligations in accordance with applicable law.\n\nHow We Use Cookies?\nWe may use cookies to record details such as a user identity and general registration details on your PC. This helps us recognize you on subsequent visits so that you do not have to re-enter your registration details each time you visit us and allows us to personalize your experience and improve our website.\n\nDepending upon the type of browser you are using, you may be able to configure your browser so that:\n\nYou are prompted to accept or reject cookies on an individual basis\nYou may be able to prevent your browser from accepting any cookies at all.\nYou should refer to the supplier or manufacturer of your web browser for specific details about cookie security.\n\nYou can read more about our cookie policy here.\n\nYour Rights Regarding Your Personal Information\nto Access & Transfer Data: You have the right to request a copy of any personal information that we hold about you or to have it transferred to a third party. We may ask you to supply appropriate evidence to verify your identity before responding to your request.\n\nOnce your identity has been verified, we will respond as quickly as possible and in any event within 30 business days.\n\nIf you have an online account, you can log in to your account at any time to view any personal information stored there.\n\nRight to Update & Amend: If any of the personal information we hold on you is inaccurate, you have the right to have that information corrected or completed where it is incomplete.\n\nRight to Complain: If you feel at any point that we have mishandled your data or infringed upon your rights set out under data protection laws, you can let us know by getting in touch with our customer service team or lodge a complaint with the supervisory authority responsible for data protection in the country you live in or the place of the alleged infringement.\n\nRight to be Forgotten: You can request to have your personal information erased when it is no longer required to process a transaction or we are not legally required to retain the information. Where your personal information is no longer required, any request to have the information erased will be carried out without undue delay.\n\nRight to Withdraw Consent: You can withdraw or restrict your consent to marketing or the processing of your personal information completely or partially, where it is no longer required.\n\nHow to Access, Amend or Transfer Your Information
+  Trident Master Company Limited (www.thetrago.com)
+  
+  Email : info@thetrago.com , sale@thetrago.com , info@worldferry.com
+  
+  Please quote your name together with your booking reference and/or account number. We would be grateful if you could also provide brief details of what information you want a copy of (this helps us to more readily locate your data). We will take all reasonable steps to confirm your identity before providing you with details of any personal information we may hold about you.
+  
+  Your Personal Information and Countries Outside the EU
+  All our customer data is stored on servers held within the EU. To perform our contract with you, we may need to send some of your personal details to our partner ferry operators outside of the EU. Where this is necessary, we take steps to restrict the data transferred to only the data that is required to perform the contract.
+  
+  We protect your privacy and your rights through the use of the European Commission’s standard data protection clauses.
+  
+  Retaining and Anonymizing Personal Data
+  We keep your personal information for either 3 years from the date of your last booking or interaction or, if longer, for any period for which we are required to keep personal information to comply with our legal and regulatory requirements. After this time has passed, we anonymize all data so that it is no longer personally identifiable.
+  
+  Information Security
+  The Trago recognizes that its customers are increasingly concerned about how companies protect personal information from misuse and abuse and about privacy in general. The Trago is constantly reviewing and enhancing its technical, physical and managerial procedures and rules to protect your personal data from unauthorised access, accidental loss and/or destruction.
+  
+  Changes to this Policy
+  We may occasionally make changes to this page and our Privacy Policy to reflect changes in how we are processing your data.
+  
+  If there are any significant changes, we make these clear either through the website or through another means of contact such as email.
+  
+  Privacy Support
+  Trident Master Co,. Ltd,. (www.thetrago.com) reserves the right to amend or modify this Privacy Policy Statement at any time and in response to changes in applicable data protection and privacy legislation.`}</Text>
                         </ScrollView>
                         <TouchableOpacity
                           style={{ alignSelf: 'center', marginTop: 18, backgroundColor: '#FD501E', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 30 }}
@@ -1662,353 +1696,5 @@ const PaymentScreen = ({ navigation, route }) => {
   );
 };
 
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: wp('5%'),
-    paddingBottom: hp('2%'),
-  },
-  contentContainer: {
-    flex: 1,
-    paddingTop: hp('1%'),
-  },
-  title: {
-    fontSize: wp('4.5%'),
-    fontWeight: 'bold',
-    textAlign: 'left',
-    color: '#1E293B',
-    marginBottom: hp('2%'),
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowRadius: 2,
-  },
-  card: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: wp('5%'),
-    width: '100%',
-    padding: wp('4%'),
-    marginVertical: hp('1%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 18, 51, 0.08)',
-    backdropFilter: 'blur(20px)',
-  },
-  header: {
-    fontSize: wp('4.5%'),
-    fontWeight: '800',
-    marginBottom: hp('1%'),
-    color: '#1E293B',
-    letterSpacing: -0.3,
-  },
-  label: {
-    fontSize: wp('4%'),
-    marginBottom: hp('0.5%'),
-    color: '#374151',
-    fontWeight: '500',
-  },
-  labelHead: {
-    fontSize: wp('4%'),
-    marginBottom: hp('0.5%'),
-    color: '#374151',
-    fontWeight: '600',
-  },
-  input: {
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(148, 163, 184, 0.3)',
-    borderRadius: wp('3%'),
-    padding: wp('3%'),
-    fontSize: wp('4%'),
-    backgroundColor: '#FFFFFF',
-    marginBottom: hp('1%'),
-    color: '#374151',
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: hp('0.5%'),
-  },
-  rowpromo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: hp('0.5%'),
-  },
-  redText: {
-    color: '#FF0000',
-  },
-  inputContainer: {
-    marginBottom: hp('1%'),
-  },
-  buttonContainer: {
-    backgroundColor: '#FD501E',
-    paddingVertical: hp('2%'),
-    borderRadius: wp('4%'),
-    alignItems: 'center',
-    marginTop: hp('2%'),
-    width: '100%',
-    marginBottom: hp('4%'),
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.4,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('1.5%'),
-  },
-  radioButton: {
-    width: wp('5%'),
-    height: wp('5%'),
-    borderRadius: wp('2.5%'),
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    marginRight: wp('3%'),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectedRadio: {
-    backgroundColor: '#FD501E',
-    borderColor: '#FD501E',
-  },
-  optionText: {
-    fontSize: wp('4%'),
-    color: '#374151',
-  },
-  payment: {
-    marginTop: hp('2%'),
-  },
-  logodown: {
-    flex: 1,
-  },
-  radioContian: {
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
-    borderRadius: wp('3%'),
-    padding: wp('3%'),
-    marginBottom: hp('1%'),
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    // elevation: 3,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp('1%'),
-    marginBottom: hp('1%'),
-  },
-  textContainer: {
-    flex: 1,
-    marginLeft: wp('2%'),
-  },
-  textcolor: {
-    color: '#FD501E',
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    width: '100%',
-    backgroundColor: '#E5E7EB',
-    marginVertical: hp('1.5%'),
-  },
-  // ...existing code...
-  loadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // พื้นหลังโปร่งใส
-    zIndex: 9999, // ✅ ให้ ActivityIndicator อยู่ด้านบนสุด
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#FFF",
-    fontSize: 18,
-  },
-  inputWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  textInput: {
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingLeft: 15,
-    paddingRight: 50, // ให้เว้นที่สำหรับ icon ด้านขวา
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  brandIcon: {
-    position: 'absolute',
-    right: 15,
-    width: 45,
-    height: 35,
-  },
-  BackButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: wp('4.5%'),
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowRadius: 1,
-  },
-  greenText: {
-    color: '#10B981',
-    fontWeight: '600',
-  },
-  // ...existing code...
-  savedCardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: wp('3%'),
-    padding: wp('3.5%'),
-    marginBottom: hp('1%'),
-    borderWidth: wp('0.2%'),
-    borderColor: 'rgba(148, 163, 184, 0.3)',
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
-  },
-  selectedCard: {
-    borderColor: '#FD501E',
-    backgroundColor: 'rgba(253, 80, 30, 0.05)',
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 6,
-  },
-  cardInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  savedCardIcon: {
-    width: 38,
-    height: 28,
-    marginRight: 14,
-    resizeMode: 'contain',
-  },
-  savedCardNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#002348',
-  },
-  savedCardName: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 2,
-  },
-  addCardButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FD501E',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: hp('1.2%'),
-    borderRadius: wp('2%'),
-    alignSelf: 'flex-end',
-    marginTop: hp('1%'),
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.3,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 6,
-  },
-  skeletonCard: {
-    backgroundColor: '#ececec',
-    borderRadius: 20,
-    width: '100%',
-    padding: 16,
-    marginVertical: 16,
-  },
-  skeletonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  skeletonCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#e0e0e0',
-    marginRight: 10,
-  },
-  skeletonLineShort: {
-    width: 120,
-    height: 18,
-    borderRadius: 8,
-    backgroundColor: '#e0e0e0',
-  },
-  skeletonCardList: {
-    marginTop: 10,
-  },
-  skeletonCardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8e8e8',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-  },
-  skeletonCardIcon: {
-    width: 38,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: '#d0d0d0',
-    marginRight: 14,
-  },
-  skeletonLine: {
-    width: '80%',
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 8,
-  },
-  skeletonLineSmall: {
-    width: '50%',
-    height: 12,
-    borderRadius: 8,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 8,
-  },
-  skeletonAddCardBtn: {
-    width: 100,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#fdcdbb',
-    alignSelf: 'flex-end',
-    marginTop: 6,
-  },
-  skeletonButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: '#fdcdbb',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-});
 
 export default PaymentScreen;
