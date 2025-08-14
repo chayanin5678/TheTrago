@@ -13,35 +13,45 @@ export const CustomerProvider = ({ children }) => {
     md_booking_affiliate_price: 0, //ราคาตัวแทน
     md_booking_code: '', //รหัสการจอง
     md_booking_groupcode: '', //รหัสกลุ่มการจอง
-    md_booking_companyid: 0, //รหัสบริษัท
+    md_booking_companyiddepart: 0, //รหัสบริษัท
+    md_booking_companyidreturn: 0, //รหัสบริษัท
     md_booking_reference: '', //รหัสอ้างอิง
     md_booking_paymentid: '', //รหัสการชำระเงิน
-    md_booking_boattypeid: 0, //รหัสประเภทเรือ
-    md_booking_country:'', //ประเทศ
+    md_booking_boattypeiddepart: 0, //รหัสประเภทเรือ
+    md_booking_boattypeidreturn: 0, //รหัสประเภทเรือ
+    md_booking_country: '', //ประเทศ
     md_booking_countrycode: '', //รหัสประเทศ
     md_booking_round: 1, //ประเภทการเดินทาง
-    md_booking_timetableid : 0, //รหัสตารางเวลา
+    md_booking_timetableiddepart: 0, //รหัสตารางเวลา
+    md_booking_timetableidreturn: 0, //รหัสตารางเวลา
     md_booking_tel: '', //เบอร์โทร
     md_booking_whatsapp: '', //เบอร์ WhatsApp
     md_booking_email: '', //อีเมล
-    md_booking_price: 0, //ราคา
-    md_booking_total: 0, //ราคารวม
-    md_booking_vat: 0, //ภาษีมูลค่าเพิ่ม
-    md_booking_paypal:'', //รหัสการชำระเงิน PayPal
-    md_booking_refund:'',
+    md_booking_pricedepart: 0, //ราคา
+    md_booking_pricereturn: 0, //ราคา
+    md_booking_totaldepart: 0, //ราคารวม
+    md_booking_totalreturn: 0, //ราคารวม
+    md_booking_vatdepart: 0, //ภาษีมูลค่าเพิ่ม
+    md_booking_vatreturn: 0, //ภาษีมูลค่าเพิ่ม
+    md_booking_paypal: '', //รหัสการชำระเงิน PayPal
+    md_booking_refund: '',
     md_booking_refundprice: 0, //ราคารับเงินคืน
     md_booking_credit: 0, //เครดิต
     md_booking_insurance: 0, //ประกันภัย
     md_booking_currency: 'THB', //สกุลเงิน
-    md_booking_net: 0, //ราคาสุทธิ
+    md_booking_netdepart: 0, //ราคาสุทธิ
+    md_booking_netreturn: 0, //ราคาสุทธิ
     md_booking_adult: 0, //จำนวนผู้ใหญ่
     md_booking_child: 0, //จำนวนเด็ก
     md_booking_infant: 0, //จำนวนทารก
-    md_booking_departdate: '', //วันที่เดินทาง
-    md_booking_departtime: '', //เวลาเดินทาง
-    md_booking_remark: '', //หมายเหตุ
+    md_booking_departdatedepart: '', //วันที่เดินทาง
+    md_booking_departdatereturn: '', //วันที่เดินทาง
+    md_booking_departtimedepart: '', //เวลาเดินทาง
+    md_booking_departtimereturn: '', //เวลาเดินทาง
+    md_booking_remarkdepart: '', //หมายเหตุ
+    md_booking_remarkreturn: '', //หมายเหตุ
     md_booking_note: '', //บันทึก
-    md_booking_statuspayment: 0, 
+    md_booking_statuspayment: 0,
     md_booking_status: 0, //สถานะการจอง
     md_booking_pay: 0, //สถานะการชำระเงิน
     md_booking_payfee: 0, //ค่าธรรมเนียมการชำระ
@@ -55,8 +65,8 @@ export const CustomerProvider = ({ children }) => {
     md_booking_agentprice: 0, //ราคาตัวแทน
     md_booking_promocode: '', //รหัสโปรโมชั่น
     md_booking_promoprice: 0, //ส่วนลดโปรโมชั่น
-    md_booking_crebyid:'', //รหัสผู้สร้าง
-    md_booking_updatebyid:'', //รหัสผู้ปรับปรุง
+    md_booking_crebyid: '', //รหัสผู้สร้าง
+    md_booking_updatebyid: '', //รหัสผู้ปรับปรุง
     //------------------------------------------------------------------------------------------------
     bookingcode: '', //รหัสการจอง
     bookingcodegroup: '', //รหัสการจอง
@@ -78,68 +88,72 @@ export const CustomerProvider = ({ children }) => {
     country: '', //ประเทศ
     countrycode: 'Please Select', //รหัสประเทศ
     roud: 1, //ประเภทการเดินทาง
-    price:'', //ราคา
-    total:0, //ราคารวม
-    currency:'THB', //สกุลเงิน
-    netDepart:'', //ราคาสุทธิ
-    adult:0, //จำนวนผู้ใหญ่
-    child:0, //จำนวนเด็ก
-    infant:0, //จำนวนทารก
-    totaladultDepart:0, //รวมราคาจำนวนผู้ใหญ่
-    totaladultReturn:0, //รวมราคาจำนวนผู้ใหญ่
-    totalchildDepart:0, //รวมราคาจำนวนเด็ก
-    totalchildReturn:0, //รวมราคาจำนวนเด็ก
-    totalinfantDepart:0, //รวมราคาจำนวนเด็ก
-    totalinfantReturn:0, //รวมราคาจำนวนเด็ก
-    discountDepart:0, //ส่วนลด
-    discountReturn:0, //ส่วนลด
-    subtotalDepart:0, //ราคารวม
-    subtotalReturn:0, //ราคารวม
-    ticketfare:0, //ค่าโดยสาร
-    paymenttype:'', //ประเภทการชำระเงิน 
-    paymentfee:0, //ค่าธรรมเนียมการชำระ
-    day:'', //วัน
-    month:'', //เดือน
-    year:'', //ปี
-    time:'', //เวลา
-    date:'', //วันที่
-    departdate:'', //วันที่เดินทาง
-    returndate:'', //วันที่กลับ
-    departtime:'', //เวลาเดินทาง
-    ip:'', //ไอพี
-    paymentid:'', //รหัสการชำระ
-    bookingdate:'', //วันที่จอง
-    pickupDepartId:'', //รหัสรถรับส่ง
-    pickupReturnId:'', //รหัสรถรับส่งกลับ
-    dropoffDepartId:'', //รหัสรถส่ง
-    dropoffReturnId:'', //รหัสรถส่งกลับ
-    pickupPriceDepart:0, //ราคารถรับส่ง
-    pickupPriceReturn:0, //ราคารถรับส่งกลับ
-    dropoffPriceDepart:0, //ราคารถส่ง
-    dropoffPriceReturn:0, //ราคารถส่งกลับ
-    onewaystatus:false, //สถานะเที่ยวเดียว
-    roudtripstatus:false, //สถานะไปกลับ
-    timeTableDepartId:'', //รหัสตารางเวลาเดินทาง
-    departDateTimeTable:'', //วันเวลาเดินทาง
-    pierStartDepartId:'', //รหัสท่าเริ่มต้น
-    pierStartDepartName:'', //ชื่อท่าเริ่มต้น
-    pierEndDepartId:'', //รหัสท่าปลายทาง
-    pierStartReturntId:'', //รหัสท่าเริ่มต้นกลับ
-    pierEndReturntId:'',
-    timeTableReturnId:'', //รหัสตารางเวลากลับ
-    tripTypeinput:'',
-    piccompanyDepart:'',
-    pictimetableDepart:'',
-    piccompanyReturn:'',
-    pictimetableReturn:'',
-    email:'',
-    password:'',
-    remember:false,
+    price: '', //ราคา
+    total: 0, //ราคารวม
+    currency: 'THB', //สกุลเงิน
+    netDepart: '', //ราคาสุทธิ
+    adult: 0, //จำนวนผู้ใหญ่
+    child: 0, //จำนวนเด็ก
+    infant: 0, //จำนวนทารก
+    totaladultDepart: 0, //รวมราคาจำนวนผู้ใหญ่
+    totaladultReturn: 0, //รวมราคาจำนวนผู้ใหญ่
+    totalchildDepart: 0, //รวมราคาจำนวนเด็ก
+    totalchildReturn: 0, //รวมราคาจำนวนเด็ก
+    totalinfantDepart: 0, //รวมราคาจำนวนเด็ก
+    totalinfantReturn: 0, //รวมราคาจำนวนเด็ก
+    discountDepart: 0, //ส่วนลด
+    discountReturn: 0, //ส่วนลด
+    subtotalDepart: 0, //ราคารวม
+    subtotalReturn: 0, //ราคารวม
+    ticketfare: 0, //ค่าโดยสาร
+    paymenttype: '', //ประเภทการชำระเงิน 
+    paymentfee: 0, //ค่าธรรมเนียมการชำระ
+    day: '', //วัน
+    month: '', //เดือน
+    year: '', //ปี
+    time: '', //เวลา
+    date: '', //วันที่
+    departdate: '', //วันที่เดินทาง
+    returndate: '', //วันที่กลับ
+    departtime: '', //เวลาเดินทาง
+    ip: '', //ไอพี
+    paymentid: '', //รหัสการชำระ
+    bookingdate: '', //วันที่จอง
+    pickupDepartId: '', //รหัสรถรับส่ง
+    pickupReturnId: '', //รหัสรถรับส่งกลับ
+    dropoffDepartId: '', //รหัสรถส่ง
+    dropoffReturnId: '', //รหัสรถส่งกลับ
+    HotelpickupDepart: '',
+    HoteldropoffDepart: '',
+    HotelpickupReturn: '',
+    HoteldropoffReturn: '',
+    pickupPriceDepart: 0, //ราคารถรับส่ง
+    pickupPriceReturn: 0, //ราคารถรับส่งกลับ
+    dropoffPriceDepart: 0, //ราคารถส่ง
+    dropoffPriceReturn: 0, //ราคารถส่งกลับ
+    onewaystatus: false, //สถานะเที่ยวเดียว
+    roudtripstatus: false, //สถานะไปกลับ
+    timeTableDepartId: '', //รหัสตารางเวลาเดินทาง
+    departDateTimeTable: '', //วันเวลาเดินทาง
+    pierStartDepartId: '', //รหัสท่าเริ่มต้น
+    pierStartDepartName: '', //ชื่อท่าเริ่มต้น
+    pierEndDepartId: '', //รหัสท่าปลายทาง
+    pierStartReturntId: '', //รหัสท่าเริ่มต้นกลับ
+    pierEndReturntId: '',
+    timeTableReturnId: '', //รหัสตารางเวลากลับ
+    tripTypeinput: '',
+    piccompanyDepart: '',
+    pictimetableDepart: '',
+    piccompanyReturn: '',
+    pictimetableReturn: '',
+    email: '',
+    password: '',
+    remember: false,
     popdestination: '',
-    discount:0,
-    exchaneRate:0,
-    intervalId: null, 
-    international : '0',
+    discount: 0,
+    exchaneRate: 0,
+    intervalId: null,
+    international: '0',
     passenger: [
       {
         prefix: '',
@@ -154,8 +168,8 @@ export const CustomerProvider = ({ children }) => {
         type: ''
       }
     ],
-    symbol:'฿', //สัญลักษณ์เงิน
-    
+    symbol: '฿', //สัญลักษณ์เงิน
+
   });
 
   const updateCustomerData = (newData) => {

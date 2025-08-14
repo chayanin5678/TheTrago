@@ -122,6 +122,7 @@
       "requireFullScreen": false,
       "userInterfaceStyle": "automatic",
       "infoPlist": {
+        "LSApplicationQueriesSchemes": ["alipay","alipays","alipayqr","alipaylite"],
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "TheTrago needs camera access to scan QR codes for ticket verification and to upload ID documents for booking verification.",
         "NSPhotoLibraryUsageDescription": "TheTrago needs access to your photo library to upload profile pictures and ID documents for account verification.",

@@ -30,7 +30,7 @@ const TripDetail = ({ navigation, route }) => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  
+
   // Floating particles animation
   const floatingAnims = useRef(
     [...Array(6)].map(() => ({
@@ -123,6 +123,10 @@ const TripDetail = ({ navigation, route }) => {
   const [HoteldropoffDepart, setHoteldropoffDepart] = useState('');
   const [HotelpickupReturn, setHotelpickupReturn] = useState('');
   const [HoteldropoffReturn, setHoteldropoffReturn] = useState('');
+  const [flightNoPickupDepart, setFlightNoPickupDepart] = useState('');
+  const [flightNoDropoffDepart, setFlightNoDropoffDepart] = useState('');
+  const [flightNoPickupReturn, setFlightNoPickupReturn] = useState('');
+  const [flightNoDropoffReturn, setFlightNoDropoffReturn] = useState('');
   const [errors, setErrors] = useState({});
 
 
@@ -165,7 +169,7 @@ const TripDetail = ({ navigation, route }) => {
   const toggleModalPickupReturn = () => setModalReturnPickupVisible(!isModalReturnPickupVisible);
   const toggleModalTransportDropoffReturn = () => setModalTransportReturnDropoffVisible(!isModalTransportReturnDropoffVisible);
   const toggleModalDropoffReturn = () => setModalReturnDropoffVisible(!isModalReturnDropoffVisible);
-    console.log('pickupselect', selectedPickupDepart);
+  console.log('pickupselect', selectedPickupDepart);
 
   const handleSelectedTranSportPickupDepart = (item) => {
     setSelectedTranSportPickupDepart(item.md_pickup_cartypeid); // เก็บ id
@@ -524,19 +528,19 @@ const TripDetail = ({ navigation, route }) => {
       selectedLanguage,
       parsedDate: date.toISOString()
     });
-    
+
     if (selectedLanguage === 'th') {
       // วันในสัปดาห์ภาษาไทย
       const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
       // เดือนภาษาไทย
-      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
-                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
       const dayName = dayNames[date.getDay()];
       const day = date.getDate().toString().padStart(2, '0');
       const monthName = monthNames[date.getMonth()];
       const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
-      
+
       const result = `${dayName} ${day} ${monthName} ${year}`;
       console.log('🗓️ TripDetail formatDate Thai result:', result);
       return result;
@@ -544,7 +548,7 @@ const TripDetail = ({ navigation, route }) => {
       // แสดงวันที่ภาษาอังกฤษ
       const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const dayName = dayNames[date.getDay()];
-      
+
       const result = `${dayName}, ${date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -637,19 +641,19 @@ const TripDetail = ({ navigation, route }) => {
     if (!pickupDepart) {
       setpickupPriceDepart(0);
       setSelectedPickupDepart("");
-       
+
     }
 
-      if (!pickupReturn) {
+    if (!pickupReturn) {
       setpickupPriceReturn(0);
       setSelectedPickupReturn("");
-      }
+    }
 
 
     if (pickupDepart && customerData.pickupDepartId !== "") {
       setSelectedPickupDepart(customerData.pickupDepartId);
-    
-    
+
+
 
     }
 
@@ -667,7 +671,7 @@ const TripDetail = ({ navigation, route }) => {
     if (!dropoffReturn) {
       setDropoffPriceReturn(0);
       setSelectedDropoffReturn("");
-       
+
 
     }
 
@@ -786,7 +790,7 @@ const TripDetail = ({ navigation, route }) => {
         setAdultPriceReturn(timetableReturn[0].md_timetable_saleadult * customerData.adult);
         setChildPriceReturn(timetableReturn[0].md_timetable_salechild * customerData.child);
         setinfantPriceReturn(timetableReturn[0].md_timetable_saleinfant * customerData.infant);
-    
+
         setTotalAdultReturn(formatNumberWithComma(adultPriceReturn));
         setTotalChildReturn(formatNumberWithComma(childPriceReturn));
         setTotalInfantReturn(formatNumberWithComma(infantPriceReturn));
@@ -874,7 +878,7 @@ const TripDetail = ({ navigation, route }) => {
           ])
         ).start();
       };
-      
+
       setTimeout(() => animateParticle(), index * 500);
     });
 
@@ -1083,19 +1087,56 @@ const TripDetail = ({ navigation, route }) => {
 
   const handleNext = (item) => {
     let newErrors = {};
+
+    // --- เดิม ---
     if (pickupDepart) {
       if (!HotelpickupDepart) newErrors.HotelpickupDepart = true;
       if (selectedTransportPickupDepartName === "Select Transport Type") newErrors.selectedTransportPickupDepartName = true;
+
+      // ต้องกรอก Flight No ถ้ารับที่สนามบิน
+      if (airPortPickupDepart === 1 && !String(flightNoPickupDepart || '').trim()) {
+        newErrors.flightNoPickupDepart = true;
+      }
     }
+
+    // กรณีต้นทางเที่ยวไปเป็นสนามบิน (ไม่มีรถรับแต่ต้องกรอกได้)
+    if (timetableDepart[0]?.md_location_airport === 1 && !String(flightNoPickupDepart || '').trim()) {
+      newErrors.flightNoPickupDepart = true;
+    }
+
     if (dropoffDepart) {
       if (!HoteldropoffDepart) newErrors.HoteldropoffDepart = true;
+
+      // ต้องกรอก Flight No ถ้าส่งที่สนามบิน
+      if (airPortDropoffDepart === 1 && !String(flightNoDropoffDepart || '').trim()) {
+        newErrors.flightNoDropoffDepart = true;
+      }
     }
+
     if (pickupReturn) {
       if (!HotelpickupReturn) newErrors.HotelpickupReturn = true;
+
+      // ต้องกรอก Flight No ถ้ารับที่สนามบิน (เที่ยวกลับ)
+      if (airPortPickupReturn === 1 && !String(flightNoPickupReturn || '').trim()) {
+        newErrors.flightNoPickupReturn = true;
+      }
     }
+
+    // กรณีต้นทางเที่ยวกลับเป็นสนามบิน
+    if (customerData.roud === 2 && timetableReturn[0]?.md_location_airport === 1 && !String(flightNoPickupReturn || '').trim()) {
+      newErrors.flightNoPickupReturn = true;
+    }
+
     if (dropoffReturn) {
       if (!HoteldropoffReturn) newErrors.HoteldropoffReturn = true;
+
+      // ต้องกรอก Flight No ถ้าส่งที่สนามบิน (เที่ยวกลับ)
+      if (airPortDropoffReturn === 1 && !String(flightNoDropoffReturn || '').trim()) {
+        newErrors.flightNoDropoffReturn = true;
+      }
     }
+
+
 
     updateCustomerData({
       totaladultDepart: parseFloat(item.totalDepart.priceadult).toFixed(2) * customerData.adult, //รวมราคาจำนวนผู้ใหญ่
@@ -1106,6 +1147,9 @@ const TripDetail = ({ navigation, route }) => {
       pickupPriceDepart: parseFloat(item.totalDepart.pricepickupdepart).toFixed(2), //ราคารวมรับ
       dropoffPriceDepart: parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2), //ราคารวมส่ง
       total: parseFloat(item.total).toFixed(2), //ราคารวมทั้งหมด
+      HotelpickupDepart: timetableDepart[0]?.md_location_airport === 1 || airPortPickupDepart === 1 ? `${flightNoPickupDepart} | ${pickuphourDepart}:${pickupminutesDepart}` : HotelpickupDepart, // ถ้าเป็นสนามบินหรือเลือกสนามบินให้กรอกโรงแรม
+      HoteldropoffDepart: airPortDropoffDepart === 1 ? `${flightNoDropoffDepart} | ${dropoffhourDepart}:${dropoffminutesDepart}` : HoteldropoffDepart, // ถ้าเป็นสนามบินให้กรอกโรงแรม
+
 
     });
 
@@ -1118,6 +1162,8 @@ const TripDetail = ({ navigation, route }) => {
         subtotalReturn: parseFloat(item.totalReturn.showtotal).toFixed(2), //ราคารวม
         pickupPriceReturn: parseFloat(item.totalReturn.pricepickupdepart).toFixed(2), //ราคารวมรับ
         dropoffPriceReturn: parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2), //ราคารวมส่ง
+        HotelpickupReturn: timetableReturn[0]?.md_location_airport === 1 || airPortPickupReturn === 1 ? `${flightNoPickupReturn} | ${pickuphourReturn}:${pickupminutesreturn}` : HotelpickupReturn, // ถ้าเป็นสนามบินหรือเลือกสนามบินให้กรอกโรงแรม
+        HoteldropoffReturn: airPortDropoffReturn === 1 ? `${flightNoDropoffReturn} | ${dropoffhourReturn}:${dropoffminutesReturn}` : HoteldropoffReturn, // ถ้าเป็นสนามบินให้กรอกโรงแรม
       });
     }
 
@@ -1154,7 +1200,7 @@ const TripDetail = ({ navigation, route }) => {
 
 
   return (
-    <SafeAreaView 
+    <SafeAreaView
       style={[
         { flex: 1 },
         Platform.OS === 'android' && Platform.Version >= 31 && {
@@ -1162,8 +1208,8 @@ const TripDetail = ({ navigation, route }) => {
         }
       ]}
     >
-      <StatusBar 
-        barStyle="light-content" 
+      <StatusBar
+        barStyle="light-content"
         backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#FD501E"}
         translucent={true}
       />
@@ -1224,7 +1270,7 @@ const TripDetail = ({ navigation, route }) => {
               shadowOpacity: 0.15,
               shadowRadius: 25,
               shadowOffset: { width: 0, height: 8 },
-           //   elevation: 18,
+              //   elevation: 18,
               padding: 10,
               minHeight: Platform.OS === 'android' && Platform.Version >= 31 ? hp('12%') + insets.top : hp('12%'),
               borderWidth: 1,
@@ -1261,7 +1307,7 @@ const TripDetail = ({ navigation, route }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: 12,
                 shadowOffset: { width: 0, height: 4 },
-             //   elevation: 8,
+                //   elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1291,7 +1337,7 @@ const TripDetail = ({ navigation, route }) => {
           position: 'relative',
         }}>
           {/* Floating decorative elements */}
-          <Animated.View 
+          <Animated.View
             style={[
               {
                 position: 'absolute',
@@ -1299,7 +1345,7 @@ const TripDetail = ({ navigation, route }) => {
                 right: 20,
                 zIndex: 1,
               },
-              { 
+              {
                 transform: [{
                   rotate: pulseAnim.interpolate({
                     inputRange: [1, 1.05],
@@ -1312,7 +1358,7 @@ const TripDetail = ({ navigation, route }) => {
             <MaterialIcons name="directions-boat" size={20} color="rgba(255,255,255,0.3)" />
           </Animated.View>
 
-          <Animated.View 
+          <Animated.View
             style={[
               {
                 position: 'absolute',
@@ -1320,7 +1366,7 @@ const TripDetail = ({ navigation, route }) => {
                 left: 30,
                 zIndex: 1,
               },
-              { 
+              {
                 transform: [{
                   rotate: pulseAnim.interpolate({
                     inputRange: [1, 1.05],
@@ -1373,7 +1419,7 @@ const TripDetail = ({ navigation, route }) => {
             },
           ]}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={[
               styles.container,
               {
@@ -1393,907 +1439,428 @@ const TripDetail = ({ navigation, route }) => {
             ]}
             contentInsetAdjustmentBehavior="automatic"
           >
-          {/* Step Component */}
-          <View style={{
-            alignItems: 'center',
-            marginTop: hp('1%'),
-            marginBottom: hp('2%'),
-          }}>
-            <Step logoUri={1} />
-          </View>
+            {/* Step Component */}
+            <View style={{
+              alignItems: 'center',
+              marginTop: hp('1%'),
+              marginBottom: hp('2%'),
+            }}>
+              <Step logoUri={1} />
+            </View>
 
-          {loading && (
-            <Animated.View style={[
-              {
-                opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-              }
-            ]}>
-              {/* Enhanced Ultra Premium Loading Skeleton */}
-              <View style={{ paddingHorizontal: wp('2%') }}>
-                {/* Enhanced Booking Section Skeleton */}
-                <View style={{
-                  width: '100%',
-                  marginTop: hp('2%'),
-                  marginBottom: hp('2%'),
-                  backgroundColor: 'rgba(255,255,255,0.95)',
-                  borderRadius: wp('6%'),
-                  padding: wp('4%'),
-                  shadowColor: '#001233',
-                  shadowOpacity: 0.08,
-                  shadowRadius: wp('3%'),
-                //  elevation: 8,
-                  borderWidth: wp('0.2%'),
-                  borderColor: 'rgba(0, 18, 51, 0.06)',
-                  overflow: 'hidden',
-                }}>
-                  {/* Trip Type Buttons Skeleton */}
-                  <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginBottom: hp('2%'),
-                    backgroundColor: 'rgba(248,250,252,0.8)',
-                    borderRadius: wp('3%'),
-                    padding: wp('0.8%'),
-                  }}>
-                    <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
-                      <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
-                        <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
-                      </Animated.View>
-                    </View>
-                    <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
-                      <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
-                        <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
-                      </Animated.View>
-                    </View>
-                  </View>
-
-                  {/* Location Selection Skeleton */}
+            {loading && (
+              <Animated.View style={[
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: scaleAnim }],
+                }
+              ]}>
+                {/* Enhanced Ultra Premium Loading Skeleton */}
+                <View style={{ paddingHorizontal: wp('2%') }}>
+                  {/* Enhanced Booking Section Skeleton */}
                   <View style={{
                     width: '100%',
-                    height: hp('12%'),
-                    borderRadius: wp('3%'),
-                    backgroundColor: '#f0f0f0',
-                    overflow: 'hidden',
-                    marginBottom: hp('1.5%'),
-                    padding: wp('3%'),
-                  }}>
-                    <View style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginBottom: hp('1%')
-                    }}>
-                      <View style={{
-                        width: wp('8%'),
-                        height: wp('8%'),
-                        borderRadius: wp('4%'),
-                        backgroundColor: '#e0e0e0',
-                        marginRight: wp('3%')
-                      }} />
-                      <View style={{ flex: 1 }}>
-                        <View style={{
-                          width: '60%',
-                          height: hp('1.5%'),
-                          backgroundColor: '#e5e5e5',
-                          borderRadius: hp('0.75%'),
-                          marginBottom: hp('0.5%')
-                        }} />
-                        <View style={{
-                          width: '40%',
-                          height: hp('1.2%'),
-                          backgroundColor: '#e0e0e0',
-                          borderRadius: hp('0.6%')
-                        }} />
-                      </View>
-                    </View>
-                    <View style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginBottom: hp('1%')
-                    }}>
-                      <View style={{
-                        width: wp('8%'),
-                        height: wp('8%'),
-                        borderRadius: wp('4%'),
-                        backgroundColor: '#e0e0e0',
-                        marginRight: wp('3%')
-                      }} />
-                      <View style={{ flex: 1 }}>
-                        <View style={{
-                          width: '70%',
-                          height: hp('1.5%'),
-                          backgroundColor: '#e5e5e5',
-                          borderRadius: hp('0.75%'),
-                          marginBottom: hp('0.5%')
-                        }} />
-                        <View style={{
-                          width: '50%',
-                          height: hp('2%'),
-                          backgroundColor: '#e0e0e0',
-                          borderRadius: hp('1%')
-                        }} />
-                      </View>
-                    </View>
-                    <Animated.View style={{ width: wp('50%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
-                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
-                    </Animated.View>
-                  </View>
-
-                  {/* Passenger Selection Skeleton */}
-                  <View style={{
-                    width: '100%',
-                    height: hp('7%'),
-                    borderRadius: wp('3%'),
-                    backgroundColor: '#f0f0f0',
-                    overflow: 'hidden',
-                    marginBottom: hp('1.5%'),
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
-                      <View style={{
-                        width: wp('6%'),
-                        height: wp('6%'),
-                        borderRadius: wp('3%'),
-                        backgroundColor: '#e0e0e0',
-                        marginRight: wp('3%')
-                      }} />
-                      <View style={{
-                        width: '65%',
-                        height: hp('2%'),
-                        backgroundColor: '#e5e5e5',
-                        borderRadius: hp('1%')
-                      }} />
-                    </View>
-                    <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
-                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
-                    </Animated.View>
-                  </View>
-
-                  {/* Date Selection Skeleton */}
-                  <View style={{
-                    width: '100%',
-                    height: hp('7%'),
-                    borderRadius: wp('3%'),
-                    backgroundColor: '#f0f0f0',
-                    overflow: 'hidden',
-                    marginBottom: hp('2%'),
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
-                      <View style={{
-                        width: wp('6%'),
-                        height: wp('6%'),
-                        borderRadius: wp('3%'),
-                        backgroundColor: '#e0e0e0',
-                        marginRight: wp('3%')
-                      }} />
-                      <View style={{
-                        width: '70%',
-                        height: hp('2%'),
-                        backgroundColor: '#e5e5e5',
-                        borderRadius: hp('1%')
-                      }} />
-                    </View>
-                    <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
-                      <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
-                    </Animated.View>
-                  </View>
-                </View>
-
-                {/* Enhanced Ferry Cards Skeleton */}
-                {Array(2).fill(0).map((_, idx) => (
-                  <View key={idx} style={{
                     marginTop: hp('2%'),
-                    minHeight: hp('25%'),
+                    marginBottom: hp('2%'),
                     backgroundColor: 'rgba(255,255,255,0.95)',
                     borderRadius: wp('6%'),
-                    overflow: 'hidden',
-                    width: '100%',
-                    borderWidth: wp('0.2%'),
-                    borderColor: 'rgba(0,35,72,0.05)',
+                    padding: wp('4%'),
                     shadowColor: '#001233',
                     shadowOpacity: 0.08,
                     shadowRadius: wp('3%'),
-                  //  elevation: 8,
-                    position: 'relative',
+                    //  elevation: 8,
+                    borderWidth: wp('0.2%'),
+                    borderColor: 'rgba(0, 18, 51, 0.06)',
+                    overflow: 'hidden',
                   }}>
-                    {/* Card Header Skeleton */}
+                    {/* Trip Type Buttons Skeleton */}
                     <View style={{
-                      height: hp('8%'),
-                      backgroundColor: '#FD501E',
-                      borderTopLeftRadius: wp('6%'),
-                      borderTopRightRadius: wp('6%'),
                       flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: wp('4%'),
                       justifyContent: 'space-between',
+                      marginBottom: hp('2%'),
+                      backgroundColor: 'rgba(248,250,252,0.8)',
+                      borderRadius: wp('3%'),
+                      padding: wp('0.8%'),
+                    }}>
+                      <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                        <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                          <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                        </Animated.View>
+                      </View>
+                      <View style={{ width: '48%', height: hp('5%'), borderRadius: wp('2.5%'), backgroundColor: '#f0f0f0', overflow: 'hidden' }}>
+                        <Animated.View style={{ width: wp('30%'), height: '100%', transform: [{ translateX: shimmerAnim }] }}>
+                          <LinearGradient colors={['#f0f0f000', '#e0e0e0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                        </Animated.View>
+                      </View>
+                    </View>
+
+                    {/* Location Selection Skeleton */}
+                    <View style={{
+                      width: '100%',
+                      height: hp('12%'),
+                      borderRadius: wp('3%'),
+                      backgroundColor: '#f0f0f0',
+                      overflow: 'hidden',
+                      marginBottom: hp('1.5%'),
+                      padding: wp('3%'),
                     }}>
                       <View style={{
-                        width: '60%',
-                        height: hp('2.5%'),
-                        backgroundColor: 'rgba(255,255,255,0.3)',
-                        borderRadius: hp('1.25%')
-                      }} />
-                      <View style={{ flexDirection: 'row', gap: wp('1.5%') }}>
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: hp('1%')
+                      }}>
                         <View style={{
-                          width: wp('12%'),
-                          height: hp('2.5%'),
-                          backgroundColor: 'rgba(255,255,255,0.3)',
-                          borderRadius: hp('1.25%')
+                          width: wp('8%'),
+                          height: wp('8%'),
+                          borderRadius: wp('4%'),
+                          backgroundColor: '#e0e0e0',
+                          marginRight: wp('3%')
                         }} />
-                        <View style={{
-                          width: wp('15%'),
-                          height: hp('2.5%'),
-                          backgroundColor: 'rgba(255,255,255,0.3)',
-                          borderRadius: hp('1.25%')
-                        }} />
+                        <View style={{ flex: 1 }}>
+                          <View style={{
+                            width: '60%',
+                            height: hp('1.5%'),
+                            backgroundColor: '#e5e5e5',
+                            borderRadius: hp('0.75%'),
+                            marginBottom: hp('0.5%')
+                          }} />
+                          <View style={{
+                            width: '40%',
+                            height: hp('1.2%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('0.6%')
+                          }} />
+                        </View>
                       </View>
-                      <Animated.View style={{ width: wp('60%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
-                        <LinearGradient colors={['#f0f0f000', '#d5d5d5aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: hp('1%')
+                      }}>
+                        <View style={{
+                          width: wp('8%'),
+                          height: wp('8%'),
+                          borderRadius: wp('4%'),
+                          backgroundColor: '#e0e0e0',
+                          marginRight: wp('3%')
+                        }} />
+                        <View style={{ flex: 1 }}>
+                          <View style={{
+                            width: '70%',
+                            height: hp('1.5%'),
+                            backgroundColor: '#e5e5e5',
+                            borderRadius: hp('0.75%'),
+                            marginBottom: hp('0.5%')
+                          }} />
+                          <View style={{
+                            width: '50%',
+                            height: hp('2%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('1%')
+                          }} />
+                        </View>
+                      </View>
+                      <Animated.View style={{ width: wp('50%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
                       </Animated.View>
                     </View>
 
-                    {/* Card Body Skeleton */}
-                    <View style={{ padding: wp('4%') }}>
-                      {/* Trip Info Skeleton */}
-                      <View style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: hp('2%')
-                      }}>
-                        <View style={{ alignItems: 'center' }}>
-                          <View style={{
-                            width: wp('15%'),
-                            height: hp('3%'),
-                            backgroundColor: '#e0e0e0',
-                            borderRadius: hp('1.5%'),
-                            marginBottom: hp('0.5%')
-                          }} />
-                          <View style={{
-                            width: wp('12%'),
-                            height: hp('1.5%'),
-                            backgroundColor: '#e5e5e5',
-                            borderRadius: hp('0.75%')
-                          }} />
-                        </View>
-                        
-                        {/* Line Skeleton */}
-                        <View style={{
-                          width: wp('20%'),
-                          height: hp('0.3%'),
-                          backgroundColor: '#e0e0e0',
-                          borderRadius: hp('0.15%')
-                        }} />
-                        
-                        <View style={{ alignItems: 'center' }}>
-                          <View style={{
-                            width: wp('15%'),
-                            height: hp('3%'),
-                            backgroundColor: '#e0e0e0',
-                            borderRadius: hp('1.5%'),
-                            marginBottom: hp('0.5%')
-                          }} />
-                          <View style={{
-                            width: wp('12%'),
-                            height: hp('1.5%'),
-                            backgroundColor: '#e5e5e5',
-                            borderRadius: hp('0.75%')
-                          }} />
-                        </View>
-                      </View>
-
-                      {/* Price Skeleton */}
-                      <View style={{ alignItems: 'center', marginBottom: hp('2%') }}>
-                        <View style={{
-                          width: wp('25%'),
-                          height: hp('3%'),
-                          backgroundColor: '#e0e0e0',
-                          borderRadius: hp('1.5%'),
-                          marginBottom: hp('0.5%')
-                        }} />
-                        <View style={{
-                          width: wp('20%'),
-                          height: hp('1.5%'),
-                          backgroundColor: '#e5e5e5',
-                          borderRadius: hp('0.75%')
-                        }} />
-                      </View>
-
-                      {/* Action Button Skeleton */}
-                      <View style={{
-                        width: '100%',
-                        height: hp('5%'),
-                        backgroundColor: '#e0e0e0',
-                        borderRadius: wp('4%')
-                      }} />
-                    </View>
-
-                    {/* Shimmer Animation Overlay */}
-                    <Animated.View style={{
-                      width: wp('70%'),
-                      height: '100%',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      transform: [{ translateX: shimmerAnim }]
-                    }}>
-                      <LinearGradient
-                        colors={['#f5f5f500', '#e0e0e0aa', '#f5f5f500']}
-                        start={[0, 0]}
-                        end={[1, 0]}
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    </Animated.View>
-                  </View>
-                ))}
-
-                {/* Enhanced Central Loading Animation */}
-                <View style={{
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginVertical: hp('5%'),
-                  paddingVertical: hp('4%'),
-                  width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: 24,
-                  padding: 32,
-                  shadowColor: '#FD501E',
-                  shadowOpacity: 0.1,
-                  shadowRadius: 20,
-                  shadowOffset: { width: 0, height: 8 },
-                //  elevation: 8,
-                  borderWidth: 1,
-                  borderColor: 'rgba(253, 80, 30, 0.08)',
-                  marginHorizontal: wp('4%')
-                }}>
-                  {/* Animated Loading Icon */}
-                  <Animated.View style={{
-                    transform: [
-                      { scale: pulseAnim },
-                      {
-                        rotate: pulseAnim.interpolate({
-                          inputRange: [1, 1.05],
-                          outputRange: ['0deg', '10deg'],
-                        })
-                      }
-                    ]
-                  }}>
-                    <MaterialIcons name="directions-boat" size={60} color="#FD501E" />
-                  </Animated.View>
-                  
-                  <Text style={{
-                    marginTop: 24,
-                    color: '#1E293B',
-                    fontWeight: '800',
-                    fontSize: 18,
-                    letterSpacing: -0.3,
-                    textAlign: 'center'
-                  }}>
-                    {t('loadingTripDetails') || 'Loading Trip Details...'}
-                  </Text>
-                  <Text style={{
-                    marginTop: 8,
-                    color: '#64748B',
-                    fontWeight: '500',
-                    fontSize: 14,
-                    textAlign: 'center',
-                    lineHeight: 20,
-                  }}>
-                    {t('preparingBestOptions') || 'Preparing the best options for your journey'}
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-          )}
-          {!loading && timetableDepart && timetableReturn && (
-            <Animated.View style={[
-              {
-                opacity: fadeAnim,
-                transform: [
-                  { translateY: slideAnim },
-                  { scale: scaleAnim },
-                ],
-              },
-            ]}>
-              {
-                timetableDepart.map((item) => (
-
-                  <View key={item.md_timetable_id} style={[
-                    styles.cardContainer,
-                    {
-                      marginTop: 24,
-                      backgroundColor: 'rgba(255,255,255,0.98)',
-                      borderWidth: 1,
-                      borderColor: 'rgba(253,80,30,0.10)',
-                      borderRadius: 24,
-                      padding: 0,
-                      overflow: 'visible',
-                      position: 'relative',
-                    },
-                  ]}>
-                    {/* หัวตั๋ว */}
+                    {/* Passenger Selection Skeleton */}
                     <View style={{
-                      backgroundColor: '#FD501E',
-                      borderTopLeftRadius: 24,
-                      borderTopRightRadius: 24,
-                      paddingVertical: 20,
-                      paddingHorizontal: 22,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      width: '100%',
+                      height: hp('7%'),
+                      borderRadius: wp('3%'),
+                      backgroundColor: '#f0f0f0',
+                      overflow: 'hidden',
+                      marginBottom: hp('1.5%'),
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
+                        <View style={{
+                          width: wp('6%'),
+                          height: wp('6%'),
+                          borderRadius: wp('3%'),
+                          backgroundColor: '#e0e0e0',
+                          marginRight: wp('3%')
+                        }} />
+                        <View style={{
+                          width: '65%',
+                          height: hp('2%'),
+                          backgroundColor: '#e5e5e5',
+                          borderRadius: hp('1%')
+                        }} />
+                      </View>
+                      <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      </Animated.View>
+                    </View>
+
+                    {/* Date Selection Skeleton */}
+                    <View style={{
+                      width: '100%',
+                      height: hp('7%'),
+                      borderRadius: wp('3%'),
+                      backgroundColor: '#f0f0f0',
+                      overflow: 'hidden',
+                      marginBottom: hp('2%'),
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', padding: wp('3%') }}>
+                        <View style={{
+                          width: wp('6%'),
+                          height: wp('6%'),
+                          borderRadius: wp('3%'),
+                          backgroundColor: '#e0e0e0',
+                          marginRight: wp('3%')
+                        }} />
+                        <View style={{
+                          width: '70%',
+                          height: hp('2%'),
+                          backgroundColor: '#e5e5e5',
+                          borderRadius: hp('1%')
+                        }} />
+                      </View>
+                      <Animated.View style={{ width: wp('40%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                        <LinearGradient colors={['#f0f0f000', '#d0d0d0aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                      </Animated.View>
+                    </View>
+                  </View>
+
+                  {/* Enhanced Ferry Cards Skeleton */}
+                  {Array(2).fill(0).map((_, idx) => (
+                    <View key={idx} style={{
+                      marginTop: hp('2%'),
+                      minHeight: hp('25%'),
+                      backgroundColor: 'rgba(255,255,255,0.95)',
+                      borderRadius: wp('6%'),
+                      overflow: 'hidden',
+                      width: '100%',
+                      borderWidth: wp('0.2%'),
+                      borderColor: 'rgba(0,35,72,0.05)',
+                      shadowColor: '#001233',
+                      shadowOpacity: 0.08,
+                      shadowRadius: wp('3%'),
+                      //  elevation: 8,
                       position: 'relative',
                     }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Image
-                          source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
-                          style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
-                          resizeMode="cover"
+                      {/* Card Header Skeleton */}
+                      <View style={{
+                        height: hp('8%'),
+                        backgroundColor: '#FD501E',
+                        borderTopLeftRadius: wp('6%'),
+                        borderTopRightRadius: wp('6%'),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: wp('4%'),
+                        justifyContent: 'space-between',
+                      }}>
+                        <View style={{
+                          width: '60%',
+                          height: hp('2.5%'),
+                          backgroundColor: 'rgba(255,255,255,0.3)',
+                          borderRadius: hp('1.25%')
+                        }} />
+                        <View style={{ flexDirection: 'row', gap: wp('1.5%') }}>
+                          <View style={{
+                            width: wp('12%'),
+                            height: hp('2.5%'),
+                            backgroundColor: 'rgba(255,255,255,0.3)',
+                            borderRadius: hp('1.25%')
+                          }} />
+                          <View style={{
+                            width: wp('15%'),
+                            height: hp('2.5%'),
+                            backgroundColor: 'rgba(255,255,255,0.3)',
+                            borderRadius: hp('1.25%')
+                          }} />
+                        </View>
+                        <Animated.View style={{ width: wp('60%'), height: '100%', position: 'absolute', transform: [{ translateX: shimmerAnim }] }}>
+                          <LinearGradient colors={['#f0f0f000', '#d5d5d5aa', '#f0f0f000']} start={[0, 0]} end={[1, 0]} style={{ width: '100%', height: '100%' }} />
+                        </Animated.View>
+                      </View>
+
+                      {/* Card Body Skeleton */}
+                      <View style={{ padding: wp('4%') }}>
+                        {/* Trip Info Skeleton */}
+                        <View style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: hp('2%')
+                        }}>
+                          <View style={{ alignItems: 'center' }}>
+                            <View style={{
+                              width: wp('15%'),
+                              height: hp('3%'),
+                              backgroundColor: '#e0e0e0',
+                              borderRadius: hp('1.5%'),
+                              marginBottom: hp('0.5%')
+                            }} />
+                            <View style={{
+                              width: wp('12%'),
+                              height: hp('1.5%'),
+                              backgroundColor: '#e5e5e5',
+                              borderRadius: hp('0.75%')
+                            }} />
+                          </View>
+
+                          {/* Line Skeleton */}
+                          <View style={{
+                            width: wp('20%'),
+                            height: hp('0.3%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('0.15%')
+                          }} />
+
+                          <View style={{ alignItems: 'center' }}>
+                            <View style={{
+                              width: wp('15%'),
+                              height: hp('3%'),
+                              backgroundColor: '#e0e0e0',
+                              borderRadius: hp('1.5%'),
+                              marginBottom: hp('0.5%')
+                            }} />
+                            <View style={{
+                              width: wp('12%'),
+                              height: hp('1.5%'),
+                              backgroundColor: '#e5e5e5',
+                              borderRadius: hp('0.75%')
+                            }} />
+                          </View>
+                        </View>
+
+                        {/* Price Skeleton */}
+                        <View style={{ alignItems: 'center', marginBottom: hp('2%') }}>
+                          <View style={{
+                            width: wp('25%'),
+                            height: hp('3%'),
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: hp('1.5%'),
+                            marginBottom: hp('0.5%')
+                          }} />
+                          <View style={{
+                            width: wp('20%'),
+                            height: hp('1.5%'),
+                            backgroundColor: '#e5e5e5',
+                            borderRadius: hp('0.75%')
+                          }} />
+                        </View>
+
+                        {/* Action Button Skeleton */}
+                        <View style={{
+                          width: '100%',
+                          height: hp('5%'),
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: wp('4%')
+                        }} />
+                      </View>
+
+                      {/* Shimmer Animation Overlay */}
+                      <Animated.View style={{
+                        width: wp('70%'),
+                        height: '100%',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        transform: [{ translateX: shimmerAnim }]
+                      }}>
+                        <LinearGradient
+                          colors={['#f5f5f500', '#e0e0e0aa', '#f5f5f500']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={{ width: '100%', height: '100%' }}
                         />
-                        <View style={styles.coltitle}>
-                          <Text
-                            style={{
-                              color: '#fff',
-                              fontWeight: 'bold',
-                              fontSize: 18,
-                              maxWidth: wp('20%'),
-                              overflow: 'hidden',
-                              flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
-                            }}
-                          >
-                            {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}
-                          </Text>
-                          <Text
-                            style={{
-                              color: '#fff',
-                              fontSize: 12,
-                              maxWidth: wp('30%'),
-                              overflow: 'hidden',
-                              flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
-                            }}
-                          >{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', gap: 6 }}>
-                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
-                        <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
-                      </View>
+                      </Animated.View>
                     </View>
-                    {/* <ImageBackground
-                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
-                      style={styles.background}> */}
-                    {/* Trip Details */}
-                    <View style={styles.tripInfo}>
-                      <View style={styles.col}>
-                        <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                        <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
-                      </View>
-                      <View style={styles.col}>
-                        <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
-                        <Image source={require('../../assets/Line 14.png')}
-                          style={styles.line}
-                        />
-                      </View>
-                      <View style={styles.col}>
-                        <Text style={styles.location}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng}</Text>
-                        <Text style={styles.ship}>{selectedLanguage === 'th' ? item.startpier_namethai : item.startpier_nameeng}</Text>
-                      </View>
-                    </View>
+                  ))}
 
-                    <View style={styles.tripInfo}>
-                      <View style={styles.col} />
-                      <View style={styles.col}>
-                        <View style={styles.orangeCircleIcon}>
-                          <Icon name="boat" size={24} color="#fff" />
-                        </View>
+                  {/* Enhanced Central Loading Animation */}
+                  <View style={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginVertical: hp('5%'),
+                    paddingVertical: hp('4%'),
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: 24,
+                    padding: 32,
+                    shadowColor: '#FD501E',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 20,
+                    shadowOffset: { width: 0, height: 8 },
+                    //  elevation: 8,
+                    borderWidth: 1,
+                    borderColor: 'rgba(253, 80, 30, 0.08)',
+                    marginHorizontal: wp('4%')
+                  }}>
+                    {/* Animated Loading Icon */}
+                    <Animated.View style={{
+                      transform: [
+                        { scale: pulseAnim },
+                        {
+                          rotate: pulseAnim.interpolate({
+                            inputRange: [1, 1.05],
+                            outputRange: ['0deg', '10deg'],
+                          })
+                        }
+                      ]
+                    }}>
+                      <MaterialIcons name="directions-boat" size={60} color="#FD501E" />
+                    </Animated.View>
 
-                        <Image source={require('../../assets/Line 14.png')}
-                          style={styles.line} />
-                      </View>
-                      <View style={styles.col}>
-                        <Text style={styles.ship}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        <Text style={styles.orangetext}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.tripInfo}>
-                      <View style={styles.col}>
-                        <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                        <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
-                      </View>
-                      <View style={styles.col}>
-                        <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
-                          <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
-                        </View>
-                      </View>
-                      <View style={styles.col}>
-                        <Text style={styles.location}>{selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
-                        <Text style={styles.ship}>{selectedLanguage === 'th' ? item.endpier_namethai : item.endpier_nameeng}</Text>
-                      </View>
-                    </View>
-
-                    {item.md_location_airport === 1 && (
-                      <>
-                        <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
-                        <TextInput style={styles.input} />
-                        <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
-                        <View style={styles.inputRow}>
-                          <View style={styles.buttonSelect}>
-                            <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
-                              <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
-                              <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                            </TouchableOpacity>
-
-                            {/* Adult Modal */}
-                            <Modal
-                              visible={ispickupHourModalVisibleDepart}
-                              transparent={true}
-                              animationType="fade"
-                              onRequestClose={pickuptoggleHourtModalDepart}
-                            >
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContent}>
-                                  <FlatList
-                                    data={HourOption}
-                                    renderItem={pickuprenderHourOptionDepart}
-                                    keyExtractor={(item, index) => index.toString()}  // Use index as key
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-                            <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
-                              <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
-                              <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                            </TouchableOpacity>
-
-                            {/* Child Modal */}
-                            <Modal
-                              visible={ispickupMinuteModalVisibleDepart}
-                              transparent={true}
-                              animationType="fade"
-                              onRequestClose={pickuptoggleMinuteModalDepart}
-                            >
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContent}>
-                                  <FlatList
-                                    data={minuteOption}
-                                    renderItem={pickuprenderMinuteOptionDepart}
-                                    keyExtractor={(item, index) => index.toString()}  // Use index as key
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-                          </View>
-                        </View>
-                      </>
-
-                    )}
-
-                    {/* Pickup Section */}
-                    {Array.isArray(TranSportDepartPickup) && TranSportDepartPickup.length > 0 ? (
-                      <View style={styles.section}>
-                        <TouchableOpacity onPress={() => setpickupDepart(!pickupDepart)} style={styles.checkboxContainer}>
-                          <MaterialIcons name={pickupDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                          <Text style={styles.label}>{t('iNeedAPickUp') || 'I need a pick up'}</Text>
-                        </TouchableOpacity>
-
-                        {pickupDepart && (
-                          <View>
-                            <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
-                            {/* Button ที่คลิกเพื่อเปิด Modal */}
-
-
-                            <TouchableOpacity
-                              style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}
-                              onPress={toggleModalTransportPickupDepart}
-                            >
-                              <Text style={styles.buttonText}>{selectedTransportPickupDepartName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
-
-
-                            {/* Modal for title selection */}
-                            <Modal visible={isModalTransportDepartPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupDepart}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupDepart(item)}>
-                                        <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-
-                                    keyExtractor={(item, index) => index.toString()}
-                                    initialNumToRender={5}
-                                    maxToRenderPerBatch={5}
-                                    windowSize={5}
-                                    pagingEnabled
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-
-
-
-                            <Text style={styles.inputLabel}>{t('pickUpArea') || 'Pick up area'}</Text>
-                            <TouchableOpacity onPress={toggleModalPickupDepart} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
-                              <Text style={styles.buttonText}>{selectedPickupDepartName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
-
-                            <Modal visible={isModalDepartPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupDepart}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_pickup_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...pickupAreaDepart]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupDepart(item)}>
-                                        <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-                                    keyExtractor={(item, index) => index.toString()}
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-                            {airPortPickupDepart === 1 && (
-
-                              <>
-                                <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
-                                <TextInput style={styles.input} />
-                                <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
-                                <View style={styles.inputRow}>
-                                  <View style={styles.buttonSelect}>
-                                    <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
-                                      <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
-                                      <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                                    </TouchableOpacity>
-
-                                    {/* Adult Modal */}
-                                    <Modal
-                                      visible={ispickupHourModalVisibleDepart}
-                                      transparent={true}
-                                      animationType="fade"
-                                      onRequestClose={pickuptoggleHourtModalDepart}
-                                    >
-                                      <View style={styles.modalOverlay}>
-                                        <View style={styles.modalContent}>
-                                          <FlatList
-                                            data={HourOption}
-                                            renderItem={pickuprenderHourOptionDepart}
-                                            keyExtractor={(item) => item.toString()}
-                                          />
-                                        </View>
-                                      </View>
-                                    </Modal>
-                                    <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
-                                      <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
-                                      <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                                    </TouchableOpacity>
-
-                                    {/* Child Modal */}
-                                    <Modal
-                                      visible={ispickupMinuteModalVisibleDepart}
-                                      transparent={true}
-                                      animationType="fade"
-                                      onRequestClose={pickuptoggleMinuteModalDepart}
-                                    >
-                                      <View style={styles.modalOverlay}>
-                                        <View style={styles.modalContent}>
-                                          <FlatList
-                                            data={minuteOption}
-                                            renderItem={pickuprenderMinuteOptionDepart}
-                                            keyExtractor={(item) => item.toString()}
-                                          />
-                                        </View>
-                                      </View>
-                                    </Modal>
-                                  </View>
-                                </View>
-                              </>
-
-                            )}
-
-
-
-                            <Text style={styles.inputLabel}>{t('hotelPickUpPoint') || 'Hotel / Pick up point'}</Text>
-                            <TextInput
-                              placeholder={t('inputHotelPickUpPoint') || "Input Hotel / Pick up point"}
-                              value={HotelpickupDepart}
-                              onChangeText={(text) => {
-                                setHotelpickupDepart(text);
-                                setErrors((prev) => ({ ...prev, HotelpickupDepart: false }));
-                              }}
-                              style={[styles.input, errors.HotelpickupDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                            />
-                          </View>
-                        )}
-                      </View>
-                    ) : (
-                      <Text></Text>
-                    )}
-
-
-
-                    {/* Dropoff Section */}
-                    {Array.isArray(TranSportDropoffDepart) && TranSportDropoffDepart.length > 0 ? (
-                      <View style={styles.section}>
-                        <TouchableOpacity onPress={() => setDropoffDepart(!dropoffDepart)} style={styles.checkboxContainer}>
-                          <MaterialIcons name={dropoffDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                          <Text style={styles.label}>{t('iNeedADropOff') || 'I need a drop off'}</Text>
-                        </TouchableOpacity>
-
-                        {dropoffDepart && (
-                          <View>
-                            <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
-                            <TouchableOpacity
-                              style={[styles.buttonSelect, errors.selectedTransportDropoffDepartName && styles.errorInput]}
-                              onPress={toggleModalTransportDropoffDepart}
-                            >
-                              <Text style={styles.buttonText}>{selectedTransportDropoffDepartName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
-
-
-                            {/* Modal for title selection */}
-                            <Modal visible={isModalTransportDepartDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffDepart}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffDepart]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffDepart(item)}>
-                                        <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-
-                                    keyExtractor={(item, index) => index.toString()}
-                                    initialNumToRender={5}
-                                    maxToRenderPerBatch={5}
-                                    windowSize={5}
-                                    pagingEnabled
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-
-
-                            <Text style={styles.inputLabel}>{t('dropOffArea') || 'Drop off area'}</Text>
-                            <TouchableOpacity onPress={toggleModalDropoffDepart} style={styles.buttonSelect}>
-                              <Text style={styles.buttonText}>{selectedDropoffDepartName}</Text>
-                              <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
-                            </TouchableOpacity>
-
-                            <Modal visible={isModalDepartDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffDepart}>
-                              <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentPre}>
-                                  <FlatList
-                                    data={[{ md_dropoff_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...DropoffAreaDepart]}
-                                    renderItem={({ item }) => (
-                                      <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffDepart(item)}>
-                                        <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
-                                      </TouchableOpacity>
-                                    )}
-                                    keyExtractor={(item, index) => index.toString()}
-                                  />
-                                </View>
-                              </View>
-                            </Modal>
-                            {airPortDropoffDepart === 1 && (
-                              <>
-                                <Text style={styles.inputLabel}>Filght Number</Text>
-                                <TextInput style={styles.input} />
-                                <Text style={styles.inputLabel}>Arrive Time</Text>
-                                <View style={styles.inputRow}>
-                                  <View style={styles.buttonSelect}>
-                                    <TouchableOpacity style={styles.button} onPress={dropofftoggleHourtModalDepart}>
-                                      <Text style={styles.ArriveText}>{dropoffhourDepart}</Text>
-                                      <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                                    </TouchableOpacity>
-
-                                    {/* Hour Modal */}
-                                    <Modal
-                                      visible={isdropoffHourModalVisibleDepart}
-                                      transparent={true}
-                                      animationType="fade"
-                                      onRequestClose={dropofftoggleHourtModalDepart}
-                                    >
-                                      <View style={styles.modalOverlay}>
-                                        <View style={styles.modalContent}>
-                                          <FlatList
-                                            data={HourOption}
-                                            renderItem={dropoffrenderHourOptionDepart}
-                                            keyExtractor={(item) => item.toString()}  // Use item as key
-                                          />
-                                        </View>
-                                      </View>
-                                    </Modal>
-                                    <TouchableOpacity style={styles.button} onPress={dropofftoggleMinuteModalDepart}>
-                                      <Text style={styles.ArriveText}>{dropoffminutesDepart} </Text>
-                                      <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
-                                    </TouchableOpacity>
-
-                                    {/* Minute Modal */}
-                                    <Modal
-                                      visible={isdropoffMinuteModalVisibleDepart}
-                                      transparent={true}
-                                      animationType="fade"
-                                      onRequestClose={dropofftoggleMinuteModalDepart}
-                                    >
-                                      <View style={styles.modalOverlay}>
-                                        <View style={styles.modalContent}>
-                                          <FlatList
-                                            data={minuteOption}
-                                            renderItem={dropoffrenderMinuteOptionDepart}
-                                            keyExtractor={(item) => item.toString()}  // Use item as key
-                                          />
-                                        </View>
-                                      </View>
-                                    </Modal>
-                                  </View>
-                                </View>
-                              </>
-                            )}
-
-
-                            <Text style={styles.inputLabel}>{t('hotelDropOffPoint') || 'Hotel / Drop off point'}</Text>
-                            <TextInput
-                              placeholder={t('inputHotelDropOffPoint') || "Input Hotel / Drop off point"}
-                              value={HoteldropoffDepart}
-                              onChangeText={(text) => {
-                                setHoteldropoffDepart(text);
-                                setErrors((prev) => ({ ...prev, HoteldropoffDepart: false }));
-                              }}
-                              style={[styles.input, errors.HoteldropoffDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
-                            />
-                          </View>
-                        )}
-                      </View>
-                    ) : (
-                      <Text></Text>
-                    )}
-
-
-                    {/* <View style={styles.TicketRow}>
-                      <View style={styles.circleContainerLeft}>
-                        <View style={styles.circleLeft1}></View>
-                        <View style={styles.circleLeft2}></View>
-                      </View>
-                      <View style={styles.dashedLineTicket} />
-                      <View style={styles.circleContainerRight}>
-                        <View style={styles.circleRight1}></View>
-                        <View style={styles.circleRight2}></View>
-                      </View>
-                    </View> */}
-                    {/* </ImageBackground> */}
+                    <Text style={{
+                      marginTop: 24,
+                      color: '#1E293B',
+                      fontWeight: '800',
+                      fontSize: 18,
+                      letterSpacing: -0.3,
+                      textAlign: 'center'
+                    }}>
+                      {t('loadingTripDetails') || 'Loading Trip Details...'}
+                    </Text>
+                    <Text style={{
+                      marginTop: 8,
+                      color: '#64748B',
+                      fontWeight: '500',
+                      fontSize: 14,
+                      textAlign: 'center',
+                      lineHeight: 20,
+                    }}>
+                      {t('preparingBestOptions') || 'Preparing the best options for your journey'}
+                    </Text>
                   </View>
-                ))
-              }
+                </View>
+              </Animated.View>
+            )}
+            {!loading && timetableDepart && timetableReturn && (
+              <Animated.View style={[
+                {
+                  opacity: fadeAnim,
+                  transform: [
+                    { translateY: slideAnim },
+                    { scale: scaleAnim },
+                  ],
+                },
+              ]}>
+                {
+                  timetableDepart.map((item) => (
 
-              {customerData.roud === 2 && (
-                <>
-                  {timetableReturn.map((item) => (
                     <View key={item.md_timetable_id} style={[
                       styles.cardContainer,
                       {
                         marginTop: 24,
-                        backgroundColor: 'rgba(255,255,255,0.97)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(253,80,30,0.13)',
-                        shadowColor: '#FD501E',
-                        shadowOpacity: 0.13,
-                        shadowRadius: 16,
-                        shadowOffset: { width: 0, height: 8 },
-                      //  elevation: 7,
-                        overflow: 'visible',
+                        backgroundColor: 'rgba(255,255,255,0.98)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(253,80,30,0.10)',
+                        borderRadius: 24,
                         padding: 0,
-                        borderRadius: 32,
+                        overflow: 'visible',
                         position: 'relative',
                       },
                     ]}>
                       {/* หัวตั๋ว */}
                       <View style={{
                         backgroundColor: '#FD501E',
-                        borderTopLeftRadius: 32,
-                        borderTopRightRadius: 32,
+                        borderTopLeftRadius: 24,
+                        borderTopRightRadius: 24,
                         paddingVertical: 20,
                         paddingHorizontal: 22,
                         flexDirection: 'row',
@@ -2336,12 +1903,14 @@ const TripDetail = ({ navigation, route }) => {
                           <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
                         </View>
                       </View>
-
+                      {/* <ImageBackground
+                      source={{ uri: 'https://www.thetrago.com/assets/images/bg/ticketmap.webp' }}
+                      style={styles.background}> */}
                       {/* Trip Details */}
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.col}>
                           <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
@@ -2373,7 +1942,7 @@ const TripDetail = ({ navigation, route }) => {
                       <View style={styles.tripInfo}>
                         <View style={styles.col}>
                           <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
-                          <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          <Text style={styles.date}>{formatDate(customerData.departdate)}</Text>
                         </View>
                         <View style={styles.col}>
                           <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
@@ -2386,53 +1955,62 @@ const TripDetail = ({ navigation, route }) => {
                         </View>
                       </View>
 
-
                       {item.md_location_airport === 1 && (
                         <>
-                          <Text style={styles.inputLabel}>Filght Number</Text>
-                          <TextInput style={styles.input} />
-                          <Text style={styles.inputLabel}>Arrive Time</Text>
+                          <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
+                          <TextInput
+                            style={[styles.input, errors.flightNoPickupDepart && styles.errorInput]}
+                            value={flightNoPickupDepart}
+                            onChangeText={(text) => {
+                              setFlightNoPickupDepart(text);
+                              setErrors(prev => ({ ...prev, flightNoPickupDepart: false }));
+                            }}
+                            placeholder="Flight Number"
+                            autoCapitalize="characters"
+                          />
+
+                          <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
                           <View style={styles.inputRow}>
                             <View style={styles.buttonSelect}>
-                              <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
-                                <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
+                                <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Adult Modal */}
                               <Modal
-                                visible={ispickupHourModalVisibleReturn}
+                                visible={ispickupHourModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={pickuptoggleHourtModalReturn}
+                                onRequestClose={pickuptoggleHourtModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={HourOption}
-                                      renderItem={pickuprenderHourOptionReturn}
+                                      renderItem={pickuprenderHourOptionDepart}
                                       keyExtractor={(item, index) => index.toString()}  // Use index as key
                                     />
                                   </View>
                                 </View>
                               </Modal>
-                              <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
-                                <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
+                              <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
+                                <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
                                 <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                               </TouchableOpacity>
 
                               {/* Child Modal */}
                               <Modal
-                                visible={ispickupMinuteModalVisibleReturn}
+                                visible={ispickupMinuteModalVisibleDepart}
                                 transparent={true}
                                 animationType="fade"
-                                onRequestClose={pickuptoggleMinuteModalReturn}
+                                onRequestClose={pickuptoggleMinuteModalDepart}
                               >
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContent}>
                                     <FlatList
                                       data={minuteOption}
-                                      renderItem={pickuprenderMinuteOptionReturn}
+                                      renderItem={pickuprenderMinuteOptionDepart}
                                       keyExtractor={(item, index) => index.toString()}  // Use index as key
                                     />
                                   </View>
@@ -2445,35 +2023,36 @@ const TripDetail = ({ navigation, route }) => {
                       )}
 
                       {/* Pickup Section */}
-                      {Array.isArray(TranSportReturnPickup) && TranSportReturnPickup.length > 0 ? (
+                      {Array.isArray(TranSportDepartPickup) && TranSportDepartPickup.length > 0 ? (
                         <View style={styles.section}>
-                          <TouchableOpacity onPress={() => setpickupReturn(!pickupReturn)} style={styles.checkboxContainer}>
-                            <MaterialIcons name={pickupReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                            <Text style={styles.label}>I need a pick up</Text>
+                          <TouchableOpacity onPress={() => setpickupDepart(!pickupDepart)} style={styles.checkboxContainer}>
+                            <MaterialIcons name={pickupDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                            <Text style={styles.label}>{t('iNeedAPickUp') || 'I need a pick up'}</Text>
                           </TouchableOpacity>
 
-                          {pickupReturn && (
+                          {pickupDepart && (
                             <View>
-                              <Text style={styles.inputLabel}>Transport type</Text>
+                              <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
                               {/* Button ที่คลิกเพื่อเปิด Modal */}
 
+
                               <TouchableOpacity
-                                style={[styles.buttonSelect, errors.selectedTranSportPickupReturn && styles.errorInput]}
-                                onPress={toggleModalTransportPickupReturn}
+                                style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}
+                                onPress={toggleModalTransportPickupDepart}
                               >
-                                <Text style={styles.buttonText}>{selectedTransportPickupReturnName}</Text>
+                                <Text style={styles.buttonText}>{selectedTransportPickupDepartName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                               </TouchableOpacity>
 
 
                               {/* Modal for title selection */}
-                              <Modal visible={isModalTransportReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupReturn}>
+                              <Modal visible={isModalTransportDepartPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupDepart}>
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
+                                      data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
                                       renderItem={({ item }) => (
-                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupReturn(item)}>
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupDepart(item)}>
                                           <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
                                         </TouchableOpacity>
                                       )}
@@ -2488,19 +2067,21 @@ const TripDetail = ({ navigation, route }) => {
                                 </View>
                               </Modal>
 
-                              <Text style={styles.inputLabel}>Pick up area</Text>
-                              <TouchableOpacity onPress={toggleModalPickupReturn}     style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
-                                <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
+
+
+                              <Text style={styles.inputLabel}>{t('pickUpArea') || 'Pick up area'}</Text>
+                              <TouchableOpacity onPress={toggleModalPickupDepart} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
+                                <Text style={styles.buttonText}>{selectedPickupDepartName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                               </TouchableOpacity>
 
-                              <Modal visible={isModalReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupReturn}>
+                              <Modal visible={isModalDepartPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupDepart}>
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_pickup_id: "0", md_transfer_nameeng: "Please Select" }, ...pickupAreaReturn]}
+                                      data={[{ md_pickup_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...pickupAreaDepart]}
                                       renderItem={({ item }) => (
-                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupReturn(item)}>
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupDepart(item)}>
                                           <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
                                         </TouchableOpacity>
                                       )}
@@ -2509,53 +2090,63 @@ const TripDetail = ({ navigation, route }) => {
                                   </View>
                                 </View>
                               </Modal>
-                              {airPortPickupReturn === 1 && (
+                              {airPortPickupDepart === 1 && (
 
                                 <>
-                                  <Text style={styles.inputLabel}>Filght Number</Text>
-                                  <TextInput style={styles.input} />
-                                  <Text style={styles.inputLabel}>Arrive Time</Text>
+                                  <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
+                                  <TextInput
+                                    style={[styles.input, errors.flightNoPickupDepart && styles.errorInput]}
+                                    value={flightNoPickupDepart}
+                                    onChangeText={(text) => {
+                                      setFlightNoPickupDepart(text);
+                                      setErrors(prev => ({ ...prev, flightNoPickupDepart: false }));
+                                    }}
+                                    placeholder="Flight Number"
+                                    autoCapitalize="characters"
+                                  />
+
+                                  <Text style={styles.inputLabel}>{t('arriveTime') || 'Arrive Time'}</Text>
                                   <View style={styles.inputRow}>
                                     <View style={styles.buttonSelect}>
-                                      <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
-                                        <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
+                                      <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalDepart}>
+                                        <Text style={styles.ArriveText}>{pickuphourDepart}</Text>
                                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                                       </TouchableOpacity>
 
                                       {/* Adult Modal */}
                                       <Modal
-                                        visible={ispickupHourModalVisibleReturn}
+                                        visible={ispickupHourModalVisibleDepart}
                                         transparent={true}
                                         animationType="fade"
-                                        onRequestClose={pickuptoggleHourtModalReturn}
+                                        onRequestClose={pickuptoggleHourtModalDepart}
                                       >
                                         <View style={styles.modalOverlay}>
                                           <View style={styles.modalContent}>
                                             <FlatList
                                               data={HourOption}
-                                              renderItem={pickuprenderHourOptionReturn}
+                                              renderItem={pickuprenderHourOptionDepart}
                                               keyExtractor={(item) => item.toString()}
                                             />
                                           </View>
                                         </View>
                                       </Modal>
-                                      <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
-                                        <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
+                                      <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalDepart}>
+                                        <Text style={styles.ArriveText}>{pickupminutesDepart} </Text>
                                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                                       </TouchableOpacity>
 
                                       {/* Child Modal */}
                                       <Modal
-                                        visible={ispickupMinuteModalVisibleReturn}
+                                        visible={ispickupMinuteModalVisibleDepart}
                                         transparent={true}
                                         animationType="fade"
-                                        onRequestClose={pickuptoggleMinuteModalReturn}
+                                        onRequestClose={pickuptoggleMinuteModalDepart}
                                       >
                                         <View style={styles.modalOverlay}>
                                           <View style={styles.modalContent}>
                                             <FlatList
                                               data={minuteOption}
-                                              renderItem={pickuprenderMinuteOptionReturn}
+                                              renderItem={pickuprenderMinuteOptionDepart}
                                               keyExtractor={(item) => item.toString()}
                                             />
                                           </View>
@@ -2569,15 +2160,15 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-                              <Text style={styles.inputLabel}>Hotel / Pick up point</Text>
+                              <Text style={styles.inputLabel}>{t('hotelPickUpPoint') || 'Hotel / Pick up point'}</Text>
                               <TextInput
-                                placeholder="Input Hotel / Pick up point"
-                                value={HotelpickupReturn}
+                                placeholder={t('inputHotelPickUpPoint') || "Input Hotel / Pick up point"}
+                                value={HotelpickupDepart}
                                 onChangeText={(text) => {
-                                  setHotelpickupReturn(text);
-                                  setErrors((prev) => ({ ...prev, HotelpickupReturn: false }));
+                                  setHotelpickupDepart(text);
+                                  setErrors((prev) => ({ ...prev, HotelpickupDepart: false }));
                                 }}
-                                style={[styles.input, errors.HotelpickupReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                style={[styles.input, errors.HotelpickupDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                               />
                             </View>
                           )}
@@ -2589,33 +2180,33 @@ const TripDetail = ({ navigation, route }) => {
 
 
                       {/* Dropoff Section */}
-                      {Array.isArray(TranSportDropoffReturn) && TranSportDropoffReturn.length > 0 ? (
+                      {Array.isArray(TranSportDropoffDepart) && TranSportDropoffDepart.length > 0 ? (
                         <View style={styles.section}>
-                          <TouchableOpacity onPress={() => setDropoffReturn(!dropoffReturn)} style={styles.checkboxContainer}>
-                            <MaterialIcons name={dropoffReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                            <Text style={styles.label}>I need a drop off</Text>
+                          <TouchableOpacity onPress={() => setDropoffDepart(!dropoffDepart)} style={styles.checkboxContainer}>
+                            <MaterialIcons name={dropoffDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                            <Text style={styles.label}>{t('iNeedADropOff') || 'I need a drop off'}</Text>
                           </TouchableOpacity>
 
-                          {dropoffReturn && (
+                          {dropoffDepart && (
                             <View>
-                              <Text style={styles.inputLabel}>Transport type</Text>
+                              <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
                               <TouchableOpacity
-                                style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
-                                onPress={toggleModalTransportDropoffReturn}
+                                style={[styles.buttonSelect, errors.selectedTransportDropoffDepartName && styles.errorInput]}
+                                onPress={toggleModalTransportDropoffDepart}
                               >
-                                <Text style={styles.buttonText}>{selectedTransportDropoffReturnName}</Text>
+                                <Text style={styles.buttonText}>{selectedTransportDropoffDepartName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                               </TouchableOpacity>
 
 
                               {/* Modal for title selection */}
-                              <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffReturn}>
+                              <Modal visible={isModalTransportDepartDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffDepart}>
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
+                                      data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffDepart]}
                                       renderItem={({ item }) => (
-                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffReturn(item)}>
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffDepart(item)}>
                                           <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
                                         </TouchableOpacity>
                                       )}
@@ -2630,19 +2221,20 @@ const TripDetail = ({ navigation, route }) => {
                                 </View>
                               </Modal>
 
-                              <Text style={styles.inputLabel}>Drop off area</Text>
-                              <TouchableOpacity onPress={toggleModalDropoffReturn} style={styles.buttonSelect}>
-                                <Text style={styles.buttonText}>{selectedDropoffReturnName}</Text>
+
+                              <Text style={styles.inputLabel}>{t('dropOffArea') || 'Drop off area'}</Text>
+                              <TouchableOpacity onPress={toggleModalDropoffDepart} style={styles.buttonSelect}>
+                                <Text style={styles.buttonText}>{selectedDropoffDepartName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                               </TouchableOpacity>
 
-                              <Modal visible={isModalReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffReturn}>
+                              <Modal visible={isModalDepartDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffDepart}>
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_dropoff_id: "0", md_transfer_nameeng: "Please Select" }, ...DropoffAreaReturn]}
+                                      data={[{ md_dropoff_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select" }, ...DropoffAreaDepart]}
                                       renderItem={({ item }) => (
-                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffReturn(item)}>
+                                        <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffDepart(item)}>
                                           <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
                                         </TouchableOpacity>
                                       )}
@@ -2651,52 +2243,62 @@ const TripDetail = ({ navigation, route }) => {
                                   </View>
                                 </View>
                               </Modal>
-                              {airPortDropoffReturn === 1 && (
+                              {airPortDropoffDepart === 1 && (
                                 <>
                                   <Text style={styles.inputLabel}>Filght Number</Text>
-                                  <TextInput style={styles.input} />
+                                  <TextInput
+                                    style={[styles.input, errors.flightNoDropoffDepart && styles.errorInput]}
+                                    value={flightNoDropoffDepart}
+                                    onChangeText={(text) => {
+                                      setFlightNoDropoffDepart(text);
+                                      setErrors(prev => ({ ...prev, flightNoDropoffDepart: false }));
+                                    }}
+                                    placeholder="Flight Number"
+                                    autoCapitalize="characters"
+                                  />
+
                                   <Text style={styles.inputLabel}>Arrive Time</Text>
                                   <View style={styles.inputRow}>
                                     <View style={styles.buttonSelect}>
-                                      <TouchableOpacity style={styles.button} onPress={dropofftoggleHourtModalReturn}>
-                                        <Text style={styles.ArriveText}>{dropoffhourReturn}</Text>
+                                      <TouchableOpacity style={styles.button} onPress={dropofftoggleHourtModalDepart}>
+                                        <Text style={styles.ArriveText}>{dropoffhourDepart}</Text>
                                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                                       </TouchableOpacity>
 
                                       {/* Hour Modal */}
                                       <Modal
-                                        visible={isdropoffHourModalVisibleReturn}
+                                        visible={isdropoffHourModalVisibleDepart}
                                         transparent={true}
                                         animationType="fade"
-                                        onRequestClose={dropofftoggleHourtModalReturn}
+                                        onRequestClose={dropofftoggleHourtModalDepart}
                                       >
                                         <View style={styles.modalOverlay}>
                                           <View style={styles.modalContent}>
                                             <FlatList
                                               data={HourOption}
-                                              renderItem={dropoffrenderHourOptionReturn}
+                                              renderItem={dropoffrenderHourOptionDepart}
                                               keyExtractor={(item) => item.toString()}  // Use item as key
                                             />
                                           </View>
                                         </View>
                                       </Modal>
-                                      <TouchableOpacity style={styles.button} onPress={dropofftoggleMinuteModalReturn}>
-                                        <Text style={styles.ArriveText}>{dropoffminutesReturn} </Text>
+                                      <TouchableOpacity style={styles.button} onPress={dropofftoggleMinuteModalDepart}>
+                                        <Text style={styles.ArriveText}>{dropoffminutesDepart} </Text>
                                         <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
                                       </TouchableOpacity>
 
                                       {/* Minute Modal */}
                                       <Modal
-                                        visible={isdropoffMinuteModalVisibleReturn}
+                                        visible={isdropoffMinuteModalVisibleDepart}
                                         transparent={true}
                                         animationType="fade"
-                                        onRequestClose={dropofftoggleMinuteModalReturn}
+                                        onRequestClose={dropofftoggleMinuteModalDepart}
                                       >
                                         <View style={styles.modalOverlay}>
                                           <View style={styles.modalContent}>
                                             <FlatList
                                               data={minuteOption}
-                                              renderItem={dropoffrenderMinuteOptionReturn}
+                                              renderItem={dropoffrenderMinuteOptionDepart}
                                               keyExtractor={(item) => item.toString()}  // Use item as key
                                             />
                                           </View>
@@ -2708,18 +2310,15 @@ const TripDetail = ({ navigation, route }) => {
                               )}
 
 
-
-
-
-                              <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
+                              <Text style={styles.inputLabel}>{t('hotelDropOffPoint') || 'Hotel / Drop off point'}</Text>
                               <TextInput
-                                placeholder="Input Hotel / Drop off point"
-                                value={HoteldropoffReturn}
+                                placeholder={t('inputHotelDropOffPoint') || "Input Hotel / Drop off point"}
+                                value={HoteldropoffDepart}
                                 onChangeText={(text) => {
-                                  setHoteldropoffReturn(text);
-                                  setErrors((prev) => ({ ...prev, HoteldropoffReturn: false }));
+                                  setHoteldropoffDepart(text);
+                                  setErrors((prev) => ({ ...prev, HoteldropoffDepart: false }));
                                 }}
-                                style={[styles.input, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                style={[styles.input, errors.HoteldropoffDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                               />
                             </View>
                           )}
@@ -2730,6 +2329,513 @@ const TripDetail = ({ navigation, route }) => {
 
 
                       {/* <View style={styles.TicketRow}>
+                      <View style={styles.circleContainerLeft}>
+                        <View style={styles.circleLeft1}></View>
+                        <View style={styles.circleLeft2}></View>
+                      </View>
+                      <View style={styles.dashedLineTicket} />
+                      <View style={styles.circleContainerRight}>
+                        <View style={styles.circleRight1}></View>
+                        <View style={styles.circleRight2}></View>
+                      </View>
+                    </View> */}
+                      {/* </ImageBackground> */}
+                    </View>
+                  ))
+                }
+
+                {customerData.roud === 2 && (
+                  <>
+                    {timetableReturn.map((item) => (
+                      <View key={item.md_timetable_id} style={[
+                        styles.cardContainer,
+                        {
+                          marginTop: 24,
+                          backgroundColor: 'rgba(255,255,255,0.97)',
+                          borderWidth: 1.5,
+                          borderColor: 'rgba(253,80,30,0.13)',
+                          shadowColor: '#FD501E',
+                          shadowOpacity: 0.13,
+                          shadowRadius: 16,
+                          shadowOffset: { width: 0, height: 8 },
+                          //  elevation: 7,
+                          overflow: 'visible',
+                          padding: 0,
+                          borderRadius: 32,
+                          position: 'relative',
+                        },
+                      ]}>
+                        {/* หัวตั๋ว */}
+                        <View style={{
+                          backgroundColor: '#FD501E',
+                          borderTopLeftRadius: 32,
+                          borderTopRightRadius: 32,
+                          paddingVertical: 20,
+                          paddingHorizontal: 22,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          position: 'relative',
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Image
+                              source={{ uri: `https://thetrago.com/Api/uploads/company/${item.md_company_picname}` }}
+                              style={{ width: wp('10.6%'), height: hp('5%'), borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee', marginRight: 10 }}
+                              resizeMode="cover"
+                            />
+                            <View style={styles.coltitle}>
+                              <Text
+                                style={{
+                                  color: '#fff',
+                                  fontWeight: 'bold',
+                                  fontSize: 18,
+                                  maxWidth: wp('20%'),
+                                  overflow: 'hidden',
+                                  flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                                }}
+                              >
+                                {selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: '#fff',
+                                  fontSize: 12,
+                                  maxWidth: wp('30%'),
+                                  overflow: 'hidden',
+                                  flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
+                                }}
+                              >{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                            </View>
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: 6 }}>
+                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng}</Text>
+                            <Text style={[styles.tag, { backgroundColor: '#fff', color: '#FD501E', fontWeight: 'bold', fontSize: 13 }]}>{tripType}</Text>
+                          </View>
+                        </View>
+
+                        {/* Trip Details */}
+                        <View style={styles.tripInfo}>
+                          <View style={styles.col}>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_departuretime)}</Text>
+                            <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          </View>
+                          <View style={styles.col}>
+                            <View style={[styles.circle, { backgroundColor: '#FD501E', width: 25, height: 25 }]} />
+                            <Image source={require('../../assets/Line 14.png')}
+                              style={styles.line}
+                            />
+                          </View>
+                          <View style={styles.col}>
+                            <Text style={styles.location}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng}</Text>
+                            <Text style={styles.ship}>{selectedLanguage === 'th' ? item.startpier_namethai : item.startpier_nameeng}</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.tripInfo}>
+                          <View style={styles.col} />
+                          <View style={styles.col}>
+                            <View style={styles.orangeCircleIcon}>
+                              <Icon name="boat" size={24} color="#fff" />
+                            </View>
+
+                            <Image source={require('../../assets/Line 14.png')}
+                              style={styles.line} />
+                          </View>
+                          <View style={styles.col}>
+                            <Text style={styles.ship}>{formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                            <Text style={styles.orangetext}>{selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.tripInfo}>
+                          <View style={styles.col}>
+                            <Text style={styles.time}>{formatTime(item.md_timetable_arrivaltime)}</Text>
+                            <Text style={styles.date}>{formatDate(customerData.returndate)}</Text>
+                          </View>
+                          <View style={styles.col}>
+                            <View style={[styles.orangeCircleIcon, { backgroundColor: '#FFF3ED' }]}>
+                              <MaterialIcons name="location-on" size={wp('6%')} color="#FD501E" />
+                            </View>
+                          </View>
+                          <View style={styles.col}>
+                            <Text style={styles.location}>{selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+                            <Text style={styles.ship}>{selectedLanguage === 'th' ? item.endpier_namethai : item.endpier_nameeng}</Text>
+                          </View>
+                        </View>
+
+
+                        {item.md_location_airport === 1 && (
+                          <>
+                            <Text style={styles.inputLabel}>Filght Number</Text>
+                            <TextInput
+                              style={[styles.input, errors.flightNoPickupReturn && styles.errorInput]}
+                              value={flightNoPickupReturn}
+                              onChangeText={(text) => {
+                                setFlightNoPickupReturn(text);
+                                setErrors(prev => ({ ...prev, flightNoPickupReturn: false }));
+                              }}
+                              placeholder="Flight Number"
+                              autoCapitalize="characters"
+                            />
+
+                            <Text style={styles.inputLabel}>Arrive Time</Text>
+                            <View style={styles.inputRow}>
+                              <View style={styles.buttonSelect}>
+                                <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
+                                  <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
+                                  <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                </TouchableOpacity>
+
+                                {/* Adult Modal */}
+                                <Modal
+                                  visible={ispickupHourModalVisibleReturn}
+                                  transparent={true}
+                                  animationType="fade"
+                                  onRequestClose={pickuptoggleHourtModalReturn}
+                                >
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContent}>
+                                      <FlatList
+                                        data={HourOption}
+                                        renderItem={pickuprenderHourOptionReturn}
+                                        keyExtractor={(item, index) => index.toString()}  // Use index as key
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+                                <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
+                                  <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
+                                  <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                </TouchableOpacity>
+
+                                {/* Child Modal */}
+                                <Modal
+                                  visible={ispickupMinuteModalVisibleReturn}
+                                  transparent={true}
+                                  animationType="fade"
+                                  onRequestClose={pickuptoggleMinuteModalReturn}
+                                >
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContent}>
+                                      <FlatList
+                                        data={minuteOption}
+                                        renderItem={pickuprenderMinuteOptionReturn}
+                                        keyExtractor={(item, index) => index.toString()}  // Use index as key
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+                              </View>
+                            </View>
+                          </>
+
+                        )}
+
+                        {/* Pickup Section */}
+                        {Array.isArray(TranSportReturnPickup) && TranSportReturnPickup.length > 0 ? (
+                          <View style={styles.section}>
+                            <TouchableOpacity onPress={() => setpickupReturn(!pickupReturn)} style={styles.checkboxContainer}>
+                              <MaterialIcons name={pickupReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                              <Text style={styles.label}>I need a pick up</Text>
+                            </TouchableOpacity>
+
+                            {pickupReturn && (
+                              <View>
+                                <Text style={styles.inputLabel}>Transport type</Text>
+                                {/* Button ที่คลิกเพื่อเปิด Modal */}
+
+                                <TouchableOpacity
+                                  style={[styles.buttonSelect, errors.selectedTranSportPickupReturn && styles.errorInput]}
+                                  onPress={toggleModalTransportPickupReturn}
+                                >
+                                  <Text style={styles.buttonText}>{selectedTransportPickupReturnName}</Text>
+                                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                </TouchableOpacity>
+
+
+                                {/* Modal for title selection */}
+                                <Modal visible={isModalTransportReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalTransportPickupReturn}>
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContentPre}>
+                                      <FlatList
+                                        data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
+                                        renderItem={({ item }) => (
+                                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupReturn(item)}>
+                                            <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
+                                          </TouchableOpacity>
+                                        )}
+
+                                        keyExtractor={(item, index) => index.toString()}
+                                        initialNumToRender={5}
+                                        maxToRenderPerBatch={5}
+                                        windowSize={5}
+                                        pagingEnabled
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+
+                                <Text style={styles.inputLabel}>Pick up area</Text>
+                                <TouchableOpacity onPress={toggleModalPickupReturn} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
+                                  <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
+                                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                </TouchableOpacity>
+
+                                <Modal visible={isModalReturnPickupVisible} transparent animationType="fade" onRequestClose={toggleModalPickupReturn}>
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContentPre}>
+                                      <FlatList
+                                        data={[{ md_pickup_id: "0", md_transfer_nameeng: "Please Select" }, ...pickupAreaReturn]}
+                                        renderItem={({ item }) => (
+                                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupReturn(item)}>
+                                            <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
+                                          </TouchableOpacity>
+                                        )}
+                                        keyExtractor={(item, index) => index.toString()}
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+                                {airPortPickupReturn === 1 && (
+
+                                  <>
+                                    <Text style={styles.inputLabel}>Filght Number</Text>
+                                    <TextInput
+                                      style={[styles.input, errors.flightNoPickupReturn && styles.errorInput]}
+                                      value={flightNoPickupReturn}
+                                      onChangeText={(text) => {
+                                        setFlightNoPickupReturn(text);
+                                        setErrors(prev => ({ ...prev, flightNoPickupReturn: false }));
+                                      }}
+                                      placeholder="Flight Number"
+                                      autoCapitalize="characters"
+                                    />
+
+                                    <Text style={styles.inputLabel}>Arrive Time</Text>
+                                    <View style={styles.inputRow}>
+                                      <View style={styles.buttonSelect}>
+                                        <TouchableOpacity style={styles.button} onPress={pickuptoggleHourtModalReturn}>
+                                          <Text style={styles.ArriveText}>{pickuphourReturn}</Text>
+                                          <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                        </TouchableOpacity>
+
+                                        {/* Adult Modal */}
+                                        <Modal
+                                          visible={ispickupHourModalVisibleReturn}
+                                          transparent={true}
+                                          animationType="fade"
+                                          onRequestClose={pickuptoggleHourtModalReturn}
+                                        >
+                                          <View style={styles.modalOverlay}>
+                                            <View style={styles.modalContent}>
+                                              <FlatList
+                                                data={HourOption}
+                                                renderItem={pickuprenderHourOptionReturn}
+                                                keyExtractor={(item) => item.toString()}
+                                              />
+                                            </View>
+                                          </View>
+                                        </Modal>
+                                        <TouchableOpacity style={styles.button} onPress={pickuptoggleMinuteModalReturn}>
+                                          <Text style={styles.ArriveText}>{pickupminutesreturn} </Text>
+                                          <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                        </TouchableOpacity>
+
+                                        {/* Child Modal */}
+                                        <Modal
+                                          visible={ispickupMinuteModalVisibleReturn}
+                                          transparent={true}
+                                          animationType="fade"
+                                          onRequestClose={pickuptoggleMinuteModalReturn}
+                                        >
+                                          <View style={styles.modalOverlay}>
+                                            <View style={styles.modalContent}>
+                                              <FlatList
+                                                data={minuteOption}
+                                                renderItem={pickuprenderMinuteOptionReturn}
+                                                keyExtractor={(item) => item.toString()}
+                                              />
+                                            </View>
+                                          </View>
+                                        </Modal>
+                                      </View>
+                                    </View>
+                                  </>
+
+                                )}
+
+
+
+                                <Text style={styles.inputLabel}>Hotel / Pick up point</Text>
+                                <TextInput
+                                  placeholder="Input Hotel / Pick up point"
+                                  value={HotelpickupReturn}
+                                  onChangeText={(text) => {
+                                    setHotelpickupReturn(text);
+                                    setErrors((prev) => ({ ...prev, HotelpickupReturn: false }));
+                                  }}
+                                  style={[styles.input, errors.HotelpickupReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                />
+                              </View>
+                            )}
+                          </View>
+                        ) : (
+                          <Text></Text>
+                        )}
+
+
+
+                        {/* Dropoff Section */}
+                        {Array.isArray(TranSportDropoffReturn) && TranSportDropoffReturn.length > 0 ? (
+                          <View style={styles.section}>
+                            <TouchableOpacity onPress={() => setDropoffReturn(!dropoffReturn)} style={styles.checkboxContainer}>
+                              <MaterialIcons name={dropoffReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                              <Text style={styles.label}>I need a drop off</Text>
+                            </TouchableOpacity>
+
+                            {dropoffReturn && (
+                              <View>
+                                <Text style={styles.inputLabel}>Transport type</Text>
+                                <TouchableOpacity
+                                  style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
+                                  onPress={toggleModalTransportDropoffReturn}
+                                >
+                                  <Text style={styles.buttonText}>{selectedTransportDropoffReturnName}</Text>
+                                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                </TouchableOpacity>
+
+
+                                {/* Modal for title selection */}
+                                <Modal visible={isModalTransportReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalTransportDropoffReturn}>
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContentPre}>
+                                      <FlatList
+                                        data={[{ md_cartype_nameeng: 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
+                                        renderItem={({ item }) => (
+                                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffReturn(item)}>
+                                            <Text style={styles.optionText}>{item.md_cartype_nameeng}</Text>
+                                          </TouchableOpacity>
+                                        )}
+
+                                        keyExtractor={(item, index) => index.toString()}
+                                        initialNumToRender={5}
+                                        maxToRenderPerBatch={5}
+                                        windowSize={5}
+                                        pagingEnabled
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+
+                                <Text style={styles.inputLabel}>Drop off area</Text>
+                                <TouchableOpacity onPress={toggleModalDropoffReturn} style={styles.buttonSelect}>
+                                  <Text style={styles.buttonText}>{selectedDropoffReturnName}</Text>
+                                  <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                </TouchableOpacity>
+
+                                <Modal visible={isModalReturnDropoffVisible} transparent animationType="fade" onRequestClose={toggleModalDropoffReturn}>
+                                  <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContentPre}>
+                                      <FlatList
+                                        data={[{ md_dropoff_id: "0", md_transfer_nameeng: "Please Select" }, ...DropoffAreaReturn]}
+                                        renderItem={({ item }) => (
+                                          <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffReturn(item)}>
+                                            <Text style={styles.optionText}>{item.md_transfer_nameeng}</Text>
+                                          </TouchableOpacity>
+                                        )}
+                                        keyExtractor={(item, index) => index.toString()}
+                                      />
+                                    </View>
+                                  </View>
+                                </Modal>
+                                {airPortDropoffReturn === 1 && (
+                                  <>
+                                    <Text style={styles.inputLabel}>Filght Number</Text>
+                                    <TextInput
+                                      style={[styles.input, errors.flightNoDropoffReturn && styles.errorInput]}
+                                      value={flightNoDropoffReturn}
+                                      onChangeText={(text) => {
+                                        setFlightNoDropoffReturn(text);
+                                        setErrors(prev => ({ ...prev, flightNoDropoffReturn: false }));
+                                      }}
+                                      placeholder="Flight Number"
+                                      autoCapitalize="characters"
+                                    />
+
+                                    <Text style={styles.inputLabel}>Arrive Time</Text>
+                                    <View style={styles.inputRow}>
+                                      <View style={styles.buttonSelect}>
+                                        <TouchableOpacity style={styles.button} onPress={dropofftoggleHourtModalReturn}>
+                                          <Text style={styles.ArriveText}>{dropoffhourReturn}</Text>
+                                          <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                        </TouchableOpacity>
+
+                                        {/* Hour Modal */}
+                                        <Modal
+                                          visible={isdropoffHourModalVisibleReturn}
+                                          transparent={true}
+                                          animationType="fade"
+                                          onRequestClose={dropofftoggleHourtModalReturn}
+                                        >
+                                          <View style={styles.modalOverlay}>
+                                            <View style={styles.modalContent}>
+                                              <FlatList
+                                                data={HourOption}
+                                                renderItem={dropoffrenderHourOptionReturn}
+                                                keyExtractor={(item) => item.toString()}  // Use item as key
+                                              />
+                                            </View>
+                                          </View>
+                                        </Modal>
+                                        <TouchableOpacity style={styles.button} onPress={dropofftoggleMinuteModalReturn}>
+                                          <Text style={styles.ArriveText}>{dropoffminutesReturn} </Text>
+                                          <Icon name="chevron-down" size={20} color="#FD501E" style={styles.dropdownIcon} />
+                                        </TouchableOpacity>
+
+                                        {/* Minute Modal */}
+                                        <Modal
+                                          visible={isdropoffMinuteModalVisibleReturn}
+                                          transparent={true}
+                                          animationType="fade"
+                                          onRequestClose={dropofftoggleMinuteModalReturn}
+                                        >
+                                          <View style={styles.modalOverlay}>
+                                            <View style={styles.modalContent}>
+                                              <FlatList
+                                                data={minuteOption}
+                                                renderItem={dropoffrenderMinuteOptionReturn}
+                                                keyExtractor={(item) => item.toString()}  // Use item as key
+                                              />
+                                            </View>
+                                          </View>
+                                        </Modal>
+                                      </View>
+                                    </View>
+                                  </>
+                                )}
+
+
+
+
+
+                                <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
+                                <TextInput
+                                  placeholder="Input Hotel / Drop off point"
+                                  value={HoteldropoffReturn}
+                                  onChangeText={(text) => {
+                                    setHoteldropoffReturn(text);
+                                    setErrors((prev) => ({ ...prev, HoteldropoffReturn: false }));
+                                  }}
+                                  style={[styles.input, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                />
+                              </View>
+                            )}
+                          </View>
+                        ) : (
+                          <Text></Text>
+                        )}
+
+
+                        {/* <View style={styles.TicketRow}>
                         <View style={styles.circleContainerLeft}>
                           <View style={styles.circleLeft1}></View>
                           <View style={styles.circleLeft2}></View>
@@ -2741,242 +2847,242 @@ const TripDetail = ({ navigation, route }) => {
                         </View>
                       </View> */}
 
-                    </View>
-                  ))}
-                </>
-              )}
-
-
-
-
-              {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
-                <View key={index} style={[styles.promo, {
-                  marginTop: 20,
-                  backgroundColor: 'rgba(255,255,255,0.98)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(253,80,30,0.10)',
-                  borderRadius: 24,
-                  padding: wp('4%'),
-                  maxWidth: wp('100%'),
-                  alignSelf: 'center',
-                  overflow: 'visible',
-                  position: 'relative',
-                  shadowColor: '#001233',
-                  shadowOpacity: 0.15,
-                  shadowRadius: wp('4%'),
-                  shadowOffset: { width: 0, height: hp('0.5%') },
-                  backdropFilter: 'blur(20px)',
-                }]}>
-                  <Text style={{
-                    color: '#1E293B',
-                    fontSize: wp('5%'),
-                    fontWeight: '800',
-                    marginBottom: hp('2%'),
-                    textAlign: 'left'
-                  }}>{t('bookingSummary') || 'Booking Summary'}</Text>
-
-                  <View style={styles.divider} />
-                  
-                  {timetableDepart.map((tripItem, tripIndex) => (
-                    <View key={tripIndex}>
-                      <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
-
-                      <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                        {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
-                      </Text>
-                      
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
                       </View>
-                      
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
-                      </View>
-                      
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
-                      </View>
-                      
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureDate') || 'Departure Date'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.departdate)}</Text>
-                      </View>
-                      
-                      <View style={styles.rowpromo}>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'}</Text>
-                        <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                          {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
+                    ))}
+                  </>
+                )}
+
+
+
+
+                {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
+                  <View key={index} style={[styles.promo, {
+                    marginTop: 20,
+                    backgroundColor: 'rgba(255,255,255,0.98)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(253,80,30,0.10)',
+                    borderRadius: 24,
+                    padding: wp('4%'),
+                    maxWidth: wp('100%'),
+                    alignSelf: 'center',
+                    overflow: 'visible',
+                    position: 'relative',
+                    shadowColor: '#001233',
+                    shadowOpacity: 0.15,
+                    shadowRadius: wp('4%'),
+                    shadowOffset: { width: 0, height: hp('0.5%') },
+                    backdropFilter: 'blur(20px)',
+                  }]}>
+                    <Text style={{
+                      color: '#1E293B',
+                      fontSize: wp('5%'),
+                      fontWeight: '800',
+                      marginBottom: hp('2%'),
+                      textAlign: 'left'
+                    }}>{t('bookingSummary') || 'Booking Summary'}</Text>
+
+                    <View style={styles.divider} />
+
+                    {timetableDepart.map((tripItem, tripIndex) => (
+                      <View key={tripIndex}>
+                        <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
+
+                        <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                          {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
                         </Text>
-                      </View>
 
-                      <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
-                        <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}</Text>
-                      </View>
-                      
-                      {customerData.child !== 0 && (
                         <View style={styles.rowpromo}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
                         </View>
-                      )}
-                      
-                      {customerData.infant !== 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant).toFixed(2))}</Text>
-                        </View>
-                      )}
-                      
-                      {pickupDepart && (
-                        <View style={styles.rowpromo}>
-                          <Text>{t('pickUp') || 'Pick up'}</Text>
-                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart).toFixed(2))}</Text>
-                        </View>
-                      )}
-                      
-                      {dropoffDepart && (
-                        <View style={styles.rowpromo}>
-                          <Text>{t('dropOff') || 'Drop off'}</Text>
-                          <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
-                        </View>
-                      )}
-                      
-                      {item.totalDepart.save != 0 && (
-                        <View style={styles.rowpromo}>
-                          <Text>{t('discount') || 'Discount'}</Text>
-                          <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))}</Text>
-                        </View>
-                      )}
-                      
-                      <View style={styles.rowpromo}>
-                        <Text>{t('ticketFare') || 'Ticket fare'}</Text>
-                        <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))}</Text>
-                      </View>
 
-                      <View style={styles.divider} />
-                    </View>
-                  ))}
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
+                        </View>
 
-                  {customerData.roud === 2 && (
-                    <>
-                      {timetableReturn.map((tripItem, tripIndex) => (
-                        <View key={tripIndex}>
-                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('return') || 'Return'}</Text>
-                          
-                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                            {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
+                        </View>
+
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureDate') || 'Departure Date'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.departdate)}</Text>
+                        </View>
+
+                        <View style={styles.rowpromo}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                            {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
                           </Text>
-                          
-                          <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
-                          </View>
-                          
-                          <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
-                          </View>
-                          
-                          <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
-                          </View>
-                          
-                          <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('returnDate') || 'Return Date'}</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.returndate)}</Text>
-                          </View>
-                          
-                          <View style={styles.rowpromo}>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
-                            <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                              {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
-                            </Text>
-                          </View>
-
-                          <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}</Text>
-                          </View>
-                          
-                          {customerData.child !== 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
-                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}</Text>
-                            </View>
-                          )}
-                          
-                          {customerData.infant !== 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
-                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}</Text>
-                            </View>
-                          )}
-                          
-                          {pickupReturn && (
-                            <View style={styles.rowpromo}>
-                              <Text>Pick up</Text>
-                              <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))}</Text>
-                            </View>
-                          )}
-                          
-                          {dropoffReturn && (
-                            <View style={styles.rowpromo}>
-                              <Text>Drop off</Text>
-                              <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
-                            </View>
-                          )}
-                          
-                          {item.totalReturn.save != 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text>Discount</Text>
-                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))}</Text>
-                            </View>
-                          )}
-                          
-                          <View style={styles.rowpromo}>
-                            <Text>Ticket fare</Text>
-                            <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))}</Text>
-                          </View>
-                          
-                          <View style={styles.divider} />
                         </View>
-                      ))}
-                    </>
-                  )}
 
-                  <View style={styles.rowpromo}>
-                    <Text>{t('subtotal') || 'Subtotal'}</Text>
-                    <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
-                  </View>
-                  <View style={styles.divider} />
-                  <View style={styles.rowpromo}>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{t('total') || 'Total'}</Text>
-                    <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
-                  </View>
-                </View>
-              ))}
-            </Animated.View>
-          )}
-          {Array.isArray(priceDepart) &&
-            priceDepart
-              .filter(item => item.totalDepart) // ป้องกัน undefined
-              .map((item, index) => (
-                <View key={index} style={styles.rowButton}>
-                  <TouchableOpacity
-                    style={[styles.ActionButton, { width: '100%' }]}
-                    onPress={() => handleNext(item)}
-                  >
-                    <Text style={styles.searchButtonText}>{t('next') || 'Next'}</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                        <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
+                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceadult).toFixed(2))}</Text>
+                        </View>
 
-        </ScrollView>
+                        {customerData.child !== 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricechild).toFixed(2))}</Text>
+                          </View>
+                        )}
+
+                        {customerData.infant !== 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
+                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.priceinfant).toFixed(2))}</Text>
+                          </View>
+                        )}
+
+                        {pickupDepart && (
+                          <View style={styles.rowpromo}>
+                            <Text>{t('pickUp') || 'Pick up'}</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricepickupdepart).toFixed(2))}</Text>
+                          </View>
+                        )}
+
+                        {dropoffDepart && (
+                          <View style={styles.rowpromo}>
+                            <Text>{t('dropOff') || 'Drop off'}</Text>
+                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
+                          </View>
+                        )}
+
+                        {item.totalDepart.save != 0 && (
+                          <View style={styles.rowpromo}>
+                            <Text>{t('discount') || 'Discount'}</Text>
+                            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.discount).toFixed(2))}</Text>
+                          </View>
+                        )}
+
+                        <View style={styles.rowpromo}>
+                          <Text>{t('ticketFare') || 'Ticket fare'}</Text>
+                          <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.showtotal).toFixed(2))}</Text>
+                        </View>
+
+                        <View style={styles.divider} />
+                      </View>
+                    ))}
+
+                    {customerData.roud === 2 && (
+                      <>
+                        {timetableReturn.map((tripItem, tripIndex) => (
+                          <View key={tripIndex}>
+                            <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('return') || 'Return'}</Text>
+
+                            <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                              {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
+                            </Text>
+
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
+                            </View>
+
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
+                            </View>
+
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
+                            </View>
+
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('returnDate') || 'Return Date'}</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatDate(customerData.returndate)}</Text>
+                            </View>
+
+                            <View style={styles.rowpromo}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
+                                {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
+                              </Text>
+                            </View>
+
+                            <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}</Text>
+                            </View>
+
+                            {customerData.child !== 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            {customerData.infant !== 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            {pickupReturn && (
+                              <View style={styles.rowpromo}>
+                                <Text>Pick up</Text>
+                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            {dropoffReturn && (
+                              <View style={styles.rowpromo}>
+                                <Text>Drop off</Text>
+                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            {item.totalReturn.save != 0 && (
+                              <View style={styles.rowpromo}>
+                                <Text>Discount</Text>
+                                <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            <View style={styles.rowpromo}>
+                              <Text>Ticket fare</Text>
+                              <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))}</Text>
+                            </View>
+
+                            <View style={styles.divider} />
+                          </View>
+                        ))}
+                      </>
+                    )}
+
+                    <View style={styles.rowpromo}>
+                      <Text>{t('subtotal') || 'Subtotal'}</Text>
+                      <Text>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.rowpromo}>
+                      <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{t('total') || 'Total'}</Text>
+                      <Text style={{ color: '#FD501E', fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.total).toFixed(2))}</Text>
+                    </View>
+                  </View>
+                ))}
+              </Animated.View>
+            )}
+            {Array.isArray(priceDepart) &&
+              priceDepart
+                .filter(item => item.totalDepart) // ป้องกัน undefined
+                .map((item, index) => (
+                  <View key={index} style={styles.rowButton}>
+                    <TouchableOpacity
+                      style={[styles.ActionButton, { width: '100%' }]}
+                      onPress={() => handleNext(item)}
+                    >
+                      <Text style={styles.searchButtonText}>{t('next') || 'Next'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+          </ScrollView>
         </Animated.View>
       </LinearGradient>
     </SafeAreaView>

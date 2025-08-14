@@ -3243,7 +3243,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     currency: selectedCurrency,
                                     symbol: selectedSysmbol,
                                     // booking information
-                                    md_booking_companyid: item.md_timetable_companyid,
+                                    md_booking_companyiddepart: item.md_timetable_companyid,
                                     md_booking_boattypeid: item.md_timetable_boattypeid,
                                     md_booking_round: 1,
                                     md_booking_timetableid: item.md_timetable_id,
@@ -3830,7 +3830,7 @@ const SearchFerry = ({ navigation, route }) => {
                                       currency: selectedCurrency,
                                       symbol: selectedSysmbol,
                                       // booking information
-                                      md_booking_companyid: item.md_timetable_companyid,
+                                      md_booking_companyiddepart: item.md_timetable_companyid,
                                       md_booking_boattypeid: item.md_timetable_boattypeid,
                                       md_booking_round: 2,
                                       md_booking_timetableid: item.md_timetable_id,
@@ -4375,7 +4375,18 @@ const SearchFerry = ({ navigation, route }) => {
                                       piccompanyReturn: item.md_timetable_companypic,
                                       pictimetableReturn: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
                                       discount: item.md_timetable_discount,
-                                      exchaneRate: item.md_exchange_money
+                                      exchaneRate: item.md_exchange_money,
+                                      //booking_insert
+                                      md_booking_companyidreturn: item.md_timetable_companyid,
+                                      md_booking_boattypeid: item.md_timetable_boattypeid,
+                                      md_booking_round: 2,
+                                      md_booking_timetableid: item.md_timetable_id,
+                                      md_booking_adult: adults,
+                                      md_booking_child: children,
+                                      md_booking_infant: infant,
+                                      md_booking_departdate: calendarStartDate,
+                                      md_booking_departtime: item.md_timetable_departuretime,
+                                      md_booking_remark : item.md_timetable_remark.en || '',
                                     });
 
                                     if (isonewaystatus) {

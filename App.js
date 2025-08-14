@@ -49,6 +49,8 @@ import ContactScreen from './src/screens/Screen/ContactScreen';
 import BookingScreen from './src/screens/Screen/BookingScreen';
 import DeleteProfileScreen from './src/screens/Screen/DeleteProfileScreen';
 import AffiliateScreen from './src/screens/Screen/AffiliateScreen';
+import TheTragoWebViewScreen from './src/screens/Screen/TheTragoWebViewScreen';
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -213,19 +215,23 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           let iconColor = isFocused ? '#FD501E' : '#9CA3AF';
           let textColor = isFocused ? '#FD501E' : '#6B7280';
           
-          switch (route.name) {
-            case 'Home':
-              iconName = 'home';
-              break;
-            case 'Booking':
-              iconName = 'calendar';
-              break;
-            case 'Login':
-              iconName = 'person';
-              break;
-            default:
-              iconName = 'ellipse';
-          }
+       switch (route.name) {
+  case 'Home':
+    iconName = 'home';
+    break;
+  case 'Booking':
+    iconName = 'calendar';
+    break;
+  case 'Login':
+    iconName = 'person';
+    break;
+  case 'Web': // ✅ เพิ่มแท็บ Web
+    iconName = 'globe-outline';
+    break;
+  default:
+    iconName = 'ellipse';
+}
+
 
           return (
             <TouchableOpacity
@@ -306,6 +312,11 @@ const MainNavigator = () => {
           title: selectedLanguage === 'th' ? 'ตั๋ว' : 'Booking',
         }} 
       />
+        <Tab.Screen 
+    name="Web"                                  // ✅ แท็บใหม่
+    component={TheTragoWebViewScreen}           // ✅ ใช้หน้าจอ WebView
+    options={{ title: t('web') || 'Web' }}      // ✅ ปรับชื่อจากภาษาที่เลือกได้
+  />
       <Tab.Screen 
         name="Login" 
         component={AccountTabNavigator} 
