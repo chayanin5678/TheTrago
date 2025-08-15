@@ -22,10 +22,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
   const { t } = useLanguage();
-  
+
   // Define titleOptions inside PassengerForm
   const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
-  
+
   const [selectedTitle, setSelectedTitle] = React.useState(t('pleaseSelect') || 'Please Select');
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [selectedNationality, setSelectedNationality] = React.useState(t('pleaseSelect') || 'Please Select');
@@ -294,9 +294,9 @@ const CustomerInfo = ({ navigation }) => {
   const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
-  
+
   const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
-  
+
   const [code, setcode] = useState('');
   const [Firstname, setFirstname] = useState(customerData.Firstname);
   const [Lastname, setLastname] = useState(customerData.Lastname);
@@ -328,11 +328,11 @@ const CustomerInfo = ({ navigation }) => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  
+
   // Floating particles animation
   const floatingAnims = useRef(
     [...Array(6)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2),
+      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
       y: new Animated.Value(Math.random() * screenHeight * 0.8),
       opacity: new Animated.Value(0.1),
       scale: new Animated.Value(1),
@@ -419,7 +419,7 @@ const CustomerInfo = ({ navigation }) => {
           ])
         ).start();
       };
-      
+
       setTimeout(() => animateParticle(), index * 500);
     });
 
@@ -588,7 +588,7 @@ const CustomerInfo = ({ navigation }) => {
         setPriceDepart([response.data.data]);
 
         updateCustomerData({
-          md_booking_promoprice : response.data.data.totalDepart.promotionprice || 0,
+          md_booking_promoprice: response.data.data.totalDepart.promotionprice || 0,
         });
 
         // Set return data if exists
@@ -631,6 +631,19 @@ const CustomerInfo = ({ navigation }) => {
         }
       }
 
+      const passengerDataArr = [{
+        prefix: selectedTitle,
+        fname: Firstname?.trim() || '',
+        lname: Lastname?.trim() || '',
+        idtype: 0,
+        nationality: country || '',          // ใช้รหัสประเทศที่เลือกจาก modal โทรศัพท์
+        passport: '',                        // ไม่ใช้ใน domestic ก็เก็บเป็นค่าว่างได้
+        dateofissue: '',
+        passportexpiry: '',
+        birthday: '',
+        type: 'adult',
+      }];
+
       updateCustomerData({
         selectedTitle: selectedTitle,
         Firstname: Firstname,
@@ -645,6 +658,7 @@ const CustomerInfo = ({ navigation }) => {
         countrycode: '+' + countrycode,
         time: timetableDepart[0].md_timetable_time,
         departtime: timetableDepart[0].md_timetable_departuretime,
+        passenger: passengerDataArr,
         // booking information
         md_booking_country: country,
         md_booking_countrycode: '+' + countrycode,
@@ -866,7 +880,7 @@ const CustomerInfo = ({ navigation }) => {
 
         // Load price data
         await fetchPrice();
-        
+
         // Load return timetable if needed
         if (customerData.roud === 2) {
           await fetchTimetableReturn();
@@ -888,7 +902,7 @@ const CustomerInfo = ({ navigation }) => {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
-        
+
         {/* Premium Gradient Background */}
         <LinearGradient
           colors={['#001233', '#002A5C', '#FD501E']}
@@ -1064,7 +1078,7 @@ const CustomerInfo = ({ navigation }) => {
               paddingHorizontal: wp('6%'),
             }}>
               {/* Skeleton for form cards */}
-              {[1,2,3].map((_, index) => (
+              {[1, 2, 3].map((_, index) => (
                 <View key={index} style={{
                   backgroundColor: 'rgba(255,255,255,0.95)',
                   borderRadius: wp('5%'),
@@ -1084,7 +1098,7 @@ const CustomerInfo = ({ navigation }) => {
                     borderRadius: wp('2%'),
                     marginBottom: hp('2%'),
                   }} />
-                  {[1,2,3,4].map((_,i) => (
+                  {[1, 2, 3, 4].map((_, i) => (
                     <View key={i} style={{
                       width: '100%',
                       height: hp('6%'),
@@ -1103,7 +1117,7 @@ const CustomerInfo = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView 
+    <SafeAreaView
       style={[
         { flex: 1 },
         Platform.OS === 'android' && Platform.Version >= 31 && {
@@ -1111,8 +1125,8 @@ const CustomerInfo = ({ navigation }) => {
         }
       ]}
     >
-      <StatusBar 
-        barStyle="light-content" 
+      <StatusBar
+        barStyle="light-content"
         backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#001233"}
         translucent={true}
       />
@@ -1246,8 +1260,8 @@ const CustomerInfo = ({ navigation }) => {
         >
           <ScrollView
             contentContainerStyle={[
-              styles.container, 
-              { 
+              styles.container,
+              {
                 paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%') // Android 15 Edge-to-Edge รองรับ
               }
             ]}
@@ -1555,8 +1569,8 @@ const CustomerInfo = ({ navigation }) => {
                         <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
                         <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                          {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
-                          <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                          {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
+                          <AntDesign name="arrowright" size={14} color="#FD501E" />
                           {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                         </Text>
                         <View style={styles.rowpromo}>
@@ -1643,8 +1657,8 @@ const CustomerInfo = ({ navigation }) => {
                           <View key={index}>
                             <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                             <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                              {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai} 
-                              <AntDesign name="arrowright" size={14} color="#FD501E" /> 
+                              {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
+                              <AntDesign name="arrowright" size={14} color="#FD501E" />
                               {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                             </Text>
                             <View style={styles.rowpromo}>

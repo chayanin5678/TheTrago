@@ -1,6 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, SafeAreaView, Platform, Linking } from 'react-native';
+
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, useWindowDimensions, ActivityIndicator, Modal, Animated, TouchableWithoutFeedback, TextInput, StatusBar, Platform, Linking } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Banner from '../components/component/Banner';
@@ -21,7 +24,6 @@ import CrossPlatformStatusBar from '../components/component/CrossPlatformStatusB
 import SafeAreaDebugger from '../components/component/SafeAreaDebugger';
 import { DesignTokens, CrossPlatformUtils } from '../styles/CSS/CrossPlatformStyles';
 import { useLanguage } from './Screen/LanguageContext';
-import {  useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HomeScreen = ({ navigation, route }) => {
   const { language, t, selectedLanguage, changeLanguage } = useLanguage();
@@ -314,11 +316,11 @@ const HomeScreen = ({ navigation, route }) => {
           ...options,
           timeout: 10000, // 10 second timeout
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         return await response.json();
       } catch (error) {
         console.log(`Attempt ${i + 1} failed:`, error.message);
@@ -588,7 +590,7 @@ const HomeScreen = ({ navigation, route }) => {
             Lastname: data.data[0].md_member_lname,
             email: data.data[0].md_member_email,
             tel: data.data[0].md_member_phone,
-            md_booking_memberid : data.data[0].md_member_id,       
+            md_booking_memberid: data.data[0].md_member_id,
 
           });
 
@@ -612,7 +614,7 @@ const HomeScreen = ({ navigation, route }) => {
         setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
       }
     };
-    
+
     if (token) {
       fetchData();
     } else {
@@ -639,7 +641,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 
       if (response.ok) {
-       
+
         updateCustomerData({
           selectcoountrycode: `(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`,
           country: json.data[0].sys_countries_code,
@@ -673,7 +675,7 @@ const HomeScreen = ({ navigation, route }) => {
 
         if (response.ok) {
           setPoppularAttraction(json.data);
-         
+
           return json.data;
         } else {
           console.warn('Not found or error:', json.message);
@@ -703,9 +705,9 @@ const HomeScreen = ({ navigation, route }) => {
 
 
         if (response.ok) {
-   
+
           setPoppularRoute(json.data);
-       
+
           return json.data;
         } else {
           console.warn('Not found or error:', json.message);
@@ -763,7 +765,7 @@ const HomeScreen = ({ navigation, route }) => {
     }
 
     setIsSearching(true);
-    
+
     // Use local search directly
     try {
       performLocalSearch(query);
@@ -780,17 +782,17 @@ const HomeScreen = ({ navigation, route }) => {
   const performLocalSearch = (query) => {
     const lowercaseQuery = query.toLowerCase();
     const results = [];
-    
+
     // Thai-English destination mapping
     const thaiDestinations = {
       'กรุงเทพ': 'Bangkok',
-      'กรุงเทพฯ': 'Bangkok',  
+      'กรุงเทพฯ': 'Bangkok',
       'bangkok': 'กรุงเทพฯ',
       'พัทยา': 'Pattaya',
       'pattaya': 'พัทยา',
       'เกาะช้าง': 'Koh Chang',
       'koh chang': 'เกาะช้าง',
-      'เกาะสมุย': 'Koh Samui', 
+      'เกาะสมุย': 'Koh Samui',
       'koh samui': 'เกาะสมุย',
       'ภูเก็ต': 'Phuket',
       'phuket': 'ภูเก็ต',
@@ -798,7 +800,7 @@ const HomeScreen = ({ navigation, route }) => {
       'chiang mai': 'เชียงใหม่',
       'หัวหิน': 'Hua Hin',
       'hua hin': 'หัวหิน',
-      'กระบี่': 'Krabi', 
+      'กระบี่': 'Krabi',
       'krabi': 'กระบี่',
       'เกาะพีพี': 'Phi Phi Island',
       'phi phi': 'เกาะพีพี',
@@ -816,18 +818,18 @@ const HomeScreen = ({ navigation, route }) => {
 
     // Detect input language (Thai or English)
     const isThaiInput = /[\u0E00-\u0E7F]/.test(query);
-    
+
     // Search in Thai-English destinations
     Object.keys(thaiDestinations).forEach(key => {
       if (key.includes(lowercaseQuery)) {
         const isEnglish = /[a-zA-Z]/.test(key);
         const thaiName = isEnglish ? thaiDestinations[key] : key;
         const englishName = isEnglish ? key : thaiDestinations[key];
-        
+
         // Show result in the same language as input
         const displayName = isThaiInput ? thaiName : englishName;
         const altName = isThaiInput ? englishName : thaiName;
-        
+
         results.push({
           id: `destination-${key}`,
           name: displayName,
@@ -836,9 +838,9 @@ const HomeScreen = ({ navigation, route }) => {
         });
       }
     });
-    
+
     // Search in countries
-    const countryResults = countrie.filter(country => 
+    const countryResults = countrie.filter(country =>
       country.sys_countries_nameeng.toLowerCase().includes(lowercaseQuery) ||
       country.sys_countries_namethai?.toLowerCase().includes(lowercaseQuery)
     ).map(country => ({
@@ -849,7 +851,7 @@ const HomeScreen = ({ navigation, route }) => {
     }));
 
     // Search in popular routes (if available)
-    const routeResults = poppularroute.filter(route => 
+    const routeResults = poppularroute.filter(route =>
       route.starteng?.toLowerCase().includes(lowercaseQuery) ||
       route.endeng?.toLowerCase().includes(lowercaseQuery) ||
       route.startth?.toLowerCase().includes(lowercaseQuery) ||
@@ -862,12 +864,12 @@ const HomeScreen = ({ navigation, route }) => {
     }));
 
     const allResults = [...results, ...countryResults, ...routeResults];
-    
+
     // Remove duplicates and limit results
-    const uniqueResults = allResults.filter((result, index, self) => 
+    const uniqueResults = allResults.filter((result, index, self) =>
       index === self.findIndex((r) => r.name === result.name)
     ).slice(0, 10);
-    
+
     setSearchResults(uniqueResults);
     setShowSearchResults(uniqueResults.length > 0);
   };
@@ -882,159 +884,165 @@ const HomeScreen = ({ navigation, route }) => {
   }, [searchText]);
 
   return (
-        <>
-      <View style={[premiumStyles.container, { backgroundColor: '#FD501E' }]}>
-      
-      {/* Background with Elegant Gradient */}
-      <View style={[premiumStyles.backgroundContainer, , { minHeight: hp('10%') }]}>
-        {/* Subtle Floating Particles */}
-        <View style={premiumStyles.particlesContainer}>
-          {[...Array(8)].map((_, i) => (
-            <Animated.View
-              key={`particle-${i}`}
-              style={[
-                premiumStyles.particle,
-                {
-                  left: `${15 + (i * 12)}%`,
-                  top: `${10 + (i * 8)}%`,
-                  transform: [
-                    {
-                      translateY: floatingAnims[i % floatingAnims.length].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 15],
-                      }),
-                    },
-                    {
-                      scale: floatingAnims[i % floatingAnims.length].interpolate({
-                        inputRange: [0, 0.5, 1],
-                        outputRange: [0.7, 1, 0.7],
-                      }),
-                    },
-                  ],
-                  opacity: floatingAnims[i % floatingAnims.length].interpolate({
-                    inputRange: [0, 0.5, 1],
-                    outputRange: [0.2, 0.4, 0.2],
-                  }),
-                },
-              ]}
-            />
-          ))}
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FD501E' }}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <View style={[premiumStyles.container, { flex: 1 }]}>
 
-        {/* Minimalist Decorative Elements */}
-        <View style={premiumStyles.geometricShapes}>
-          <Animated.View style={[premiumStyles.shape1, {
-            transform: [{
-              rotate: bounceAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '180deg'],
-              })
-            }]
-          }]}>
-            <MaterialIcons name="waves" size={wp('6%')} color="rgba(255,255,255,0.15)" />
-          </Animated.View>
-          
-          <Animated.View style={[premiumStyles.shape2, {
-            transform: [{
-              scale: bounceAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.9, 1.1],
-              })
-            }]
-          }]}>
-            <FontAwesome5 name="anchor" size={wp('4.5%')} color="rgba(255,255,255,0.12)" />
-          </Animated.View>
-        </View>
-      </View>
+        {/* Background with Elegant Gradient */}
+        <View style={[premiumStyles.backgroundContainer, { minHeight: hp('10%') }, { paddingTop: insets.top }]}>
+          {/* Subtle Floating Particles */}
+          <View style={premiumStyles.particlesContainer}>
+            {[...Array(8)].map((_, i) => (
+              <Animated.View
+                key={`particle-${i}`}
+                style={[
+                  premiumStyles.particle,
+                  {
+                    left: `${15 + (i * 12)}%`,
+                    top: `${10 + (i * 8)}%`,
+                    transform: [
+                      {
+                        translateY: floatingAnims[i % floatingAnims.length].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 15],
+                        }),
+                      },
+                      {
+                        scale: floatingAnims[i % floatingAnims.length].interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [0.7, 1, 0.7],
+                        }),
+                      },
+                    ],
+                    opacity: floatingAnims[i % floatingAnims.length].interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0.2, 0.4, 0.2],
+                    }),
+                  },
+                ]}
+              />
+            ))}
+          </View>
 
-      {isLoading && (
-        <View style={premiumStyles.loadingContainer}>
-          <BlurView intensity={100} tint="dark" style={premiumStyles.loadingBlur}>
-            <View style={premiumStyles.loadingContent}>
-              <Animated.View style={[premiumStyles.loadingSpinner, {
-                transform: [{ rotate: bounceAnim.interpolate({
+          {/* Minimalist Decorative Elements */}
+          <View style={premiumStyles.geometricShapes}>
+            <Animated.View style={[premiumStyles.shape1, {
+              transform: [{
+                rotate: bounceAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: ['0deg', '360deg'],
-                })}]
-              }]}>
-                <LinearGradient
-                  colors={['#FD501E', '#FF6B35']}
-                  style={premiumStyles.loadingGradient}
-                >
-                  <MaterialIcons name="directions-boat" size={wp('10%')} color="#fff" />
-                </LinearGradient>
-              </Animated.View>
-              <Text style={premiumStyles.loadingText}>Loading...</Text>
-              <Text style={premiumStyles.loadingSubtext}>Please wait a moment</Text>
-            </View>
-          </BlurView>
+                  outputRange: ['0deg', '180deg'],
+                })
+              }]
+            }]}>
+              <MaterialIcons name="waves" size={wp('6%')} color="rgba(255,255,255,0.15)" />
+            </Animated.View>
+
+            <Animated.View style={[premiumStyles.shape2, {
+              transform: [{
+                scale: bounceAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.9, 1.1],
+                })
+              }]
+            }]}>
+              <FontAwesome5 name="anchor" size={wp('4.5%')} color="rgba(255,255,255,0.12)" />
+            </Animated.View>
+          </View>
         </View>
-      )}
 
-      <ScrollView 
-        contentContainerStyle={premiumStyles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-      >
-
-        {/* Refined Header Section with Better Spacing */}
-        <View style={premiumStyles.headerSection}>
-          <BlurView intensity={60} tint="light" style={premiumStyles.headerBlur}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.88)']}
-              style={premiumStyles.headerGradient}
-            >
-              {/* Header Content */}
-              <View style={premiumStyles.headerContent}>
-                {/* Empty left space for balance */}
-           
-                
-                {/* Centered Logo */}
-                <View style={premiumStyles.logoContainer}>
-                  <Animated.View style={[premiumStyles.logoWrapper, {
-                    transform: [{ scale: scaleAnim }]
-                  }]}>
-                    <LogoTheTrago />
-                  </Animated.View>
-                </View>
-
-                {/* Language Toggle Text Only */}
-                <View style={premiumStyles.headerActionsRight}>
-                  <TouchableOpacity 
-                    onPress={() => {
-                      const newLanguage = selectedLanguage === 'th' ? 'en' : 'th';
-                      console.log('Toggling language from', selectedLanguage, 'to', newLanguage);
-                      changeLanguage(newLanguage);
-                    }}
+        {isLoading && (
+          <View style={premiumStyles.loadingContainer}>
+            <BlurView intensity={100} tint="dark" style={premiumStyles.loadingBlur}>
+              <View style={premiumStyles.loadingContent}>
+                <Animated.View style={[premiumStyles.loadingSpinner, {
+                  transform: [{
+                    rotate: bounceAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    })
+                  }]
+                }]}>
+                  <LinearGradient
+                    colors={['#FD501E', '#FF6B35']}
+                    style={premiumStyles.loadingGradient}
                   >
-                    <Text style={{
-                      color: '#FD501E',
-                      fontSize: wp('4.5%'),
-                      fontWeight: 'bold',
-                    }}>
-                      {selectedLanguage === 'th' ? 'TH' : 'EN'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                    <MaterialIcons name="directions-boat" size={wp('10%')} color="#fff" />
+                  </LinearGradient>
+                </Animated.View>
+                <Text style={premiumStyles.loadingText}>Loading...</Text>
+                <Text style={premiumStyles.loadingSubtext}>Please wait a moment</Text>
               </View>
+            </BlurView>
+          </View>
+        )}
 
-              {/* Simplified Search Section */}
-              <View style={premiumStyles.searchSection}>
-                {isLoadingTitle ? (
-                  <View style={premiumStyles.searchSkeleton}>
-                    <Animated.View style={[premiumStyles.shimmerEffect, {
-                      transform: [{ translateX: shimmerAnim }],
+        <ScrollView
+          contentContainerStyle={[
+   premiumStyles.scrollContainer,
+   { paddingBottom: (premiumStyles?.scrollContainer?.paddingBottom || 0) + insets.bottom }
+ ]}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
+
+          {/* Refined Header Section with Better Spacing */}
+          <View style={[premiumStyles.headerSection]}>
+            <BlurView intensity={60} tint="light" style={premiumStyles.headerBlur}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.88)']}
+                style={premiumStyles.headerGradient}
+              >
+                {/* Header Content */}
+                <View style={premiumStyles.headerContent}>
+                  {/* Empty left space for balance */}
+
+
+                  {/* Centered Logo */}
+                  <View style={premiumStyles.logoContainer}>
+                    <Animated.View style={[premiumStyles.logoWrapper, {
+                      transform: [{ scale: scaleAnim }]
                     }]}>
-                      <LinearGradient
-                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                        start={[0, 0]}
-                        end={[1, 0]}
-                        style={premiumStyles.shimmerGradient}
-                      />
+                      <LogoTheTrago />
                     </Animated.View>
                   </View>
-                ) : (
-                
+
+                  {/* Language Toggle Text Only */}
+                  <View style={premiumStyles.headerActionsRight}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const newLanguage = selectedLanguage === 'th' ? 'en' : 'th';
+                        console.log('Toggling language from', selectedLanguage, 'to', newLanguage);
+                        changeLanguage(newLanguage);
+                      }}
+                    >
+                      <Text style={{
+                        color: '#FD501E',
+                        fontSize: wp('4.5%'),
+                        fontWeight: 'bold',
+                      }}>
+                        {selectedLanguage === 'th' ? 'TH' : 'EN'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Simplified Search Section */}
+                <View style={premiumStyles.searchSection}>
+                  {isLoadingTitle ? (
+                    <View style={premiumStyles.searchSkeleton}>
+                      <Animated.View style={[premiumStyles.shimmerEffect, {
+                        transform: [{ translateX: shimmerAnim }],
+                      }]}>
+                        <LinearGradient
+                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={premiumStyles.shimmerGradient}
+                        />
+                      </Animated.View>
+                    </View>
+                  ) : (
+
                     <BlurView intensity={30} tint="light" style={premiumStyles.searchContainer}>
                       <LinearGradient
                         colors={['rgba(253,80,30,0.08)', 'rgba(255,107,53,0.04)']}
@@ -1078,217 +1086,269 @@ const HomeScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                       </LinearGradient>
                     </BlurView>
-          
-                )}
-              </View>
-            </LinearGradient>
-          </BlurView>
-        </View>
-        
-        {/* Search Results */}
-        {showSearchResults && (
-          <View style={premiumStyles.searchResultsContainer}>
-            <BlurView intensity={20} tint="light" style={premiumStyles.searchResultsBlur}>
-              <Text style={premiumStyles.searchResultsTitle}>
-                {t('searchResults') || 'Search Results'} ({searchResults.length})
-              </Text>
-              {isSearching ? (
-                <View style={premiumStyles.searchLoadingContainer}>
-                  <ActivityIndicator size="small" color="#FD501E" />
-                  <Text style={premiumStyles.searchLoadingText}>
-                    {t('searching') || 'Searching...'}
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView 
-                  style={premiumStyles.searchResultsList}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {searchResults.map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={premiumStyles.searchResultItem}
-                      onPress={() => {
-                        // Check if it's a country result
-                        if (item.type === 'country' && item.id) {
-                          updateCustomerData({
-                            countrycode: item.id,
-                            country: item.name,
-                          });
-                          setSearchText('');
-                          setShowSearchResults(false);
-                          navigation.navigate('PopularDestination');
-                        } else {
-                          // For other types, use original logic
-                          updateCustomerData({
-                            startingPointId: '0',
-                            startingpoint_name: item.sys_countries_nameeng || item.name,
-                            endPointId: '0',
-                            endpoint_name: t('destination'),
-                          });
-                          setSearchText('');
-                          setShowSearchResults(false);
-                          navigation.navigate('SearchFerry');
-                        }
-                      }}
-                    >
-                      <MaterialIcons name="location-on" size={wp('4%')} color="#FD501E" />
-                      <Text style={premiumStyles.searchResultText}>
-                        {item.sys_countries_nameeng || item.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  {searchResults.length === 0 && !isSearching && (
-                    <Text style={premiumStyles.noResultsText}>
-                      {t('noResults') || 'No results found'}
-                    </Text>
-                  )}
-                </ScrollView>
-              )}
-            </BlurView>
-          </View>
-        )}
-        
-        {/* Enhanced Services Grid with Better Balance */}
-        <View style={premiumStyles.servicesSection}>
-          <Animated.View style={[premiumStyles.servicesContainer, {
-            opacity: iconAnim,
-            transform: [{
-              scale: iconAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.95, 1],
-              }),
-            }, {
-              translateY: iconAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 0],
-              }),
-            }],
-          }]}>
-            <BlurView intensity={70} tint="light" style={premiumStyles.servicesBlur}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.93)', 'rgba(255,250,246,0.90)']}
-                style={premiumStyles.servicesGradient}
-              >
-                {/* Refined Section Title */}
-                <View style={premiumStyles.servicesTitleContainer}>
-                  <Text style={premiumStyles.servicesTitle}>{t('ourServices')}</Text>
-                  <Text style={premiumStyles.servicesSubtitle}>{t('chooseYourPerfectJourney')}</Text>
-                </View>
 
-                {/* Improved Services Grid */}
-                <View style={premiumStyles.servicesGrid}>
-                  {(isLoadingTitle ? Array(8).fill(null) : data).map((item, index) => (
-                    <View key={item?.id || `skeleton-${index}`} style={premiumStyles.serviceItemContainer}>
-                      {isLoadingTitle ? (
-                        <View style={premiumStyles.serviceSkeleton}>
-                          <View style={premiumStyles.serviceSkeletonIcon}>
-                            <Animated.View style={[premiumStyles.shimmerEffect, {
-                              transform: [{ translateX: shimmerAnim }],
-                            }]}>
-                              <LinearGradient
-                                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                                start={[0, 0]}
-                                end={[1, 0]}
-                                style={premiumStyles.shimmerGradient}
-                              />
-                            </Animated.View>
-                          </View>
-                          <View style={premiumStyles.serviceSkeletonText}>
-                            <Animated.View style={[premiumStyles.shimmerEffect, {
-                              transform: [{ translateX: shimmerAnim }],
-                            }]}>
-                              <LinearGradient
-                                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                                start={[0, 0]}
-                                end={[1, 0]}
-                                style={premiumStyles.shimmerGradient}
-                              />
-                            </Animated.View>
-                          </View>
-                        </View>
-                      ) : (
-                        <TouchableOpacity
-                          style={[
-                            premiumStyles.serviceItem, 
-                            !item.available && { opacity: 0.5 }
-                          ]}
-                          disabled={!item.available}
-                          onPress={() => {
-                            if (!item.available) return;
-                            
-                            if (item.id === '1') {
-                              updateCustomerData({
-                                startingPointId: '0',
-                                startingpoint_name: t('startingPoint'),
-                                endPointId: '0',
-                                endpoint_name: t('destination'),
-                              });
-                            }
-                            if (item.navigate) {
-                              navigation.navigate(item.navigate);
-                            }
-                          }}
-                        >
-                          <BlurView intensity={40} style={premiumStyles.serviceItemBlur}>
-                            <LinearGradient
-                              colors={index % 2 === 0 
-                                ? ['rgba(253,80,30,0.06)', 'rgba(255,107,53,0.03)']
-                                : ['rgba(255,107,53,0.06)', 'rgba(253,80,30,0.03)']
-                              }
-                              style={premiumStyles.serviceItemGradient}
-                            >
-                              {item.item && (
-                                <Animated.View style={[premiumStyles.serviceBadge, {
-                                  transform: [{ translateY: bounceAnim.interpolate({
-                                    inputRange: [0, 0.25, 0.5, 0.75, 1],
-                                    outputRange: [-2, 0, 2, 0, -2],
-                                  })}],
-                                }]}>
-                                  <LinearGradient
-                                    colors={['#FF4444', '#FF6666']}
-                                    style={premiumStyles.badgeGradient}
-                                  >
-                                    <Text style={premiumStyles.badgeText}>{t(item.item)}</Text>
-                                  </LinearGradient>
-                                </Animated.View>
-                              )}
-                              
-                              <View style={premiumStyles.serviceIconContainer}>
-                                <Ionicons name={item.icon} size={wp('6.5%')} color="#FD501E" />
-                              </View>
-                              
-                              <Text style={premiumStyles.serviceItemText}>{item.title}</Text>
-                              
-                              {/* Subtle Hover Indicator */}
-                              <View style={premiumStyles.hoverIndicator} />
-                            </LinearGradient>
-                          </BlurView>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  ))}
+                  )}
                 </View>
               </LinearGradient>
             </BlurView>
-          </Animated.View>
-        </View>
+          </View>
+
+          {/* Search Results */}
+          {showSearchResults && (
+            <View style={premiumStyles.searchResultsContainer}>
+              <BlurView intensity={20} tint="light" style={premiumStyles.searchResultsBlur}>
+                <Text style={premiumStyles.searchResultsTitle}>
+                  {t('searchResults') || 'Search Results'} ({searchResults.length})
+                </Text>
+                {isSearching ? (
+                  <View style={premiumStyles.searchLoadingContainer}>
+                    <ActivityIndicator size="small" color="#FD501E" />
+                    <Text style={premiumStyles.searchLoadingText}>
+                      {t('searching') || 'Searching...'}
+                    </Text>
+                  </View>
+                ) : (
+                  <ScrollView
+                    style={premiumStyles.searchResultsList}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {searchResults.map((item, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={premiumStyles.searchResultItem}
+                        onPress={() => {
+                          // Check if it's a country result
+                          if (item.type === 'country' && item.id) {
+                            updateCustomerData({
+                              countrycode: item.id,
+                              country: item.name,
+                            });
+                            setSearchText('');
+                            setShowSearchResults(false);
+                            navigation.navigate('PopularDestination');
+                          } else {
+                            // For other types, use original logic
+                            updateCustomerData({
+                              startingPointId: '0',
+                              startingpoint_name: item.sys_countries_nameeng || item.name,
+                              endPointId: '0',
+                              endpoint_name: t('destination'),
+                            });
+                            setSearchText('');
+                            setShowSearchResults(false);
+                            navigation.navigate('SearchFerry');
+                          }
+                        }}
+                      >
+                        <MaterialIcons name="location-on" size={wp('4%')} color="#FD501E" />
+                        <Text style={premiumStyles.searchResultText}>
+                          {item.sys_countries_nameeng || item.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                    {searchResults.length === 0 && !isSearching && (
+                      <Text style={premiumStyles.noResultsText}>
+                        {t('noResults') || 'No results found'}
+                      </Text>
+                    )}
+                  </ScrollView>
+                )}
+              </BlurView>
+            </View>
+          )}
+
+          {/* Enhanced Services Grid with Better Balance */}
+          <View style={premiumStyles.servicesSection}>
+            <Animated.View style={[premiumStyles.servicesContainer, {
+              opacity: iconAnim,
+              transform: [{
+                scale: iconAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.95, 1],
+                }),
+              }, {
+                translateY: iconAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }],
+            }]}>
+              <BlurView intensity={70} tint="light" style={premiumStyles.servicesBlur}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.93)', 'rgba(255,250,246,0.90)']}
+                  style={premiumStyles.servicesGradient}
+                >
+                  {/* Refined Section Title */}
+                  <View style={premiumStyles.servicesTitleContainer}>
+                    <Text style={premiumStyles.servicesTitle}>{t('ourServices')}</Text>
+                    <Text style={premiumStyles.servicesSubtitle}>{t('chooseYourPerfectJourney')}</Text>
+                  </View>
+
+                  {/* Improved Services Grid */}
+                  <View style={premiumStyles.servicesGrid}>
+                    {(isLoadingTitle ? Array(8).fill(null) : data).map((item, index) => (
+                      <View key={item?.id || `skeleton-${index}`} style={premiumStyles.serviceItemContainer}>
+                        {isLoadingTitle ? (
+                          <View style={premiumStyles.serviceSkeleton}>
+                            <View style={premiumStyles.serviceSkeletonIcon}>
+                              <Animated.View style={[premiumStyles.shimmerEffect, {
+                                transform: [{ translateX: shimmerAnim }],
+                              }]}>
+                                <LinearGradient
+                                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                                  start={[0, 0]}
+                                  end={[1, 0]}
+                                  style={premiumStyles.shimmerGradient}
+                                />
+                              </Animated.View>
+                            </View>
+                            <View style={premiumStyles.serviceSkeletonText}>
+                              <Animated.View style={[premiumStyles.shimmerEffect, {
+                                transform: [{ translateX: shimmerAnim }],
+                              }]}>
+                                <LinearGradient
+                                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                                  start={[0, 0]}
+                                  end={[1, 0]}
+                                  style={premiumStyles.shimmerGradient}
+                                />
+                              </Animated.View>
+                            </View>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={[
+                              premiumStyles.serviceItem,
+                              !item.available && { opacity: 0.5 }
+                            ]}
+                            disabled={!item.available}
+                            onPress={() => {
+                              if (!item.available) return;
+
+                              if (item.id === '1') {
+                                updateCustomerData({
+                                  startingPointId: '0',
+                                  startingpoint_name: t('startingPoint'),
+                                  endPointId: '0',
+                                  endpoint_name: t('destination'),
+                                });
+                              }
+                              if (item.navigate) {
+                                navigation.navigate(item.navigate);
+                              }
+                            }}
+                          >
+                            <BlurView intensity={40} style={premiumStyles.serviceItemBlur}>
+                              <LinearGradient
+                                colors={index % 2 === 0
+                                  ? ['rgba(253,80,30,0.06)', 'rgba(255,107,53,0.03)']
+                                  : ['rgba(255,107,53,0.06)', 'rgba(253,80,30,0.03)']
+                                }
+                                style={premiumStyles.serviceItemGradient}
+                              >
+                                {item.item && (
+                                  <Animated.View style={[premiumStyles.serviceBadge, {
+                                    transform: [{
+                                      translateY: bounceAnim.interpolate({
+                                        inputRange: [0, 0.25, 0.5, 0.75, 1],
+                                        outputRange: [-2, 0, 2, 0, -2],
+                                      })
+                                    }],
+                                  }]}>
+                                    <LinearGradient
+                                      colors={['#FF4444', '#FF6666']}
+                                      style={premiumStyles.badgeGradient}
+                                    >
+                                      <Text style={premiumStyles.badgeText}>{t(item.item)}</Text>
+                                    </LinearGradient>
+                                  </Animated.View>
+                                )}
+
+                                <View style={premiumStyles.serviceIconContainer}>
+                                  <Ionicons name={item.icon} size={wp('6.5%')} color="#FD501E" />
+                                </View>
+
+                                <Text style={premiumStyles.serviceItemText}>{item.title}</Text>
+
+                                {/* Subtle Hover Indicator */}
+                                <View style={premiumStyles.hoverIndicator} />
+                              </LinearGradient>
+                            </BlurView>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                </LinearGradient>
+              </BlurView>
+            </Animated.View>
+          </View>
 
 
 
 
-        {/* Refined Hot Deals Section */}
-        <View style={premiumStyles.hotDealsSection}>
-          <Animated.View style={[premiumStyles.hotDealsContainer, {
-            transform: [{ 
-              translateX: bounceAnim.interpolate({
-                inputRange: [0, 0.25, 0.5, 0.75, 1],
-                outputRange: [-3, 0, 5, 0, -3],
-              })
-            }],
-          }]}>
+          {/* Refined Hot Deals Section */}
+          <View style={premiumStyles.hotDealsSection}>
+            <Animated.View style={[premiumStyles.hotDealsContainer, {
+              transform: [{
+                translateX: bounceAnim.interpolate({
+                  inputRange: [0, 0.25, 0.5, 0.75, 1],
+                  outputRange: [-3, 0, 5, 0, -3],
+                })
+              }],
+            }]}>
+              {isLoadingTitle ? (
+                <View style={premiumStyles.hotDealsSkeleton}>
+                  <Animated.View style={[premiumStyles.shimmerEffect, {
+                    transform: [{ translateX: shimmerAnim }],
+                  }]}>
+                    <LinearGradient
+                      colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                      start={[0, 0]}
+                      end={[1, 0]}
+                      style={premiumStyles.shimmerGradient}
+                    />
+                  </Animated.View>
+                </View>
+              ) : (
+                <BlurView intensity={50} tint="light" style={premiumStyles.hotDealsBlur}>
+                  <LinearGradient
+                    colors={['rgba(253,80,30,0.92)', 'rgba(255,107,53,0.88)', 'rgba(255,140,80,0.82)']}
+                    style={premiumStyles.hotDealsGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <View style={premiumStyles.hotDealsContent}>
+                      <MaterialIcons name="local-fire-department" size={wp('6%')} color="#fff" />
+                      <View style={premiumStyles.hotDealsTextContainer}>
+                        <Text style={premiumStyles.hotDealsTitle}>
+                          {t('hot')} <Text style={premiumStyles.hotDealsAccent}>{t('deals')}</Text>
+                        </Text>
+                        <Text style={premiumStyles.hotDealsSubtitle}>{t('limitedTimeOffers')}</Text>
+                      </View>
+                    </View>
+
+                    {/* Minimal Floating Elements */}
+                    <Animated.View style={[premiumStyles.floatingElement1, {
+                      transform: [{
+                        rotate: bounceAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '180deg'],
+                        })
+                      }]
+                    }]}>
+                      <MaterialIcons name="star" size={wp('3.5%')} color="rgba(255,255,255,0.25)" />
+                    </Animated.View>
+                  </LinearGradient>
+                </BlurView>
+              )}
+            </Animated.View>
+          </View>
+
+          {/* Banner Section with Header-matching Style */}
+          <View style={premiumStyles.bannerSection}>
             {isLoadingTitle ? (
-              <View style={premiumStyles.hotDealsSkeleton}>
+              <View style={premiumStyles.bannerSkeleton}>
                 <Animated.View style={[premiumStyles.shimmerEffect, {
                   transform: [{ translateX: shimmerAnim }],
                 }]}>
@@ -1301,707 +1361,268 @@ const HomeScreen = ({ navigation, route }) => {
                 </Animated.View>
               </View>
             ) : (
-              <BlurView intensity={50} tint="light" style={premiumStyles.hotDealsBlur}>
-                <LinearGradient
-                  colors={['rgba(253,80,30,0.92)', 'rgba(255,107,53,0.88)', 'rgba(255,140,80,0.82)']}
-                  style={premiumStyles.hotDealsGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <View style={premiumStyles.hotDealsContent}>
-                    <MaterialIcons name="local-fire-department" size={wp('6%')} color="#fff" />
-                    <View style={premiumStyles.hotDealsTextContainer}>
-                      <Text style={premiumStyles.hotDealsTitle}>
-                        {t('hot')} <Text style={premiumStyles.hotDealsAccent}>{t('deals')}</Text>
-                      </Text>
-                      <Text style={premiumStyles.hotDealsSubtitle}>{t('limitedTimeOffers')}</Text>
+              <View style={premiumStyles.bannerContainer}>
+                <BlurView intensity={60} tint="light" style={premiumStyles.bannerBlur}>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.88)', 'rgba(255,250,246,0.85)']}
+                    style={premiumStyles.bannerGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={premiumStyles.bannerContentWrapper}>
+                      <Banner />
                     </View>
-                  </View>
-                  
-                  {/* Minimal Floating Elements */}
-                  <Animated.View style={[premiumStyles.floatingElement1, {
-                    transform: [{
-                      rotate: bounceAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      })
-                    }]
-                  }]}>
-                    <MaterialIcons name="star" size={wp('3.5%')} color="rgba(255,255,255,0.25)" />
-                  </Animated.View>
-                </LinearGradient>
-              </BlurView>
-            )}
-          </Animated.View>
-        </View>
 
-        {/* Banner Section with Header-matching Style */}
-        <View style={premiumStyles.bannerSection}>
+                    {/* Floating Decorative Elements */}
+                    <View style={premiumStyles.bannerOverlay}>
+                      <Animated.View style={[premiumStyles.bannerBadge, {
+                        transform: [{
+                          translateY: bounceAnim2.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, -2],
+                          })
+                        }]
+                      }]}>
+                        <LinearGradient
+                          colors={['#FFD700', '#FF8C42']}
+                          style={premiumStyles.badgeGradient}
+                        >
+                          <MaterialIcons name="verified" size={wp('3.5%')} color="#fff" />
+                          <Text style={premiumStyles.bannerBadgeText}>{t('featured')}</Text>
+                        </LinearGradient>
+                      </Animated.View>
+                    </View>
+                  </LinearGradient>
+                </BlurView>
+              </View>
+            )}
+          </View>
+
+
+
+
+
           {isLoadingTitle ? (
-            <View style={premiumStyles.bannerSkeleton}>
-              <Animated.View style={[premiumStyles.shimmerEffect, {
-                transform: [{ translateX: shimmerAnim }],
-              }]}>
+            <View
+              style={{
+                height: hp('4.5%'),
+                width: wp('37.5%'),
+                borderRadius: wp('6.25%'),
+                marginTop: hp('1.5%'),
+                marginBottom: hp('1.5%'),
+                marginLeft: 0,
+                overflow: 'hidden',
+                backgroundColor: '#eee',
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Animated.View
+                style={{
+                  width: wp('25%'),
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
                 <LinearGradient
                   colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
                   start={[0, 0]}
                   end={[1, 0]}
-                  style={premiumStyles.shimmerGradient}
+                  style={{ width: '100%', height: '100%' }}
                 />
               </Animated.View>
             </View>
           ) : (
-            <View style={premiumStyles.bannerContainer}>
-              <BlurView intensity={60} tint="light" style={premiumStyles.bannerBlur}>
+            <View style={premiumStyles.sectionTitleContainer}>
+              <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
                 <LinearGradient
-                  colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.88)', 'rgba(255,250,246,0.85)']}
-                  style={premiumStyles.bannerGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
+                  style={premiumStyles.sectionTitleGradient}
                 >
-                  <View style={premiumStyles.bannerContentWrapper}>
-                    <Banner />
-                  </View>
-                  
-                  {/* Floating Decorative Elements */}
-                  <View style={premiumStyles.bannerOverlay}>
-                    <Animated.View style={[premiumStyles.bannerBadge, {
-                      transform: [{ translateY: bounceAnim2.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -2],
-                      })}]
-                    }]}>
-                      <LinearGradient
-                        colors={['#FFD700', '#FF8C42']}
-                        style={premiumStyles.badgeGradient}
-                      >
-                        <MaterialIcons name="verified" size={wp('3.5%')} color="#fff" />
-                        <Text style={premiumStyles.bannerBadgeText}>{t('featured')}</Text>
-                      </LinearGradient>
-                    </Animated.View>
-                  </View>
+                  <Text style={premiumStyles.sectionTitle}>
+                    {t('destination')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
+                  </Text>
+                  <Text style={premiumStyles.sectionSubtitle}>{t('discoverAmazingPlaces')}</Text>
                 </LinearGradient>
               </BlurView>
             </View>
           )}
-        </View>
 
+          <View style={premiumStyles.destinationsGrid}>
+            {countrie.map((item, index) => {
+              const isLoaded = loadedIndexes.includes(index);
 
-
-
-
-        {isLoadingTitle ? (
-          <View
-            style={{
-              height: hp('4.5%'),
-              width: wp('37.5%'),
-              borderRadius: wp('6.25%'),
-              marginTop: hp('1.5%'),
-              marginBottom: hp('1.5%'),
-              marginLeft: 0,
-              overflow: 'hidden',
-              backgroundColor: '#eee',
-              alignSelf: 'flex-start',
-            }}
-          >
-            <Animated.View
-              style={{
-                width: wp('25%'),
-                height: '100%',
-                transform: [{ translateX: shimmerAnim }],
-              }}
-            >
-              <LinearGradient
-                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                start={[0, 0]}
-                end={[1, 0]}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </Animated.View>
-          </View>
-        ) : (
-          <View style={premiumStyles.sectionTitleContainer}>
-            <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
-                style={premiumStyles.sectionTitleGradient}
-              >
-                <Text style={premiumStyles.sectionTitle}>
-                  {t('destination')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
-                </Text>
-                <Text style={premiumStyles.sectionSubtitle}>{t('discoverAmazingPlaces')}</Text>
-              </LinearGradient>
-            </BlurView>
-          </View>
-        )}
-
-        <View style={premiumStyles.destinationsGrid}>
-          {countrie.map((item, index) => {
-            const isLoaded = loadedIndexes.includes(index);
-
-            return (
-              <View
-                key={item.sys_countries_id}
-                style={premiumStyles.destinationCard}
-              >
-                <TouchableOpacity
-                  style={premiumStyles.destinationTouchable}
-                  onPress={() => {
-                    const countryName = selectedLanguage === 'th' ? (item.sys_countries_namethai || item.sys_countries_nameeng) : item.sys_countries_nameeng;
-                    updateCustomerData({
-                      countrycode: item.sys_countries_id,
-                      country: countryName,
-                    });
-                    navigation.navigate('PopularDestination');
-                  }}
-                >
-                  <BlurView intensity={20} tint="light" style={premiumStyles.destinationBlur}>
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.95)', 'rgba(255,250,246,0.90)']}
-                      style={premiumStyles.destinationGradient}
-                    >
-                      <View style={premiumStyles.destinationImageContainer}>
-                        {!isLoaded && (
-                          <Animated.View style={premiumStyles.destinationImageSkeleton}>
-                            <Animated.View
-                              style={[premiumStyles.shimmerEffect, {
-                                transform: [{ translateX: shimmerAnim }],
-                              }]}
-                            >
-                              <LinearGradient
-                                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                                start={[0, 0]}
-                                end={[1, 0]}
-                                style={premiumStyles.shimmerGradient}
-                              />
-                            </Animated.View>
-                          </Animated.View>
-                        )}
-                        <Image
-                          source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
-                          style={premiumStyles.destinationImage}
-                          resizeMode="cover"
-                          onLoadEnd={() => setLoadedIndexes((prev) => [...prev, index])}
-                        />
-                        
-                        {/* Premium Overlay */}
-                        <LinearGradient
-                          colors={['transparent', 'rgba(0,0,0,0.4)']}
-                          style={premiumStyles.destinationOverlay}
-                        />
-                      </View>
-                      
-                      <View style={premiumStyles.destinationContent}>
-                        {!isLoaded ? (
-                          <Animated.View style={premiumStyles.destinationTextSkeleton}>
-                            <Animated.View
-                              style={[premiumStyles.shimmerEffect, {
-                                transform: [{ translateX: shimmerAnim }],
-                              }]}
-                            >
-                              <LinearGradient
-                                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                                start={[0, 0]}
-                                end={[1, 0]}
-                                style={premiumStyles.shimmerGradient}
-                              />
-                            </Animated.View>
-                          </Animated.View>
-                        ) : (
-                          <>
-                            <Text style={premiumStyles.destinationName}>
-                              {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
-                            </Text>
-                            <View style={premiumStyles.destinationMeta}>
-                              <MaterialIcons name="place" size={wp('3.5%')} color="#FD501E" />
-                              <Text style={premiumStyles.destinationMetaText}>
-                                {t('exploreNow')}
-                              </Text>
-                            </View>
-                          </>
-                        )}
-                      </View>
-                      
-                      {/* Hover Indicator */}
-                      <View style={premiumStyles.destinationIndicator} />
-                    </LinearGradient>
-                  </BlurView>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </View>
-
-
-        <View style={{
-          paddingBottom: hp('2%'),
-        }}>
-       
-
-               {isLoadingTitle ? (
-          <View
-            style={{
-              height: hp('4.5%'),
-              width: wp('37.5%'),
-              borderRadius: wp('6.25%'),
-              marginTop: hp('1.5%'),
-              marginBottom: hp('1.5%'),
-              marginLeft: 0,
-              overflow: 'hidden',
-              backgroundColor: '#eee',
-              alignSelf: 'flex-start',
-            }}
-          >
-            <Animated.View
-              style={{
-                width: wp('25%'),
-                height: '100%',
-                transform: [{ translateX: shimmerAnim }],
-              }}
-            >
-              <LinearGradient
-                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                start={[0, 0]}
-                end={[1, 0]}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </Animated.View>
-          </View>
-        ) : (
-          <View style={[premiumStyles.sectionTitleContainer, { marginTop: 0, marginBottom: hp('1%') }]}>
-            <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
-                style={[premiumStyles.sectionTitleGradient, { paddingVertical: wp('2.5%') }]}
-              >
-                <Text style={[premiumStyles.sectionTitle, { fontSize: wp('5%'), marginBottom: 0 }]}>
-                  {t('route')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
-                </Text>
-                <Text style={premiumStyles.sectionSubtitle}>{t('discoverMostTraveledRoutes')}</Text>
-              </LinearGradient>
-            </BlurView>
-          </View>
-
-        )}
-
-         
-       
-
-          <View style={[styles.tabContainer, { marginTop: hp('0.5%') }]}>
-            <View style={styles.tabContainer}>
-              {countrie.map((item) => (
-                <TouchableOpacity
-                  key={item.sys_countries_id}
-                  style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]}
-                  onPress={() => {
-                    setActiveCountry(item.sys_countries_id);
-                    setVisibleRoutes(6);
-                  }}
-                >
-                  <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
-                    {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={premiumStyles.routesGrid}>
-            {isLoadingTitle
-              ? Array(6).fill(null).map((_, index) => (
-                <View key={`route-skeleton-${index}`} style={premiumStyles.routeCard}>
-                  <View style={[premiumStyles.routeImageSkeleton, { height: hp('12%') }]}>
-                    <Animated.View style={[premiumStyles.shimmerEffect, {
-                      transform: [{ translateX: shimmerAnim }],
-                    }]}>
-                      <LinearGradient
-                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                        start={[0, 0]}
-                        end={[1, 0]}
-                        style={premiumStyles.shimmerGradient}
-                      />
-                    </Animated.View>
-                  </View>
-                  <View style={[premiumStyles.routeTextSkeleton, { flex: 1, margin: wp('2.5%') }]}>
-                    <Animated.View style={[premiumStyles.shimmerEffect, {
-                      transform: [{ translateX: shimmerAnim }],
-                    }]}>
-                      <LinearGradient
-                        colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                        start={[0, 0]}
-                        end={[1, 0]}
-                        style={premiumStyles.shimmerGradient}
-                      />
-                    </Animated.View>
-                  </View>
-                </View>
-              ))
-              : poppularroute.slice(0, visibleRoutes).map((item, index) => (
+              return (
                 <View
-                  key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
-                  style={[
-                    premiumStyles.routeCard,
-                    // Remove right margin for every 3rd card (0, 3, 6, 9...)
-                    (index + 1) % 3 === 0 && { marginRight: 0 }
-                  ]}
+                  key={item.sys_countries_id}
+                  style={premiumStyles.destinationCard}
                 >
                   <TouchableOpacity
-                    style={premiumStyles.routeTouchable}
+                    style={premiumStyles.destinationTouchable}
                     onPress={() => {
+                      const countryName = selectedLanguage === 'th' ? (item.sys_countries_namethai || item.sys_countries_nameeng) : item.sys_countries_nameeng;
                       updateCustomerData({
-                        startingPointId: item.md_timetable_startid,
-                        startingpoint_name: language === 'th' ? item.start_location_namethai : item.start_location_nameeng,
-                        endPointId: item.md_timetable_endid,
-                        endpoint_name: language === 'th' ? item.end_location_namethai : item.end_location_nameeng,
+                        countrycode: item.sys_countries_id,
+                        country: countryName,
                       });
-                      navigation.navigate('SearchFerry');
+                      navigation.navigate('PopularDestination');
                     }}
                   >
-                    <BlurView intensity={20} tint="light" style={premiumStyles.routeBlur}>
+                    <BlurView intensity={20} tint="light" style={premiumStyles.destinationBlur}>
                       <LinearGradient
                         colors={['rgba(255,255,255,0.95)', 'rgba(255,250,246,0.90)']}
-                        style={premiumStyles.routeGradient}
+                        style={premiumStyles.destinationGradient}
                       >
-                        <View style={premiumStyles.routeImageContainer}>
-                          <Image
-                            source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                            style={premiumStyles.routeImage}
-                            resizeMode="cover"
-                          />
-                          
-                          {/* Premium Image Overlay */}
-                          <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.3)']}
-                            style={premiumStyles.routeImageOverlay}
-                          />
-                          
-                          {/* Hot Route Badge */}
-                          {index < 2 && (
-                            <Animated.View style={[premiumStyles.hotRouteBadge, {
-                              transform: [{ translateY: bounceAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -2],
-                              })}],
-                            }]}>
-                              <LinearGradient
-                                colors={['#FF4444', '#FF6666']}
-                                style={premiumStyles.hotRouteBadgeGradient}
+                        <View style={premiumStyles.destinationImageContainer}>
+                          {!isLoaded && (
+                            <Animated.View style={premiumStyles.destinationImageSkeleton}>
+                              <Animated.View
+                                style={[premiumStyles.shimmerEffect, {
+                                  transform: [{ translateX: shimmerAnim }],
+                                }]}
                               >
-                                <MaterialIcons name="local-fire-department" size={wp('2.5%')} color="#fff" />
-                                <Text style={premiumStyles.hotRouteBadgeText}>{t('hotRoute')}</Text>
-                              </LinearGradient>
+                                <LinearGradient
+                                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                                  start={[0, 0]}
+                                  end={[1, 0]}
+                                  style={premiumStyles.shimmerGradient}
+                                />
+                              </Animated.View>
                             </Animated.View>
                           )}
+                          <Image
+                            source={{ uri: `https://www.thetrago.com/Api/uploads/countries/index/${item.sys_countries_picname}` }}
+                            style={premiumStyles.destinationImage}
+                            resizeMode="cover"
+                            onLoadEnd={() => setLoadedIndexes((prev) => [...prev, index])}
+                          />
+
+                          {/* Premium Overlay */}
+                          <LinearGradient
+                            colors={['transparent', 'rgba(0,0,0,0.4)']}
+                            style={premiumStyles.destinationOverlay}
+                          />
                         </View>
-                        
-                        <View style={premiumStyles.routeContent}>
-                          <View>
-                            <View style={premiumStyles.routeHeader}>
-                              <Text style={premiumStyles.routeFromText} numberOfLines={1} ellipsizeMode="tail">
-                                {language === 'th' ? item.start_location_namethai : item.start_location_nameeng}
+
+                        <View style={premiumStyles.destinationContent}>
+                          {!isLoaded ? (
+                            <Animated.View style={premiumStyles.destinationTextSkeleton}>
+                              <Animated.View
+                                style={[premiumStyles.shimmerEffect, {
+                                  transform: [{ translateX: shimmerAnim }],
+                                }]}
+                              >
+                                <LinearGradient
+                                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                                  start={[0, 0]}
+                                  end={[1, 0]}
+                                  style={premiumStyles.shimmerGradient}
+                                />
+                              </Animated.View>
+                            </Animated.View>
+                          ) : (
+                            <>
+                              <Text style={premiumStyles.destinationName}>
+                                {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
                               </Text>
-                              <View style={premiumStyles.routeArrowContainer}>
-                                <MaterialIcons name="arrow-forward" size={wp('4%')} color="#FD501E" />
+                              <View style={premiumStyles.destinationMeta}>
+                                <MaterialIcons name="place" size={wp('3.5%')} color="#FD501E" />
+                                <Text style={premiumStyles.destinationMetaText}>
+                                  {t('exploreNow')}
+                                </Text>
                               </View>
-                              <Text style={premiumStyles.routeToText} numberOfLines={1} ellipsizeMode="tail">
-                                {language === 'th' ? item.end_location_namethai : item.end_location_nameeng}
-                              </Text>
-                            </View>
-                          </View>
-                          
-                          <View style={premiumStyles.routeFooter}>
-                            <MaterialIcons name="place" size={wp('3%')} color="#999" />
-                            <Text style={premiumStyles.routePierText} numberOfLines={1} ellipsizeMode="tail">
-                              {language === 'th' ? item.md_pier_namethai : item.md_pier_nameeng}
-                            </Text>
-                          </View>
+                            </>
+                          )}
                         </View>
-                        
+
                         {/* Hover Indicator */}
-                        <View style={premiumStyles.routeIndicator} />
+                        <View style={premiumStyles.destinationIndicator} />
                       </LinearGradient>
                     </BlurView>
                   </TouchableOpacity>
                 </View>
-              ))}
+              );
+            })}
           </View>
 
-          {/* Load More Button - positioned below routes grid */}
-          {!isLoadingTitle && visibleRoutes < poppularroute.length && (
-            <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('0.5%') }}>
-              <TouchableOpacity 
-                onPress={loadMoreRoutes}
+
+          <View style={{
+            paddingBottom: hp('2%'),
+          }}>
+
+
+            {isLoadingTitle ? (
+              <View
                 style={{
-                  backgroundColor: '#FD501E',
-                  paddingHorizontal: wp('6%'),
-                  paddingVertical: hp('1%'),
-                  borderRadius: wp('6%'),
-                  // elevation: 2, // ลบ elevation ตามที่ผู้ใช้ขอ
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 2,
+                  height: hp('4.5%'),
+                  width: wp('37.5%'),
+                  borderRadius: wp('6.25%'),
+                  marginTop: hp('1.5%'),
+                  marginBottom: hp('1.5%'),
+                  marginLeft: 0,
+                  overflow: 'hidden',
+                  backgroundColor: '#eee',
+                  alignSelf: 'flex-start',
                 }}
               >
-                <Text style={{ 
-                  color: 'white', 
-                  fontWeight: 'bold', 
-                  fontSize: wp('3.5%'),
-                  textAlign: 'center'
-                }}>
-                  {t('loadMore')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-
-        </View>
-        {isLoadingTitle ? (
-          <View
-            style={{
-              height: hp('4.5%'),
-              width: wp('37.5%'),
-              borderRadius: wp('6.25%'),
-              marginTop: hp('1%'),
-              marginBottom: hp('1%'),
-              marginLeft: 0,
-              overflow: 'hidden',
-              backgroundColor: '#eee',
-              alignSelf: 'flex-start',
-            }}
-          >
-            <Animated.View
-              style={{
-                width: wp('25%'),
-                height: '100%',
-                transform: [{ translateX: shimmerAnim }],
-              }}
-            >
-              <LinearGradient
-                colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                start={[0, 0]}
-                end={[1, 0]}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </Animated.View>
-          </View>
-        ) : (
-          <View style={[premiumStyles.sectionTitleContainer, { marginTop: hp('1%'), marginBottom: hp('1%') }]}>
-            <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
-                style={premiumStyles.sectionTitleGradient}
-              >
-                <Text style={premiumStyles.sectionTitle}>
-                  {t('topTrending')} <Text style={premiumStyles.sectionTitleAccent}>{t('places')}</Text>
-                </Text>
-                <Text style={premiumStyles.sectionSubtitle}>{t('mostPopularDestinations')}</Text>
-              </LinearGradient>
-            </BlurView>
-          </View>
-        )}
-        
-        {/* Top Trending Places - Enhanced Horizontal Scroll */}
-        <View style={premiumStyles.trendingCarouselContainer}>
-          {isLoadingTitle ? (
-            <View style={premiumStyles.trendingCarouselSkeleton}>
-              <Animated.View style={[premiumStyles.shimmerEffect, {
-                transform: [{ translateX: shimmerAnim }],
-              }]}>
-                <LinearGradient
-                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                  start={[0, 0]}
-                  end={[1, 0]}
-                  style={premiumStyles.shimmerGradient}
-                />
-              </Animated.View>
-            </View>
-          ) : (
-            <ScrollView
-              ref={scrollViewRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(event) => {
-                const cardWidth = wp('95%'); // Card width + margins
-                const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
-                setCurrentBanner(index);
-              }}
-              style={premiumStyles.trendingScrollView}
-              contentContainerStyle={premiumStyles.trendingScrollContent}
-            >
-              {toptrending.map((item, index) => (
-                <TouchableOpacity
-                  key={item.md_location_id || `trending-${index}`}
-                  style={premiumStyles.trendingCarouselCard}
-                  onPress={() => {
-                    updateCustomerData({
-                      startingPointId: item.md_location_id,
-                      startingpoint_name: language === 'th' ? item.md_location_namethai : item.md_location_nameeng,
-                      countrycode: item.md_location_countriesid,
-                      country: language === 'th' ? (item.sys_countries_namethai || item.sys_countries_nameeng) : item.sys_countries_nameeng,
-                    });
-                    navigation.navigate('LocationDetail');
-                  }}
-                >
-                  <BlurView intensity={50} tint="light" style={premiumStyles.trendingCarouselBlur}>
-                    <View style={premiumStyles.trendingCarouselImageContainer}>
-                      <Image
-                        source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
-                        style={premiumStyles.trendingCarouselImage}
-                        resizeMode="cover"
-                      />
-                      
-                      {/* Enhanced Image Overlay with gradient */}
-                      <LinearGradient
-                        colors={[
-                          'transparent', 
-                          'rgba(0,0,0,0.2)', 
-                          'rgba(0,0,0,0.6)', 
-                          'rgba(0,0,0,0.8)'
-                        ]}
-                        locations={[0, 0.3, 0.7, 1]}
-                        style={premiumStyles.trendingCarouselOverlay}
-                      />
-                      
-                      {/* Trending Badge */}
-                      {index < 3 && (
-                        <Animated.View style={[premiumStyles.trendingCarouselBadge, {
-                          transform: [
-                            { 
-                              translateY: bounceAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -3],
-                              })
-                            },
-                            {
-                              scale: bounceAnim.interpolate({
-                                inputRange: [0, 0.5, 1],
-                                outputRange: [1, 1.05, 1],
-                              })
-                            }
-                          ],
-                        }]}>
-                          <LinearGradient
-                            colors={['#FF6B35', '#FD501E', '#E04000']}
-                            style={premiumStyles.trendingCarouselBadgeGradient}
-                          >
-                            <MaterialIcons name="trending-up" size={wp('4%')} color="#fff" />
-                            <Text style={premiumStyles.trendingCarouselBadgeText}>#{index + 1} {t('trending')}</Text>
-                          </LinearGradient>
-                        </Animated.View>
-                      )}
-                      
-                      {/* Rating Badge */}
-                      <View style={premiumStyles.trendingCarouselRating}>
-                        <BlurView intensity={80} tint="dark" style={premiumStyles.ratingBlurContainer}>
-                          <MaterialIcons name="star" size={wp('4%')} color="#FFD700" />
-                          <Text style={premiumStyles.trendingCarouselRatingText}>4.8</Text>
-                        </BlurView>
-                      </View>
-                      
-                      {/* Content Overlay */}
-                      <View style={premiumStyles.trendingCarouselContent}>
-                        <View style={premiumStyles.trendingCarouselTextContainer}>
-                          <Text style={premiumStyles.trendingCarouselCountry} numberOfLines={1}>
-                            {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
-                          </Text>
-                          <Text style={premiumStyles.trendingCarouselLocation} numberOfLines={2}>
-                            {language === 'th' ? item.md_location_namethai : item.md_location_nameeng}
-                          </Text>
-                          
-                          <View style={premiumStyles.trendingCarouselMeta}>
-                            <View style={premiumStyles.trendingCarouselMetaItem}>
-                              <MaterialIcons name="place" size={wp('4%')} color="#FD501E" />
-                              <Text style={premiumStyles.trendingCarouselMetaText}>{t('exploreDestination')}</Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  </BlurView>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-          
-          {/* Carousel Indicators */}
-          {!isLoadingTitle && (
-            <View style={premiumStyles.carouselIndicators}>
-              {toptrending.map((_, index) => (
                 <Animated.View
-                  key={index}
-                  style={[
-                    premiumStyles.carouselIndicator,
-                    {
-                      opacity: currentBanner === index ? 1 : 0.4,
-                      backgroundColor: currentBanner === index ? '#FD501E' : '#fff',
-                      transform: [{
-                        scale: currentBanner === index ? 1.2 : 1
-                      }]
-                    }
-                  ]}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-        <View style={{
-          paddingBottom: hp('2.5%'),
-        }}>
-          <View style={premiumStyles.sectionTitleContainer}>
-            <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
-                style={premiumStyles.sectionTitleGradient}
-              >
-                <Text style={premiumStyles.sectionTitle}>
-                  {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
-                </Text>
-                <Text style={premiumStyles.sectionSubtitle}>{t('exploreTheBestAttractions')}</Text>
-              </LinearGradient>
-            </BlurView>
-          </View>
-          <View style={[styles.tabContainer]}>
-            <View style={styles.tabContainer}>
-              {attraction.map((item) => (
-                <TouchableOpacity
-                  key={item.md_province_id}
-                  style={[styles.tab, activeattraction === item.md_province_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
-                  onPress={() => {
-                    setActiveattraction(item.md_province_id);
-
+                  style={{
+                    width: wp('25%'),
+                    height: '100%',
+                    transform: [{ translateX: shimmerAnim }],
                   }}
-                // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
                 >
-                  <Text style={[styles.tabText, activeattraction === item.md_province_id && styles.activeTabText]}>
-                    {language === 'th' ? item.md_province_namethai : item.md_province_nameeng}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-        
-        {/* Popular Attraction - Premium Grid Layout */}
-        <View style={premiumStyles.attractionsGrid}>
-          {isLoadingTitle
-            ? Array(6).fill(null).map((_, index) => (
-              <Animated.View key={`attraction-skeleton-${index}`} style={[premiumStyles.attractionCard, {
-                transform: [{
-                  scale: bounceAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.98, 1],
-                  })
-                }],
-              }]}>
-                <BlurView intensity={20} tint="light" style={premiumStyles.attractionBlur}>
                   <LinearGradient
-                    colors={['rgba(255,255,255,0.9)', 'rgba(245,245,245,0.8)']}
-                    style={premiumStyles.attractionGradient}
+                    colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Animated.View>
+              </View>
+            ) : (
+              <View style={[premiumStyles.sectionTitleContainer, { marginTop: 0, marginBottom: hp('1%') }]}>
+                <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
+                    style={[premiumStyles.sectionTitleGradient, { paddingVertical: wp('2.5%') }]}
                   >
-                    <View style={premiumStyles.attractionImageSkeleton}>
+                    <Text style={[premiumStyles.sectionTitle, { fontSize: wp('5%'), marginBottom: 0 }]}>
+                      {t('route')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
+                    </Text>
+                    <Text style={premiumStyles.sectionSubtitle}>{t('discoverMostTraveledRoutes')}</Text>
+                  </LinearGradient>
+                </BlurView>
+              </View>
+
+            )}
+
+
+
+
+            <View style={[styles.tabContainer, { marginTop: hp('0.5%') }]}>
+              <View style={styles.tabContainer}>
+                {countrie.map((item) => (
+                  <TouchableOpacity
+                    key={item.sys_countries_id}
+                    style={[styles.tab, activeCountry === item.sys_countries_id && styles.activeTab]}
+                    onPress={() => {
+                      setActiveCountry(item.sys_countries_id);
+                      setVisibleRoutes(6);
+                    }}
+                  >
+                    <Text style={[styles.tabText, activeCountry === item.sys_countries_id && styles.activeTabText]}>
+                      {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={premiumStyles.routesGrid}>
+              {isLoadingTitle
+                ? Array(6).fill(null).map((_, index) => (
+                  <View key={`route-skeleton-${index}`} style={premiumStyles.routeCard}>
+                    <View style={[premiumStyles.routeImageSkeleton, { height: hp('12%') }]}>
                       <Animated.View style={[premiumStyles.shimmerEffect, {
                         transform: [{ translateX: shimmerAnim }],
                       }]}>
@@ -2012,128 +1633,255 @@ const HomeScreen = ({ navigation, route }) => {
                           style={premiumStyles.shimmerGradient}
                         />
                       </Animated.View>
-                      
-                      {/* Skeleton badges */}
-                      <View style={[premiumStyles.attractionRatingBadge, { backgroundColor: '#e0e0e0' }]}>
-                        <View style={[premiumStyles.attractionRatingContainer, { backgroundColor: 'transparent' }]}>
-                          <View style={{ width: wp('3.5%'), height: wp('3.5%'), backgroundColor: '#ccc', borderRadius: wp('1.75%') }} />
-                          <View style={{ width: wp('6%'), height: wp('3%'), backgroundColor: '#ccc', borderRadius: wp('1%'), marginLeft: wp('1%') }} />
-                        </View>
-                      </View>
-                      
-                      {index < 3 && (
-                        <View style={[premiumStyles.attractionPopularBadge, { backgroundColor: '#e0e0e0' }]}>
-                          <View style={[premiumStyles.attractionPopularBadgeGradient, { backgroundColor: 'transparent' }]}>
-                            <View style={{ width: wp('3.2%'), height: wp('3.2%'), backgroundColor: '#ccc', borderRadius: wp('1.6%') }} />
-                            <View style={{ width: wp('12%'), height: wp('2.8%'), backgroundColor: '#ccc', borderRadius: wp('1%'), marginLeft: wp('1%') }} />
-                          </View>
-                        </View>
-                      )}
                     </View>
-                    
-                    <View style={[premiumStyles.attractionContent]}>
-                      <View style={[premiumStyles.attractionTextSkeleton, { marginBottom: wp('2%'), height: hp('2.5%') }]}>
-                        <Animated.View style={[premiumStyles.shimmerEffect, {
-                          transform: [{ translateX: shimmerAnim }],
-                        }]}>
-                          <LinearGradient
-                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                            start={[0, 0]}
-                            end={[1, 0]}
-                            style={premiumStyles.shimmerGradient}
-                          />
-                        </Animated.View>
-                      </View>
-                      
-                      <View style={[premiumStyles.attractionTextSkeleton, { marginBottom: wp('3%'), height: hp('1.8%'), width: '70%' }]}>
-                        <Animated.View style={[premiumStyles.shimmerEffect, {
-                          transform: [{ translateX: shimmerAnim }],
-                        }]}>
-                          <LinearGradient
-                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                            start={[0, 0]}
-                            end={[1, 0]}
-                            style={premiumStyles.shimmerGradient}
-                          />
-                        </Animated.View>
-                      </View>
-                      
-                      <View style={[premiumStyles.attractionTextSkeleton, { height: hp('2%'), width: '50%' }]}>
-                        <Animated.View style={[premiumStyles.shimmerEffect, {
-                          transform: [{ translateX: shimmerAnim }],
-                        }]}>
-                          <LinearGradient
-                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
-                            start={[0, 0]}
-                            end={[1, 0]}
-                            style={premiumStyles.shimmerGradient}
-                          />
-                        </Animated.View>
-                      </View>
+                    <View style={[premiumStyles.routeTextSkeleton, { flex: 1, margin: wp('2.5%') }]}>
+                      <Animated.View style={[premiumStyles.shimmerEffect, {
+                        transform: [{ translateX: shimmerAnim }],
+                      }]}>
+                        <LinearGradient
+                          colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                          start={[0, 0]}
+                          end={[1, 0]}
+                          style={premiumStyles.shimmerGradient}
+                        />
+                      </Animated.View>
                     </View>
-                  </LinearGradient>
-                </BlurView>
-              </Animated.View>
-            ))
-            : poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
-              <Animated.View
-                key={item.md_tour_id ? `attraction-${item.md_tour_id}` : `attraction-index-${index}`}
-                style={[premiumStyles.attractionCard, {
-                  transform: [{
-                    scale: bounceAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.99, 1],
-                    })
-                  }],
-                }]}
-              >
-                <TouchableOpacity
-                  style={premiumStyles.attractionTouchable}
-                  onPress={() => {
-                    // Navigate to attraction detail
-                    console.log('Navigate to attraction:', language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng);
-                  }}
-                  activeOpacity={0.95}
-                >
-                  <BlurView intensity={25} tint="light" style={premiumStyles.attractionBlur}>
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.95)', 'rgba(255,250,246,0.92)']}
-                      style={premiumStyles.attractionGradient}
+                  </View>
+                ))
+                : poppularroute.slice(0, visibleRoutes).map((item, index) => (
+                  <View
+                    key={item.md_location_id ? `route-${item.md_location_id}` : `route-index-${index}`}
+                    style={[
+                      premiumStyles.routeCard,
+                      // Remove right margin for every 3rd card (0, 3, 6, 9...)
+                      (index + 1) % 3 === 0 && { marginRight: 0 }
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={premiumStyles.routeTouchable}
+                      onPress={() => {
+                        updateCustomerData({
+                          startingPointId: item.md_timetable_startid,
+                          startingpoint_name: language === 'th' ? item.start_location_namethai : item.start_location_nameeng,
+                          endPointId: item.md_timetable_endid,
+                          endpoint_name: language === 'th' ? item.end_location_namethai : item.end_location_nameeng,
+                        });
+                        navigation.navigate('SearchFerry');
+                      }}
                     >
-                      <View style={premiumStyles.attractionImageContainer}>
+                      <BlurView intensity={20} tint="light" style={premiumStyles.routeBlur}>
+                        <LinearGradient
+                          colors={['rgba(255,255,255,0.95)', 'rgba(255,250,246,0.90)']}
+                          style={premiumStyles.routeGradient}
+                        >
+                          <View style={premiumStyles.routeImageContainer}>
+                            <Image
+                              source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                              style={premiumStyles.routeImage}
+                              resizeMode="cover"
+                            />
+
+                            {/* Premium Image Overlay */}
+                            <LinearGradient
+                              colors={['transparent', 'rgba(0,0,0,0.3)']}
+                              style={premiumStyles.routeImageOverlay}
+                            />
+
+                            {/* Hot Route Badge */}
+                            {index < 2 && (
+                              <Animated.View style={[premiumStyles.hotRouteBadge, {
+                                transform: [{
+                                  translateY: bounceAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -2],
+                                  })
+                                }],
+                              }]}>
+                                <LinearGradient
+                                  colors={['#FF4444', '#FF6666']}
+                                  style={premiumStyles.hotRouteBadgeGradient}
+                                >
+                                  <MaterialIcons name="local-fire-department" size={wp('2.5%')} color="#fff" />
+                                  <Text style={premiumStyles.hotRouteBadgeText}>{t('hotRoute')}</Text>
+                                </LinearGradient>
+                              </Animated.View>
+                            )}
+                          </View>
+
+                          <View style={premiumStyles.routeContent}>
+                            <View>
+                              <View style={premiumStyles.routeHeader}>
+                                <Text style={premiumStyles.routeFromText} numberOfLines={1} ellipsizeMode="tail">
+                                  {language === 'th' ? item.start_location_namethai : item.start_location_nameeng}
+                                </Text>
+                                <View style={premiumStyles.routeArrowContainer}>
+                                  <MaterialIcons name="arrow-forward" size={wp('4%')} color="#FD501E" />
+                                </View>
+                                <Text style={premiumStyles.routeToText} numberOfLines={1} ellipsizeMode="tail">
+                                  {language === 'th' ? item.end_location_namethai : item.end_location_nameeng}
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View style={premiumStyles.routeFooter}>
+                              <MaterialIcons name="place" size={wp('3%')} color="#999" />
+                              <Text style={premiumStyles.routePierText} numberOfLines={1} ellipsizeMode="tail">
+                                {language === 'th' ? item.md_pier_namethai : item.md_pier_nameeng}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Hover Indicator */}
+                          <View style={premiumStyles.routeIndicator} />
+                        </LinearGradient>
+                      </BlurView>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+            </View>
+
+            {/* Load More Button - positioned below routes grid */}
+            {!isLoadingTitle && visibleRoutes < poppularroute.length && (
+              <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('0.5%') }}>
+                <TouchableOpacity
+                  onPress={loadMoreRoutes}
+                  style={{
+                    backgroundColor: '#FD501E',
+                    paddingHorizontal: wp('6%'),
+                    paddingVertical: hp('1%'),
+                    borderRadius: wp('6%'),
+                    // elevation: 2, // ลบ elevation ตามที่ผู้ใช้ขอ
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 2,
+                  }}
+                >
+                  <Text style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: wp('3.5%'),
+                    textAlign: 'center'
+                  }}>
+                    {t('loadMore')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+
+          </View>
+          {isLoadingTitle ? (
+            <View
+              style={{
+                height: hp('4.5%'),
+                width: wp('37.5%'),
+                borderRadius: wp('6.25%'),
+                marginTop: hp('1%'),
+                marginBottom: hp('1%'),
+                marginLeft: 0,
+                overflow: 'hidden',
+                backgroundColor: '#eee',
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Animated.View
+                style={{
+                  width: wp('25%'),
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
+          ) : (
+            <View style={[premiumStyles.sectionTitleContainer, { marginTop: hp('1%'), marginBottom: hp('1%') }]}>
+              <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
+                  style={premiumStyles.sectionTitleGradient}
+                >
+                  <Text style={premiumStyles.sectionTitle}>
+                    {t('topTrending')} <Text style={premiumStyles.sectionTitleAccent}>{t('places')}</Text>
+                  </Text>
+                  <Text style={premiumStyles.sectionSubtitle}>{t('mostPopularDestinations')}</Text>
+                </LinearGradient>
+              </BlurView>
+            </View>
+          )}
+
+          {/* Top Trending Places - Enhanced Horizontal Scroll */}
+          <View style={premiumStyles.trendingCarouselContainer}>
+            {isLoadingTitle ? (
+              <View style={premiumStyles.trendingCarouselSkeleton}>
+                <Animated.View style={[premiumStyles.shimmerEffect, {
+                  transform: [{ translateX: shimmerAnim }],
+                }]}>
+                  <LinearGradient
+                    colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={premiumStyles.shimmerGradient}
+                  />
+                </Animated.View>
+              </View>
+            ) : (
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(event) => {
+                  const cardWidth = wp('95%'); // Card width + margins
+                  const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+                  setCurrentBanner(index);
+                }}
+                style={premiumStyles.trendingScrollView}
+                contentContainerStyle={premiumStyles.trendingScrollContent}
+              >
+                {toptrending.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.md_location_id || `trending-${index}`}
+                    style={premiumStyles.trendingCarouselCard}
+                    onPress={() => {
+                      updateCustomerData({
+                        startingPointId: item.md_location_id,
+                        startingpoint_name: language === 'th' ? item.md_location_namethai : item.md_location_nameeng,
+                        countrycode: item.md_location_countriesid,
+                        country: language === 'th' ? (item.sys_countries_namethai || item.sys_countries_nameeng) : item.sys_countries_nameeng,
+                      });
+                      navigation.navigate('LocationDetail');
+                    }}
+                  >
+                    <BlurView intensity={50} tint="light" style={premiumStyles.trendingCarouselBlur}>
+                      <View style={premiumStyles.trendingCarouselImageContainer}>
                         <Image
-                          source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
-                          style={premiumStyles.attractionImage}
+                          source={{ uri: `https://thetrago.com/Api/uploads/location/pictures/${item.md_location_picname}` }}
+                          style={premiumStyles.trendingCarouselImage}
                           resizeMode="cover"
                         />
-                        
-                        {/* Premium Image Overlay */}
+
+                        {/* Enhanced Image Overlay with gradient */}
                         <LinearGradient
-                          colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.3)']}
-                          locations={[0, 0.6, 1]}
-                          style={premiumStyles.attractionImageOverlay}
+                          colors={[
+                            'transparent',
+                            'rgba(0,0,0,0.2)',
+                            'rgba(0,0,0,0.6)',
+                            'rgba(0,0,0,0.8)'
+                          ]}
+                          locations={[0, 0.3, 0.7, 1]}
+                          style={premiumStyles.trendingCarouselOverlay}
                         />
-                        
-                        {/* Rating Badge with enhanced styling */}
-                        <Animated.View style={[premiumStyles.attractionRatingBadge, {
-                          transform: [{
-                            scale: bounceAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [1, 1.05],
-                            })
-                          }],
-                        }]}>
-                          <BlurView intensity={95} tint="dark" style={premiumStyles.attractionRatingContainer}>
-                            <Ionicons name="star" size={wp('3.5%')} color="#FFD700" />
-                            <Text style={premiumStyles.attractionRatingText}>
-                              {formatDecimal(item.md_tour_star)}
-                            </Text>
-                          </BlurView>
-                        </Animated.View>
-                        
-                        {/* Enhanced Popular Badge for top 3 */}
+
+                        {/* Trending Badge */}
                         {index < 3 && (
-                          <Animated.View style={[premiumStyles.attractionPopularBadge, {
+                          <Animated.View style={[premiumStyles.trendingCarouselBadge, {
                             transform: [
                               {
                                 translateY: bounceAnim.interpolate({
@@ -2143,100 +1891,365 @@ const HomeScreen = ({ navigation, route }) => {
                               },
                               {
                                 scale: bounceAnim.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: [1, 1.08],
+                                  inputRange: [0, 0.5, 1],
+                                  outputRange: [1, 1.05, 1],
                                 })
                               }
                             ],
                           }]}>
                             <LinearGradient
-                              colors={['#FF6B35', '#FD501E']}
-                              style={premiumStyles.attractionPopularBadgeGradient}
+                              colors={['#FF6B35', '#FD501E', '#E04000']}
+                              style={premiumStyles.trendingCarouselBadgeGradient}
                             >
-                              <MaterialIcons name="local-fire-department" size={wp('3.2%')} color="#fff" />
-                              <Text style={premiumStyles.attractionPopularBadgeText}>{t('popular')}</Text>
+                              <MaterialIcons name="trending-up" size={wp('4%')} color="#fff" />
+                              <Text style={premiumStyles.trendingCarouselBadgeText}>#{index + 1} {t('trending')}</Text>
                             </LinearGradient>
                           </Animated.View>
                         )}
 
-                        {/* New Rank Badge for top positions */}
+                        {/* Rating Badge */}
+                        <View style={premiumStyles.trendingCarouselRating}>
+                          <BlurView intensity={80} tint="dark" style={premiumStyles.ratingBlurContainer}>
+                            <MaterialIcons name="star" size={wp('4%')} color="#FFD700" />
+                            <Text style={premiumStyles.trendingCarouselRatingText}>4.8</Text>
+                          </BlurView>
+                        </View>
+
+                        {/* Content Overlay */}
+                        <View style={premiumStyles.trendingCarouselContent}>
+                          <View style={premiumStyles.trendingCarouselTextContainer}>
+                            <Text style={premiumStyles.trendingCarouselCountry} numberOfLines={1}>
+                              {language === 'th' ? item.sys_countries_namethai : item.sys_countries_nameeng}
+                            </Text>
+                            <Text style={premiumStyles.trendingCarouselLocation} numberOfLines={2}>
+                              {language === 'th' ? item.md_location_namethai : item.md_location_nameeng}
+                            </Text>
+
+                            <View style={premiumStyles.trendingCarouselMeta}>
+                              <View style={premiumStyles.trendingCarouselMetaItem}>
+                                <MaterialIcons name="place" size={wp('4%')} color="#FD501E" />
+                                <Text style={premiumStyles.trendingCarouselMetaText}>{t('exploreDestination')}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </BlurView>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Carousel Indicators */}
+            {!isLoadingTitle && (
+              <View style={premiumStyles.carouselIndicators}>
+                {toptrending.map((_, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      premiumStyles.carouselIndicator,
+                      {
+                        opacity: currentBanner === index ? 1 : 0.4,
+                        backgroundColor: currentBanner === index ? '#FD501E' : '#fff',
+                        transform: [{
+                          scale: currentBanner === index ? 1.2 : 1
+                        }]
+                      }
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+          <View style={{
+            paddingBottom: hp('2.5%'),
+          }}>
+            <View style={premiumStyles.sectionTitleContainer}>
+              <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
+                  style={premiumStyles.sectionTitleGradient}
+                >
+                  <Text style={premiumStyles.sectionTitle}>
+                    {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
+                  </Text>
+                  <Text style={premiumStyles.sectionSubtitle}>{t('exploreTheBestAttractions')}</Text>
+                </LinearGradient>
+              </BlurView>
+            </View>
+            <View style={[styles.tabContainer]}>
+              <View style={styles.tabContainer}>
+                {attraction.map((item) => (
+                  <TouchableOpacity
+                    key={item.md_province_id}
+                    style={[styles.tab, activeattraction === item.md_province_id && styles.activeTab]} // ทำให้ปุ่มที่เลือกมีสีพื้นหลัง
+                    onPress={() => {
+                      setActiveattraction(item.md_province_id);
+
+                    }}
+                  // เมื่อกดปุ่ม จะทำการเปลี่ยนสถานะ
+                  >
+                    <Text style={[styles.tabText, activeattraction === item.md_province_id && styles.activeTabText]}>
+                      {language === 'th' ? item.md_province_namethai : item.md_province_nameeng}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Popular Attraction - Premium Grid Layout */}
+          <View style={premiumStyles.attractionsGrid}>
+            {isLoadingTitle
+              ? Array(6).fill(null).map((_, index) => (
+                <Animated.View key={`attraction-skeleton-${index}`} style={[premiumStyles.attractionCard, {
+                  transform: [{
+                    scale: bounceAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.98, 1],
+                    })
+                  }],
+                }]}>
+                  <BlurView intensity={20} tint="light" style={premiumStyles.attractionBlur}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.9)', 'rgba(245,245,245,0.8)']}
+                      style={premiumStyles.attractionGradient}
+                    >
+                      <View style={premiumStyles.attractionImageSkeleton}>
+                        <Animated.View style={[premiumStyles.shimmerEffect, {
+                          transform: [{ translateX: shimmerAnim }],
+                        }]}>
+                          <LinearGradient
+                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                            start={[0, 0]}
+                            end={[1, 0]}
+                            style={premiumStyles.shimmerGradient}
+                          />
+                        </Animated.View>
+
+                        {/* Skeleton badges */}
+                        <View style={[premiumStyles.attractionRatingBadge, { backgroundColor: '#e0e0e0' }]}>
+                          <View style={[premiumStyles.attractionRatingContainer, { backgroundColor: 'transparent' }]}>
+                            <View style={{ width: wp('3.5%'), height: wp('3.5%'), backgroundColor: '#ccc', borderRadius: wp('1.75%') }} />
+                            <View style={{ width: wp('6%'), height: wp('3%'), backgroundColor: '#ccc', borderRadius: wp('1%'), marginLeft: wp('1%') }} />
+                          </View>
+                        </View>
+
                         {index < 3 && (
-                          <View style={[premiumStyles.attractionRankBadge, { backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }]}>
-                            <Text style={premiumStyles.attractionRankText}>#{index + 1}</Text>
+                          <View style={[premiumStyles.attractionPopularBadge, { backgroundColor: '#e0e0e0' }]}>
+                            <View style={[premiumStyles.attractionPopularBadgeGradient, { backgroundColor: 'transparent' }]}>
+                              <View style={{ width: wp('3.2%'), height: wp('3.2%'), backgroundColor: '#ccc', borderRadius: wp('1.6%') }} />
+                              <View style={{ width: wp('12%'), height: wp('2.8%'), backgroundColor: '#ccc', borderRadius: wp('1%'), marginLeft: wp('1%') }} />
+                            </View>
                           </View>
                         )}
                       </View>
-                      
-                      <View style={premiumStyles.attractionContent}>
-                        <Text style={premiumStyles.attractionName} numberOfLines={2}>
-                          {truncateText(language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng)}
-                        </Text>
-                        
-                        <View style={premiumStyles.attractionMeta}>
-                          <View style={premiumStyles.attractionMetaItem}>
-                            <MaterialIcons name="people" size={wp('3.5%')} color="#666" />
-                            <Text style={premiumStyles.attractionMetaText}>
-                              {item.md_tour_count} {t('booked')}
+
+                      <View style={[premiumStyles.attractionContent]}>
+                        <View style={[premiumStyles.attractionTextSkeleton, { marginBottom: wp('2%'), height: hp('2.5%') }]}>
+                          <Animated.View style={[premiumStyles.shimmerEffect, {
+                            transform: [{ translateX: shimmerAnim }],
+                          }]}>
+                            <LinearGradient
+                              colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                              start={[0, 0]}
+                              end={[1, 0]}
+                              style={premiumStyles.shimmerGradient}
+                            />
+                          </Animated.View>
+                        </View>
+
+                        <View style={[premiumStyles.attractionTextSkeleton, { marginBottom: wp('3%'), height: hp('1.8%'), width: '70%' }]}>
+                          <Animated.View style={[premiumStyles.shimmerEffect, {
+                            transform: [{ translateX: shimmerAnim }],
+                          }]}>
+                            <LinearGradient
+                              colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                              start={[0, 0]}
+                              end={[1, 0]}
+                              style={premiumStyles.shimmerGradient}
+                            />
+                          </Animated.View>
+                        </View>
+
+                        <View style={[premiumStyles.attractionTextSkeleton, { height: hp('2%'), width: '50%' }]}>
+                          <Animated.View style={[premiumStyles.shimmerEffect, {
+                            transform: [{ translateX: shimmerAnim }],
+                          }]}>
+                            <LinearGradient
+                              colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                              start={[0, 0]}
+                              end={[1, 0]}
+                              style={premiumStyles.shimmerGradient}
+                            />
+                          </Animated.View>
+                        </View>
+                      </View>
+                    </LinearGradient>
+                  </BlurView>
+                </Animated.View>
+              ))
+              : poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
+                <Animated.View
+                  key={item.md_tour_id ? `attraction-${item.md_tour_id}` : `attraction-index-${index}`}
+                  style={[premiumStyles.attractionCard, {
+                    transform: [{
+                      scale: bounceAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.99, 1],
+                      })
+                    }],
+                  }]}
+                >
+                  <TouchableOpacity
+                    style={premiumStyles.attractionTouchable}
+                    onPress={() => {
+                      // Navigate to attraction detail
+                      console.log('Navigate to attraction:', language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng);
+                    }}
+                    activeOpacity={0.95}
+                  >
+                    <BlurView intensity={25} tint="light" style={premiumStyles.attractionBlur}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.95)', 'rgba(255,250,246,0.92)']}
+                        style={premiumStyles.attractionGradient}
+                      >
+                        <View style={premiumStyles.attractionImageContainer}>
+                          <Image
+                            source={{ uri: `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}` }}
+                            style={premiumStyles.attractionImage}
+                            resizeMode="cover"
+                          />
+
+                          {/* Premium Image Overlay */}
+                          <LinearGradient
+                            colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.3)']}
+                            locations={[0, 0.6, 1]}
+                            style={premiumStyles.attractionImageOverlay}
+                          />
+
+                          {/* Rating Badge with enhanced styling */}
+                          <Animated.View style={[premiumStyles.attractionRatingBadge, {
+                            transform: [{
+                              scale: bounceAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [1, 1.05],
+                              })
+                            }],
+                          }]}>
+                            <BlurView intensity={95} tint="dark" style={premiumStyles.attractionRatingContainer}>
+                              <Ionicons name="star" size={wp('3.5%')} color="#FFD700" />
+                              <Text style={premiumStyles.attractionRatingText}>
+                                {formatDecimal(item.md_tour_star)}
+                              </Text>
+                            </BlurView>
+                          </Animated.View>
+
+                          {/* Enhanced Popular Badge for top 3 */}
+                          {index < 3 && (
+                            <Animated.View style={[premiumStyles.attractionPopularBadge, {
+                              transform: [
+                                {
+                                  translateY: bounceAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -3],
+                                  })
+                                },
+                                {
+                                  scale: bounceAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [1, 1.08],
+                                  })
+                                }
+                              ],
+                            }]}>
+                              <LinearGradient
+                                colors={['#FF6B35', '#FD501E']}
+                                style={premiumStyles.attractionPopularBadgeGradient}
+                              >
+                                <MaterialIcons name="local-fire-department" size={wp('3.2%')} color="#fff" />
+                                <Text style={premiumStyles.attractionPopularBadgeText}>{t('popular')}</Text>
+                              </LinearGradient>
+                            </Animated.View>
+                          )}
+
+                          {/* New Rank Badge for top positions */}
+                          {index < 3 && (
+                            <View style={[premiumStyles.attractionRankBadge, { backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }]}>
+                              <Text style={premiumStyles.attractionRankText}>#{index + 1}</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={premiumStyles.attractionContent}>
+                          <Text style={premiumStyles.attractionName} numberOfLines={2}>
+                            {truncateText(language === 'th' ? item.md_tour_name_thai : item.md_tour_name_eng)}
+                          </Text>
+
+                          <View style={premiumStyles.attractionMeta}>
+                            <View style={premiumStyles.attractionMetaItem}>
+                              <MaterialIcons name="people" size={wp('3.5%')} color="#666" />
+                              <Text style={premiumStyles.attractionMetaText}>
+                                {item.md_tour_count} {t('booked')}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={premiumStyles.attractionPriceContainer}>
+                            <Text style={premiumStyles.attractionPriceLabel}>{t('startFrom')}</Text>
+                            <Text style={premiumStyles.attractionPrice}>
+                              ฿{formatNumberWithComma(item.md_tour_priceadult)}
                             </Text>
                           </View>
                         </View>
-                        
-                        <View style={premiumStyles.attractionPriceContainer}>
-                          <Text style={premiumStyles.attractionPriceLabel}>{t('startFrom')}</Text>
-                          <Text style={premiumStyles.attractionPrice}>
-                            ฿{formatNumberWithComma(item.md_tour_priceadult)}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      {/* Enhanced Hover Indicator */}
-                      <Animated.View style={[premiumStyles.attractionIndicator, {
-                        transform: [{
-                          scaleX: bounceAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.2],
-                          })
-                        }],
-                      }]} />
-                    </LinearGradient>
-                  </BlurView>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-        </View>
-        
-        {/* Premium Show More Button */}
-        {poppularAttraction.length > visibleAttraction && (
-          <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('0.5%') }}>
-            <TouchableOpacity 
-              onPress={() => setvisibleAttraction(prev => prev + 6)}
-              style={{
-                backgroundColor: '#FD501E',
-                paddingHorizontal: wp('6%'),
-                paddingVertical: hp('1%'),
-                borderRadius: wp('6%'),
-                elevation: 2,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.2,
-                shadowRadius: 2,
-              }}
-            >
-              <Text style={{ 
-                color: 'white', 
-                fontWeight: 'bold', 
-                fontSize: wp('3.5%'),
-                textAlign: 'center'
-              }}>
-                {t('loadMore')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-      </View>
 
-    </>
+                        {/* Enhanced Hover Indicator */}
+                        <Animated.View style={[premiumStyles.attractionIndicator, {
+                          transform: [{
+                            scaleX: bounceAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [1, 1.2],
+                            })
+                          }],
+                        }]} />
+                      </LinearGradient>
+                    </BlurView>
+                  </TouchableOpacity>
+                </Animated.View>
+              ))}
+          </View>
+
+          {/* Premium Show More Button */}
+          {poppularAttraction.length > visibleAttraction && (
+            <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('0.5%') }}>
+              <TouchableOpacity
+                onPress={() => setvisibleAttraction(prev => prev + 6)}
+                style={{
+                  backgroundColor: '#FD501E',
+                  paddingHorizontal: wp('6%'),
+                  paddingVertical: hp('1%'),
+                  borderRadius: wp('6%'),
+                  elevation: 2,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 2,
+                }}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: wp('3.5%'),
+                  textAlign: 'center'
+                }}>
+                  {t('loadMore')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 

@@ -22,8 +22,8 @@ export const CustomerProvider = ({ children }) => {
     md_booking_country: '', //ประเทศ
     md_booking_countrycode: '', //รหัสประเทศ
     md_booking_round: 1, //ประเภทการเดินทาง
-    md_booking_timetableiddepart: 0, //รหัสตารางเวลา
-    md_booking_timetableidreturn: 0, //รหัสตารางเวลา
+    md_booking_timetableiddepart: '', //รหัสตารางเวลา
+    md_booking_timetableidreturn: '', //รหัสตารางเวลา
     md_booking_tel: '', //เบอร์โทร
     md_booking_whatsapp: '', //เบอร์ WhatsApp
     md_booking_email: '', //อีเมล
@@ -44,10 +44,10 @@ export const CustomerProvider = ({ children }) => {
     md_booking_adult: 0, //จำนวนผู้ใหญ่
     md_booking_child: 0, //จำนวนเด็ก
     md_booking_infant: 0, //จำนวนทารก
-    md_booking_departdatedepart: '', //วันที่เดินทาง
-    md_booking_departdatereturn: '', //วันที่เดินทาง
-    md_booking_departtimedepart: '', //เวลาเดินทาง
-    md_booking_departtimereturn: '', //เวลาเดินทาง
+    md_booking_departdate: '', //วันที่เดินทาง
+    md_booking_returndate: '', //วันที่เดินทางกลับ
+    md_booking_departtime: '', //เวลาเดินทาง
+    md_booking_returntime: '', //เวลาเดินทางกลับ
     md_booking_remarkdepart: '', //หมายเหตุ
     md_booking_remarkreturn: '', //หมายเหตุ
     md_booking_note: '', //บันทึก
