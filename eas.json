@@ -8,21 +8,15 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "releaseChannel": "default",
-        "compileSdkVersion": 35,
-        "targetSdkVersion": 35,
-        "minSdkVersion": 24
+  "buildType": "apk",
+  "releaseChannel": "default"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "releaseChannel": "default",
-        "compileSdkVersion": 35,
-        "targetSdkVersion": 35,
-        "minSdkVersion": 24
+  "buildType": "apk",
+  "releaseChannel": "default"
       }
     },
     "production": {
@@ -30,9 +24,6 @@
       "android": {
         "buildType": "app-bundle",
         "releaseChannel": "default",
-        "compileSdkVersion": 35,
-        "targetSdkVersion": 35,
-        "minSdkVersion": 24,
         "gradleCommand": ":app:bundleRelease",
         "image": "latest",
         "env": {

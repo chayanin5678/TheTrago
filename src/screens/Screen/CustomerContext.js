@@ -156,16 +156,17 @@ export const CustomerProvider = ({ children }) => {
     international: '0',
     passenger: [
       {
-        prefix: '',
-        fname: '',
-        lname: '',
-        idtype: '',
-        nationality: '',
-        passport: '',
-        dateofissue: '',
-        passportexpiry: '',
-        birthday: '',
-        type: ''
+        md_passenger_prefix: '',
+        md_passenger_fname:  '',
+        md_passenger_lname:  '',
+        md_passenger_idtype: '',
+        md_passenger_nationality:  '',
+        md_passenger_passport: '',          // ใช้รหัสประเทศที่เลือกจาก modal โทรศัพท์
+        md_passenger_passportexpiry: '',                        // ไม่ใช้ใน domestic ก็เก็บเป็นค่าว่างได้
+        md_passenger_dateoflssue: '',
+        md_passenger_birthday: '',
+        md_passenger_type: '',
+        
       }
     ],
     symbol: '฿', //สัญลักษณ์เงิน

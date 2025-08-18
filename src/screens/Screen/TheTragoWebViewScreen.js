@@ -10,7 +10,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const ALLOWED_HOSTS = new Set([
   'thailandferrybooking.com', 'www.thailandferrybooking.com',
   // Alipay
-  'mclient.alipay.com', 'render.alipay.com', 'openapi.alipay.com'
+  'mclient.alipay.com', 'render.alipay.com', 'openapi.alipay.com','https://pay.omise.co/','https://emvacs.2c2p.com/','3dsms.omise.co  '
 ]);
 
 const isAlipayHost = (host) => !!host && host.toLowerCase().endsWith('.alipay.com');

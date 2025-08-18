@@ -19,14 +19,31 @@ import { styles } from '../../styles/CSS/CustomerInfoStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+/* =========================
+   Title helpers (เก็บค่า EN เสมอ แต่แสดง label ตามภาษา)
+   ========================= */
+const getTitleOptions = (t) => ([
+  { label: t('pleaseSelect') || 'Please Select', value: 'Please Select' },
+  { label: t('mr') || 'Mr.', value: 'Mr.' },
+  { label: t('mrs') || 'Mrs.', value: 'Mrs.' },
+  { label: t('ms') || 'Ms.', value: 'Ms.' },
+  { label: t('master') || 'Master', value: 'Master' },
+]);
+
+const getTitleLabel = (value, t) => {
+  const opt = getTitleOptions(t).find(o => o.value === value);
+  return opt ? opt.label : (t('pleaseSelect') || 'Please Select');
+};
+
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
   const { t } = useLanguage();
 
-  // Define titleOptions inside PassengerForm
-  const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
+  // ใช้ options แบบ label/value (value เป็น EN เสมอ)
+  const titleOptions = getTitleOptions(t);
 
-  const [selectedTitle, setSelectedTitle] = React.useState(t('pleaseSelect') || 'Please Select');
+  // เก็บค่า EN เสมอ
+  const [selectedTitle, setSelectedTitle] = React.useState('Please Select');
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [selectedNationality, setSelectedNationality] = React.useState(t('pleaseSelect') || 'Please Select');
   const [isNationalityModalVisible, setNationalityModalVisible] = React.useState(false);
@@ -43,10 +60,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
   const [fieldErrors, setFieldErrors] = React.useState({});
   const [nationalityCode, setNationalityCode] = useState('');
 
-
   useImperativeHandle(ref, () => ({
     getData: () => ({
-      prefix: selectedTitle,
+      prefix: selectedTitle, // ✅ EN เสมอ
       fname,
       lname,
       idtype: 1,
@@ -59,7 +75,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     }),
     validate: () => {
       let errors = {};
-      if (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select')) errors.selectedTitle = true;
+      if (!selectedTitle || selectedTitle === 'Please Select') errors.selectedTitle = true; // ✅ เช็ค EN
       if (!fname || fname.trim() === '') errors.fname = true;
       if (!lname || lname.trim() === '') errors.lname = true;
       if (!selectedNationality || selectedNationality === 'Please Select' || selectedNationality === (t('pleaseSelect') || 'Please Select')) errors.nationality = true;
@@ -75,12 +91,10 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     }
   }));
 
-
   const filteredCountries = telePhone.filter((item) =>
     item.sys_countries_nameeng.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Add error state for each field
   const handleFnameChange = (text) => {
     setFname(text);
     setFieldErrors((prev) => ({ ...prev, fname: undefined }));
@@ -106,8 +120,6 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
   };
 
-
-
   return (
     <View style={styles.promo}>
       <Text style={styles.TextInput}>{type.charAt(0).toUpperCase() + type.slice(1)} {index + 1}</Text>
@@ -115,9 +127,9 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       {/* คำนำหน้า */}
       <Text style={styles.textHead}>{t('title') || 'Title'}</Text>
       <TouchableOpacity
-        style={[styles.button, (fieldErrors.selectedTitle || (showAllErrors && (selectedTitle === (t('pleaseSelect') || 'Please Select') || !selectedTitle))) && styles.errorInput]}
+        style={[styles.button, (fieldErrors.selectedTitle || (showAllErrors && (selectedTitle === 'Please Select'))) && styles.errorInput]}
         onPress={() => setModalVisible(true)}>
-        <Text style={styles.buttonText}>{selectedTitle}</Text>
+        <Text style={styles.buttonText}>{getTitleLabel(selectedTitle, t)}</Text>
         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
       </TouchableOpacity>
 
@@ -128,8 +140,11 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
             <FlatList
               data={titleOptions}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.optionItem} onPress={() => { setSelectedTitle(item); setModalVisible(false); }}>
-                  <Text style={styles.optionText}>{item}</Text>
+                <TouchableOpacity
+                  style={styles.optionItem}
+                  onPress={() => { setSelectedTitle(item.value); setModalVisible(false); }} // ✅ เก็บค่า EN
+                >
+                  <Text style={styles.optionText}>{item.label}</Text>
                 </TouchableOpacity>
               )}
               keyExtractor={(item, idx) => idx.toString()}
@@ -147,7 +162,6 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         style={[styles.input, (fieldErrors.fname || (showAllErrors && !fname)) && styles.errorInput]}
       />
 
-
       {/* Last Name */}
       <Text style={styles.textHead}>{t('lastName') || 'Last Name'}</Text>
       <TextInput
@@ -156,7 +170,6 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         onChangeText={handleLnameChange}
         style={[styles.input, (fieldErrors.lname || (showAllErrors && !lname)) && styles.errorInput]}
       />
-
 
       {/* Nationality */}
       <Text style={styles.textHead}>{t('nationality') || 'Nationality'}</Text>
@@ -189,7 +202,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
                   } else {
                     setSelectedNationality(`(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`);
                     setNationalityCode(item.sys_countries_code);
-                    setFieldErrors((prev) => ({ ...prev, nationality: undefined })); // Clear error on select
+                    setFieldErrors((prev) => ({ ...prev, nationality: undefined }));
                   }
                   setNationalityModalVisible(false);
                   setSearchQuery('');
@@ -219,7 +232,6 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         onChangeText={handlePassportChange}
         style={[styles.input, (fieldErrors.passport || (showAllErrors && !passport)) && styles.errorInput]}
       />
-
 
       {/* Date of Issue */}
       <Text style={styles.textHead}>{t('dateOfIssue') || 'Date of Issue'}</Text>
@@ -295,12 +307,14 @@ const CustomerInfo = ({ navigation }) => {
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
 
-  const titleOptions = [t('pleaseSelect') || 'Please Select', t('mr') || 'Mr.', t('mrs') || 'Mrs.', t('ms') || 'Ms.', t('master') || 'Master'];
+  // ใช้ options แบบ label/value (value เป็น EN เสมอ)
+  const titleOptions = getTitleOptions(t);
 
   const [code, setcode] = useState('');
   const [Firstname, setFirstname] = useState(customerData.Firstname);
   const [Lastname, setLastname] = useState(customerData.Lastname);
-  const [selectedTitle, setSelectedTitle] = useState(t('pleaseSelect') || 'Please Select');
+  // เก็บค่า EN เสมอ
+  const [selectedTitle, setSelectedTitle] = useState(customerData.selectedTitle || 'Please Select');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedTele, setSelectedTele] = useState(customerData.selectcoountrycode);
   const [isTeleModalVisible, setIsTeleModalVisible] = useState(false);
@@ -310,10 +324,10 @@ const CustomerInfo = ({ navigation }) => {
   const [email, setemail] = useState(customerData.email);
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
-  const [country, setCountry] = useState(customerData.country); // ใช้ค่าเริ่มต้นจาก customerData
-  const [countrycode, setCountrycode] = useState(customerData.countrycode); // ใช้ค่าเริ่มต้นจาก customerData
+  const [country, setCountry] = useState(customerData.country);
+  const [countrycode, setCountrycode] = useState(customerData.countrycode);
   const [errors, setErrors] = useState({});
-  const [isWhatsapp, setIsWhatsapp] = useState(''); // State for Whatsapp checkbox
+  const [isWhatsapp, setIsWhatsapp] = useState('');
   const [contactErrors, setContactErrors] = useState({ phone: false, mobile: false, email: false });
   const passengerFormRefs = useRef([]);
   const [showAllErrors, setShowAllErrors] = useState(false);
@@ -322,14 +336,13 @@ const CustomerInfo = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [setError] = useState('');
 
-  // Ultra Premium Animations
+  // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Floating particles animation
   const floatingAnims = useRef(
     [...Array(6)].map(() => ({
       x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
@@ -340,13 +353,11 @@ const CustomerInfo = ({ navigation }) => {
   ).current;
 
   function formatTime(timeString) {
-    if (!timeString) return ""; // Handle empty input
-    return timeString.slice(0, 5); // Extracts "HH:mm"
+    if (!timeString) return "";
+    return timeString.slice(0, 5);
   }
 
-  // Premium animations initialization
   useEffect(() => {
-    // Premium entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -370,7 +381,6 @@ const CustomerInfo = ({ navigation }) => {
       }),
     ]).start();
 
-    // Floating particles animation
     floatingAnims.forEach((anim, index) => {
       const animateParticle = () => {
         Animated.loop(
@@ -423,7 +433,6 @@ const CustomerInfo = ({ navigation }) => {
       setTimeout(() => animateParticle(), index * 500);
     });
 
-    // Continuous pulse animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -441,7 +450,6 @@ const CustomerInfo = ({ navigation }) => {
       ])
     ).start();
 
-    // Continuous rotation for decorative elements
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -465,22 +473,6 @@ const CustomerInfo = ({ navigation }) => {
 
   const fetchPrice = async () => {
     try {
-      // console.log({
-      //   currency: customerData.currency,
-      //   roundtrip: customerData.roud,
-      //   departtrip: customerData.timeTableDepartId,
-      //   returntrip: customerData.timeTableReturnId,
-      //   adult: customerData.adult,
-      //   child: customerData.child,
-      //   infant: customerData.infant,
-      //   departdate: customerData.departdate,
-      //   returndate: customerData.returndate,
-      //   pickupdepart1: selectedPickupDepart,
-      //   dropoffdepart1: selectedDropoffDepart,
-      //   pickupdepart2: selectedPickupReturn,
-      //   dropoffdepart2: selectedDropoffReturn,
-      // });
-
       const response = await axios.post(
         'https://thetrago.com/api/V1/ferry/Getprice',
         {
@@ -498,24 +490,14 @@ const CustomerInfo = ({ navigation }) => {
           dropoffdepart1: customerData.dropoffDepartId,
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: 0,
-
-
-
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         }
       );
 
       if (response.data.status === 'success') {
-
-
         setPriceDepart([response.data.data]);
-
-
-
       } else {
         setPriceDepart([]);
         setPriceReturn([]);
@@ -530,25 +512,8 @@ const CustomerInfo = ({ navigation }) => {
     }
   };
 
-
   const handlepromo = async () => {
     try {
-      // console.log({
-      //   currency: customerData.currency,
-      //   roundtrip: customerData.roud,
-      //   departtrip: customerData.timeTableDepartId,
-      //   returntrip: customerData.timeTableReturnId,
-      //   adult: customerData.adult,
-      //   child: customerData.child,
-      //   infant: customerData.infant,
-      //   departdate: customerData.departdate,
-      //   returndate: customerData.returndate,
-      //   pickupdepart1: selectedPickupDepart,
-      //   dropoffdepart1: selectedDropoffDepart,
-      //   pickupdepart2: selectedPickupReturn,
-      //   dropoffdepart2: selectedDropoffReturn,
-      // });
-
       const response = await axios.post(
         'https://thetrago.com/api/V1/ferry/Getprice',
         {
@@ -567,13 +532,9 @@ const CustomerInfo = ({ navigation }) => {
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: 0,
           promotioncode: code,
-
-
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         }
       );
 
@@ -584,18 +545,15 @@ const CustomerInfo = ({ navigation }) => {
           Alert.alert(t('invalidCode') || 'โค้ดไม่ถูกต้อง');
         }
 
-        // Set the price data correctly based on API response structure
         setPriceDepart([response.data.data]);
 
         updateCustomerData({
           md_booking_promoprice: response.data.data.totalDepart.promotionprice || 0,
         });
 
-        // Set return data if exists
         if (response.data.data.totalReturn) {
           setPriceReturn([response.data.data.totalReturn]);
         }
-
       } else {
         Alert.alert(t('invalidCode') || 'โค้ดไม่ถูกต้อง');
         setPriceDepart([]);
@@ -611,11 +569,31 @@ const CustomerInfo = ({ navigation }) => {
     }
   };
 
-  // ฟังก์ชันตรวจสอบข้อผิดพลาด
+  // แปลงข้อมูลจาก PassengerForm -> พารามิเตอร์ API (idtype เป็น int)
+  const toPassengerParam = (raw, fallbackType = 'adult') => {
+    const parsed = Number.isFinite(raw?.idtype)
+      ? raw.idtype
+      : parseInt(raw?.idtype ?? '', 10);
+    const idtypeNum = Number.isFinite(parsed) ? parsed : 0;
+
+    return {
+      md_passenger_prefix: raw.prefix || '', // ✅ prefix เป็น EN
+      md_passenger_fname: (raw.fname || '').trim(),
+      md_passenger_lname: (raw.lname || '').trim(),
+      md_passenger_idtype: idtypeNum,
+      md_passenger_nationality: raw.nationality || '',
+      md_passenger_passport: raw.passport || '',
+      md_passenger_passportexpiry: raw.passportexpiry || '',
+      md_passenger_dateoflssue: raw.dateofissue || '',
+      md_passenger_birthday: raw.birthday || '',
+      md_passenger_type: (raw.type || fallbackType || '').toLowerCase(),
+    };
+  };
+
   const handleNext = () => {
     if (customerData.international == 0) {
       let newErrors = {};
-      if (selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTitle = true;
+      if (selectedTitle === 'Please Select') newErrors.selectedTitle = true; // ✅ เช็ค EN
       if (!Firstname) newErrors.Firstname = true;
       if (!Lastname) newErrors.Lastname = true;
       if (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTele = true;
@@ -631,21 +609,23 @@ const CustomerInfo = ({ navigation }) => {
         }
       }
 
-      const passengerDataArr = [{
-        prefix: selectedTitle,
-        fname: Firstname?.trim() || '',
-        lname: Lastname?.trim() || '',
-        idtype: 0,
-        nationality: country || '',          // ใช้รหัสประเทศที่เลือกจาก modal โทรศัพท์
-        passport: '',                        // ไม่ใช้ใน domestic ก็เก็บเป็นค่าว่างได้
-        dateofissue: '',
-        passportexpiry: '',
-        birthday: '',
-        type: 'adult',
-      }];
+      const passengerDataArr = [
+        toPassengerParam({
+          prefix: selectedTitle, // ✅ EN
+          fname: Firstname,
+          lname: Lastname,
+          idtype: 0,
+          nationality: country,
+          passport: '',
+          passportexpiry: '',
+          dateofissue: '',
+          birthday: '',
+          type: 'adult',
+        })
+      ];
 
       updateCustomerData({
-        selectedTitle: selectedTitle,
+        selectedTitle: selectedTitle, // ✅ EN
         Firstname: Firstname,
         Lastname: Lastname,
         tel: mobileNumber,
@@ -672,8 +652,6 @@ const CustomerInfo = ({ navigation }) => {
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         setShowAllErrors(true);
-
-        // Show an alert if there are missing fields or invalid email
         if (newErrors.email) {
           Alert.alert(t('invalidEmail') || 'Invalid Email', t('pleaseEnterValidEmail') || 'Please enter a valid email address.', [
             { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
@@ -683,14 +661,11 @@ const CustomerInfo = ({ navigation }) => {
             { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
           ]);
         }
-
         return;
       }
       setShowAllErrors(false);
-      // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
       navigation.navigate('PaymentScreen');
     } else {
-      // ตรวจสอบข้อมูลผู้โดยสาร (PassengerForm)
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
         Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredPassengerFields') || 'Please fill in all required passenger fields.', [
@@ -704,10 +679,8 @@ const CustomerInfo = ({ navigation }) => {
       hasPassengerError = passengerErrors.some(err => Object.keys(err).length > 0);
       passengerFormRefs.current.forEach((formRef, idx) => {
         if (formRef) {
-          console.log('formRef', formRef);
           const data = formRef.getData?.() || {};
           const allFields = ['prefix', 'fname', 'lname', 'nationality', 'passport', 'dateofissue', 'passportexpiry', 'birthday'];
-          console.log('🧾 Form data:', passengerFormRefs.current.map(r => r?.getData?.()));
           const errorObj = {};
           allFields.forEach(f => {
             if (!data[f] || data[f] === 'Please Select' || data[f] === (t('pleaseSelect') || 'Please Select')) errorObj[f] = true;
@@ -723,11 +696,13 @@ const CustomerInfo = ({ navigation }) => {
         return;
       }
       setShowAllErrors(false);
-      // ถ้าข้อมูลครบ
-      const passengerDataArr = passengerFormRefs.current.map(ref => ref?.getData?.() || {});
-      console.log("🧾 passengerDataArr", passengerDataArr);
+      const passengerDataArr = passengerFormRefs.current.map(ref => {
+        const d = ref?.getData?.() || {};
+        if (d.idtype == null || d.idtype === '') d.idtype = 1;
+        return toPassengerParam(d);
+      });
       updateCustomerData({
-        selectedTitle: selectedTitle,
+        selectedTitle: selectedTitle, // ✅ EN
         Firstname: Firstname,
         Lastname: Lastname,
         tel: mobileNumber,
@@ -743,7 +718,7 @@ const CustomerInfo = ({ navigation }) => {
         passenger: passengerDataArr,
         // booking information
         md_booking_country: country,
-        md_booking_countrycode: '+' + countrycode,
+        md_booking_countrycode:   countrycode,
         md_booking_tel: mobileNumber,
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
@@ -757,8 +732,6 @@ const CustomerInfo = ({ navigation }) => {
   const toggleModal = () => setModalVisible(!isModalVisible);
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
 
-
-
   function formatNumber(value) {
     return parseFloat(value).toFixed(2);
   }
@@ -769,20 +742,19 @@ const CustomerInfo = ({ navigation }) => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-
-    console.log("Formatted Value:", formattedValue);
     return formattedValue;
   }
 
-
   const calculateDiscountedPrice = (price) => {
-    if (!price || isNaN(price)) return "N/A"; // ตรวจสอบว่าราคาถูกต้องไหม
-    const discountedPrice = price * 0.9; // ลด 10%
-    return discountedPrice.toFixed(2); // ปัดเศษทศนิยม 2 ตำแหน่ง
+    if (!price || isNaN(price)) return "N/A";
+    const discountedPrice = price * 0.9;
+    return discountedPrice.toFixed(2);
   };
-  const handleSelectTitle = (title) => {
-    setSelectedTitle(title);
-    setErrors((prev) => ({ ...prev, selectedTitle: false })); // Clear the error state
+
+  // รับค่า EN
+  const handleSelectTitle = (value) => {
+    setSelectedTitle(value); // ✅ EN
+    setErrors((prev) => ({ ...prev, selectedTitle: false }));
     toggleModal();
   };
 
@@ -790,15 +762,14 @@ const CustomerInfo = ({ navigation }) => {
     const selectedValue =
       item.sys_countries_nameeng === 'Please Select'
         ? 'Please Select'
-        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
+        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
 
     setSelectedTele(selectedValue);
     setCountry(item.sys_countries_code);
-    setCountrycode(item.sys_countries_telephone); // ใช้ตอนส่งออก
+    setCountrycode(item.sys_countries_telephone);
     setErrors((prev) => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
   };
-
 
   const filteredTelePhones = telePhone.filter((item) => {
     const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
@@ -806,31 +777,24 @@ const CustomerInfo = ({ navigation }) => {
   });
 
   function formatDate(dateString) {
-    const date = new Date(Date.parse(dateString)); // Parses "14 Feb 2025" correctly
+    const date = new Date(Date.parse(dateString));
     return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function formatTimeToHoursAndMinutes(time) {
     let [hours, minutes] = time.split(':');
-
-    // กำจัด 0 ด้านหน้า
     hours = parseInt(hours, 10);
     minutes = parseInt(minutes, 10);
-
     return `${hours} h ${minutes} min`;
   }
-
 
   const fetchTimetableReturn = async () => {
     try {
       const response = await fetch(`${ipAddress}/timetable/${customerData.timeTableReturnId}`);
-
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
       const data = await response.json();
-
       if (data && Array.isArray(data.data)) {
         settimetableReturn(data.data);
       } else {
@@ -842,12 +806,9 @@ const CustomerInfo = ({ navigation }) => {
     }
   };
 
-
-
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load telephone data
         const teleResponse = await fetch(`${ipAddress}/telephone`);
         const teleData = await teleResponse.json();
         if (teleData && Array.isArray(teleData.data)) {
@@ -865,7 +826,6 @@ const CustomerInfo = ({ navigation }) => {
           setTelePhone([]);
         }
 
-        // Load timetable data
         const timetableResponse = await fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`);
         if (!timetableResponse.ok) {
           throw new Error('Network response was not ok');
@@ -878,15 +838,12 @@ const CustomerInfo = ({ navigation }) => {
           settimetableDepart([]);
         }
 
-        // Load price data
         await fetchPrice();
 
-        // Load return timetable if needed
         if (customerData.roud === 2) {
           await fetchTimetableReturn();
         }
 
-        // All data loaded, hide loading
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -898,19 +855,16 @@ const CustomerInfo = ({ navigation }) => {
   }, [customerData.timeTableReturnId]);
 
   if (isLoading) {
-    // Premium Skeleton Loader UI
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
 
-        {/* Premium Gradient Background */}
         <LinearGradient
           colors={['#001233', '#002A5C', '#FD501E']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1.2 }}
           style={{ flex: 1 }}
         >
-          {/* Floating Particles Background */}
           <View style={{
             position: 'absolute',
             width: '100%',
@@ -941,7 +895,6 @@ const CustomerInfo = ({ navigation }) => {
             ))}
           </View>
 
-          {/* Enhanced Premium Header */}
           <LinearGradient
             colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
             style={[
@@ -1005,7 +958,6 @@ const CustomerInfo = ({ navigation }) => {
             </View>
           </LinearGradient>
 
-          {/* Enhanced Ultra Premium Title Section */}
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -1058,7 +1010,6 @@ const CustomerInfo = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
           >
-            {/* Step Component Skeleton */}
             <View style={{
               alignItems: 'center',
               marginTop: hp('1%'),
@@ -1073,11 +1024,9 @@ const CustomerInfo = ({ navigation }) => {
               }} />
             </View>
 
-            {/* Skeleton Content */}
             <View style={{
               paddingHorizontal: wp('6%'),
             }}>
-              {/* Skeleton for form cards */}
               {[1, 2, 3].map((_, index) => (
                 <View key={index} style={{
                   backgroundColor: 'rgba(255,255,255,0.95)',
@@ -1121,7 +1070,7 @@ const CustomerInfo = ({ navigation }) => {
       style={[
         { flex: 1 },
         Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใน Android 15 จะจัดการ insets เอง
+          paddingTop: 0,
         }
       ]}
     >
@@ -1130,14 +1079,12 @@ const CustomerInfo = ({ navigation }) => {
         backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#001233"}
         translucent={true}
       />
-      {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-        {/* Enhanced Premium Header - รองรับ Android 15 Edge-to-Edge */}
         <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
@@ -1157,7 +1104,6 @@ const CustomerInfo = ({ navigation }) => {
               minHeight: hp('12%'),
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
-              // Ultra premium glass morphism
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1176,7 +1122,6 @@ const CustomerInfo = ({ navigation }) => {
               },
             ]}
           >
-            {/* Back Button - Left */}
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={{
@@ -1197,14 +1142,12 @@ const CustomerInfo = ({ navigation }) => {
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
             </TouchableOpacity>
 
-            {/* Logo - Center */}
             <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
               <LogoTheTrago />
             </View>
           </View>
         </LinearGradient>
 
-        {/* Enhanced Ultra Premium Title Section */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -1262,14 +1205,14 @@ const CustomerInfo = ({ navigation }) => {
             contentContainerStyle={[
               styles.container,
               {
-                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%') // Android 15 Edge-to-Edge รองรับ
+                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%')
               }
             ]}
             showsVerticalScrollIndicator={false}
             style={[
               { flex: 1 },
               Platform.OS === 'android' && Platform.Version >= 31 && {
-                paddingBottom: 0, // ใช้ contentContainerStyle แทน
+                paddingBottom: 0,
               }
             ]}
             contentInsetAdjustmentBehavior="automatic"
@@ -1293,10 +1236,9 @@ const CustomerInfo = ({ navigation }) => {
                   {/* คำนำหน้า */}
                   <Text style={styles.textHead}>{t('title') || 'Title'}</Text>
                   <TouchableOpacity
-
-                    style={[styles.button, (errors.selectedTitle || (selectedTitle === 'Please Select' || selectedTitle === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
+                    style={[styles.button, (errors.selectedTitle || (selectedTitle === 'Please Select')) && styles.errorInput]}
                     onPress={toggleModal}>
-                    <Text style={styles.buttonText}>{selectedTitle}</Text>
+                    <Text style={styles.buttonText}>{getTitleLabel(selectedTitle, t)}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                   </TouchableOpacity>
 
@@ -1307,8 +1249,8 @@ const CustomerInfo = ({ navigation }) => {
                         <FlatList
                           data={titleOptions}
                           renderItem={({ item }) => (
-                            <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item)}>
-                              <Text style={styles.optionText}>{item}</Text>
+                            <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTitle(item.value)}>
+                              <Text style={styles.optionText}>{item.label}</Text>
                             </TouchableOpacity>
                           )}
                           keyExtractor={(item, index) => index.toString()}
@@ -1320,6 +1262,7 @@ const CustomerInfo = ({ navigation }) => {
                       </View>
                     </View>
                   </Modal>
+
                   {/* ชื่อจริง & นามสกุล */}
                   <Text style={styles.textHead}>{t('firstName') || 'First Name'}</Text>
                   <TextInput
@@ -1329,7 +1272,7 @@ const CustomerInfo = ({ navigation }) => {
                       setFirstname(text);
                       setErrors((prev) => ({ ...prev, Firstname: false }));
                     }}
-                    style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                    style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]}
                   />
 
                   <Text style={styles.textHead}>{t('lastName') || 'Last Name'}</Text>
@@ -1338,11 +1281,10 @@ const CustomerInfo = ({ navigation }) => {
                     value={Lastname}
                     onChangeText={(text) => {
                       setLastname(text);
-                      setErrors((prev) => ({ ...prev, Lastname: false })); // Remove error when the user types
+                      setErrors((prev) => ({ ...prev, Lastname: false }));
                     }}
-                    style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                    style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]}
                   />
-
 
                   {/* รายละเอียดการติดต่อ */}
                   <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
@@ -1392,9 +1334,9 @@ const CustomerInfo = ({ navigation }) => {
                     keyboardType="number-pad"
                     onChangeText={(text) => {
                       setmobileNumber(text);
-                      setErrors((prev) => ({ ...prev, mobileNumber: false })); // Remove error when the user types
+                      setErrors((prev) => ({ ...prev, mobileNumber: false }));
                     }}
-                    style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                    style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]}
                   />
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginBottom: 10 }}>
                     <TouchableOpacity
@@ -1411,16 +1353,14 @@ const CustomerInfo = ({ navigation }) => {
                     value={email}
                     onChangeText={(text) => {
                       setemail(text);
-                      setErrors((prev) => ({ ...prev, email: false })); // Remove error when the user types
+                      setErrors((prev) => ({ ...prev, email: false }));
                     }}
-                    style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                    style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]}
                     editable={!customerData.email}
                   />
                 </View>
               ) : (
-                // ถ้า international ไม่ใช่ 0 ให้แสดงฟอร์มตามจำนวนผู้โดยสาร
                 <>
-                  {/* ก่อน map ทุกครั้ง ให้ reset refs */}
                   {passengerFormRefs.current = []}
 
                   {[...Array(customerData.adult)].map((_, i) => (
@@ -1454,7 +1394,7 @@ const CustomerInfo = ({ navigation }) => {
                     />
                   ))}
 
-                  {/* Contact Details Section (after all PassengerForms) */}
+                  {/* Contact Details Section */}
                   <View style={styles.promo}>
                     <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
                     <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
@@ -1465,7 +1405,6 @@ const CustomerInfo = ({ navigation }) => {
                       <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                     </TouchableOpacity>
 
-                    {/* Modal for selecting telephone */}
                     <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
                       <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
@@ -1530,34 +1469,6 @@ const CustomerInfo = ({ navigation }) => {
                 </>
               )}
 
-              {/* Render ฟอร์มผู้โดยสารแบบ map พร้อมส่ง type, index ให้แต่ละฟอร์ม */}
-              {/* {[...Array(customerData.adult)].map((_, i) => (
-              <PassengerForm
-                key={`adult-${i}`}
-                type="adult"
-                index={i}
-                telePhone={telePhone}
-                // ...other props if needed...
-              />
-            ))}
-            {[...Array(customerData.child)].map((_, i) => (
-              <PassengerForm
-                key={`child-${i}`}
-                type="child"
-                index={i}
-                telePhone={telePhone}
-                // ...other props if needed...
-              />
-            ))}
-            {[...Array(customerData.infant)].map((_, i) => (
-              <PassengerForm
-                key={`infant-${i}`}
-                type="infant"
-                index={i}
-                telePhone={telePhone}
-                // ...other props if needed...
-              />
-            ))} */}
               {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => (
                 <View key={index}>
 
@@ -1599,9 +1510,6 @@ const CustomerInfo = ({ navigation }) => {
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'} : </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                         </View>
-
-
-
 
                         <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
                           <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
@@ -1748,7 +1656,6 @@ const CustomerInfo = ({ navigation }) => {
                   </View>
                 </View>
               ))}
-
 
               <View style={styles.promo}>
                 <Text style={styles.promoLabel}>{t('promotionCode') || 'Promotion Code'}</Text>
