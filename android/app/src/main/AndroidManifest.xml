@@ -64,7 +64,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="thetrago"/>
-        <data android:scheme="com.chayanin5678.thetrago"/>
+        <data android:scheme="com.thetrago.android"/>
         <data android:scheme="exp+thetrago"/>
       </intent-filter>
     </activity>

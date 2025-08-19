@@ -1,10 +1,19 @@
 {
   "expo": {
+    "owner": "chayanin0937",
     "name": "TheTrago - Ferry Booking App",
     "slug": "TheTrago",
     "scheme": "thetrago",
     "description": "Book ferry tickets easily with TheTrago. Find the best ferry routes, compare prices, and make reservations for your island hopping adventures in Thailand.",
-    "keywords": ["ferry", "booking", "travel", "thailand", "island", "transportation", "tickets"],
+    "keywords": [
+      "ferry",
+      "booking",
+      "travel",
+      "thailand",
+      "island",
+      "transportation",
+      "tickets"
+    ],
     "privacy": "public",
     "extra": {
       "deeplink": {
@@ -13,8 +22,8 @@
         "subdomain": "thetrago"
       },
       "eas": {
-        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b",
-         "build": {
+        "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c",
+        "build": {
           "version": "1.0.3",
           "buildNumber": "3"
         }
@@ -32,7 +41,7 @@
     },
     "android": {
       "versionCode": 50,
-      "package": "com.chayanin5678.TheTrago",
+      "package": "com.thetrago.android",
       "compileSdkVersion": 35,
       "targetSdkVersion": 35,
       "minSdkVersion": 24,
@@ -75,8 +84,21 @@
               "android16AdaptiveLayouts": true
             },
             "packagingOptions": {
-              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"],
-              "exclude": ["META-INF/DEPENDENCIES", "META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/license.txt", "META-INF/NOTICE", "META-INF/notice.txt", "META-INF/ASL2.0", "META-INF/LICENSE.md", "META-INF/NOTICE.md"]
+              "pickFirst": [
+                "**/libc++_shared.so",
+                "**/libjsc.so"
+              ],
+              "exclude": [
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/LICENSE.md",
+                "META-INF/NOTICE.md"
+              ]
             },
             "proguardVersion": "7.4.0",
             "enableProguardInReleaseBuilds": true,
@@ -117,19 +139,27 @@
       "versionCode": 3,
       "version": "1.0.3",
       "buildNumber": "3",
-      "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "bundleIdentifier": "com.thetrago.android",
       "supportsTablet": true,
       "requireFullScreen": false,
       "userInterfaceStyle": "automatic",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": ["alipay","alipays","alipayqr","alipaylite"],
+        "LSApplicationQueriesSchemes": [
+          "alipay",
+          "alipays",
+          "alipayqr",
+          "alipaylite"
+        ],
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "TheTrago needs camera access to scan QR codes for ticket verification and to upload ID documents for booking verification.",
         "NSPhotoLibraryUsageDescription": "TheTrago needs access to your photo library to upload profile pictures and ID documents for account verification.",
         "NSSpeechRecognitionUsageDescription": "TheTrago may use speech recognition to enhance voice input features for better user experience.",
         "NSLocationWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
-        "UIBackgroundModes": ["background-fetch", "remote-notification"],
+        "UIBackgroundModes": [
+          "background-fetch",
+          "remote-notification"
+        ],
         "CFBundleDisplayName": "TheTrago",
         "CFBundleName": "TheTrago",
         "CFBundleVersion": "3",

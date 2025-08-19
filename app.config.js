@@ -2,6 +2,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 
 export default {
   "expo": {
+    "owner": "chayanin0937",
     "name": IS_DEV ? "TheTrago (Dev)" : "TheTrago",
     "slug": "TheTrago",
     "scheme": "thetrago",
@@ -12,10 +13,11 @@ export default {
         "subdomain": "thetrago"
       },
       "eas": {
-        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
+        "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c"
       }
     },
-    "version": "1.0.2",
+    "version": "1.0.3",
+    
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
@@ -27,7 +29,7 @@ export default {
     },
     "android": {
       "versionCode": 2,
-      "package": "com.chayanin5678.TheTrago",
+      "package": "com.thetrago.android",
       "permissions": [
         "CAMERA"
       ]
@@ -51,7 +53,8 @@ export default {
     ],
     "jsEngine": "jsc",
     "ios": {
-      "bundleIdentifier": "com.chayanin5678.TheTrago",
+      "bundleIdentifier": "com.thetrago.android",
+      "buildNumber": "3",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,

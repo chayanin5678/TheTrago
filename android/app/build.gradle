@@ -87,13 +87,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk 35
 
-    namespace 'com.chayanin5678.TheTrago'
+    namespace 'com.thetrago.android'
     defaultConfig {
-        applicationId 'com.chayanin5678.TheTrago'
+        applicationId 'com.thetrago.android'
         minSdkVersion 24
         targetSdkVersion 35
-        versionCode 48
-        versionName "1.4.8"
+        versionCode 1
+        versionName "1.0.0"
         
         // ระบุว่าไม่ใช้โฆษณาสำหรับ Google Play Console
         manifestPlaceholders = [

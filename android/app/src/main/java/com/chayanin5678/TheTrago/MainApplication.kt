@@ -1,4 +1,4 @@
-package com.chayanin5678.TheTrago
+package com.thetrago.android
 
 import android.app.Application
 import android.content.res.Configuration

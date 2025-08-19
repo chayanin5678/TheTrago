@@ -1,4 +1,4 @@
-package com.chayanin5678.TheTrago
+package com.thetrago.android
 
 import expo.modules.splashscreen.SplashScreenManager
 
