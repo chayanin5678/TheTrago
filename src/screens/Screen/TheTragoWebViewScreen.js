@@ -1,56 +1,34 @@
 // TheTragoWebViewScreen.js
-import React, { useCallback, useRef, useState, useMemo } from 'react';
-import {
-  View,
-  ActivityIndicator,
-  Platform,
-  BackHandler,
-  Alert,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Easing,
-} from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { View, ActivityIndicator, Platform, BackHandler, Alert, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Linking from 'expo-linking';
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import * as Haptics from 'expo-haptics';
 
-// ✅ อนุญาตเฉพาะ hostname ที่ต้องการ
+// ✅ allow-list เฉพาะ hostname
 const ALLOWED_HOSTS = new Set([
   'thailandferrybooking.com',
   'www.thailandferrybooking.com',
-  // Payment gateways ที่ให้โหลดใน WebView
   'kpaymentgateway.kasikornbank.com',
   'pay.omise.co',
   '3dsms.omise.co',
   'emvacs.2c2p.com',
-  // Alipay web flows
   'mclient.alipay.com',
   'render.alipay.com',
   'openapi.alipay.com',
 ]);
 
-// ✅ อนุโลมซับโดเมนของรูทโดเมนเหล่านี้
 const ALLOWED_ROOTS = new Set(['kasikornbank.com', 'alipay.com']);
-const isAllowedByRoot = (h) =>
-  Array.from(ALLOWED_ROOTS).some(root => h === root || h.endsWith('.' + root));
+const isAllowedByRoot = (h) => Array.from(ALLOWED_ROOTS).some(root => h === root || h.endsWith('.' + root));
+const isAlipayHost = (hostname) => (!!hostname && hostname.toLowerCase().endsWith('.alipay.com')) || hostname === 'alipay.com';
 
-const isAlipayHost = (hostname) =>
-  (!!hostname && hostname.toLowerCase().endsWith('.alipay.com')) || hostname === 'alipay.com';
-
-const SCHEMES_TO_OPEN_EXTERNALLY = new Set([
-  'alipays','alipay','alipayqr','alipaylite',
-  'weixin','line','kplus','promptpay',
-  'tel','mailto',
-]);
-
+const SCHEMES_TO_OPEN_EXTERNALLY = new Set(['alipays','alipay','alipayqr','alipaylite','weixin','line','kplus','promptpay','tel','mailto']);
 const HEADER_H = 56;
 
-// 🔒 ล็อกซูม + กัน iOS auto-zoom
+/* ---------- lock zoom ก่อนโหลด ---------- */
 const INJECTED_LOCK_ZOOM_BEFORE = `
   (function(){
     try {
@@ -65,18 +43,44 @@ const INJECTED_LOCK_ZOOM_BEFORE = `
       style.innerHTML = \`
         html, body { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
         html, body, * { touch-action: pan-x pan-y; }
-        input, textarea, select, button { font-size: 16px !important; line-height: 1.25 !important; }
-        ::-webkit-input-placeholder, :-ms-input-placeholder, ::placeholder { font-size: 16px !important; }
-        body { will-change: transform; }
       \`;
       document.head.appendChild(style);
+
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        var now = Date.now();
+        if (now - lastTouchEnd <= 300) e.preventDefault();
+        lastTouchEnd = now;
+      }, { passive:false });
+
+      ['gesturestart','gesturechange','gestureend'].forEach(function(type){
+        document.addEventListener(type, function(e){ e.preventDefault(); }, { passive:false });
+      });
+
+      document.addEventListener('wheel', function(e){ if (e.ctrlKey) e.preventDefault(); }, { passive:false });
+
+      document.addEventListener('keydown', function(e){
+        var k = e.key;
+        if ((e.ctrlKey || e.metaKey) && (k === '+' || k === '-' || k === '=' || k === '0')) e.preventDefault();
+      });
+
+      if (window.visualViewport) {
+        var resetViewport = function(){
+          try {
+            var m = document.querySelector('meta[name=viewport]');
+            if (m) m.setAttribute('content','width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no');
+          } catch(_){}
+        };
+        window.visualViewport.addEventListener('resize', resetViewport);
+        window.visualViewport.addEventListener('scroll', resetViewport);
+      }
     } catch(e){}
   })();
   true;
 `;
 
-// ⛔️ กัน target=_blank โดดไปแท็บใหม่: ให้เปิดหน้าเดิมแทน
-const INJECTED_FIX_WINDOW_OPEN = `
+/* ---------- กัน window.open โดดออก ---------- */
+const INJECTED_JS = `
   (function(){
     try {
       const _open = window.open;
@@ -86,75 +90,60 @@ const INJECTED_FIX_WINDOW_OPEN = `
   true;
 `;
 
-/** ⬇️ ดึง-ค้าง (sticky pull-to-refresh) ฝั่งเว็บ */
-const INJECTED_PULL_TO_REFRESH = `
-  (function () {
-    try {
-      var startY = 0, pulling = false, dy = 0, threshold = 80, maxPull = 140, locked = false;
+/** ===== Pull-down with top icon (ไม่มี loader กลางจอ) ===== */
+const ALLOW_PULL_DOWN_REFRESH = Platform.OS === 'ios'; // iOS: JS ยิงรีเฟรชเอง, Android: ใช้ native
 
-      function atTop(){
-        var top = (document.scrollingElement || document.documentElement).scrollTop || window.pageYOffset || 0;
-        return top <= 0;
-      }
+const INJECTED_PULL_DOWN_HOLD = `
+  (function(){
+    try{
+      var startY=0,startX=0,pulling=false,exceeded=false,holding=false,startAt=0;
+      var THRESHOLD=120, VERT_RATIO=1.2, EDGE_TOL=2, MIN_DUR=200;
+      var ALLOW_REFRESH=${ALLOW_PULL_DOWN_REFRESH ? 'true' : 'false'};
 
-      function setBodyOffset(y, withTransition){
-        try {
-          var b = document.body;
-          if (!b) return;
-          if (withTransition) { b.style.transition = 'transform 200ms ease'; }
-          else { b.style.transition = 'none'; }
-          b.style.transform = 'translateY(' + y + 'px)';
-        } catch(_){}
-      }
+      function st(){ return (document.scrollingElement||document.documentElement).scrollTop||0; }
 
-      window.addEventListener('touchstart', function (e) {
-        if (locked) return;
-        pulling = atTop();
-        startY = e.touches[0].clientY;
-        dy = 0;
-      }, { passive: true });
-
-      window.addEventListener('touchmove', function (e) {
-        if (locked || !pulling) return;
-        var cur = e.touches[0].clientY;
-        dy = cur - startY;
-        if (dy <= 0) return;
-        var eased = Math.min(maxPull, dy * 0.6);
-        setBodyOffset(eased, false);
-        window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({type:'PTR_PULL', y:eased, threshold:threshold}));
-        e.preventDefault();
-      }, { passive: false });
-
-      window.addEventListener('touchend', function () {
-        if (locked) return;
-        if (!pulling) return;
-        pulling = false;
-        if (dy * 0.6 >= threshold) {
-          locked = true;
-          setBodyOffset(60, true);
-          window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({type:'PTR_START'}));
-        } else {
-          setBodyOffset(0, true);
-          window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({type:'PTR_CANCEL'}));
+      function ensureHold(state){
+        if(state && !holding){
+          holding=true;
+          window.ReactNativeWebView && window.ReactNativeWebView.postMessage('{"type":"pullDownHoldStart"}');
+        }else if(!state && holding){
+          holding=false;
+          window.ReactNativeWebView && window.ReactNativeWebView.postMessage('{"type":"pullDownHoldCancel"}');
         }
-      }, { passive: true });
+      }
 
-      // รับสัญญาณปล่อยตัวจาก RN
-      window.addEventListener('message', function(e){
-        try{
-          var data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-          if (data && data.type === 'PTR_FINISH') {
-            locked = false;
-            setBodyOffset(0, true);
+      window.addEventListener('touchstart',function(e){
+        exceeded=false; startAt=Date.now();
+        startY=e.touches[0].clientY; startX=e.touches[0].clientX;
+        pulling = (st()<=EDGE_TOL);
+        ensureHold(false);
+      },{passive:true});
+
+      window.addEventListener('touchmove',function(e){
+        if(!pulling) return;
+        var y=e.touches[0].clientY, x=e.touches[0].clientX, dy=y-startY, dx=x-startX;
+        if(st()>EDGE_TOL){ pulling=false; exceeded=false; ensureHold(false); return; }
+        exceeded=(dy>THRESHOLD)&&(Math.abs(dy)>=VERT_RATIO*Math.abs(dx));
+        ensureHold(exceeded);
+      },{passive:true});
+
+      ['touchend','touchcancel'].forEach(function(ev){
+        window.addEventListener(ev,function(){
+          if(pulling && exceeded && st()<=EDGE_TOL && (Date.now()-startAt)>=MIN_DUR){
+            if(ALLOW_REFRESH){
+              window.ReactNativeWebView && window.ReactNativeWebView.postMessage('{"type":"pullRefresh"}');
+            }
           }
-        }catch(_){}
+          pulling=false; exceeded=false; ensureHold(false);
+        },{passive:true});
       });
-    } catch (_) {}
+    }catch(_){}
   })();
   true;
 `;
 
-const INJECTED_AFTER = `${INJECTED_FIX_WINDOW_OPEN}\n${INJECTED_PULL_TO_REFRESH}`;
+/* ---------- รวมสคริปต์หลังโหลด ---------- */
+const injectedAfterLoad = [INJECTED_JS, INJECTED_PULL_DOWN_HOLD].join('\n');
 
 export default function TheTragoWebViewScreen() {
   const initialUrl = 'https://thailandferrybooking.com/';
@@ -167,22 +156,16 @@ export default function TheTragoWebViewScreen() {
   const [pageTitle, setPageTitle] = useState('Thailand Ferry');
   const [currentUrl, setCurrentUrl] = useState(initialUrl);
 
-  // ดึงลงค้าง (หัวรีเฟรช)
+  // UI: เฉพาะด้านบน
+  const [isPullHoldTop, setIsPullHoldTop] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const pullY = useRef(new Animated.Value(0)).current; // 0 → 60
-  const stickyHeight = 60;
 
-  // 👇 สั่น "ตึ๊กเดียว" ตอนเริ่มโหลด (ต่อหนึ่งรอบโหลด)
-  const vibbedThisLoadRef = useRef(false);
-  const vibrateOnce = useCallback(() => {
-    if (vibbedThisLoadRef.current) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    vibbedThisLoadRef.current = true;
-  }, []);
+  // Android: ธงบอกว่า native pull กำลังจะเริ่ม
+  const pendingNativeRefresh = useRef(false);
 
-  const animatePullTo = useCallback((to, dur = 160) => {
-    Animated.timing(pullY, { toValue: to, duration: dur, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
-  }, [pullY]);
+  // คูลดาวน์ไม่ให้รีเฟรชถี่
+  const lastRefreshAt = useRef(0);
+  const COOL_MS = 1200;
 
   useFocusEffect(
     useCallback(() => {
@@ -195,7 +178,6 @@ export default function TheTragoWebViewScreen() {
     }, [canGoBack])
   );
 
-  // จัดการ intent:// และ deep links
   const handleIntentUrl = (url) => {
     const m = url.match(/intent:\/\/.*#Intent;.*?S\.browser_fallback_url=([^;]+);/);
     if (m && m[1]) {
@@ -206,20 +188,16 @@ export default function TheTragoWebViewScreen() {
     setTimeout(() => { Linking.openURL(url).catch(() => Alert.alert('Cannot open link', url)); }, 0);
   };
 
-  // ต้อง synchronous เท่านั้น (ห้าม async/await)
   const handleShouldStartLoad = useCallback((req) => {
     const url = req.url;
     try {
       if (url.startsWith('about:') || url.startsWith('data:')) return true;
-
       if (url.startsWith('intent://')) { handleIntentUrl(url); return false; }
-
       const scheme = url.split(':')[0].toLowerCase();
       if (SCHEMES_TO_OPEN_EXTERNALLY.has(scheme)) {
         setTimeout(() => { Linking.openURL(url).catch(() => Alert.alert('Cannot open link', url)); }, 0);
         return false;
       }
-
       const u = new URL(url);
       const { hostname, protocol } = u;
       const isHttp = protocol === 'http:' || protocol === 'https:';
@@ -229,68 +207,24 @@ export default function TheTragoWebViewScreen() {
       }
       return false;
     } catch {
-      return true; // ปล่อย resource ภายในบางอย่าง
+      // บาง resource ภายใน (blob/data) อาจ parse ไม่ได้ → ปล่อยผ่าน
+      return true;
     }
   }, []);
 
-  const refresh = useCallback(() => {
-    if (refreshing) return;
+  const refresh = () => {
+    const now = Date.now();
+    if (loading) return;
+    if (now - lastRefreshAt.current < COOL_MS) return;
+    lastRefreshAt.current = now;
     setRefreshing(true);
-    animatePullTo(stickyHeight, 80);
-    webRef.current?.reload(); // โหลดใหม่จากบนสุด
-  }, [refreshing, animatePullTo]);
+    webRef.current?.reload();
+  };
 
   const openInBrowser = () => Linking.openURL(currentUrl).catch(() => {});
 
-  // รับอีเวนต์จากหน้าเว็บ (ดึงลง)
-  const onMessage = useCallback((e) => {
-    let data = e?.nativeEvent?.data;
-    try { data = JSON.parse(data); } catch {}
-    if (!data || !data.type) return;
-
-    if (data.type === 'PTR_PULL' && !refreshing) {
-      const y = Math.min(stickyHeight, Math.max(0, Number(data.y) || 0));
-      pullY.setValue(y);
-    } else if (data.type === 'PTR_START') {
-      refresh();
-    } else if (data.type === 'PTR_CANCEL' && !refreshing) {
-      animatePullTo(0);
-    }
-  }, [refreshing, pullY, animatePullTo, refresh]);
-
-  const onLoadStart = useCallback(() => {
-    setLoading(true);
-    vibrateOnce(); // 👈 สั่น "ตึ๊กเดียว"
-  }, [vibrateOnce]);
-
-  // โหลดเสร็จ → ปลดหัวค้าง + รีเซ็ตให้รอบหน้าสั่นได้อีก
-  const onLoadEnd = useCallback(() => {
-    setLoading(false);
-    vibbedThisLoadRef.current = false;
-
-    if (refreshing) {
-      setRefreshing(false);
-      animatePullTo(0, 180);
-      try {
-        // บอกเว็บให้ปล่อย body กลับที่เดิม
-        webRef.current?.postMessage(JSON.stringify({ type: 'PTR_FINISH' }));
-      } catch {}
-    }
-  }, [refreshing, animatePullTo]);
-
-  const headerPad = useMemo(
-    () => ({ paddingTop: insets.top + HEADER_H }),
-    [insets.top]
-  );
-
-  const translateContent = pullY.interpolate({
-    inputRange: [0, stickyHeight],
-    outputRange: [0, stickyHeight],
-    extrapolate: 'clamp',
-  });
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: insets.top + HEADER_H, marginBottom: insets.bottom + HEADER_H }}>
       {/* HEADER */}
       <View style={[styles.header, { paddingTop: insets.top, height: insets.top + HEADER_H }]}>
         <View style={styles.headerRow}>
@@ -321,74 +255,98 @@ export default function TheTragoWebViewScreen() {
         </View>
       </View>
 
-      {/* หัวรีเฟรชค้าง */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.refreshHeader,
-          { paddingTop: insets.top,
-            height: pullY,
-            opacity: pullY.interpolate({ inputRange:[0,10], outputRange:[0,1] }) }
-        ]}
-      >
-        <View style={styles.refreshInner}>
-          <ActivityIndicator />
-          <Text style={styles.refreshText}>{refreshing ? 'กำลังรีเฟรช...' : 'ดึงเพื่อรีเฟรช'}</Text>
+      {/* WEBVIEW */}
+      <WebView
+        ref={webRef}
+        source={{ uri: initialUrl }}
+        applicationNameForUserAgent={`ThailandFerryBooking/${Platform.OS}`}
+
+        // ❌ ปิด loader กลางจอของ WebView
+        startInLoadingState={false}
+        renderLoading={() => null}
+
+        onLoadStart={() => {
+          setLoading(true);
+          // Android: ถ้าเป็น pull-down native ให้สลับเป็น refreshing + haptic
+          if (pendingNativeRefresh.current) {
+            pendingNativeRefresh.current = false;
+            setIsPullHoldTop(false);
+            setRefreshing(true);
+            try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+          }
+        }}
+        onLoadEnd={() => { setLoading(false); setRefreshing(false); }}
+
+        onNavigationStateChange={(nav) => {
+          setCanGoBack(nav.canGoBack);
+          if (nav?.title) setPageTitle(nav.title);
+          if (nav?.url) setCurrentUrl(nav.url);
+        }}
+
+        injectedJavaScriptBeforeContentLoaded={INJECTED_LOCK_ZOOM_BEFORE}
+        injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
+        injectedJavaScript={injectedAfterLoad}
+        injectedJavaScriptForMainFrameOnly={false}
+
+        javaScriptEnabled
+        javaScriptCanOpenWindowsAutomatically={false}
+        domStorageEnabled
+        onShouldStartLoadWithRequest={handleShouldStartLoad}
+        pullToRefreshEnabled={Platform.OS === 'android'} // Android: ใช้ native
+        bounces                                          // iOS: ต้องเปิดเพื่อ overscroll ด้านบน
+        setSupportMultipleWindows={false}
+        allowFileAccess
+        originWhitelist={['http://*', 'https://*', 'about:*', 'data:*']}
+        cacheEnabled
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+
+        // ปิดซูมฝั่ง native
+        setBuiltInZoomControls={false}
+        setDisplayZoomControls={false}
+        textZoom={100}
+        scalesPageToFit={false}
+
+        // รับสัญญาณจาก JS
+        onMessage={async (e) => {
+          let type = e.nativeEvent?.data;
+          try { const payload = JSON.parse(type || '{}'); type = payload?.type || type; } catch {}
+
+          if (type === 'pullDownHoldStart') {
+            setIsPullHoldTop(true);
+            if (Platform.OS === 'android') pendingNativeRefresh.current = true; // รอ native เริ่มโหลด
+            try { await Haptics.selectionAsync(); } catch {} // สั่นนิดตอนเริ่มค้าง
+          }
+          else if (type === 'pullDownHoldCancel') {
+            setIsPullHoldTop(false);
+            if (Platform.OS === 'android') pendingNativeRefresh.current = false;
+          }
+          else if (type === 'pullRefresh') {
+            // iOS: ปล่อยแล้วรีเฟรช
+            setIsPullHoldTop(false);
+            try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+            refresh();
+          }
+        }}
+
+        onError={(e) => {
+          const msg = e?.nativeEvent?.description || 'Unknown error';
+          Alert.alert('Load error', msg);
+        }}
+        style={{ flex: 1 }}
+      />
+
+      {/* ✅ Overlay เฉพาะด้านบน (ไม่มีตัวไหนกลางจออีกแล้ว) */}
+      {(isPullHoldTop || refreshing) && (
+        <View pointerEvents="none" style={[styles.holdOverlayTop, { top: insets.top + HEADER_H + 8 }]}>
+          <View style={styles.holdBox}>
+            {refreshing
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Ionicons name="refresh" size={16} color="#fff" />}
+            <Text style={styles.holdText}>{refreshing ? 'Refreshing…' : 'Release to refresh'}</Text>
+          </View>
         </View>
-      </Animated.View>
-
-      {/* เนื้อหา WebView */}
-      <Animated.View style={{ flex: 1, transform: [{ translateY: translateContent }] }}>
-        <View style={[{ flex: 1 }, headerPad]}>
-          <WebView
-            ref={webRef}
-            source={{ uri: initialUrl }}
-            applicationNameForUserAgent={`ThailandFerryBooking/${Platform.OS}`}
-            onLoadStart={onLoadStart}
-            onLoadEnd={onLoadEnd}
-            onNavigationStateChange={(nav) => {
-              setCanGoBack(nav.canGoBack);
-              if (nav?.title) setPageTitle(nav.title);
-              if (nav?.url) setCurrentUrl(nav.url);
-            }}
-
-            // 🔐 anti-zoom + ptr script
-            injectedJavaScriptBeforeContentLoaded={INJECTED_LOCK_ZOOM_BEFORE}
-            injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
-            injectedJavaScript={INJECTED_AFTER}
-            injectedJavaScriptForMainFrameOnly={false}
-
-            // pull-to-refresh แบบ custom (ปิด native)
-            pullToRefreshEnabled={false}
-            onMessage={onMessage}
-
-            // WebView options
-            javaScriptEnabled
-            javaScriptCanOpenWindowsAutomatically={false}
-            domStorageEnabled
-            onShouldStartLoadWithRequest={handleShouldStartLoad}
-            bounces
-            setSupportMultipleWindows={false}
-            allowFileAccess
-            originWhitelist={['http://*', 'https://*', 'about:*', 'data:*']}
-            cacheEnabled
-            sharedCookiesEnabled
-            thirdPartyCookiesEnabled
-
-            // 🔒 ปิดการซูมฝั่ง native
-            setBuiltInZoomControls={false}
-            setDisplayZoomControls={false}
-            textZoom={100}
-            scalesPageToFit={false}
-
-            onError={(e) => {
-              const msg = e?.nativeEvent?.description || 'Unknown error';
-              Alert.alert('Load error', msg);
-            }}
-            style={{ flex: 1 }}
-          />
-        </View>
-      </Animated.View>
+      )}
     </View>
   );
 }
@@ -400,11 +358,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E7EB',
-    zIndex: 30,
+    zIndex: 10,
     elevation: 10,
   },
   headerRow: {
-    height: HEADER_H,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -415,26 +373,20 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 11, color: '#6B7280', marginTop: 2 },
   rightBox: { flexDirection: 'row', alignItems: 'center' },
 
-  refreshHeader: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    backgroundColor: '#fff',
-    zIndex: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-  },
-  refreshInner: {
-    height: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  // กล่อง overlay ด้านบนเท่านั้น
+  holdBox: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(17,24,39,0.9)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
-  refreshText: {
-    fontSize: 12,
-    color: '#4B5563',
-    marginLeft: 8,
+  holdText: { color: '#fff', fontSize: 12, fontWeight: '600', marginLeft: 8 },
+
+  holdOverlayTop: {
+    position: 'absolute',
+    left: 0, right: 0,
+    alignItems: 'center',
   },
 });

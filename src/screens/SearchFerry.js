@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -32,6 +33,7 @@ const getResponsiveSize = (phone, tablet, largeTablet) => {
 
 
 const SearchFerry = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
 
@@ -127,40 +129,40 @@ const SearchFerry = ({ navigation, route }) => {
     console.log('📅 Depart date clicked:', day.dateString);
     setCalendarStartDate(day.dateString);
     setDepartureDate(new Date(day.dateString));
-    
+
     // สำหรับ Round Trip: ถ้าวันที่ออกเดินทางมากกว่าวันที่กลับ ให้เซ็ตวันที่กลับเป็นวันที่ออกเดินทาง
     if (tripType === t('roundTrip') || tripType === t('returnTrip')) {
       const selectedDepartDate = new Date(day.dateString);
-      
+
       console.log('🔍 Debug Departure Date Selection (Round Trip):');
       console.log('  - Selected departure date:', day.dateString);
       console.log('  - Current return date:', calendarEndDate);
-      
+
       // ตรวจสอบว่ามีวันที่กลับหรือไม่ และวันที่ออกเดินทางมากกว่าวันที่กลับหรือไม่
       if (calendarEndDate) {
         const currentReturnDate = new Date(calendarEndDate);
         console.log('  - Departure > Return?', selectedDepartDate > currentReturnDate);
-        
+
         if (selectedDepartDate > currentReturnDate) {
           const sameDayString = selectedDepartDate.toISOString().split('T')[0];
-          
+
           console.log('⚠️ Adjusting return date from', calendarEndDate, 'to', sameDayString);
-          
+
           // Force update states และ re-render
           setTimeout(() => {
             setCalendarEndDate(sameDayString);
             setReturnDate(new Date(sameDayString));
             console.log('✅ Return date state updated to:', sameDayString);
           }, 10);
-          
+
           console.log('⚠️ Return date adjusted to match departure date:', sameDayString);
         }
       } else {
         // ถ้าไม่มีวันที่กลับ ให้ตั้งวันที่กลับเท่ากับวันที่ออกเดินทาง
         const sameDayString = selectedDepartDate.toISOString().split('T')[0];
-        
+
         console.log('⚠️ No return date set, setting return date to:', sameDayString);
-        
+
         setTimeout(() => {
           setCalendarEndDate(sameDayString);
           setReturnDate(new Date(sameDayString));
@@ -168,36 +170,36 @@ const SearchFerry = ({ navigation, route }) => {
         }, 10);
       }
     }
-    
+
     console.log('✅ Depart date updated:', day.dateString);
   };
 
   // ฟังก์ชันสำหรับเลือกวันที่กลับ
   const onReturnCalendarDayPress = (day) => {
     console.log('📅 Return date clicked:', day.dateString);
-    
+
     // ตรวจสอบว่าวันที่กลับไม่น้อยกว่าวันที่ออกเดินทาง
     const selectedReturnDate = new Date(day.dateString);
     const currentDepartDate = new Date(calendarStartDate);
-    
+
     console.log('🔍 Debug Return Date Selection:');
     console.log('  - Selected return date:', day.dateString);
     console.log('  - Current departure date:', calendarStartDate);
     console.log('  - Return < Departure?', selectedReturnDate < currentDepartDate);
-    
+
     if (selectedReturnDate < currentDepartDate) {
       // ถ้าวันที่กลับน้อยกว่าวันที่ออกเดินทาง ให้ใช้วันที่ออกเดินทางแทน
       const departDateString = calendarStartDate;
-      
+
       console.log('⚠️ Adjusting return date from', day.dateString, 'to', departDateString);
-      
+
       // Force update states และ re-render
       setTimeout(() => {
         setCalendarEndDate(departDateString);
         setReturnDate(new Date(departDateString));
         console.log('✅ Return date state updated to:', departDateString);
       }, 10);
-      
+
       console.log('⚠️ Return date adjusted to match departure date:', departDateString);
     } else {
       setCalendarEndDate(day.dateString);
@@ -243,7 +245,7 @@ const SearchFerry = ({ navigation, route }) => {
     console.log('  - returnDate:', returnDate);
     console.log('  - calendarStartDate:', calendarStartDate);
     console.log('  - calendarEndDate:', calendarEndDate);
-    
+
     if (departureDate && !calendarStartDate) {
       const newStartDate = departureDate.toISOString().split('T')[0];
       console.log('  - Setting calendarStartDate to:', newStartDate);
@@ -329,18 +331,18 @@ const SearchFerry = ({ navigation, route }) => {
 
   const formatDateInput = (date) => {
     if (!date) return ""; // ตรวจสอบว่ามีค่า date หรือไม่
-    
+
     const dateObj = new Date(date);
-    
+
     if (selectedLanguage === 'th') {
       // เดือนภาษาไทยแบบย่อ
-      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
-                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
       const day = dateObj.getDate().toString().padStart(2, '0');
       const monthName = monthNames[dateObj.getMonth()];
       const year = dateObj.getFullYear() + 543; // แปลงเป็น พ.ศ.
-      
+
       return `${day} ${monthName} ${year}`;
     } else {
       // แสดงวันที่ภาษาอังกฤษ
@@ -421,19 +423,19 @@ const SearchFerry = ({ navigation, route }) => {
       selectedLanguage,
       formattedResult: ''
     });
-    
+
     if (selectedLanguage === 'th') {
       // วันในสัปดาห์ภาษาไทย
       const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
       // เดือนภาษาไทย
-      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
-                         'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      
+      const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
       const dayName = dayNames[date.getDay()];
       const day = date.getDate().toString().padStart(2, '0');
       const monthName = monthNames[date.getMonth()];
       const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
-      
+
       const result = `${dayName} ${day} ${monthName} ${year}`;
       console.log('🗓️ formatDate Thai result:', result);
       return result;
@@ -441,7 +443,7 @@ const SearchFerry = ({ navigation, route }) => {
       // แสดงวันที่ภาษาอังกฤษ
       const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const dayName = dayNames[date.getDay()];
-      
+
       const result = `${dayName}, ${date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -451,7 +453,7 @@ const SearchFerry = ({ navigation, route }) => {
       return result;
     }
   };
-  
+
 
   useEffect(() => {
     setDetaDepart(departureDate);
@@ -475,11 +477,11 @@ const SearchFerry = ({ navigation, route }) => {
       // เริ่ม loading state
       setLoading(true);
       setError(''); // ล้าง error ก่อน
-      
+
       // แสดงค่า selectedLanguage
       // console.log('🌐 Selected Language:', selectedLanguage);
       // console.log('🌐 Selected Language type:', typeof selectedLanguage);
-      
+
       // ตรวจสอบข้อมูลที่จำเป็น
       if (!startingPoint.id || !endPoint.id) {
         // console.log('❌ Missing location data:', { startingPoint: startingPoint.id, endPoint: endPoint.id });
@@ -487,17 +489,17 @@ const SearchFerry = ({ navigation, route }) => {
         setLoading(false);
         return;
       }
-      
+
       if (!calendarStartDate) {
         // console.log('❌ Missing start date');
         setError('กรุณาเลือกวันที่เดินทาง');
         setLoading(false);
         return;
       }
-      
+
       // ตรวจสอบค่าก่อนส่ง (optional แต่ดีมาก)
       const languageToSend = selectedLanguage && (selectedLanguage === 'th' || selectedLanguage === 'en') ? selectedLanguage : 'en';
-      
+
       const requestData = {
         lang: languageToSend, // ใช้ fallback เป็น 'en' ถ้า selectedLanguage ไม่ถูกต้อง
         currency: selectedCurrency,
@@ -510,7 +512,7 @@ const SearchFerry = ({ navigation, route }) => {
         departdate: calendarStartDate,
         returndate: calendarEndDate,
       };
-      
+
       // console.log('📤 Language to send:', languageToSend);
       // console.log('📤 API Request Data:', requestData);
       // console.log('🔗 API URL:', 'https://thetrago.com/api/V1/ferry/Getroute');
@@ -532,33 +534,33 @@ const SearchFerry = ({ navigation, route }) => {
       if (response.data.status === 'success') {
         // console.log('🚢 Depart Trips Data:', JSON.stringify(response.data.data.departtrip, null, 2));
         // console.log('🔄 Return Trips Data:', JSON.stringify(response.data.data.returntrip, null, 2));
-        
+
         setDepartTrips(response.data.data.departtrip);
         setReturnTrips(response.data.data.returntrip);
         // console.log('🚢 Depart Trips Count:', response.data.data.departtrip?.length || 0);
         // console.log('🔄 Return Trips Count:', response.data.data.returntrip?.length || 0);
-        
+
         // สร้างรายการบริษัทสำหรับ filter จากข้อมูล depart trips
         const companyNames = response.data.data.departtrip?.map(trip => {
           return trip.md_timetable_companyname;
         }) || [];
-        
+
         // ลบรายการซ้ำ
         const uniqueCompanyNames = [...new Set(companyNames)].filter(name => name); // กรองเอาเฉพาะค่าที่ไม่ใช่ null/undefined
-        
+
         // console.log('🏢 Available Company Names:', uniqueCompanyNames);
         setAvailableCompaniesDepart(uniqueCompanyNames);
         setSelectedCompaniesDepart(uniqueCompanyNames); // เลือกทุก company
-        
+
         // สร้างรายการบริษัทสำหรับ return trips ด้วย
         const returnCompanyNames = response.data.data.returntrip?.map(trip => {
           return trip.md_timetable_companyname;
         }) || [];
-        
+
         const uniqueReturnCompanyNames = [...new Set(returnCompanyNames)].filter(name => name);
         setAvailableCompaniesReturn(uniqueReturnCompanyNames);
         setSelectedCompaniesReturn(uniqueReturnCompanyNames);
-        
+
       } else {
         // console.log('❌ API returned unsuccessful status:', response.data);
         setError('ไม่สามารถโหลดข้อมูลได้');
@@ -568,7 +570,7 @@ const SearchFerry = ({ navigation, route }) => {
       // console.log('🚨 Error message:', err.message);
       // console.log('🚨 Error response:', err.response?.data);
       // console.log('🚨 Error status:', err.response?.status);
-      
+
       const apiError = err.response?.data;
 
       const ignoredMessages = [
@@ -591,7 +593,7 @@ const SearchFerry = ({ navigation, route }) => {
   };
 
 
- 
+
   useEffect(() => {
 
     const fecthdiscount = async (countrieid) => {
@@ -697,10 +699,10 @@ const SearchFerry = ({ navigation, route }) => {
     if (allSelectedDepart) {
       return true;
     }
-    
+
     // ใช้ md_timetable_companyname เท่านั้น
     const companyName = item.md_timetable_companyname;
-    
+
     // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
     return selectedCompaniesDepart.includes(companyName);
   });
@@ -710,10 +712,10 @@ const SearchFerry = ({ navigation, route }) => {
     if (allSelectedReturn) {
       return true;
     }
-    
+
     // ใช้ md_timetable_companyname เท่านั้น
     const companyName = item.md_timetable_companyname;
-    
+
     // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
     return selectedCompaniesReturn.includes(companyName);
   });
@@ -761,9 +763,13 @@ const SearchFerry = ({ navigation, route }) => {
   }, [boatAnim]);
 
 
+  const EXTRA_TOP_GUTTER = 50;
+
+
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+
+    <View style={{ flex: 1 }}>
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -779,7 +785,7 @@ const SearchFerry = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -10,
+              paddingTop: insets.top + EXTRA_TOP_GUTTER,
               borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
               borderBottomRightRadius: getResponsiveSize(40, 35, 30),
               paddingBottom: getResponsiveSize(8, 6, 5),
@@ -806,7 +812,7 @@ const SearchFerry = ({ navigation, route }) => {
                 paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: getResponsiveSize(30, 25, 20),
+                marginTop: 0,
                 height: getResponsiveSize(56, 50, 45),
                 maxWidth: isTablet ? 1200 : '100%',
                 alignSelf: 'center',
@@ -863,17 +869,17 @@ const SearchFerry = ({ navigation, route }) => {
                 minWidth: getResponsiveSize(70, 80, 90),
               }}
             >
-              <Icon 
-                name="cash-outline" 
-                size={getResponsiveSize(18, 20, 22)} 
-                color="#FD501E" 
-                style={{ marginRight: getResponsiveSize(8, 10, 12) }} 
+              <Icon
+                name="cash-outline"
+                size={getResponsiveSize(18, 20, 22)}
+                color="#FD501E"
+                style={{ marginRight: getResponsiveSize(8, 10, 12) }}
               />
-              <Text style={{ 
-                fontWeight: 'bold', 
-                color: '#FD501E', 
-                fontSize: getResponsiveSize(14, 16, 18), 
-                letterSpacing: 0.5 
+              <Text style={{
+                fontWeight: 'bold',
+                color: '#FD501E',
+                fontSize: getResponsiveSize(14, 16, 18),
+                letterSpacing: 0.5
               }}>
                 {selectedCurrency}
               </Text>
@@ -888,6 +894,8 @@ const SearchFerry = ({ navigation, route }) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                   paddingHorizontal: 20,
+                  paddingTop: insets.top,
+                  paddingBottom: insets.bottom,
                 }}
               >
                 <View
@@ -977,80 +985,7 @@ const SearchFerry = ({ navigation, route }) => {
 
         </LinearGradient>
         {/* Enhanced Ultra Premium Title and Filters Section */}
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: hp('2%'),
-          marginHorizontal: wp('6%'),
-          marginBottom: hp('2%'),
-          paddingHorizontal: wp('2%'),
-          paddingVertical: hp('1.5%'),
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          borderRadius: wp('4%'),
-          backdropFilter: 'blur(10px)',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.2)',
-        }}>
-          <View style={{ flex: 1, paddingRight: wp('2%') }}>
-            <Text style={{
-                color: '#FFFFFF',
-                fontSize: wp('5.5%'),
-                fontWeight: '800',
-                letterSpacing: -0.5,
-                textAlign: 'left',
-                marginBottom: hp('0.5%'),
-                lineHeight: wp('7%'),
-                textShadowColor: 'rgba(0,0,0,0.3)',
-                textShadowRadius: 4,
-                textShadowOffset: { width: 1, height: 1 },
-              }}>
-              {t('searchFerry')}
-            </Text>
-            <Text style={{
-              color: 'rgba(255,255,255,0.8)',
-              fontSize: wp('3.2%'),
-              fontWeight: '500',
-              lineHeight: wp('4.5%'),
-              letterSpacing: 0.3,
-              textShadowColor: 'rgba(0,0,0,0.2)',
-              textShadowRadius: 2,
-            }}>
-              {t('findYourPerfectJourney')}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.25)',
-              paddingVertical: hp('1.5%'),
-              paddingHorizontal: wp('5%'),
-              borderRadius: wp('4%'),
-              shadowColor: '#FFFFFF',
-              shadowOpacity: 0.1,
-              shadowRadius: wp('1.5%'),
-              shadowOffset: { width: 0, height: hp('0.25%') },
-              elevation: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              backdropFilter: 'blur(15px)',
-            }}
-            onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
-            activeOpacity={0.8}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Icon name="options-outline" size={wp('4.5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
-              <Text style={{
-                color: '#FFFFFF',
-                fontWeight: '700',
-                fontSize: wp('3.8%'),
-                letterSpacing: 0.5,
-                textShadowColor: Platform.OS === 'android' ? 'transparent' : 'rgba(0,0,0,0.2)',
-                textShadowRadius: Platform.OS === 'android' ? 0 : 2,
-              }}>{ t('filters') }</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
+       
         <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
           <View style={{
             flex: 1,
@@ -1086,7 +1021,7 @@ const SearchFerry = ({ navigation, route }) => {
                   color: '#1E293B',
                   letterSpacing: -0.3
                 }}>
-                  { t('ferryOperators') }
+                  {t('ferryOperators')}
                 </Text>
                 <TouchableOpacity
                   onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
@@ -1136,12 +1071,12 @@ const SearchFerry = ({ navigation, route }) => {
                   color: '#1E293B',
                   letterSpacing: 0.2
                 }}>
-                  { t('selectAllOperators') }
+                  {t('selectAllOperators')}
                 </Text>
               </TouchableOpacity>
 
               {/* Enhanced Ultra Premium Company List with ScrollView */}
-              <ScrollView 
+              <ScrollView
                 style={{ maxHeight: hp('40%'), marginBottom: hp('2.5%') }}
                 showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
@@ -1256,7 +1191,7 @@ const SearchFerry = ({ navigation, route }) => {
                     textShadowColor: 'rgba(0,0,0,0.2)',
                     textShadowRadius: 2,
                   }}>
-                    { t('applyFilters') }
+                    {t('applyFilters')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -1268,15 +1203,16 @@ const SearchFerry = ({ navigation, route }) => {
 
 
         <ScrollView
+          contentInsetAdjustmentBehavior="never"
           contentContainerStyle={[
             styles.containerSearch,
             {
               backgroundColor: 'transparent',
               paddingHorizontal: getResponsiveSize(24, wp('8%'), wp('12%')),
               paddingTop: getResponsiveSize(8, 12, 16),
-              paddingBottom: Platform.OS === 'android' ? 
-                getResponsiveSize(hp('10%'), hp('8%'), hp('6%')) : 
-                getResponsiveSize(hp('8%'), hp('6%'), hp('4%')),
+              paddingBottom:
+                (Platform.OS === 'ios' ? insets.bottom : 0)
+                + getResponsiveSize(hp('8%'), hp('6%'), hp('4%')), // กันชนแท็บล่าง/เส้น home
               maxWidth: isTablet ? 1200 : '100%',
               alignSelf: 'center',
               width: '100%',
@@ -1286,6 +1222,80 @@ const SearchFerry = ({ navigation, route }) => {
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
         >
+           <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: hp('2%'),
+       
+          marginBottom: hp('2%'),
+          paddingHorizontal: wp('2%'),
+          paddingVertical: hp('1.5%'),
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          borderRadius: wp('4%'),
+          backdropFilter: 'blur(10px)',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.2)',
+        }}>
+          <View style={{ flex: 1, paddingRight: wp('2%') }}>
+            <Text style={{
+              color: '#FFFFFF',
+              fontSize: wp('5.5%'),
+              fontWeight: '800',
+              letterSpacing: -0.5,
+              textAlign: 'left',
+              marginBottom: hp('0.5%'),
+              lineHeight: wp('7%'),
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowRadius: 4,
+              textShadowOffset: { width: 1, height: 1 },
+            }}>
+              {t('searchFerry')}
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: wp('3.2%'),
+              fontWeight: '500',
+              lineHeight: wp('4.5%'),
+              letterSpacing: 0.3,
+              textShadowColor: 'rgba(0,0,0,0.2)',
+              textShadowRadius: 2,
+            }}>
+              {t('findYourPerfectJourney')}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.25)',
+              paddingVertical: hp('1.5%'),
+              paddingHorizontal: wp('5%'),
+              borderRadius: wp('4%'),
+              shadowColor: '#FFFFFF',
+              shadowOpacity: 0.1,
+              shadowRadius: wp('1.5%'),
+              shadowOffset: { width: 0, height: hp('0.25%') },
+              elevation: 4,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              backdropFilter: 'blur(15px)',
+            }}
+            onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={wp('4.5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+              <Text style={{
+                color: '#FFFFFF',
+                fontWeight: '700',
+                fontSize: wp('3.8%'),
+                letterSpacing: 0.5,
+                textShadowColor: Platform.OS === 'android' ? 'transparent' : 'rgba(0,0,0,0.2)',
+                textShadowRadius: Platform.OS === 'android' ? 0 : 2,
+              }}>{t('filters')}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
           {/* Enhanced Premium Booking Section - iPad Optimized */}
           <View style={[styles.bookingSection, {
             backgroundColor: 'rgba(255,255,255,0.95)',
@@ -1409,7 +1419,7 @@ const SearchFerry = ({ navigation, route }) => {
                     }
                   ]}
                 >
-                  { t('roundTrip') }
+                  {t('roundTrip')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1466,7 +1476,7 @@ const SearchFerry = ({ navigation, route }) => {
                     }]}
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                  >{adults} { t('adult') }, {children} { t('child') }, {infant} { t('infant') }</Text>
+                  >{adults} {t('adult')}, {children} {t('child')}, {infant} {t('infant')}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -1504,7 +1514,7 @@ const SearchFerry = ({ navigation, route }) => {
                       color: '#1E293B',
                       letterSpacing: -0.5
                     }}>
-                      { t('selectPassengers') }
+                      {t('selectPassengers')}
                     </Text>
                     <TouchableOpacity
                       onPress={() => setPassengerModalVisible(false)}
@@ -1542,7 +1552,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        { t('adults') }
+                        {t('adults')}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1610,7 +1620,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        { t('children') }
+                        {t('children')}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1677,7 +1687,7 @@ const SearchFerry = ({ navigation, route }) => {
                         flex: 1,
                         letterSpacing: -0.3
                       }}>
-                        { t('infants') }
+                        {t('infants')}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
                         <TouchableOpacity
@@ -1745,7 +1755,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontSize: 16,
                       letterSpacing: 0.5
                     }}>
-                      { t('confirmSelection') }
+                      {t('confirmSelection')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -1994,7 +2004,7 @@ const SearchFerry = ({ navigation, route }) => {
                           fontWeight: '600',
                           letterSpacing: 0.2,
                           marginBottom: 2,
-                        }]}>{ t('returnDate') }</Text>
+                        }]}>{t('returnDate')}</Text>
                         <Text
                           key={`return-${selectedLanguage}-${calendarEndDate}`}
                           style={[styles.inputText, {
@@ -2012,7 +2022,7 @@ const SearchFerry = ({ navigation, route }) => {
                 )}
               </View>
 
-            
+
 
               {/* Enhanced Departure Date Calendar Modal */}
               <Modal
@@ -2068,7 +2078,7 @@ const SearchFerry = ({ navigation, route }) => {
                           color: '#1E293B',
                           letterSpacing: -0.3,
                           flex: 1,
-                        }} numberOfLines={1}>{ t('selectDepartureDate') }</Text>
+                        }} numberOfLines={1}>{t('selectDepartureDate')}</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => setShowDepartModal(false)}
@@ -2117,33 +2127,33 @@ const SearchFerry = ({ navigation, route }) => {
                               }
                             }}
                             theme={{
-                                backgroundColor: 'transparent',
-                                calendarBackground: 'transparent',
-                                textSectionTitleColor: '#1E293B',
-                                selectedDayBackgroundColor: '#FD501E',
-                                selectedDayTextColor: '#FFFFFF',
-                                todayTextColor: '#FD501E',
-                                dayTextColor: '#1E293B',
-                                textDisabledColor: '#94A3B8',
-                                arrowColor: '#FD501E',
-                                monthTextColor: '#1E293B',
-                                textDayFontWeight: '600',
-                                textMonthFontWeight: '700',
-                                textDayHeaderFontWeight: '600',
-                                textDayFontSize: Platform.OS === 'android' ? 14 : 16,
-                                textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
-                                textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
-                              }}
-                              enableSwipeMonths={true}
-                              firstDay={1}
-                              hideExtraDays={false}
-                              disableMonthChange={false}
-                              hideDayNames={false}
-                              showWeekNumbers={false}
-                            />
+                              backgroundColor: 'transparent',
+                              calendarBackground: 'transparent',
+                              textSectionTitleColor: '#1E293B',
+                              selectedDayBackgroundColor: '#FD501E',
+                              selectedDayTextColor: '#FFFFFF',
+                              todayTextColor: '#FD501E',
+                              dayTextColor: '#1E293B',
+                              textDisabledColor: '#94A3B8',
+                              arrowColor: '#FD501E',
+                              monthTextColor: '#1E293B',
+                              textDayFontWeight: '600',
+                              textMonthFontWeight: '700',
+                              textDayHeaderFontWeight: '600',
+                              textDayFontSize: Platform.OS === 'android' ? 14 : 16,
+                              textMonthFontSize: Platform.OS === 'android' ? 16 : 18,
+                              textDayHeaderFontSize: Platform.OS === 'android' ? 12 : 14,
+                            }}
+                            enableSwipeMonths={true}
+                            firstDay={1}
+                            hideExtraDays={false}
+                            disableMonthChange={false}
+                            hideDayNames={false}
+                            showWeekNumbers={false}
+                          />
                         </View>
 
-                        
+
                       </ScrollView>
 
 
@@ -2179,7 +2189,7 @@ const SearchFerry = ({ navigation, route }) => {
                               textShadowColor: 'rgba(0,0,0,0.2)',
                               textShadowRadius: 2,
                             }}>
-                              { t('confirmDepartureDate') }
+                              {t('confirmDepartureDate')}
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -2244,7 +2254,7 @@ const SearchFerry = ({ navigation, route }) => {
                           color: '#1E293B',
                           letterSpacing: -0.3,
                           flex: 1,
-                        }} numberOfLines={1}>{ t('selectReturnDate') }</Text>
+                        }} numberOfLines={1}>{t('selectReturnDate')}</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => setShowReturnModal(false)}
@@ -2319,7 +2329,7 @@ const SearchFerry = ({ navigation, route }) => {
                           />
                         </View>
                       </ScrollView>
-                      
+
 
                       {/* Enhanced Confirm Button - Fixed at bottom */}
                       <View style={{
@@ -2351,7 +2361,7 @@ const SearchFerry = ({ navigation, route }) => {
                               fontSize: Platform.OS === 'android' ? 16 : 18,
                               letterSpacing: 0.5,
                             }}>
-                              { t('confirmReturnDate') }
+                              {t('confirmReturnDate')}
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -2362,9 +2372,9 @@ const SearchFerry = ({ navigation, route }) => {
               </Modal>
 
               {/* Enhanced Premium Search Button - iPad Optimized */}
-              <View style={{ 
-                marginTop: getResponsiveSize(hp('1.5%'), hp('1%'), hp('0.8%')), 
-             //   marginBottom: getResponsiveSize(hp('-1%'), hp('0.5%'), hp('0.4%')),
+              <View style={{
+                marginTop: getResponsiveSize(hp('1.5%'), hp('1%'), hp('0.8%')),
+                //   marginBottom: getResponsiveSize(hp('-1%'), hp('0.5%'), hp('0.4%')),
                 width: '100%',
                 alignItems: 'center',
                 paddingHorizontal: getResponsiveSize(wp('2%'), wp('3%'), wp('5%'))
@@ -2385,7 +2395,7 @@ const SearchFerry = ({ navigation, route }) => {
                       shadowOpacity: Platform.OS === 'android' ? 0 : (loading ? 0.1 : 0.3),
                       shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')),
                       shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.5%'), hp('0.4%'), hp('0.3%')) },
-                     // elevation: Platform.OS === 'android' ? 8 : 12,
+                      // elevation: Platform.OS === 'android' ? 8 : 12,
                       borderWidth: 1,
                       borderColor: 'rgba(255, 255, 255, 0.2)',
                       width: '100%',
@@ -2396,33 +2406,33 @@ const SearchFerry = ({ navigation, route }) => {
                   ]}
                   onPress={() => {
                     if (loading) return; // ป้องกันการกดซ้ำขณะ loading
-                    
+
                     // ตรวจสอบข้อมูลก่อนค้นหา
                     if (!startingPoint?.id || !endPoint?.id) {
                       alert(t('pleaseSelectStartEndPoints') || 'กรุณาเลือกจุดเริ่มต้นและจุดปลายทาง');
                       return;
                     }
-                    
+
                     if (!calendarStartDate) {
                       alert(t('pleaseSelectDepartureDate') || 'กรุณาเลือกวันที่เดินทาง');
                       return;
                     }
-                    
+
                     if (customerData.roud === 2 && !calendarEndDate) {
                       alert(t('pleaseSelectReturnDate') || 'กรุณาเลือกวันที่กลับ');
                       return;
                     }
-                    
+
                     // เรียกใช้ฟังก์ชันค้นหา (loading state จัดการใน fetchFerryRoute)
                     fetchFerryRoute();
                   }}
                   activeOpacity={0.85}
                 >
-                  <Icon 
-                    name={loading ? "hourglass-outline" : "search"} 
-                    size={getResponsiveSize(wp('5%'), wp('4%'), wp('3.5%'))} 
-                    color="#FFFFFF" 
-                    style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }} 
+                  <Icon
+                    name={loading ? "hourglass-outline" : "search"}
+                    size={getResponsiveSize(wp('5%'), wp('4%'), wp('3.5%'))}
+                    color="#FFFFFF"
+                    style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }}
                   />
                   <Text style={[
                     styles.searchButtonText,
@@ -2443,7 +2453,7 @@ const SearchFerry = ({ navigation, route }) => {
             </View>
           </View>
 
-                            
+
           {/* Enhanced Ultra Premium Loading Skeleton */}
           {loading && (
             <View style={{ paddingHorizontal: wp('2%') }}>
@@ -3252,7 +3262,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     md_booking_infant: infant,
                                     md_booking_departdate: calendarStartDate,
                                     md_booking_departtime: item.md_timetable_departuretime,
-                                    md_booking_remark : item.md_timetable_remark.en || '',
+                                    md_booking_remark: item.md_timetable_remark.en || '',
                                   });
                                   navigation.navigate('TripDetail');
                                 }}
@@ -3439,7 +3449,7 @@ const SearchFerry = ({ navigation, route }) => {
                           tripTypeSearchResult === "Depart Trip" && styles.activeText,
                         ]}
                       >
-                        { t('departTrip') }
+                        {t('departTrip')}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -3455,7 +3465,7 @@ const SearchFerry = ({ navigation, route }) => {
                           tripTypeSearchResult === t('returnTrip') && styles.activeText,
                         ]}
                       >
-                        { t('returnTrip') }
+                        {t('returnTrip')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -3839,7 +3849,7 @@ const SearchFerry = ({ navigation, route }) => {
                                       md_booking_infant: infant,
                                       md_booking_returndate: calendarEndDate,
                                       md_booking_departtime: item.md_timetable_departuretime,
-                                      md_booking_remark : item.md_timetable_remark.en || '',
+                                      md_booking_remark: item.md_timetable_remark.en || '',
 
                                     });
 
@@ -4386,7 +4396,7 @@ const SearchFerry = ({ navigation, route }) => {
                                       md_booking_infant: infant,
                                       md_booking_departdate: calendarStartDate,
                                       md_booking_departtime: item.md_timetable_departuretime,
-                                      md_booking_remark : item.md_timetable_remark.en || '',
+                                      md_booking_remark: item.md_timetable_remark.en || '',
                                     });
 
                                     if (isonewaystatus) {
@@ -4835,7 +4845,7 @@ const SearchFerry = ({ navigation, route }) => {
 
         </ScrollView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 };
 
