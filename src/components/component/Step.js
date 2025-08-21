@@ -1,10 +1,12 @@
 import React from 'react';
+import { useLanguage } from '../../screens/Screen/LanguageContext';
 import { View, StyleSheet, Image, Text, Dimensions, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export default function Step({ logoUri }) { 
+  const { t } = useLanguage();
   
   // Enhanced Step Component
   const StepCircle = ({ isActive, isPassed, number, children }) => {
@@ -61,7 +63,7 @@ export default function Step({ logoUri }) {
               <Entypo name="check" size={wp('5%')} color="white" />
             </StepCircle>
           </View>
-          <Text style={[styles.step, styles.stepCompleted]}>Choose Your Boat</Text>
+          <Text style={[styles.step, styles.stepCompleted]}>{t('chooseYourBoat')}</Text>
         </View>
         
         {/* Step 2 */}
@@ -75,7 +77,7 @@ export default function Step({ logoUri }) {
               {logoUri >= 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>Shuttle Transfer</Text>
+          <Text style={logoUri === 1 ? [styles.step, styles.stepActive] : logoUri >= 2 ? [styles.step, styles.stepCompleted] : styles.step}>{t('shuttleTransfer')}</Text>
         </View>
         
         {/* Step 3 */}
@@ -89,7 +91,7 @@ export default function Step({ logoUri }) {
               {logoUri > 2 && <Entypo name="check" size={wp('5%')} color="white" />}
             </StepCircle>
           </View>
-          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>Customer Information</Text>
+          <Text style={logoUri === 2 ? [styles.step, styles.stepActive] : logoUri > 2 ? [styles.step, styles.stepCompleted] : styles.step}>{t('customerInformation')}</Text>
         </View>
         
         {/* Step 4 */}
@@ -100,7 +102,7 @@ export default function Step({ logoUri }) {
               number="4" 
             />
           </View>
-          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>Payment</Text>
+          <Text style={logoUri === 3 ? [styles.step, styles.stepActive] : styles.step}>{t('payment')}</Text>
         </View>
         
         {/* Connector Lines */}

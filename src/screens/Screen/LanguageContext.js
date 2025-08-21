@@ -106,7 +106,12 @@ const translations = {
     andWithinThe: 'และภายใน',
     bestBudgets: 'งบประมาณที่ดีที่สุด',
 
-    // SearchFerry Screen
+  // Step Component
+  chooseYourBoat: 'เลือกเรือของคุณ',
+  shuttleTransfer: 'รถรับส่ง',
+  customerInformation: 'ข้อมูลลูกค้า',
+  payment: 'ชำระเงิน',
+  // SearchFerry Screen
     oneWayTrip: 'เดินทางไปเท่านั้น',
     roundTrip: 'ไป-กลับ',
     searchFerry: 'ค้นหาเที่ยวเรือ',
@@ -1002,7 +1007,12 @@ const translations = {
     andWithinThe: 'And within the',
     bestBudgets: 'best budgets',
 
-    // SearchFerry Screen
+  // Step Component
+  chooseYourBoat: 'Choose Your Boat',
+  shuttleTransfer: 'Shuttle Transfer',
+  customerInformation: 'Customer Information',
+  payment: 'Payment',
+  // SearchFerry Screen
     oneWayTrip: 'One Way Trip',
     roundTrip: 'Round Trip',
     searchFerry: 'Search Ferry',

@@ -17,6 +17,15 @@ import headStyles from '../../styles/CSS/StartingPointScreenStyles';
 import axios from 'axios';
 import { styles } from '../../styles/CSS/CustomerInfoStyles';
 
+
+const isTablet = screenWidth >= 768;
+const isLargeTablet = screenWidth >= 1024;
+const getResponsiveSize = (phone, tablet, largeTablet) => {
+  if (isLargeTablet && largeTablet) return largeTablet;
+  if (isTablet && tablet) return tablet;
+  return phone;
+};
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 /* =========================
@@ -718,7 +727,7 @@ const CustomerInfo = ({ navigation }) => {
         passenger: passengerDataArr,
         // booking information
         md_booking_country: country,
-        md_booking_countrycode:   countrycode,
+        md_booking_countrycode: countrycode,
         md_booking_tel: mobileNumber,
         md_booking_email: email,
         md_booking_whatsapp: isWhatsapp,
@@ -854,10 +863,12 @@ const CustomerInfo = ({ navigation }) => {
     loadData();
   }, [customerData.timeTableReturnId]);
 
+    const EXTRA_TOP_GUTTER = 50;
+
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }}>
-        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
+      <View style={{ flex: 1 }}>
+
 
         <LinearGradient
           colors={['#001233', '#002A5C', '#FD501E']}
@@ -902,18 +913,20 @@ const CustomerInfo = ({ navigation }) => {
               {
                 width: '100%',
                 marginLeft: '0%',
-                marginTop: Platform.OS === 'ios' ? 0 : -20,
-                borderBottomLeftRadius: 40,
-                borderBottomRightRadius: 40,
-                paddingBottom: 8,
+                paddingTop: insets.top + EXTRA_TOP_GUTTER,
+                borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
+                borderBottomRightRadius: getResponsiveSize(40, 35, 30),
+                paddingBottom: getResponsiveSize(8, 6, 5),
                 shadowColor: '#001233',
                 shadowOpacity: 0.15,
-                shadowRadius: 25,
-                shadowOffset: { width: 0, height: 8 },
-                padding: 10,
-                minHeight: hp('12%'),
+                shadowRadius: getResponsiveSize(25, 20, 15),
+                shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+                elevation: 18,
+                padding: getResponsiveSize(10, 8, 6),
+                minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
                 borderWidth: 1,
                 borderColor: 'rgba(0, 18, 51, 0.08)',
+                // Ultra premium glass morphism
                 backdropFilter: 'blur(30px)',
               },
             ]}
@@ -924,27 +937,32 @@ const CustomerInfo = ({ navigation }) => {
                 {
                   alignItems: 'center',
                   justifyContent: 'center',
-                  paddingHorizontal: 0,
+                  paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
                   paddingTop: 0,
                   position: 'relative',
-                  marginTop: Platform.OS === 'android' ? 70 : -10,
-                  height: 56,
+                  marginTop: 0,
+                  height: getResponsiveSize(56, 50, 45),
+                  maxWidth: isTablet ? 1200 : '100%',
+                  alignSelf: 'center',
+                  width: '100%',
                 },
               ]}
             >
+              {/* Back Button - Left */}
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 style={{
                   position: 'absolute',
-                  left: 16,
+                  left: getResponsiveSize(16, 20, 30),
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: 25,
-                  padding: 8,
+                  borderRadius: getResponsiveSize(25, 22, 20),
+                  padding: getResponsiveSize(8, 10, 12),
                   zIndex: 2,
                   shadowColor: '#FD501E',
                   shadowOpacity: 0.2,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 4 },
+                  shadowRadius: getResponsiveSize(12, 10, 8),
+                  shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                  elevation: 8,
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.1)',
                 }}
@@ -952,11 +970,15 @@ const CustomerInfo = ({ navigation }) => {
                 <AntDesign name="arrowleft" size={24} color="#FD501E" />
               </TouchableOpacity>
 
+              {/* Logo - Center */}
               <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
                 <LogoTheTrago />
               </View>
+
             </View>
+
           </LinearGradient>
+
 
           <View style={{
             flexDirection: 'row',
@@ -1061,24 +1083,15 @@ const CustomerInfo = ({ navigation }) => {
             </View>
           </ScrollView>
         </LinearGradient>
-      </SafeAreaView>
+      </View>
     );
   }
 
+
+
   return (
-    <SafeAreaView
-      style={[
-        { flex: 1 },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0,
-        }
-      ]}
-    >
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#001233"}
-        translucent={true}
-      />
+    <View style={{ flex: 1 }}>
+
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
         start={{ x: 0, y: 0 }}
@@ -1092,18 +1105,20 @@ const CustomerInfo = ({ navigation }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.top - 10 : -20) : 0,
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              paddingBottom: 8,
+              paddingTop: insets.top + EXTRA_TOP_GUTTER,
+              borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
+              borderBottomRightRadius: getResponsiveSize(40, 35, 30),
+              paddingBottom: getResponsiveSize(8, 6, 5),
               shadowColor: '#001233',
               shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
-              padding: 10,
-              minHeight: hp('12%'),
+              shadowRadius: getResponsiveSize(25, 20, 15),
+              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+              elevation: 18,
+              padding: getResponsiveSize(10, 8, 6),
+              minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
+              // Ultra premium glass morphism
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1114,27 +1129,32 @@ const CustomerInfo = ({ navigation }) => {
               {
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingHorizontal: 0,
+                paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: Platform.OS === 'android' ? 70 : -10,
-                height: 56,
+                marginTop: 0,
+                height: getResponsiveSize(56, 50, 45),
+                maxWidth: isTablet ? 1200 : '100%',
+                alignSelf: 'center',
+                width: '100%',
               },
             ]}
           >
+            {/* Back Button - Left */}
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={{
                 position: 'absolute',
-                left: 16,
+                left: getResponsiveSize(16, 20, 30),
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 25,
-                padding: 8,
+                borderRadius: getResponsiveSize(25, 22, 20),
+                padding: getResponsiveSize(8, 10, 12),
                 zIndex: 2,
                 shadowColor: '#FD501E',
                 shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: getResponsiveSize(12, 10, 8),
+                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1142,13 +1162,40 @@ const CustomerInfo = ({ navigation }) => {
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
             </TouchableOpacity>
 
+            {/* Logo - Center */}
             <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
               <LogoTheTrago />
             </View>
+
           </View>
+
         </LinearGradient>
 
-        <View style={{
+      
+
+        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
+
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              styles.container,
+              {
+                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%')
+              }
+            ]}
+            showsVerticalScrollIndicator={false}
+            style={[
+              { flex: 1 },
+              Platform.OS === 'android' && Platform.Version >= 31 && {
+                paddingBottom: 0,
+              }
+            ]}
+            contentInsetAdjustmentBehavior="automatic"
+          >
+              <View style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -1194,29 +1241,6 @@ const CustomerInfo = ({ navigation }) => {
             </Text>
           </View>
         </View>
-
-        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
-
-        <KeyboardAvoidingView
-          behavior="padding"
-          style={{ flex: 1 }}
-        >
-          <ScrollView
-            contentContainerStyle={[
-              styles.container,
-              {
-                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%')
-              }
-            ]}
-            showsVerticalScrollIndicator={false}
-            style={[
-              { flex: 1 },
-              Platform.OS === 'android' && Platform.Version >= 31 && {
-                paddingBottom: 0,
-              }
-            ]}
-            contentInsetAdjustmentBehavior="automatic"
-          >
             {/* Step Component */}
             <View style={{
               alignItems: 'center',
@@ -1689,7 +1713,7 @@ const CustomerInfo = ({ navigation }) => {
           </ScrollView>
         </KeyboardAvoidingView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }
 

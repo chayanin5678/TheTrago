@@ -1,22 +1,27 @@
-import React, { useRef, useState, useEffect } from 'react';
+import  { useRef, useState, useEffect } from 'react';
 import ipAddress from '../config/ipconfig';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, ImageBackground, TouchableWithoutFeedback, Alert, ActivityIndicator, SafeAreaView, Dimensions, StatusBar, Platform, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Modal, FlatList, Alert, Dimensions, Platform, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoTheTrago from '../components/component/Logo';
-import Step from '../components/component/Step';
-import BackNextButton from '../components/component/BackNextButton';
+import Step from '../components/component/Step'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import moment from 'moment';
 import { useCustomer } from './Screen/CustomerContext';
 import axios from 'axios';
 import headStyles from '../styles/CSS/StartingPointScreenStyles';
 import styles from '../styles/CSS/TripDetailStyles';
 import { useLanguage } from './Screen/LanguageContext';
+
+const isTablet = screenWidth >= 768;
+const isLargeTablet = screenWidth >= 1024;
+const getResponsiveSize = (phone, tablet, largeTablet) => {
+  if (isLargeTablet && largeTablet) return largeTablet;
+  if (isTablet && tablet) return tablet;
+  return phone;
+};
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -42,33 +47,6 @@ const TripDetail = ({ navigation, route }) => {
   ).current;
 
   const [tripType, setTripType] = useState("One Way Trip");
-  const [pickupPriceDepart, setpickupPriceDepart] = useState();
-  const [pickupPriceReturn, setpickupPriceReturn] = useState();
-  const [dropoffPriceDepart, setDropoffPriceDepart] = useState();
-  const [dropoffPriceReturn, setDropoffPriceReturn] = useState();
-  const [totalAdultDepart, setTotalAdultDepart] = useState("0.00");
-  const [totalAdultReturn, setTotalAdultReturn] = useState("0.00");
-  const [totalChildDepart, setTotalChildDepart] = useState("0.00");
-  const [totalChildReturn, setTotalChildReturn] = useState("0.00");
-  const [totalInfantDepart, setTotalInfantDepart] = useState("0.00");
-  const [totalInfantReturn, setTotalInfantReturn] = useState("0.00");
-  const [subtotalDepart, setSubtotalDepart] = useState("0.00");
-  const [subtotalReturn, setSubtotalReturn] = useState("0.00");
-  const [total, setTotal] = useState("0.00");
-  const [discountDepart, setDiscountDepart] = useState("0.00");
-  const [discountReturn, setDiscountReturn] = useState("0.00");
-  const [saleadultDepart, setSaleadultDepart] = useState();
-  const [saleadultReturn, setSaleadultReturn] = useState();
-  const [salechildDepart, setSalechildDepart] = useState();
-  const [salechildReturn, setSalechildReturn] = useState();
-  const [saleinfantDepart, setSaleinfantDepart] = useState();
-  const [saleinfantReturn, setSaleinfantReturn] = useState();
-  const [adultPriceDepart, setAdultPriceDepart] = useState();
-  const [adultPriceReturn, setAdultPriceReturn] = useState();
-  const [childPriceDepart, setChildPriceDepart] = useState();
-  const [childPriceReturn, setChildPriceReturn] = useState();
-  const [infantPriceDepart, setinfantPriceDepart] = useState();
-  const [infantPriceReturn, setinfantPriceReturn] = useState();
   const [pickuphourDepart, setPickuphourDepart] = useState("HH");
   const [dropoffhourDepart, setDropoffhourDepart] = useState("HH");
   const [pickupminutesDepart, setpickupMinutesDepart] = useState("MM");
@@ -85,7 +63,6 @@ const TripDetail = ({ navigation, route }) => {
   const [dropoffDepart, setDropoffDepart] = useState(false);
   const [dropoffReturn, setDropoffReturn] = useState(false);
   const [priceDepart, setPriceDepart] = useState([]);
-  const [priceReturn, setPriceReturn] = useState([]);
   const [error, setError] = useState(null);
 
   const [TranSportDepartPickup, setTranSportDepartPickup] = useState([]);
@@ -113,12 +90,6 @@ const TripDetail = ({ navigation, route }) => {
   const [ispickupMinuteModalVisibleReturn, setispickupMinuteModalVisibleReturn] = useState(false);
   const [isdropoffMinuteModalVisibleReturn, setisdropoffMinuteModalVisibleReturn] = useState(false);
   const { customerData, updateCustomerData } = useCustomer();
-  const [modaladultVisibleDepart, setModalAdultVisibleDepart] = useState(false);
-  const [modaladultVisibleReturn, setModalAdultVisibleReturn] = useState(false);
-  const [modalchildVisibleDepart, setModalChildVisibleDepart] = useState(false);
-  const [modalchildVisibleReturn, setModalChildVisibleReturn] = useState(false);
-  const [modalInfantVisibleDepart, setModalInfantVisibleDepart] = useState(false);
-  const [modalInfantVisibleReturn, setModalInfantVisibleReturn] = useState(false);
   const [HotelpickupDepart, setHotelpickupDepart] = useState('');
   const [HoteldropoffDepart, setHoteldropoffDepart] = useState('');
   const [HotelpickupReturn, setHotelpickupReturn] = useState('');
@@ -171,13 +142,14 @@ const TripDetail = ({ navigation, route }) => {
   const toggleModalDropoffReturn = () => setModalReturnDropoffVisible(!isModalReturnDropoffVisible);
   console.log('pickupselect', selectedPickupDepart);
 
+  
+
   const handleSelectedTranSportPickupDepart = (item) => {
     setSelectedTranSportPickupDepart(item.md_pickup_cartypeid); // เก็บ id
     setSelectedTransportPickupDepartName(item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportPickupDepartName: false })); // Clear the error state
     setSelectedPickupDepart("");
     setSelectedPickupDepartName("Please Select");
-    setpickupPriceDepart(0);
     setAirPortPickupDepart('');
     toggleModalTransportPickupDepart();
   };
@@ -187,12 +159,11 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedPickupDepartName(item.md_transfer_nameeng);
     setErrors((prev) => ({ ...prev, selectedTransportPickupDepartName: false })); // Clear the error state
     if (item.md_pickup_id === "0") {
-      setpickupPriceDepart(0);
+
       setAirPortPickupDepart('');
       updateCustomerData({ pickupDepartId: "" });
     } else {
       setAirPortPickupDepart(item.md_transfer_airport);
-      setpickupPriceDepart(item.md_pickup_price);
       updateCustomerData({ pickupDepartId: item.md_pickup_id });
     }
     toggleModalPickupDepart();
@@ -205,7 +176,6 @@ const TripDetail = ({ navigation, route }) => {
     setErrors((prev) => ({ ...prev, selectedTransportDropoffDepartName: false })); // Clear the error state
     setSelectedDropoffDepart("");
     setSelectedDropoffDepartName("Please Select");
-    setDropoffPriceDepart(0);
     setAirPortDropoffDepart('');
     toggleModalTransportDropoffDepart();
   };
@@ -215,12 +185,10 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedDropoffDepartName(item.md_transfer_nameeng);
     setErrors((prev) => ({ ...prev, selectedDropoffDepartName: false })); // Clear the error state
     if (item.md_dropoff_id === "0") {
-      setDropoffPriceDepart(0);
       setAirPortDropoffDepart('');
       updateCustomerData({ dropoffDepartId: "" });
     } else {
       setAirPortDropoffDepart(item.md_transfer_airport);
-      setDropoffPriceDepart(item.md_dropoff_price);
       updateCustomerData({ dropoffDepartId: item.md_dropoff_id });
     }
     toggleModalDropoffDepart();
@@ -232,7 +200,6 @@ const TripDetail = ({ navigation, route }) => {
     setErrors((prev) => ({ ...prev, selectedTransportPickupReturnName: false })); // Clear the error state
     setSelectedPickupReturn("");
     setSelectedPickupReturnName("Please Select");
-    setpickupPriceReturn(0);
     setAirPortPickupReturn('');
     toggleModalTransportPickupReturn();
   };
@@ -242,12 +209,11 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedPickupReturnName(item.md_transfer_nameeng);
     setErrors((prev) => ({ ...prev, selectedPickupReturnName: false })); // Clear the error state
     if (item.md_pickup_id === "0") {
-      setpickupPriceReturn(0);
+
       setAirPortPickupReturn('');
       updateCustomerData({ pickupReturnId: "" });
     } else {
       setAirPortPickupReturn(item.md_transfer_airport);
-      setpickupPriceReturn(item.md_pickup_price);
       updateCustomerData({ pickupReturnId: item.md_pickup_id });
     }
     toggleModalPickupReturn();
@@ -259,7 +225,6 @@ const TripDetail = ({ navigation, route }) => {
     setErrors((prev) => ({ ...prev, selectedTransportDropoffReturnName: false })); // Clear the error state
     setSelectedDropoffReturn("");
     setSelectedDropoffReturnName("Please Select");
-    setDropoffPriceReturn(0);
     setAirPortDropoffReturn('');
     toggleModalTransportDropoffReturn();
   };
@@ -269,74 +234,15 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedDropoffReturnName(item.md_transfer_nameeng);
     setErrors((prev) => ({ ...prev, selectedDropoffReturnName: false })); // Clear the error state
     if (item.md_dropoff_id === "0") {
-      setDropoffPriceReturn(0);
       setAirPortDropoffReturn('');
       updateCustomerData({ dropoffReturnId: "" });
     } else {
       setAirPortDropoffReturn(item.md_transfer_airport);
-      setDropoffPriceReturn(item.md_dropoff_price);
       updateCustomerData({ dropoffReturnId: item.md_dropoff_id });
     }
     toggleModalDropoffReturn();
   };
 
-
-
-
-
-  const toggleTooltipadultDepart = () => {
-    setModalAdultVisibleDepart(!modaladultVisibleDepart);
-  };
-  const toggleTooltipadultReturn = () => {
-    setModalAdultVisibleReturn(!modaladultVisibleReturn);
-  };
-
-  // Close modal when clicking outside of it
-  const closeModaladultDepart = () => {
-    setModalAdultVisibleDepart(false);
-  };
-
-  const closeModaladultReturn = () => {
-    setModalAdultVisibleReturn(false);
-  };
-
-
-  const toggleTooltipchildDepart = () => {
-    setModalChildVisibleDepart(!modalchildVisibleDepart);
-  };
-
-  const toggleTooltipchildReturn = () => {
-    setModalChildVisibleReturn(!modalchildVisibleReturn);
-  };
-
-  // Close modal when clicking outside of it
-  const closeModalchildDepart = () => {
-    setModalChildVisibleDepart(false);
-  };
-
-  const closeModalchildReturn = () => {
-    setModalChildVisibleReturn(false);
-  };
-
-  const toggleTooltipinfantDepart = () => {
-    setModalInfantVisibleDepart(!modalInfantVisibleDepart);
-  };
-
-  const toggleTooltipinfantReturn = () => {
-    setModalInfantVisibleReturn(!modalInfantVisibleReturn);
-  };
-
-  const closeModalindantDepart = () => {
-    setModalInfantVisibleDepart(false);
-  };
-
-  const closeModalinfantReturn = () => {
-    setModalInfantVisibleReturn(false);
-  };
-
-  // function formatNumber(value) {
-  //   return parseFloat(value).toFixed(2);
-  // }
 
 
   const pickuptoggleHourtModalDepart = () => {
@@ -639,13 +545,11 @@ const TripDetail = ({ navigation, route }) => {
 
     }
     if (!pickupDepart) {
-      setpickupPriceDepart(0);
       setSelectedPickupDepart("");
 
     }
 
     if (!pickupReturn) {
-      setpickupPriceReturn(0);
       setSelectedPickupReturn("");
     }
 
@@ -664,12 +568,10 @@ const TripDetail = ({ navigation, route }) => {
 
 
     if (!dropoffDepart) {
-      setDropoffPriceDepart(0);
       setSelectedDropoffDepart("");
     }
 
     if (!dropoffReturn) {
-      setDropoffPriceReturn(0);
       setSelectedDropoffReturn("");
 
 
@@ -747,61 +649,17 @@ const TripDetail = ({ navigation, route }) => {
           ? response.data.data
           : [response.data.data]); // บังคับให้เป็น array
 
-        setPriceReturn(Array.isArray(response.data.data.totalReturn)
-          ? response.data.data.totalReturn
-          : [response.data.data.totalReturn]); // บังคับให้เป็น array
-
       } else {
         setError('ไม่สามารถโหลดข้อมูลได้');
       }
     } catch (err) {
       console.error("❌ API Error:", err.response?.data || err.message);
       setPriceDepart([]);
-      setPriceReturn([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
     } finally {
       setLoading(false);
     }
   };
-
-
-
-  useEffect(() => {
-    if (timetableDepart.length > 0) {
-      setSaleadultDepart(timetableDepart[0].md_timetable_saleadult * customerData.exchaneRate);
-      setSalechildDepart(timetableDepart[0].md_timetable_salechild * customerData.exchaneRate);
-      setSaleinfantDepart(timetableDepart[0].md_timetable_saleinfant * customerData.exchaneRate);
-      setAdultPriceDepart((timetableDepart[0].md_timetable_saleadult * customerData.exchaneRate) * customerData.adult);
-      setChildPriceDepart((timetableDepart[0].md_timetable_salechild * customerData.exchaneRate) * customerData.child);
-      setinfantPriceDepart((timetableDepart[0].md_timetable_saleinfant * customerData.exchaneRate) * customerData.infant);
-      setTotalAdultDepart(formatNumberWithComma(adultPriceDepart));
-      setTotalChildDepart(formatNumberWithComma(childPriceDepart));
-      setTotalInfantDepart(formatNumberWithComma(infantPriceDepart));
-      setSubtotalDepart((parseFloat(dropoffPriceDepart)) + (parseFloat(pickupPriceDepart)) + parseFloat((calculateDiscountedPrice(adultPriceDepart + childPriceDepart + infantPriceDepart))));
-      setDiscountDepart(formatNumberWithComma((adultPriceDepart + childPriceDepart + infantPriceDepart) - (calculateDiscountedPrice(adultPriceDepart + childPriceDepart + infantPriceDepart))));
-      setTotal(parseFloat(subtotalDepart));
-
-    }
-    if (customerData.roud === 2 && timetableReturn.length > 0) {
-      {
-        setSaleadultReturn(timetableReturn[0].md_timetable_saleadult);
-        setSalechildReturn(timetableReturn[0].md_timetable_salechild);
-        setSaleinfantReturn(timetableReturn[0].md_timetable_saleinfant);
-        setAdultPriceReturn(timetableReturn[0].md_timetable_saleadult * customerData.adult);
-        setChildPriceReturn(timetableReturn[0].md_timetable_salechild * customerData.child);
-        setinfantPriceReturn(timetableReturn[0].md_timetable_saleinfant * customerData.infant);
-
-        setTotalAdultReturn(formatNumberWithComma(adultPriceReturn));
-        setTotalChildReturn(formatNumberWithComma(childPriceReturn));
-        setTotalInfantReturn(formatNumberWithComma(infantPriceReturn));
-        setSubtotalReturn((parseFloat(dropoffPriceReturn)) + (parseFloat(pickupPriceReturn)) + parseFloat((calculateDiscountedPrice(adultPriceReturn + childPriceReturn + infantPriceReturn))));
-        setDiscountReturn(formatNumberWithComma((adultPriceReturn + childPriceReturn + infantPriceReturn) - (calculateDiscountedPrice(adultPriceReturn + childPriceDepart + infantPriceReturn))));
-        setTotal(parseFloat(subtotalDepart) + parseFloat(subtotalReturn));
-      }
-    }
-
-
-  }, [customerData.roud, timetableReturn, timetableDepart, customerData.adult, customerData.child, adultPriceDepart, adultPriceReturn, childPriceDepart, childPriceReturn, infantPriceDepart, infantPriceReturn, pickupPriceDepart, pickupPriceReturn, dropoffPriceDepart, dropoffPriceReturn, subtotalDepart, subtotalReturn]);
 
   // Premium Animation Initialization - เหมือนหน้า SearchFerry
   useEffect(() => {
@@ -1189,30 +1047,15 @@ const TripDetail = ({ navigation, route }) => {
 
     // หากไม่มีข้อผิดพลาด ให้ไปหน้าถัดไป
     navigation.navigate('CustomerInfo', {
-      timeTableDepartId: customerData.timeTableDepartId,
-      departDateTimeTable: customerData.departdate,
-      totalAdult: adultPriceDepart,
-      totalChild: childPriceDepart
     });
   };
 
+  const EXTRA_TOP_GUTTER = 50;
 
 
 
   return (
-    <SafeAreaView
-      style={[
-        { flex: 1 },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใน Android 15 จะจัดการ insets เอง
-        }
-      ]}
-    >
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#FD501E"}
-        translucent={true}
-      />
+    <View style={{ flex: 1 }}>
       {/* Premium Gradient Background */}
       <LinearGradient
         colors={['#001233', '#002A5C', '#FD501E']}
@@ -1262,19 +1105,20 @@ const TripDetail = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.top - 10 : -20) : 0,
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
-              paddingBottom: 8,
+              paddingTop: insets.top + EXTRA_TOP_GUTTER,
+              borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
+              borderBottomRightRadius: getResponsiveSize(40, 35, 30),
+              paddingBottom: getResponsiveSize(8, 6, 5),
               shadowColor: '#001233',
               shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
-              //   elevation: 18,
-              padding: 10,
-              minHeight: Platform.OS === 'android' && Platform.Version >= 31 ? hp('12%') + insets.top : hp('12%'),
+              shadowRadius: getResponsiveSize(25, 20, 15),
+              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+              elevation: 18,
+              padding: getResponsiveSize(10, 8, 6),
+              minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
+              // Ultra premium glass morphism
               backdropFilter: 'blur(30px)',
             },
           ]}
@@ -1285,11 +1129,14 @@ const TripDetail = ({ navigation, route }) => {
               {
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingHorizontal: 0,
+                paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: Platform.OS === 'android' ? 70 : -10,
-                height: 56,
+                marginTop: 0,
+                height: getResponsiveSize(56, 50, 45),
+                maxWidth: isTablet ? 1200 : '100%',
+                alignSelf: 'center',
+                width: '100%',
               },
             ]}
           >
@@ -1298,16 +1145,16 @@ const TripDetail = ({ navigation, route }) => {
               onPress={() => navigation.goBack()}
               style={{
                 position: 'absolute',
-                left: 16,
+                left: getResponsiveSize(16, 20, 30),
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 25,
-                padding: 8,
+                borderRadius: getResponsiveSize(25, 22, 20),
+                padding: getResponsiveSize(8, 10, 12),
                 zIndex: 2,
                 shadowColor: '#FD501E',
                 shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                //   elevation: 8,
+                shadowRadius: getResponsiveSize(12, 10, 8),
+                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1319,13 +1166,50 @@ const TripDetail = ({ navigation, route }) => {
             <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
               <LogoTheTrago />
             </View>
+
           </View>
+
         </LinearGradient>
 
-        {/* Enhanced Title Section */}
+       
+
+        {/* Main Content with Animations */}
+        <Animated.View
+          style={[
+            { flex: 1 },
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim },
+              ],
+            },
+          ]}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              styles.container,
+              {
+                backgroundColor: 'transparent',
+                paddingHorizontal: 24,
+                paddingTop: 8,
+                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%'), // Android 15 Edge-to-Edge รองรับ
+                flexGrow: 1,
+              }
+            ]}
+            showsVerticalScrollIndicator={false}
+            style={[
+              { flex: 1 },
+              Platform.OS === 'android' && Platform.Version >= 31 && {
+                paddingBottom: 0, // ใช้ contentContainerStyle แทน
+              }
+            ]}
+            contentInsetAdjustmentBehavior="automatic"
+          >
+
+             {/* Enhanced Title Section */}
         <View style={{
           marginTop: hp('1%'),
-          marginHorizontal: wp('6%'),
           marginBottom: hp('2%'),
           paddingHorizontal: wp('4%'),
           paddingVertical: hp('1.5%'),
@@ -1405,40 +1289,6 @@ const TripDetail = ({ navigation, route }) => {
             {t('completeYourTripDetails') || 'Complete your trip details'}
           </Text>
         </View>
-
-        {/* Main Content with Animations */}
-        <Animated.View
-          style={[
-            { flex: 1 },
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim },
-              ],
-            },
-          ]}
-        >
-          <ScrollView
-            contentContainerStyle={[
-              styles.container,
-              {
-                backgroundColor: 'transparent',
-                paddingHorizontal: 24,
-                paddingTop: 8,
-                paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%'), // Android 15 Edge-to-Edge รองรับ
-                flexGrow: 1,
-              }
-            ]}
-            showsVerticalScrollIndicator={false}
-            style={[
-              { flex: 1 },
-              Platform.OS === 'android' && Platform.Version >= 31 && {
-                paddingBottom: 0, // ใช้ contentContainerStyle แทน
-              }
-            ]}
-            contentInsetAdjustmentBehavior="automatic"
-          >
             {/* Step Component */}
             <View style={{
               alignItems: 'center',
@@ -3085,7 +2935,7 @@ const TripDetail = ({ navigation, route }) => {
           </ScrollView>
         </Animated.View>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
 
   );
 };

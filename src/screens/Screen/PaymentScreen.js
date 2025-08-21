@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, SafeAreaView, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, Dimensions, Alert, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, ActivityIndicator, Modal, StatusBar, KeyboardAvoidingView, Platform } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ipAddress from "../../config/ipconfig";
@@ -19,6 +19,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
 import styles from '../../styles/CSS/PaymentScreenStyles';
 import { NetworkInfo } from 'react-native-network-info';
+
+
+const isTablet = screenWidth >= 768;
+const isLargeTablet = screenWidth >= 1024;
+const getResponsiveSize = (phone, tablet, largeTablet) => {
+  if (isLargeTablet && largeTablet) return largeTablet;
+  if (isTablet && tablet) return tablet;
+  return phone;
+};
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const brandIcons = {
   Visa: require("../../../assets/visa.png"),
@@ -895,21 +905,12 @@ const PaymentScreen = ({ navigation, route }) => {
     AsyncStorage.setItem('savedCards', JSON.stringify(savedCards));
   }, [savedCards]);
 
+    const EXTRA_TOP_GUTTER = 50;
+    
+
   return (
-    <SafeAreaView
-      style={[
-        { flex: 1 },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใน Android 15 จะจัดการ insets เอง
-        }
-      ]}
-    >
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={Platform.OS === 'android' && Platform.Version >= 31 ? "transparent" : "#001233"}
-        translucent={true}
-      />
-      <View style={{ flex: 1 }}>
+       <>
+
         {/* ✅ หน้าหมุนแสดงระหว่างรอการชำระเงิน */}
         {isLoading && (
           <View style={styles.loadingContainer}>
@@ -949,7 +950,7 @@ const PaymentScreen = ({ navigation, route }) => {
           </ScrollView>
         ) : (
           // ...existing code for ScrollView and content...
-          <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>
             {/* Premium Gradient Background */}
             <LinearGradient
               colors={['#001233', '#002A5C', '#FD501E']}
@@ -959,74 +960,94 @@ const PaymentScreen = ({ navigation, route }) => {
             >
               {/* Enhanced Premium Header */}
               <LinearGradient
-                colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
-                style={[
-                  headStyles.headerBg,
-                  {
-                    width: '100%',
-                    marginLeft: '0%',
-                    marginTop: Platform.OS === 'ios' ? 0 : -20,
-                    borderBottomLeftRadius: 40,
-                    borderBottomRightRadius: 40,
-                    paddingBottom: 8,
-                    shadowColor: '#001233',
-                    shadowOpacity: 0.15,
-                    shadowRadius: 25,
-                    shadowOffset: { width: 0, height: 8 },
-                    elevation: 18,
-                    padding: 10,
-                    minHeight: hp('12%'),
-                    borderWidth: 1,
-                    borderColor: 'rgba(0, 18, 51, 0.08)',
-                    backdropFilter: 'blur(30px)',
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    headStyles.headerRow,
-                    {
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingHorizontal: 0,
-                      paddingTop: 0,
-                      position: 'relative',
-                      marginTop: Platform.OS === 'android' ? 70 : -10,
-                      height: 56,
-                    },
-                  ]}
-                >
-                  {/* Back Button - Left */}
-                  <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={{
-                      position: 'absolute',
-                      left: 16,
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: 25,
-                      padding: 8,
-                      zIndex: 2,
-                      shadowColor: '#FD501E',
-                      shadowOpacity: 0.2,
-                      shadowRadius: 12,
-                      shadowOffset: { width: 0, height: 4 },
-                      elevation: 8,
-                      borderWidth: 1,
-                      borderColor: 'rgba(253, 80, 30, 0.1)',
-                    }}
-                  >
-                    <AntDesign name="arrowleft" size={24} color="#FD501E" />
-                  </TouchableOpacity>
-
-                  {/* Logo - Center */}
-                  <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
-                    <LogoTheTrago />
-                  </View>
-                </View>
-              </LinearGradient>
+                       colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+                       style={[
+                         headStyles.headerBg,
+                         {
+                           width: '100%',
+                           marginLeft: '0%',
+                           paddingTop: insets.top + EXTRA_TOP_GUTTER,
+                           borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
+                           borderBottomRightRadius: getResponsiveSize(40, 35, 30),
+                           paddingBottom: getResponsiveSize(8, 6, 5),
+                           shadowColor: '#001233',
+                           shadowOpacity: 0.15,
+                           shadowRadius: getResponsiveSize(25, 20, 15),
+                           shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+                           elevation: 18,
+                           padding: getResponsiveSize(10, 8, 6),
+                           minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
+                           borderWidth: 1,
+                           borderColor: 'rgba(0, 18, 51, 0.08)',
+                           // Ultra premium glass morphism
+                           backdropFilter: 'blur(30px)',
+                         },
+                       ]}
+                     >
+                       <View
+                         style={[
+                           headStyles.headerRow,
+                           {
+                             alignItems: 'center',
+                             justifyContent: 'center',
+                             paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
+                             paddingTop: 0,
+                             position: 'relative',
+                             marginTop: 0,
+                             height: getResponsiveSize(56, 50, 45),
+                             maxWidth: isTablet ? 1200 : '100%',
+                             alignSelf: 'center',
+                             width: '100%',
+                           },
+                         ]}
+                       >
+                         {/* Back Button - Left */}
+                         <TouchableOpacity
+                           onPress={() => navigation.goBack()}
+                           style={{
+                             position: 'absolute',
+                             left: getResponsiveSize(16, 20, 30),
+                             backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                             borderRadius: getResponsiveSize(25, 22, 20),
+                             padding: getResponsiveSize(8, 10, 12),
+                             zIndex: 2,
+                             shadowColor: '#FD501E',
+                             shadowOpacity: 0.2,
+                             shadowRadius: getResponsiveSize(12, 10, 8),
+                             shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                             elevation: 8,
+                             borderWidth: 1,
+                             borderColor: 'rgba(253, 80, 30, 0.1)',
+                           }}
+                         >
+                           <AntDesign name="arrowleft" size={24} color="#FD501E" />
+                         </TouchableOpacity>
+             
+                         {/* Logo - Center */}
+                         <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
+                           <LogoTheTrago />
+                         </View>
+             
+                       </View>
+             
+                     </LinearGradient>
+             
 
               {/* Enhanced Ultra Premium Title Section */}
-              <View style={{
+            
+        
+
+              <KeyboardAvoidingView
+                behavior="padding"
+                style={{ flex: 1 }}
+              >
+                <ScrollView
+                  contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
+                  showsVerticalScrollIndicator={false}
+                  style={{ flex: 1 }}
+                  contentInsetAdjustmentBehavior="automatic"
+                >
+                    <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -1073,18 +1094,6 @@ const PaymentScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
-
-              <KeyboardAvoidingView
-                behavior="padding"
-                style={{ flex: 1 }}
-              >
-                <ScrollView
-                  contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
-                  showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }}
-                  contentInsetAdjustmentBehavior="automatic"
-                >
                   {/* Step Component */}
                   <View style={{
                     alignItems: 'center',
@@ -1626,10 +1635,9 @@ const PaymentScreen = ({ navigation, route }) => {
                 </ScrollView>
               </KeyboardAvoidingView>
             </LinearGradient>
-          </SafeAreaView>
+          </View>
         )}
-      </View>
-    </SafeAreaView>
+          </>
   );
 };
 
