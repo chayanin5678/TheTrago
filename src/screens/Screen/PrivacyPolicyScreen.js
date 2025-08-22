@@ -1145,3 +1145,19 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
+
+getShimmerEffect = () => {
+  return (
+    <Animated.View style={{
+      ...styles.shimmerContainer,
+      transform: [{ translateX: shimmerAnim }]
+    }}>
+      <View style={styles.shimmerItem} />
+      <View style={styles.shimmerItem} />
+      <View style={styles.shimmerItem} />
+    </Animated.View>
+  );
+};this.useCallback(() => {
+  // Debugging height
+  console.log("Shimmer effect height:", styles.shimmerContainer.height);
+}, [styles.shimmerContainer.height]);
