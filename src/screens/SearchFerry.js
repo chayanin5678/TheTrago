@@ -19,7 +19,6 @@ import headStyles from '../styles/CSS/StartingPointScreenStyles';
 import LottieView from 'lottie-react-native';
 import axios from 'axios';
 
-
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const itemsPerPage = 5;
 
@@ -37,54 +36,6 @@ const SearchFerry = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
-
-  // Animations (Account-like)
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const headerAnim = useRef(new Animated.Value(-80)).current;
-  const logoScaleAnim = useRef(new Animated.Value(1)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const floatingAnims = useRef(
-    [...Array(6)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth - screenWidth / 2),
-      y: new Animated.Value(Math.random() * screenHeight * 0.6),
-      opacity: new Animated.Value(0.08),
-      scale: new Animated.Value(1),
-    }))
-  ).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 700, delay: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.timing(logoScaleAnim, { toValue: 0.96, duration: 900, delay: 250, easing: Easing.out(Easing.back(0.8)), useNativeDriver: true }),
-      Animated.timing(headerAnim, { toValue: 0, duration: 900, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-    ]).start();
-
-    // particle loops
-    floatingAnims.forEach((anim, idx) => {
-      const loop = () => {
-        Animated.loop(
-          Animated.parallel([
-            Animated.sequence([Animated.timing(anim.y, { toValue: -40, duration: 3800 + idx * 300, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(anim.y, { toValue: screenHeight * 0.6, duration: 0, useNativeDriver: true })]),
-            Animated.sequence([Animated.timing(anim.x, { toValue: (Math.random() * screenWidth - screenWidth / 2) * 0.3, duration: 2000 + idx * 200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(anim.x, { toValue: Math.random() * screenWidth - screenWidth / 2, duration: 2000 + idx * 200, easing: Easing.inOut(Easing.sin), useNativeDriver: true })]),
-            Animated.sequence([Animated.timing(anim.opacity, { toValue: 0.35, duration: 2000, useNativeDriver: true }), Animated.timing(anim.opacity, { toValue: 0.08, duration: 2000, useNativeDriver: true })]),
-          ])
-        ).start();
-      };
-      setTimeout(loop, idx * 300);
-    });
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.02, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ])
-    ).start();
-
-    Animated.loop(Animated.timing(rotateAnim, { toValue: 1, duration: 30000, easing: Easing.linear, useNativeDriver: true })).start();
-  }, []);
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
@@ -222,30 +173,6 @@ const SearchFerry = ({ navigation, route }) => {
 
     console.log('✅ Depart date updated:', day.dateString);
   };
-
-  // ใกล้ ๆ ตัวแปร shimmerAnim
-useEffect(() => {
-  Animated.loop(
-    Animated.timing(shimmerAnim, {
-      toValue: screenWidth,
-      duration: 1400,
-      useNativeDriver: true,
-    })
-  ).start();
-}, [shimmerAnim]);
-// บนสุดของคอมโพเนนต์
-const scrollY = useRef(new Animated.Value(0)).current;
-const headerTranslate = scrollY.interpolate({
-  inputRange: [0, 120],
-  outputRange: [0, -12],
-  extrapolate: 'clamp',
-});
-const logoScale = scrollY.interpolate({
-  inputRange: [0, 120],
-  outputRange: [1, 0.92],
-  extrapolate: 'clamp',
-});
-
 
   // ฟังก์ชันสำหรับเลือกวันที่กลับ
   const onReturnCalendarDayPress = (day) => {
@@ -850,9 +777,8 @@ const logoScale = scrollY.interpolate({
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
       >
-  {/* Enhanced Premium Header */}
-  <Animated.View style={{ transform: [{ translateY: headerAnim }], opacity: fadeAnim }}>
-  <LinearGradient
+        {/* Enhanced Premium Header */}
+        <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
             headStyles.headerBg,
@@ -916,16 +842,9 @@ const logoScale = scrollY.interpolate({
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
             </TouchableOpacity>
 
-            {/* Logo - Center (animated) */}
-            <Animated.View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', transform: [{ translateY: headerAnim }, { scale: logoScaleAnim }] }}>
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
               <LogoTheTrago />
-            </Animated.View>
-
-            {/* Floating particles (background, pointerEvents none) */}
-            <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 0 }}>
-              {floatingAnims.map((anim, i) => (
-                <Animated.View key={i} style={{ position: 'absolute', left: screenWidth / 2, width: 18, height: 18, borderRadius: 9, backgroundColor: 'rgba(253,80,30,0.12)', transform: [{ translateX: anim.x }, { translateY: anim.y }, { scale: anim.scale }], opacity: anim.opacity }} />
-              ))}
             </View>
 
             {/* Currency Button - Right */}
@@ -1064,8 +983,7 @@ const logoScale = scrollY.interpolate({
             </Modal>
           </View>
 
-  </LinearGradient>
-  </Animated.View>
+        </LinearGradient>
         {/* Enhanced Ultra Premium Title and Filters Section */}
        
         <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>

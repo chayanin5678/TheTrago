@@ -50,6 +50,8 @@ import BookingScreen from './src/screens/Screen/BookingScreen';
 import DeleteProfileScreen from './src/screens/Screen/DeleteProfileScreen';
 import AffiliateScreen from './src/screens/Screen/AffiliateScreen';
 import TheTragoWebViewScreen from './src/screens/Screen/TheTragoWebViewScreen';
+import EarningsScreen from './src/screens/Screen/EarningsScreen';
+import BookingAffiliateScreen from './src/screens/Screen/BookingAffiliateScreen';
 
 
 const Stack = createStackNavigator();
@@ -149,7 +151,9 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
           <Stack.Screen name="ContactScreen" component={ContactScreen} />
           <Stack.Screen name="DeleteProfile" component={DeleteProfileScreen} />
+          <Stack.Screen name="EarningsScreen" component={EarningsScreen} />
           <Stack.Screen name="AffiliateScreen" component={AffiliateScreen} />
+          <Stack.Screen name="BookingAffiliateScreen" component={BookingAffiliateScreen} />
         </>
       )}
     </Stack.Navigator>

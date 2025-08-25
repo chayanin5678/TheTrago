@@ -33,8 +33,6 @@ const TripDetail = ({ navigation, route }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const headerAnim = useRef(new Animated.Value(-80)).current;
-  const logoScaleAnim = useRef(new Animated.Value(1)).current;
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -680,20 +678,6 @@ const TripDetail = ({ navigation, route }) => {
         easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
         useNativeDriver: true,
       }),
-      Animated.timing(headerAnim, {
-        toValue: 0,
-        duration: 900,
-        delay: 250,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoScaleAnim, {
-        toValue: 0.96,
-        duration: 900,
-        delay: 300,
-        easing: Easing.out(Easing.back(0.8)),
-        useNativeDriver: true,
-      }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 1200,
@@ -1113,9 +1097,8 @@ const TripDetail = ({ navigation, route }) => {
           ))}
         </View>
 
-  {/* Enhanced Premium Header - รองรับ Android 15 Edge-to-Edge */}
-  <Animated.View style={{ transform: [{ translateY: headerAnim }], opacity: fadeAnim }}>
-  <LinearGradient
+        {/* Enhanced Premium Header - รองรับ Android 15 Edge-to-Edge */}
+        <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
           style={[
             headStyles.headerBg,
@@ -1179,15 +1162,14 @@ const TripDetail = ({ navigation, route }) => {
               <AntDesign name="arrowleft" size={24} color="#FD501E" />
             </TouchableOpacity>
 
-            {/* Logo - Center (animated) */}
-            <Animated.View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', transform: [{ translateY: headerAnim }, { scale: logoScaleAnim }] }}>
+            {/* Logo - Center */}
+            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
               <LogoTheTrago />
-            </Animated.View>
+            </View>
 
           </View>
 
-  </LinearGradient>
-  </Animated.View>
+        </LinearGradient>
 
        
 
