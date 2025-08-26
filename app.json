@@ -24,12 +24,12 @@
       "eas": {
         "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c",
         "build": {
-          "version": "1.0.3",
-          "buildNumber": "3"
+          "version": "1.0.0",
+          "buildNumber": "1"
         }
       }
     },
-    "version": "1.0.3",
+    "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icontrago.png",
     "userInterfaceStyle": "light",
@@ -137,8 +137,8 @@
     ],
     "ios": {
       "versionCode": 3,
-      "version": "1.0.3",
-      "buildNumber": "3",
+      "version": "1.0.0",
+      "buildNumber": "0",
       "bundleIdentifier": "com.thetrago.android",
       "supportsTablet": true,
       "requireFullScreen": false,
@@ -162,8 +162,8 @@
         ],
         "CFBundleDisplayName": "TheTrago",
         "CFBundleName": "TheTrago",
-        "CFBundleVersion": "3",
-        "CFBundleShortVersionString": "1.0.3",
+        "CFBundleVersion": "0",
+        "CFBundleShortVersionString": "1.0.0",
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationLandscapeLeft",

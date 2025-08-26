@@ -333,7 +333,8 @@ const AccountScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Extracted profile fetch so we can call it on focus (when returning from AffiliateScreen)
+    const fetchProfile = async () => {
       try {
         console.log('🔄 Fetching profile data...');
         const response = await fetch(`${ipAddress}/profile`, {
@@ -387,11 +388,23 @@ const AccountScreen = ({ navigation }) => {
     };
 
     if (token) {
-      fetchData();
+      fetchProfile();
     } else {
       setIsLoading(false);
       setIsLoadingProfile(false);
     }
+
+    // Refresh profile when screen comes into focus so affiliate changes reflect immediately
+    const focusUnsub = navigation.addListener('focus', () => {
+      if (token) {
+        fetchProfile();
+      }
+    });
+
+    return () => {
+      // cleanup focus listener
+      focusUnsub && focusUnsub();
+    };
   }, [token]);
 
   // Sync selectedLanguageLocal with selectedLanguage context
@@ -802,43 +815,66 @@ const AccountScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>{t('accountManagement') || 'Account Management'}</Text>
           
           <View style={styles.listSection}>
-            {[
-              { title: t('affiliateProgram') || 'Affiliate Program', subtitle: t('earnCommission') || 'Earn commission on bookings', icon: 'group', color: '#10B981', nav: 'AffiliateScreen' },
-              { title: t('earnings') || 'Earnings', subtitle: t('earningsSubtitle') || 'Track your earnings and invoices', icon: 'payments', color: '#10B981', nav: 'EarningsScreen' },
-              { title: t('bookingAffiliate') || 'Booking Affiliate', subtitle: t('trackBookings') || 'Track affiliate bookings and export report', icon: 'cloud-download', color: '#3B82F6', nav: 'BookingAffiliateScreen' },
-              { title: t('deleteAccount') || 'Delete Account', subtitle: t('deleteAccountDesc') || 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' }
-            ].map((item, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.listItemWrapper,
-                  {
-                    opacity: menuItemAnims[index + 4]?.opacity || 1,
-                    transform: [
-                      { translateY: menuItemAnims[index + 4]?.translateY || 0 },
-                      { scale: menuItemAnims[index + 4]?.scale || 1 },
-                    ],
-                  },
-                ]}
-              >
-                <TouchableOpacity 
-                  style={styles.listItem}
-                  onPress={() => item.nav && navigation.navigate(item.nav)}
-                  activeOpacity={0.7}
+            {/* Build account management menu conditionally based on affiliate status */}
+            {(() => {
+              // helper to interpret various affiliate flags
+              const isOn = (v) => v === 1 || v === '1' || v === true;
+
+              const statusRaw = (user && Array.isArray(user) && user.length > 0)
+                ? (user[0].md_member_affiliate_status ?? user[0].md_affiliate_status ?? 0)
+                : 0;
+
+              const affiliateEnabled = isOn(statusRaw);
+
+              // base items always shown
+              const items = [
+                { title: t('affiliateProgram') || 'Affiliate Program', subtitle: t('earnCommission') || 'Earn commission on bookings', icon: 'group', color: '#10B981', nav: 'AffiliateScreen' },
+              ];
+
+              // Only show earnings and bookingAffiliate when affiliate is enabled
+              if (affiliateEnabled) {
+                items.push(
+                  { title: t('earnings') || 'Earnings', subtitle: t('earningsSubtitle') || 'Track your earnings and invoices', icon: 'payments', color: '#10B981', nav: 'EarningsScreen' },
+                  { title: t('bookingAffiliate') || 'Booking Affiliate', subtitle: t('trackBookings') || 'Track affiliate bookings and export report', icon: 'cloud-download', color: '#3B82F6', nav: 'BookingAffiliateScreen' }
+                );
+              }
+
+              // delete account always last
+              items.push({ title: t('deleteAccount') || 'Delete Account', subtitle: t('deleteAccountDesc') || 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' });
+
+              return items.map((item, index) => (
+                <Animated.View
+                  key={index}
+                  style={[
+                    styles.listItemWrapper,
+                    {
+                      opacity: menuItemAnims[index + 4]?.opacity || 1,
+                      transform: [
+                        { translateY: menuItemAnims[index + 4]?.translateY || 0 },
+                        { scale: menuItemAnims[index + 4]?.scale || 1 },
+                      ],
+                    },
+                  ]}
                 >
-                  <View style={styles.listIconContainer}>
-                    <MaterialIcons name={item.icon} size={20} color={item.color} />
-                  </View>
-                  <View style={styles.listContent}>
-                    <Text style={[styles.listTitle, { color: item.color === '#EF4444' ? '#EF4444' : '#1F2937' }]}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.listSubtitle}>{item.subtitle}</Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={20} color="#D1D5DB" />
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
+                  <TouchableOpacity 
+                    style={styles.listItem}
+                    onPress={() => item.nav && navigation.navigate(item.nav)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.listIconContainer}>
+                      <MaterialIcons name={item.icon} size={20} color={item.color} />
+                    </View>
+                    <View style={styles.listContent}>
+                      <Text style={[styles.listTitle, { color: item.color === '#EF4444' ? '#EF4444' : '#1F2937' }]}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.listSubtitle}>{item.subtitle}</Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={20} color="#D1D5DB" />
+                  </TouchableOpacity>
+                </Animated.View>
+              ));
+            })()}
           </View>
 
           {/* Premium Logout Button */}

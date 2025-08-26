@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Clipboard, Alert, Platform, Linking, Modal, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  Clipboard,
+  Alert,
+  Platform,
+  Modal,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from './LanguageContext';
@@ -12,19 +26,27 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 const AffiliateScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
+
+  const [affiliateEnabled, setAffiliateEnabled] = useState(false);
+  const [enabling, setEnabling] = useState(false);
+
   const [affiliateData, setAffiliateData] = useState({
     upcoming: 0,
     cancelled: 0,
     completed: 0,
     totalListings: 0,
-    earning: 0.00
+    earning: 0.0,
   });
+
   const [userProfile, setUserProfile] = useState(null);
   const [referralLink, setReferralLink] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [qrModalLink, setQrModalLink] = useState('');
   const [qrModalTitle, setQrModalTitle] = useState('');
+
+  const isOn = (v) => v === 1 || v === '1' || v === true;
 
   useEffect(() => {
     loadUserProfile();
@@ -36,66 +58,65 @@ const AffiliateScreen = ({ navigation }) => {
       const token = await SecureStore.getItemAsync('userToken');
       if (!token) return;
 
-      // Try new API first
+      // API ใหม่
       const response = await axios.get(`${ipAddress}/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
 
-      if (response.data.status === 'success' && response.data.data && response.data.data.length > 0) {
+      if (response.data.status === 'success' && response.data.data?.length > 0) {
         const userData = response.data.data[0];
-        console.log('=== API Debug Info ===');
-        console.log('API Response:', JSON.stringify(response.data, null, 2));
-        console.log('User Data:', JSON.stringify(userData, null, 2));
-        console.log('response.data.memberId:', response.data.memberId);
-        console.log('userData.memberno:', userData.memberno);
-        console.log('userData.md_member_no:', userData.md_member_no);
-        console.log('========================');
-        
-        // ลองหาค่า member ID จากหลายๆ field
-        const possibleMemberId = response.data.memberId || 
-                                userData.memberno || 
-                                userData.md_member_no || 
-                                userData.md_member_user ||
-                                'M033048';
-        
+
+        const statusRaw =
+          response.data.md_member_affiliate_status ??
+          userData.md_member_affiliate_status ??
+          userData.md_affiliate_status ??
+          0;
+        setAffiliateEnabled(isOn(statusRaw));
+
+        const possibleMemberId =
+          response.data.memberId ||
+          userData.memberno ||
+          userData.md_member_no ||
+          userData.md_member_user ||
+          'M033048';
+
         setUserProfile({
           memberId: possibleMemberId,
           name: `${userData.md_member_fname || ''} ${userData.md_member_lname || ''}`.trim(),
           email: userData.md_member_email || '',
           phone: userData.md_member_tel || '',
-          joinDate: userData.md_member_credate || new Date().toISOString()
+          joinDate: userData.md_member_credate || new Date().toISOString(),
         });
-        
-        // Generate referral links with the correct member ID
+
         generateReferralLinks(possibleMemberId);
-        console.log('Final Member ID used:', possibleMemberId);
         return;
       }
 
-      // Fallback to old API if new one fails
+      // Fallback API เก่า
       const fallbackResponse = await axios.get(`${ipAddress}/user-profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
 
       if (fallbackResponse.data.success) {
-        setUserProfile(fallbackResponse.data.user);
-        generateReferralLinks(fallbackResponse.data.user.memberId);
+        const up = fallbackResponse.data.user;
+
+        const statusRaw2 = up?.md_member_affiliate_status ?? up?.md_affiliate_status ?? 0;
+        setAffiliateEnabled(isOn(statusRaw2));
+
+        const memberId = up?.memberId || up?.md_member_no || 'M033048';
+        setUserProfile(up);
+        generateReferralLinks(memberId);
+        return;
       }
     } catch (error) {
-      console.error('Load user profile error:', error);
-      // Fallback ถ้าไม่สามารถดึงข้อมูลได้
+      // ดึงข้อมูลไม่ได้ → ปิดไว้ก่อน
+      setAffiliateEnabled(false);
       setUserProfile({
         memberId: 'M033048',
         name: 'Default User',
         email: '',
         phone: '',
-        joinDate: new Date().toISOString()
+        joinDate: new Date().toISOString(),
       });
       generateReferralLinks('M033048');
     }
@@ -103,64 +124,98 @@ const AffiliateScreen = ({ navigation }) => {
 
   const loadAffiliateData = async () => {
     try {
-      // ชั่วคราวใช้ข้อมูล mock แทน API ที่ยังไม่มี
+      // mock
       setAffiliateData({
-        upcoming: 3,
-        cancelled: 1,
-        completed: 12,
+        upcoming: 0,
+        cancelled: 0,
+        completed: 0,
         totalListings: 16,
-        earning: 2450.00
+        earning: 2450.0,
       });
-      
-      /* 
-      // เมื่อ API พร้อมแล้วให้เปิด comment นี้
-      const token = await SecureStore.getItemAsync('userToken');
-      const response = await axios.get(`${ipAddress}/affiliate-data`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.data.success) {
-        setAffiliateData(response.data.data);
-      }
-      */
-    } catch (error) {
-      console.error('Load affiliate data error:', error);
-      // ใช้ข้อมูล default ถ้าเกิดข้อผิดพลาด
+      // ถ้ามี API จริง ให้เปิดใช้ส่วนนี้
+      // const token = await SecureStore.getItemAsync('userToken');
+      // const res = await axios.get(`${ipAddress}/affiliate-data`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
+      // setAffiliateData(res.data.data);
+    } catch (e) {
       setAffiliateData({
         upcoming: 0,
         cancelled: 0,
         completed: 0,
         totalListings: 0,
-        earning: 0.00
+        earning: 0.0,
       });
     }
   };
 
-  const generateReferralLinks = async (memberId) => {
+  const confirmEnableAffiliate = () => {
+    Alert.alert(
+      t('enableAffiliate') || 'เปิดใช้งาน Affiliate',
+      t('enableAffiliateConfirmMsg') ||
+        'ต้องการเปิดใช้งาน Affiliate หรือไม่? เมื่อเปิดแล้วคุณจะได้รับลิงก์แนะนำและเริ่มนับคอมมิชชัน',
+      [
+        { text: t('cancel') || 'ยกเลิก', style: 'cancel' },
+        { text: t('enable') || 'เปิดใช้งาน', onPress: enableAffiliate },
+      ]
+    );
+  };
+
+const enableAffiliate = async () => {
+  try {
+    setEnabling(true);
+
+    const token = await SecureStore.getItemAsync('userToken');
+    if (!token) {
+      Alert.alert(t('error') || 'เกิดข้อผิดพลาด', t('loginRequired') || 'กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
+
+    // เรียก API จริงเพื่ออัปเดต md_member_affiliate_status = 1
+    const res = await axios.post(
+      `${ipAddress}/affiliate/enable`,   // ipAddress ของคุณควรชี้ไปที่ /AppApi
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      }
+    );
+
+    if (res?.data?.status === 'success') {
+      setAffiliateEnabled(true);
+      Alert.alert(t('success') || 'สำเร็จ', t('affiliateEnabledMsg') || 'เปิดใช้งาน Affiliate แล้ว');
+      // ดึงโปรไฟล์อีกรอบเพื่อให้ state สอดคล้องฐานข้อมูล
+      await loadUserProfile();
+    } else {
+      throw new Error(res?.data?.message || 'Enable affiliate failed');
+    }
+  } catch (e) {
+    const msg = e?.response?.data?.message || e?.message || (t('tryAgain') || 'ลองใหม่อีกครั้ง');
+    Alert.alert(t('error') || 'เกิดข้อผิดพลาด', msg);
+  } finally {
+    setEnabling(false);
+  }
+};
+
+
+  const generateReferralLinks = (memberId) => {
     try {
-      const memberIdToUse = memberId || userProfile?.memberId || 'M033048';
-      
-      // สร้าง deep link สำหรับเปิดแอปไปหน้า home พร้อม referral parameter
+      const memberIdToUse = memberId || (userProfile && userProfile.memberId) || 'M033048';
       const appReferralLink = `thetrago://home?ref=${memberIdToUse}`;
-      // สร้าง deep link สำหรับเปิดแอปไปหน้าสมัครสมาชิก พร้อม referral parameter
       const appInviteLink = `thetrago://register?ref=${memberIdToUse}`;
-      
       setReferralLink(appReferralLink);
       setInviteLink(appInviteLink);
-    } catch (error) {
-      console.error('Generate links error:', error);
-    }
+    } catch (e) {}
   };
 
   const copyToClipboard = (text, type) => {
     Clipboard.setString(text);
-    Alert.alert(
-      t('copied') || 'Copied!',
-      `${type} ${t('linkCopied') || 'link copied to clipboard'}`,
-      [{ text: t('ok') || 'OK' }]
-    );
+    Alert.alert(t('copied') || 'Copied!', `${type} ${t('linkCopied') || 'link copied to clipboard'}`, [
+      { text: t('ok') || 'OK' },
+    ]);
   };
 
   const showQRCode = (link, title) => {
@@ -193,26 +248,22 @@ const AffiliateScreen = ({ navigation }) => {
     </View>
   );
 
-  const LinkCard = ({ title, subtitle, link, commission }) => (
+  const LinkCard = ({ title, subtitle, link }) => (
     <View style={styles.linkCard}>
       <MaterialCommunityIcons name="share-variant" size={24} color="#6B7280" />
       <Text style={styles.linkTitle}>{title}</Text>
       <Text style={styles.linkSubtitle}>{subtitle}</Text>
-      
+
       <View style={styles.linkContainer}>
-        <Text style={styles.linkText} numberOfLines={1}>{link}</Text>
-        <TouchableOpacity 
-          style={styles.copyButton}
-          onPress={() => copyToClipboard(link, title)}
-        >
+        <Text style={styles.linkText} numberOfLines={1}>
+          {link}
+        </Text>
+        <TouchableOpacity style={styles.copyButton} onPress={() => copyToClipboard(link, title)}>
           <Text style={styles.copyButtonText}>{t('copy') || 'Copy!'}</Text>
         </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={styles.qrButton}
-        onPress={() => showQRCode(link, title)}
-      >
+
+      <TouchableOpacity style={styles.qrButton} onPress={() => showQRCode(link, title)}>
         <Text style={styles.qrButtonText}>{t('qrCode') || 'QR CODE'}</Text>
       </TouchableOpacity>
     </View>
@@ -220,25 +271,22 @@ const AffiliateScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* QR Code Modal */}
-      <Modal
-        visible={qrModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setQrModalVisible(false)}
-      >
+      {/* QR Modal */}
+      <Modal visible={qrModalVisible} transparent animationType="fade" onRequestClose={() => setQrModalVisible(false)}>
         <View style={styles.qrModalOverlay}>
           <View style={styles.qrModalContent}>
             <Text style={styles.qrModalTitle}>{qrModalTitle}</Text>
             <Image
-              source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrModalLink)}` }}
+              source={{
+                uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrModalLink)}`,
+              }}
               style={styles.qrModalImage}
             />
             <Text style={styles.qrModalLink}>{qrModalLink}</Text>
             <View style={{ flexDirection: 'row', marginTop: 16 }}>
               <TouchableOpacity
                 style={[styles.qrModalButton, { backgroundColor: '#F97316' }]}
-                onPress={() => { copyToClipboard(qrModalLink, qrModalTitle); }}
+                onPress={() => copyToClipboard(qrModalLink, qrModalTitle)}
               >
                 <Text style={styles.qrModalButtonText}>{t('copy') || 'Copy!'}</Text>
               </TouchableOpacity>
@@ -252,9 +300,10 @@ const AffiliateScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
-      
-      {/* Premium Header */}
+
+      {/* Header */}
       <View style={styles.headerContainer}>
         <LinearGradient
           colors={['#FD501E', '#FF6B40', '#FD501E']}
@@ -264,14 +313,10 @@ const AffiliateScreen = ({ navigation }) => {
         >
           <SafeAreaView style={styles.safeAreaHeader}>
             <View style={styles.headerContent}>
-              <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-              
+
               <Text style={styles.headerTitle}>{t('affiliateProgram') || 'Affiliate Program'}</Text>
               <Text style={styles.headerSubtitle}>{t('earnCommission') || 'Earn commission on bookings'}</Text>
             </View>
@@ -279,83 +324,105 @@ const AffiliateScreen = ({ navigation }) => {
         </LinearGradient>
       </View>
 
-      <ScrollView 
+      {/* Body */}
+      <ScrollView
         style={[styles.scrollContainer, styles.scrollViewWithMargin]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* Section Title */}
+          {/* แถบเปิดใช้งาน (เฉพาะตอนยังไม่เปิด) */}
+          {!affiliateEnabled && (
+            <View style={styles.enableRow}>
+              <Text style={styles.enableHint}>{t('enableAffiliate') || 'เปิดใช้งาน Affiliate'}</Text>
+              <TouchableOpacity
+                style={[styles.enableBtn, enabling && { opacity: 0.6 }]}
+                onPress={confirmEnableAffiliate}
+                disabled={enabling}
+                activeOpacity={0.9}
+              >
+                {enabling ? (
+                  <>
+                    <ActivityIndicator size="small" color="#EF4444" style={{ marginRight: 6 }} />
+                    <Text style={styles.enableBtnText}>{t('processing') || 'กำลังเปิด...'}</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.enablePlus}>＋</Text>
+                    <Text style={styles.enableBtnText}>
+                      {t('openAffiliate') || 'Open'}
+                      {'\n'}
+                      {t('affiliate') || 'Affiliate'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* หัวข้อ */}
           <Text style={styles.sectionTitle}>{t('bookingsAffiliate') || 'Bookings affiliate'}</Text>
 
-          {/* Status Cards */}
-          <StatusCard 
-            title={t('upcoming') || 'Upcoming'} 
+          {/* สถานะ 3 การ์ด */}
+          <StatusCard
+            title={t('upcoming') || 'Upcoming'}
             count={affiliateData.upcoming}
             icon="schedule"
             color="#F59E0B"
             bgColor="#FEF3C7"
           />
-          
-          <StatusCard 
-            title={t('cancelled') || 'Cancelled'} 
+          <StatusCard
+            title={t('cancelled') || 'Cancelled'}
             count={affiliateData.cancelled}
             icon="close"
             color="#EF4444"
             bgColor="#FEE2E2"
           />
-          
-          <StatusCard 
-            title={t('completed') || 'Completed'} 
+          <StatusCard
+            title={t('completed') || 'Completed'}
             count={affiliateData.completed}
             icon="check"
             color="#10B981"
             bgColor="#D1FAE5"
           />
 
-          {/* Metric Cards */}
-          <MetricCard 
-            title={t('totalListings') || 'Total Listings'}
-            value={affiliateData.totalListings}
-            icon="format-list-bulleted"
-            color="#10B981"
-          />
+          {/* ส่วนลิงก์และสรุปจะแสดงเมื่อเปิดใช้งานแล้ว */}
+          {affiliateEnabled && (
+            <>
+              <MetricCard
+                title={t('totalListings') || 'Total Listings'}
+                value={affiliateData.totalListings}
+                icon="format-list-bulleted"
+                color="#10B981"
+              />
+              <MetricCard
+                title={t('earning') || 'Earning'}
+                value={`฿${affiliateData.earning.toFixed(2)}`}
+                icon="trending-up"
+                color="#3B82F6"
+              />
 
-          <MetricCard 
-            title={t('earning') || 'Earning'}
-            value={`฿${affiliateData.earning.toFixed(2)}`}
-            icon="trending-up"
-            color="#3B82F6"
-          />
-
-          {/* Referral Links */}
-          <LinkCard 
-            title={t('yourAffiliate') || 'Your Affiliate:'}
-            subtitle={t('shareLink40') || 'Share this link and earn up to 40% commission on bookings!'}
-            link={referralLink}
-            commission="40%"
-          />
-
-          <LinkCard 
-            title={t('inviteFriends') || 'Invite friends:'}
-            subtitle={t('shareAppLink') || 'Share this link to open TheTrago app!'}
-            link={inviteLink}
-            commission="10%"
-          />
+              <LinkCard
+                title={t('yourAffiliate') || 'Your Affiliate:'}
+                subtitle={t('shareLink40') || 'Share this link and earn up to 40% commission on bookings!'}
+                link={referralLink}
+              />
+              <LinkCard
+                title={t('inviteFriends') || 'Invite friends:'}
+                subtitle={t('shareAppLink') || 'Share this link to open TheTrago app!'}
+                link={inviteLink}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
   );
-
 };
 
 const styles = StyleSheet.create({
-  qrModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // modal
+  qrModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   qrModalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -368,61 +435,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  qrModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#1F2937',
-    textAlign: 'center',
-  },
-  qrModalImage: {
-    width: 200,
-    height: 200,
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-  },
-  qrModalLink: {
-    fontSize: 13,
-    color: '#4B5563',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  qrModalButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  qrModalButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: hp('10%'),
-  },
-  scrollViewWithMargin: {
-    marginTop: 140,
-    flex: 1,
-  },
-  
-  // Premium Header Styles
-  headerContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-  },
+  qrModalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#1F2937', textAlign: 'center' },
+  qrModalImage: { width: 200, height: 200, marginBottom: 12, borderRadius: 8, backgroundColor: '#F3F4F6' },
+  qrModalLink: { fontSize: 13, color: '#4B5563', marginBottom: 8, textAlign: 'center' },
+  qrModalButton: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  qrModalButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+
+  // layout
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollContainer: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: hp('10%') },
+  scrollViewWithMargin: { marginTop: 140, flex: 1 },
+
+  // header
+  headerContainer: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 },
   headerGradient: {
     paddingTop: 0,
     paddingBottom: 40,
@@ -436,14 +462,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  safeAreaHeader: {
-    paddingTop: Platform.OS === 'android' ? 40 : 0,
-  },
-  headerContent: {
-    alignItems: 'center',
-    position: 'relative',
-    zIndex: 3,
-  },
+  safeAreaHeader: { paddingTop: Platform.OS === 'android' ? 40 : 0 },
+  headerContent: { alignItems: 'center', position: 'relative', zIndex: 3 },
   backButton: {
     position: 'absolute',
     top: 15,
@@ -451,7 +471,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 5,
@@ -470,29 +490,27 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  headerSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.95)',
-    textAlign: 'center',
-    fontWeight: '500',
-    letterSpacing: 0.3,
-  },
+  headerSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.95)', textAlign: 'center', fontWeight: '500', letterSpacing: 0.3 },
 
-  // Content Styles
-  content: {
-    paddingHorizontal: wp('4%'),
-    paddingTop: hp('2%'),
-    paddingBottom: hp('5%'),
-    minHeight: '100%',
-  },
-  sectionTitle: {
-    fontSize: wp('5%'),
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: hp('2%'),
-  },
+  // content
+  content: { paddingHorizontal: wp('4%'), paddingTop: hp('2%'), paddingBottom: hp('5%'), minHeight: '100%' },
+  sectionTitle: { fontSize: wp('5%'), fontWeight: 'bold', color: '#1F2937', marginBottom: hp('2%') },
 
-  // Status Card Styles
+  // enable bar
+  enableRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 8 },
+  enableHint: { marginRight: 10, color: '#6B7280' },
+  enableBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4FF',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  enablePlus: { fontSize: 18, color: '#F97316', marginRight: 6, fontWeight: '700' },
+  enableBtnText: { color: '#EF4444', fontWeight: '800', lineHeight: 16 },
+
+  // status cards
   statusCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -501,29 +519,12 @@ const styles = StyleSheet.create({
     borderRadius: wp('3%'),
     marginBottom: hp('1.5%'),
   },
-  statusContent: {
-    flex: 1,
-  },
-  statusCount: {
-    fontSize: wp('6%'),
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statusTitle: {
-    fontSize: wp('4%'),
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  statusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  statusContent: { flex: 1 },
+  statusCount: { fontSize: wp('6%'), fontWeight: 'bold', color: '#1F2937', marginBottom: 4 },
+  statusTitle: { fontSize: wp('4%'), color: '#6B7280', fontWeight: '500' },
+  statusIcon: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
 
-  // Metric Card Styles
+  // metric cards
   metricCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -537,30 +538,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  metricIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: wp('3%'),
-  },
-  metricContent: {
-    flex: 1,
-  },
-  metricValue: {
-    fontSize: wp('5%'),
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  metricTitle: {
-    fontSize: wp('3.5%'),
-    color: '#6B7280',
-    fontWeight: '500',
-  },
+  metricIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: wp('3%') },
+  metricContent: { flex: 1 },
+  metricValue: { fontSize: wp('5%'), fontWeight: 'bold', color: '#1F2937', marginBottom: 4 },
+  metricTitle: { fontSize: wp('3.5%'), color: '#6B7280', fontWeight: '500' },
 
-  // Link Card Styles
+  // link card
   linkCard: {
     backgroundColor: '#FFFFFF',
     padding: wp('4%'),
@@ -572,19 +555,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  linkTitle: {
-    fontSize: wp('4%'),
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: hp('1%'),
-    marginBottom: hp('0.5%'),
-  },
-  linkSubtitle: {
-    fontSize: wp('3.5%'),
-    color: '#6B7280',
-    marginBottom: hp('2%'),
-    lineHeight: wp('5%'),
-  },
+  linkTitle: { fontSize: wp('4%'), fontWeight: '600', color: '#1F2937', marginTop: hp('1%'), marginBottom: hp('0.5%') },
+  linkSubtitle: { fontSize: wp('3.5%'), color: '#6B7280', marginBottom: hp('2%'), lineHeight: wp('5%') },
   linkContainer: {
     flexDirection: 'row',
     backgroundColor: '#F3F4F6',
@@ -593,36 +565,11 @@ const styles = StyleSheet.create({
     marginBottom: hp('1.5%'),
     alignItems: 'center',
   },
-  linkText: {
-    flex: 1,
-    fontSize: wp('3.5%'),
-    color: '#4B5563',
-    marginRight: wp('2%'),
-  },
-  copyButton: {
-    backgroundColor: '#F97316',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: wp('2%'),
-    borderRadius: wp('2%'),
-  },
-  copyButtonText: {
-    color: '#FFFFFF',
-    fontSize: wp('3.5%'),
-    fontWeight: '600',
-  },
-  qrButton: {
-    backgroundColor: '#0891B2',
-    paddingVertical: wp('3%'),
-    borderRadius: wp('2%'),
-    alignItems: 'center',
-    marginTop: wp('1%'),
-  },
-  qrButtonText: {
-    color: '#FFFFFF',
-    fontSize: wp('3.5%'),
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
+  linkText: { flex: 1, fontSize: wp('3.5%'), color: '#4B5563', marginRight: wp('2%') },
+  copyButton: { backgroundColor: '#F97316', paddingHorizontal: wp('4%'), paddingVertical: wp('2%'), borderRadius: wp('2%') },
+  copyButtonText: { color: '#FFFFFF', fontSize: wp('3.5%'), fontWeight: '600' },
+  qrButton: { backgroundColor: '#0891B2', paddingVertical: wp('3%'), borderRadius: wp('2%'), alignItems: 'center', marginTop: wp('1%') },
+  qrButtonText: { color: '#FFFFFF', fontSize: wp('3.5%'), fontWeight: '600', letterSpacing: 1 },
 });
 
 export default AffiliateScreen;

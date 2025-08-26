@@ -16,6 +16,7 @@ import axios from 'axios';
 import ipAddress from '../../config/ipconfig';
 
 const PAGE_SIZE = 10;
+const TABLE_MIN_WIDTH = 950; // ความกว้างขั้นต่ำของตารางแนวนอน
 
 const BookingAffiliateScreen = ({ navigation }) => {
   const { t } = useLanguage();
@@ -27,7 +28,7 @@ const BookingAffiliateScreen = ({ navigation }) => {
     completed: 0,
   });
 
-  const [bookings, setBookings] = useState([]); // [{id, bookingNo, company, date, status}]
+  const [bookings, setBookings] = useState([]); // [{id, bookingNo, company, detail, departureDate, status, earnings, paid}]
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -39,13 +40,13 @@ const BookingAffiliateScreen = ({ navigation }) => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
       if (token) {
-        // เมื่อพร้อมต่อ API:
+        // ต่อ API จริงเมื่อพร้อม
         // const res = await axios.get(`${ipAddress}/affiliate/bookings/summary`, {
         //   headers: { Authorization: `Bearer ${token}` },
         // });
         // setSummary(res.data);
 
-        // MOCK ชั่วคราวให้ตรงภาพ
+        // MOCK ให้เหมือนภาพ
         setSummary({ pending: 0, cancelled: 0, completed: 0 });
       } else {
         setSummary({ pending: 0, cancelled: 0, completed: 0 });
@@ -59,11 +60,22 @@ const BookingAffiliateScreen = ({ navigation }) => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
       if (token) {
-        // เมื่อพร้อมต่อ API:
+        // ต่อ API จริงเมื่อพร้อม
         // const res = await axios.get(`${ipAddress}/affiliate/bookings`, {
         //   headers: { Authorization: `Bearer ${token}` },
         // });
-        // setBookings(res.data?.items || []);
+        // setBookings(
+        //   (res.data?.items || []).map((b) => ({
+        //     id: b.id,
+        //     bookingNo: b.booking_no,
+        //     company: b.company_name,
+        //     detail: b.tour_name,
+        //     departureDate: b.departure_date, // yyyy-mm-dd
+        //     status: b.status_text,
+        //     earnings: b.affiliate_earning,
+        //     paid: b.paid_status === 1,
+        //   }))
+        // );
 
         // MOCK ตารางว่างตามภาพ
         setBookings([]);
@@ -95,42 +107,60 @@ const BookingAffiliateScreen = ({ navigation }) => {
 
   const TableHeader = () => (
     <View style={styles.tableHeader}>
-      <Text style={[styles.th, { flex: 0.5, textAlign: 'center' }]}>#</Text>
-      <Text style={[styles.th, { flex: 2 }]}>{t('bookingNumber') || 'Booking Number'}</Text>
-      <Text style={[styles.th, { flex: 2 }]}>{t('company') || 'Company'}</Text>
-      <Text style={[styles.th, { flex: 1.5 }]}>{t('date') || 'Date'}</Text>
+      <Text style={[styles.th, { flex: 0.6, textAlign: 'center' }]}>#</Text>
+      <Text style={[styles.th, { flex: 1.4 }]}>{t('bookingNumber') || 'Booking Number'}</Text>
+      <Text style={[styles.th, { flex: 1.2 }]}>{t('company') || 'Company'}</Text>
+      <Text style={[styles.th, { flex: 1.1 }]}>{t('detail') || 'Detail'}</Text>
+      <Text style={[styles.th, { flex: 1.4 }]}>{t('departureDate') || 'Departure Date'}</Text>
       <Text style={[styles.th, { flex: 1 }]}>{t('status') || 'Status'}</Text>
+      <Text style={[styles.th, { flex: 1 }]}>{t('earnings') || 'Earnings'}</Text>
+      <Text style={[styles.th, { flex: 1.1 }]}>{t('statusPaid') || 'Status Paid'}</Text>
     </View>
   );
 
   const TableRow = ({ item, index }) => (
     <View style={styles.tableRow}>
-      <Text style={[styles.td, { flex: 0.5, textAlign: 'center' }]}>{index + 1 + (page - 1) * PAGE_SIZE}</Text>
-      <Text style={[styles.td, { flex: 2 }]}>{item.bookingNo}</Text>
-      <Text style={[styles.td, { flex: 2 }]}>{item.company}</Text>
-      <Text style={[styles.td, { flex: 1.5 }]}>{item.date}</Text>
-      <Text style={[styles.td, { flex: 1 }]}>{item.status}</Text>
+      <Text style={[styles.td, { flex: 0.6, textAlign: 'center' }]}>{index + 1 + (page - 1) * PAGE_SIZE}</Text>
+      <Text style={[styles.td, { flex: 1.4 }]}>{item.bookingNo}</Text>
+      <Text style={[styles.td, { flex: 1.2 }]}>{item.company}</Text>
+      <Text style={[styles.td, { flex: 1.1 }]}>{item.detail || '-'}</Text>
+      <Text style={[styles.td, { flex: 1.4 }]}>{item.departureDate || '-'}</Text>
+      <Text style={[styles.td, { flex: 1 }]}>{item.status || '-'}</Text>
+      <Text style={[styles.td, { flex: 1 }]}>
+        {item.earnings != null
+          ? `฿${Number(item.earnings).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : '฿0.00'}
+      </Text>
+      <Text style={[styles.td, { flex: 1.1 }]}>
+        {item.paid ? (t('paid') || 'Paid') : (t('unpaid') || 'Unpaid')}
+      </Text>
     </View>
   );
 
   const downloadCSV = async () => {
     try {
       const rows = [
-        ['#', 'Booking Number', 'Company', 'Date', 'Status'],
-        ...bookings.map((b, i) => [i + 1, b.bookingNo, b.company, b.date, b.status]),
+        ['#', 'Booking Number', 'Company', 'Detail', 'Departure Date', 'Status', 'Earnings', 'Status Paid'],
+        ...bookings.map((b, i) => [
+          i + 1,
+          b.bookingNo,
+          b.company,
+          b.detail || '',
+          b.departureDate || '',
+          b.status || '',
+          b.earnings != null ? Number(b.earnings) : 0,
+          b.paid ? 'Paid' : 'Unpaid',
+        ]),
       ];
-      const csv = rows.map(r =>
-        r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
-      ).join('\n');
+      const csv = rows
+        .map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
 
       const uri = FileSystem.documentDirectory + `booking_report_${Date.now()}.csv`;
       await FileSystem.writeAsStringAsync(uri, csv, { encoding: FileSystem.EncodingType.UTF8 });
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
-      } else {
-        Alert.alert('Saved', `CSV saved to:\n${uri}`);
-      }
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri);
+      else Alert.alert('Saved', `CSV saved to:\n${uri}`);
     } catch (e) {
       Alert.alert('Error', 'Cannot generate report right now.');
     }
@@ -209,45 +239,51 @@ const BookingAffiliateScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.tableWrap}>
-              <TableHeader />
-              {pagedData.length > 0 ? (
-                <FlatList
-                  data={pagedData}
-                  keyExtractor={(item) => String(item.id)}
-                  renderItem={({ item, index }) => <TableRow item={item} index={index} />}
-                />
-              ) : (
-                <View style={styles.emptyWrap}>
-                  <Text style={styles.emptyText}>{t('noBookings') || 'No bookings yet'}</Text>
+              {/* ตารางแนวนอน */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces>
+                <View style={{ minWidth: TABLE_MIN_WIDTH }}>
+                  <TableHeader />
+
+                  {pagedData.length > 0 ? (
+                    <FlatList
+                      data={pagedData}
+                      keyExtractor={(item) => String(item.id)}
+                      renderItem={({ item, index }) => <TableRow item={item} index={index} />}
+                    />
+                  ) : (
+                    <View style={styles.emptyWrap}>
+                      <Text style={styles.emptyText}>{t('noBookings') || 'No bookings yet'}</Text>
+                    </View>
+                  )}
+
+                  {/* Pagination */}
+                  <View style={styles.pagerRow}>
+                    <TouchableOpacity
+                      disabled={page <= 1}
+                      onPress={() => setPage(p => Math.max(1, p - 1))}
+                      style={[styles.pagerBtn, page <= 1 && styles.pagerBtnDisabled]}
+                    >
+                      <Text style={[styles.pagerBtnText, page <= 1 && styles.pagerBtnTextDisabled]}>
+                        {t('prev') || 'Prev'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.pageBadge}>
+                      <Text style={styles.pageBadgeText}>{page}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      disabled={page >= totalPages}
+                      onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+                      style={[styles.pagerBtn, page >= totalPages && styles.pagerBtnDisabled]}
+                    >
+                      <Text style={[styles.pagerBtnText, page >= totalPages && styles.pagerBtnTextDisabled]}>
+                        {t('next') || 'Next'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              )}
-
-              {/* Pagination */}
-              <View style={styles.pagerRow}>
-                <TouchableOpacity
-                  disabled={page <= 1}
-                  onPress={() => setPage(p => Math.max(1, p - 1))}
-                  style={[styles.pagerBtn, page <= 1 && styles.pagerBtnDisabled]}
-                >
-                  <Text style={[styles.pagerBtnText, page <= 1 && styles.pagerBtnTextDisabled]}>
-                    {t('prev') || 'Prev'}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={styles.pageBadge}>
-                  <Text style={styles.pageBadgeText}>{page}</Text>
-                </View>
-
-                <TouchableOpacity
-                  disabled={page >= totalPages}
-                  onPress={() => setPage(p => Math.min(totalPages, p + 1))}
-                  style={[styles.pagerBtn, page >= totalPages && styles.pagerBtnDisabled]}
-                >
-                  <Text style={[styles.pagerBtnText, page >= totalPages && styles.pagerBtnTextDisabled]}>
-                    {t('next') || 'Next'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              </ScrollView>
             </View>
           </View>
         </View>
