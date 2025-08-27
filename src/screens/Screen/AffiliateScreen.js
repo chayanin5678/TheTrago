@@ -13,6 +13,7 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -255,9 +256,11 @@ const enableAffiliate = async () => {
       <Text style={styles.linkSubtitle}>{subtitle}</Text>
 
       <View style={styles.linkContainer}>
-        <Text style={styles.linkText} numberOfLines={1}>
-          {link}
-        </Text>
+        <TouchableOpacity style={{ flex: 1 }} activeOpacity={0.8} onPress={() => handleOpenLink(link)}>
+          <Text style={styles.linkText} numberOfLines={1}>
+            {link}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.copyButton} onPress={() => copyToClipboard(link, title)}>
           <Text style={styles.copyButtonText}>{t('copy') || 'Copy!'}</Text>
         </TouchableOpacity>
@@ -268,6 +271,50 @@ const enableAffiliate = async () => {
       </TouchableOpacity>
     </View>
   );
+
+  // Open link: try to navigate inside app for custom scheme, otherwise open URL
+  const handleOpenLink = (link) => {
+    try {
+      if (!link) return;
+      // if it's our app scheme, try to navigate internally
+      if (link.startsWith('thetrago://')) {
+        // example: thetrago://home?ref=M0123  or thetrago://register?ref=M0123
+        const withoutScheme = link.replace('thetrago://', '');
+        const [pathPart, queryPart] = withoutScheme.split('?');
+        const path = pathPart?.toLowerCase();
+        const params = {};
+        if (queryPart) {
+          queryPart.split('&').forEach((pair) => {
+            const [k, v] = pair.split('=');
+            if (k) params[k] = decodeURIComponent(v || '');
+          });
+        }
+
+        // Map scheme paths to navigation routes in the app — adjust if your route names differ
+        if (path === 'home') {
+          navigation.navigate('Home', params);
+          return;
+        }
+        if (path === 'register' || path === 'signup') {
+          navigation.navigate('Register', params);
+          return;
+        }
+
+        // If unknown path, let the OS handle the deep link (this will open the app if configured)
+        Linking.openURL(link).catch(() => {
+          Alert.alert(t('error') || 'Error', t('cannotOpenLink') || 'Cannot open link');
+        });
+        return;
+      }
+
+      // For normal http(s) links, open in browser
+      Linking.openURL(link).catch(() => {
+        Alert.alert(t('error') || 'Error', t('cannotOpenLink') || 'Cannot open link');
+      });
+    } catch (e) {
+      Alert.alert(t('error') || 'Error', e.message || (t('cannotOpenLink') || 'Cannot open link'));
+    }
+  };
 
   return (
     <View style={styles.container}>

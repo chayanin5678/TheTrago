@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions, Alert, Platform } from 'react-native';
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import {
+  View, Text, TextInput, TouchableOpacity, ScrollView, Modal, FlatList,
+  KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions,
+  Alert, Platform, InteractionManager
+} from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../../config/ipconfig";
-import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,16 +16,15 @@ import { styles } from '../../styles/CSS/ProfileScreenStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-
 const ProfileScreen = ({ navigation }) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
   const [tel, setTel] = useState('');
   const [email, setEmail] = useState('');
-
   const [searchQuery, setSearchQuery] = useState('');
   const [searchQueryCountry, setSearchQueryCountry] = useState('');
   const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
@@ -30,7 +32,6 @@ const ProfileScreen = ({ navigation }) => {
   const [telePhone, setTelePhone] = useState([]);
   const [countrycode, setCountrycode] = useState('');
   const [errors, setErrors] = useState({});
-
   const [selectedTele, setSelectedTele] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [countryId, setCountryId] = useState('');
@@ -44,220 +45,121 @@ const ProfileScreen = ({ navigation }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Ultra Premium Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  
-  // Floating particles animation
-  const floatingAnims = useRef(
-    [...Array(6)].map(() => ({
-      x: new Animated.Value(Math.random() * screenWidth - screenWidth/2), // Center around screen
-      y: new Animated.Value(Math.random() * screenHeight * 0.8),
-      opacity: new Animated.Value(0.1),
-      scale: new Animated.Value(1),
-    }))
-  ).current;
+  // === Smooth Animations (Contact-style) ===
+  const fadeAnim   = useRef(new Animated.Value(0)).current;
+  const scaleAnim  = useRef(new Animated.Value(0.98)).current;
+  const headerAnim = useRef(new Animated.Value(-100)).current;
 
-  // Card staggered animations
+  // Clocks
+  const particleClock = useRef(new Animated.Value(0)).current;
+  const pulseClock    = useRef(new Animated.Value(0)).current;
+  const rotateAnim    = useRef(new Animated.Value(0)).current;
+
+  // Cards
   const cardAnims = useRef(
-    [...Array(3)].map(() => ({
-      opacity: new Animated.Value(0),
-      translateY: new Animated.Value(30),
-      scale: new Animated.Value(0.9),
+    Array.from({ length: 3 }, () => ({
+      opacity:    new Animated.Value(0),
+      translateY: new Animated.Value(24),
+      scale:      new Animated.Value(0.98),
     }))
   ).current;
 
+  // Particles driven by one clock
+  const PARTICLE_COUNT = 4;
+  const particles = useMemo(() => {
+    return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+      const phase = i / PARTICLE_COUNT;
+      const t = Animated.modulo(Animated.add(particleClock, phase), 1);
 
+      const x = t.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [-40 + i * 8, 40 - i * 8, -40 + i * 8],
+        extrapolate: 'clamp',
+      });
+      const y = t.interpolate({
+        inputRange: [0, 1],
+        outputRange: [screenHeight * 0.8 + i * 30, -80],
+        extrapolate: 'clamp',
+      });
+      const opacity = t.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.08, 0.22, 0.08],
+      });
+      const scale = t.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.9, 1.12, 0.9],
+      });
+      return { x, y, opacity, scale };
+    });
+  }, [particleClock]);
 
-  const formatDate = (dateString) => {
-    if (!dateString || isNaN(new Date(dateString))) {
-      return t('selectBirthday');
-    }
+  const pulseScale = pulseClock.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] });
+  const spin = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
-  };
-
-  // Premium animations initialization
   useEffect(() => {
-    // Premium entrance animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        delay: 300,
-        easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 1200,
-        delay: 500,
-        easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
-        useNativeDriver: true,
-      }),
-    ]).start();
+    InteractionManager.runAfterInteractions(() => {
+      // Entrance: ชะลอ header ให้ไม่ลงมาเร็ว
+      Animated.parallel([
+        Animated.timing(fadeAnim,   { toValue: 1, duration: 700,  easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(headerAnim, { toValue: 0, duration: 1200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.spring(scaleAnim,  { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
+      ]).start();
 
-    // Floating particles animation
-    floatingAnims.forEach((anim, index) => {
-      const animateParticle = () => {
-        Animated.loop(
+      // clocks
+      Animated.loop(
+        Animated.timing(particleClock, { toValue: 1, duration: 16000, easing: Easing.linear, useNativeDriver: true })
+      ).start();
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseClock, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(pulseClock, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      ).start();
+
+      Animated.loop(
+        Animated.timing(rotateAnim, { toValue: 1, duration: 20000, easing: Easing.linear, useNativeDriver: true })
+      ).start();
+
+      // Cards: stagger นุ่มขึ้น
+      Animated.stagger(
+        180,
+        cardAnims.map(a =>
           Animated.parallel([
-            Animated.sequence([
-              Animated.timing(anim.y, {
-                toValue: -50,
-                duration: 4000 + index * 400,
-                easing: Easing.inOut(Easing.sin),
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim.y, {
-                toValue: screenHeight * 0.8,
-                duration: 0,
-                useNativeDriver: true,
-              }),
-            ]),
-            Animated.sequence([
-              Animated.timing(anim.opacity, {
-                toValue: 0.3,
-                duration: 2000,
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim.opacity, {
-                toValue: 0.1,
-                duration: 2000,
-                useNativeDriver: true,
-              }),
-            ]),
-            Animated.loop(
-              Animated.sequence([
-                Animated.timing(anim.scale, {
-                  toValue: 1.2,
-                  duration: 2500,
-                  easing: Easing.inOut(Easing.sin),
-                  useNativeDriver: true,
-                }),
-                Animated.timing(anim.scale, {
-                  toValue: 0.8,
-                  duration: 2500,
-                  easing: Easing.inOut(Easing.sin),
-                  useNativeDriver: true,
-                }),
-              ])
-            ),
+            Animated.timing(a.opacity,    { toValue: 1, duration: 520, useNativeDriver: true }),
+            Animated.timing(a.translateY, { toValue: 0, duration: 720, easing: Easing.out(Easing.back(1.25)), useNativeDriver: true }),
+            Animated.spring(a.scale,      { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
           ])
-        ).start();
-      };
-      
-      setTimeout(() => animateParticle(), index * 500);
+        )
+      ).start();
     });
-
-    // Card staggered animations
-    cardAnims.forEach((anim, index) => {
-      setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(anim.opacity, {
-            toValue: 1,
-            duration: 700,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim.translateY, {
-            toValue: 0,
-            duration: 900,
-            easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim.scale, {
-            toValue: 1,
-            duration: 800,
-            easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }, index * 200 + 800);
-    });
-
-    // Continuous pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Continuous rotation for decorative elements
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 20000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
   }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
-
-
+  const formatDate = (dateString) => {
+    if (!dateString || isNaN(new Date(dateString))) return t('selectBirthday');
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+  };
 
   const handleConfirm = (event, selectedDate) => {
     setShowPicker(false);
-    if (selectedDate) {
-      const formatted = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      setBirthdate(formatted);
-    }
+    if (selectedDate) setBirthdate(selectedDate.toISOString().split('T')[0]);
   };
 
-
+  // ===== data fetching =====
   useEffect(() => {
-
     const fetchData = async () => {
       const storedToken = await SecureStore.getItemAsync('userToken');
       try {
         const response = await fetch(`${ipAddress}/profile`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${storedToken}`, // ส่ง Token ใน Authorization header
-            'Content-Type': 'application/json', // ระบุประเภทของข้อมูลที่ส่ง (ถ้าจำเป็น)
-          },
+          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
+        if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
         if (data && Array.isArray(data.data)) {
@@ -265,27 +167,19 @@ const ProfileScreen = ({ navigation }) => {
           setLastname(data.data[0].md_member_lname);
           setTel(data.data[0].md_member_phone);
           setEmail(data.data[0].md_member_email);
+
           if (data.data[0].md_member_code) {
             getCountryByCode(data.data[0].md_member_code);
-
             setCountrycode(data.data[0].md_member_code);
+          } else setSelectedTele(t('pleaseSelect'));
 
-          } else {
-            setSelectedTele(t('pleaseSelect'));
-          }
           if (data.data[0].md_member_nationality) {
             getCountryByid(data.data[0].md_member_nationality);
-
             setCountryId(data.data[0].md_member_nationality);
+          } else setSelectedCountry(t('pleaseSelect'));
 
-          } else {
-            setSelectedCountry(t('pleaseSelect'));
-          }
-          if (data.data[0].md_member_birthday) {
-            setBirthdate(data.data[0].md_member_birthday);
-          } else {
-            setBirthdate(t('selectBirthday'));
-          }
+          if (data.data[0].md_member_birthday) setBirthdate(data.data[0].md_member_birthday);
+          else setBirthdate(t('selectBirthday'));
 
           updateCustomerData ({
             Firstname : data.data[0].md_member_fname,
@@ -296,420 +190,218 @@ const ProfileScreen = ({ navigation }) => {
             country : data.data[0].md_member_nationality ,
             selectcoountrycode : data.data[0].md_member_code
           });
-
-        } else {
-          console.error('Data is not an array', data);
-          setUser([]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setIsLoading(false);  // ตั้งค่า loading เป็น false หลังจากทำงานเสร็จ
+        setIsLoading(false);
       }
-    };    fetchData();
+    };
+    fetchData();
     checkPassportStatus();
     checkBankStatus();
-
   }, []);
 
-  // Add focus listener to refresh bank status when returning from BankVerificationScreen
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      // Refresh bank status when screen comes into focus
-      checkBankStatus();
-    });
-
-    return unsubscribe;
+    const unsub = navigation.addListener('focus', () => { checkBankStatus(); });
+    return unsub;
   }, [navigation]);
 
   const getCountryByCode = async (code) => {
     try {
       const response = await fetch(`${ipAddress}/membercountry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ countrycode: code }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countrycode: code }),
       });
-
       const json = await response.json();
-
       if (response.ok) {
-        console.log('Country data:', json.data);
         setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
-
         setCountrycode(json.data[0].sys_countries_telephone);
-
         return json.data;
-      } else {
-        console.warn('Not found or error:', json.message);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error fetching country:', error);
-      return null;
-    }
+      } else return null;
+    } catch { return null; }
   };
 
   const getCountryByid = async (id) => {
     try {
       const response = await fetch(`${ipAddress}/membercountryname`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ countryid: id }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryid: id }),
       });
-
       const json = await response.json();
-
       if (response.ok) {
-        console.log('Country data:', json.data);
         setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
         setCountryId(json.data[0].sys_countries_id);
-
         return json.data;
-      } else {
-        console.warn('Not found or error:', json.message);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error fetching country:', error);
-      return null;
-    }
+      } else return null;
+    } catch { return null; }
   };
 
   const checkPassportStatus = async () => {
     try {
       const storedToken = await SecureStore.getItemAsync('userToken');
-      
-      if (!storedToken) {
-        console.warn('No token found');
-        return;
-      }
-
+      if (!storedToken) return;
       const response = await fetch(`${ipAddress}/passport-info`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json',
-        },
+        method: 'GET', headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
       });
-
       const json = await response.json();
-
       if (response.ok && json.status === 'success') {
         const { has_passport, has_document } = json.data;
-        // Set passport as verified if user has both passport number and document
         setIsPassportVerified(has_passport && has_document);
-      } else {
-        console.warn('Passport check failed:', json.message);
-        setIsPassportVerified(false);
-      }
-    } catch (error) {
-      console.error('Error checking passport status:', error);
-      setIsPassportVerified(false);
-    }
+      } else setIsPassportVerified(false);
+    } catch { setIsPassportVerified(false); }
   };
 
   const checkBankStatus = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      
-      if (!token) {
-        console.warn('No token found for bank check');
-        return;
-      }
-
+      if (!token) return;
       const response = await fetch(`${ipAddress}/bankbook-info`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
-
-      if (!response.ok) {
-        console.warn('Failed to check bank status:', response.status);
-        return;
-      }
-
+      if (!response.ok) return;
       const json = await response.json();
-      
       if (json.status === 'success' && json.data) {
         const { has_bank_id, has_account_name, has_account_number, has_document } = json.data;
-        // Set bank as verified if user has all required bank information
         setIsBankVerified(has_bank_id && has_account_name && has_account_number && has_document);
-      } else {
-        console.warn('Bank check failed:', json.message);
-        setIsBankVerified(false);
-      }
-    } catch (error) {
-      console.error('Error checking bank status:', error);
-      setIsBankVerified(false);
-    }
+      } else setIsBankVerified(false);
+    } catch { setIsBankVerified(false); }
   };
 
-  const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
-  const toggleCountryModal = () => setIsCountryModalVisible(!isCountryModalVisible);
+  const toggleTeleModal = () => setIsTeleModalVisible(v => !v);
+  const toggleCountryModal = () => setIsCountryModalVisible(v => !v);
 
   const handleSelectTele = (item) => {
-    const selectedValue =
-      item.sys_countries_nameeng === 'Please Select'
-        ? t('pleaseSelect')
-        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
-
+    const selectedValue = item.sys_countries_nameeng === 'Please Select'
+      ? t('pleaseSelect') : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
     setSelectedTele(selectedValue);
     setCountryName(item.sys_countries_nameeng);
-    let country_code = item.sys_countries_telephone;
-    setCountrycode(country_code); // ใช้ตอนส่งออก
-    setErrors((prev) => ({ ...prev, selectedTele: false }));
+    setCountrycode(item.sys_countries_telephone);
+    setErrors(prev => ({ ...prev, selectedTele: false }));
     toggleTeleModal();
   };
 
   const handleSelectCountry = (item) => {
-    const selectedValue =
-      item.sys_countries_nameeng === 'Please Select'
-        ? t('pleaseSelect')
-        : `${item.sys_countries_nameeng}`; // แสดงแค่ชื่อประเทศ
-
+    const selectedValue = item.sys_countries_nameeng === 'Please Select' ? t('pleaseSelect') : `${item.sys_countries_nameeng}`;
     setSelectedCountry(selectedValue);
-    let country_id = item.sys_countries_id;
-    setCountryId(country_id);
-    //  setCountryName(item.sys_countries_nameeng); // ใช้ตอนส่งออก
-    setErrors((prev) => ({ ...prev, selectedCountry: false })); 
-
+    setCountryId(item.sys_countries_id);
+    setErrors(prev => ({ ...prev, selectedCountry: false }));
     toggleCountryModal();
   };
 
+  const filteredTelePhones = useMemo(() => {
+    return telePhone.filter(item =>
+      `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [telePhone, searchQuery]);
 
-
-  const filteredTelePhones = telePhone.filter((item) => {
-    const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
-    return searchText.includes(searchQuery.toLowerCase());
-  });
-
-
-  const filteredCountry = telePhone.filter((item) => {
-    const searchText = `${item.sys_countries_nameeng}`.toLowerCase();
-    return searchText.includes(searchQueryCountry.toLowerCase());
-  });
+  const filteredCountry = useMemo(() => {
+    return telePhone.filter(item =>
+      `${item.sys_countries_nameeng}`.toLowerCase().includes(searchQueryCountry.toLowerCase())
+    );
+  }, [telePhone, searchQueryCountry]);
 
   useEffect(() => {
     fetch(`${ipAddress}/telephone`)
-      .then((response) => response.json())
+      .then((r) => r.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          // เพิ่ม "Please Select" ที่ด้านบนของรายการ
-          const countryList = [
-            {
-              sys_countries_telephone: '',
-              sys_countries_nameeng: 'Please Select',
-              sys_countries_code: ''
-            },
-            ...data.data
-          ];
-          setTelePhone(countryList);
+          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: 'Please Select', sys_countries_code: '' }, ...data.data]);
         } else {
-          console.error('Data is not an array', data);
           setTelePhone([]);
         }
       })
-      .catch((error) => console.error('Error fetching data:', error));
+      .catch(() => {});
   }, []);
 
   const handleSave = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-
-      if (!token) {
-        alert(t('userTokenNotFound'));
-        return;
-      }
+      if (!token) { alert(t('userTokenNotFound')); return; }
 
       const response = await fetch(`${ipAddress}/update-profile`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fname: Firstname,
-          lname: Lastname,
-          phone: tel,
-          code: countrycode,
-          birthday: birthdate,
-          nationality: countryId,
+          fname: Firstname, lname: Lastname, phone: tel, code: countrycode, birthday: birthdate, nationality: countryId,
         }),
       });
-
       const json = await response.json();
 
       if (json.status === 'success') {
         alert("✅ " + t('profileUpdatedSuccess'));
-
-        // รวมอัปเดตไว้ใน object เดียว
         updateCustomerData({
-          Firstname: Firstname,
-          Lastname: Lastname,
-          tel: tel,
+          Firstname, Lastname, tel,
           selectcoountrycode: `(+${countrycode}) ${countryName}` || t('pleaseSelect'),
-          birthdate: birthdate,
-          country: countryName || t('pleaseSelect'),
+          birthdate, country: countryName || t('pleaseSelect'),
         });
-
       } else {
         alert("❌ " + t('updateFailed') + ": " + json.message);
       }
-
     } catch (error) {
       console.error("handleSave error:", error);
       alert("⚠️ " + t('errorOccurred'));
     }
   };
 
-  // เพิ่ม function สำหรับเปลี่ยนรหัสผ่าน
   const handleChangePassword = async () => {
-    // ตรวจสอบว่ากรอกข้อมูลครบถ้วน
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      alert(t('fillAllPasswordFields'));
-      return;
-    }
-
-    // ตรวจสอบว่ารหัสผ่านใหม่ตรงกัน
-    if (newPassword !== confirmPassword) {
-      alert(t('passwordMismatch'));
-      return;
-    }
-
-    // ตรวจสอบความยาวรหัสผ่านใหม่
-    if (newPassword.length < 6) {
-      alert(t('passwordTooShort'));
-      return;
-    }
+    if (!currentPassword || !newPassword || !confirmPassword) { alert(t('fillAllPasswordFields')); return; }
+    if (newPassword !== confirmPassword) { alert(t('passwordMismatch')); return; }
+    if (newPassword.length < 6) { alert(t('passwordTooShort')); return; }
 
     try {
       const token = await SecureStore.getItemAsync('userToken');
-
-      if (!token) {
-        alert(t('userTokenNotFound'));
-        return;
-      }
+      if (!token) { alert(t('userTokenNotFound')); return; }
 
       const response = await fetch(`${ipAddress}/change-password`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: currentPassword,
-          newPassword: newPassword,
-        }),
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
       const json = await response.json();
-
       if (json.status === 'success') {
         alert(t('passwordChangedSuccess'));
-        // เคลียร์ข้อมูลในฟอร์ม
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setShowCurrentPassword(false);
-        setShowNewPassword(false);
-        setShowConfirmPassword(false);
+        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+        setShowCurrentPassword(false); setShowNewPassword(false); setShowConfirmPassword(false);
       } else {
         alert("❌ " + json.message);
       }
-
     } catch (error) {
       console.error("handleChangePassword error:", error);
       alert(t('passwordChangeError'));
     }
   };
 
-
-
   const isEmailVerified = !!customerData.email;
-
   const isProfileVerified =
-    customerData.Firstname &&
-    customerData.Lastname &&
-    customerData.tel &&
-    customerData.email &&
-    customerData.birthdate &&
-    customerData.country &&
-    customerData.selectcoountrycode;
+    customerData.Firstname && customerData.Lastname && customerData.tel &&
+    customerData.email && customerData.birthdate && customerData.country && customerData.selectcoountrycode;
 
-  // สมมุติยังไม่เชื่อม ID และ Bank Status
   const isIdVerified = isPassportVerified;
-
-  const verifiedCount = [
-    isEmailVerified,
-    isProfileVerified,
-    isIdVerified,
-    isBankVerified
-  ].filter(Boolean).length;
-
+  const verifiedCount = [isEmailVerified, isProfileVerified, isIdVerified, isBankVerified].filter(Boolean).length;
   const progressPercent = (verifiedCount / 4) * 100;
 
-
   if (isLoading) {
-    // Premium Skeleton Loader UI
     return (
       <View style={styles.containerPremium}>
         <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
-        
-        {/* Floating Particles Background */}
-        <View style={styles.particlesContainer}>
-          {floatingAnims.map((anim, index) => (
-            <Animated.View
-              key={index}
-              style={[
-                styles.floatingParticle,
-                {
-                  transform: [
-                    { translateX: anim.x },
-                    { translateY: anim.y },
-                    { scale: anim.scale },
-                  ],
-                  opacity: anim.opacity,
-                },
-              ]}
-            />
+        <View style={styles.particlesContainer} pointerEvents="none">
+          {particles.map((p, i) => (
+            <Animated.View key={i} style={[styles.floatingParticle, { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity }]} />
           ))}
         </View>
 
-        {/* Premium Header - Full Screen */}
         <View style={styles.headerContainer}>
-          <LinearGradient
-            colors={['#FD501E', '#FF6B40', '#FD501E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
-          >
+          <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
             <SafeAreaView style={styles.safeAreaHeader}>
               <View style={styles.headerTopRow}>
-                <TouchableOpacity 
-                  style={styles.backButton}
-                  onPress={() => navigation.goBack()}
-                >
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                   <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
-              
               <View style={styles.headerContent}>
                 <Text style={styles.headerTitle}>{t('profileSettings')}</Text>
                 <Text style={styles.headerSubtitle}>{t('completeProfile')}</Text>
-                
-                {/* Floating decorative elements */}
-                <Animated.View 
-                  style={[
-                    styles.floatingDecor,
-                    { transform: [{ rotate: spin }] }
-                  ]}
-                >
+                <Animated.View style={[styles.floatingDecor, { transform: [{ rotate: spin }] }]}>
                   <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
                 </Animated.View>
               </View>
@@ -717,32 +409,7 @@ const ProfileScreen = ({ navigation }) => {
           </LinearGradient>
         </View>
 
-        <ScrollView style={[styles.scrollViewPremium, styles.scrollViewWithMargin]}>
-          <View style={styles.contentContainer}>
-            {/* Skeleton for Progress Card */}
-            <Animated.View style={[styles.progressCardPremium, { opacity: 0.7 }]}>  
-              <View style={[styles.skeletonPremium, { width: 200, height: 24, marginBottom: 15 }]} />
-              <View style={[styles.skeletonPremium, { width: '100%', height: 12, marginBottom: 12, borderRadius: 6 }]} />
-              <View style={[styles.skeletonPremium, { width: 280, height: 16, marginBottom: 15 }]} />
-              <View style={{ gap: 8 }}>
-                {[1,2,3,4].map((_,i) => (
-                  <View key={i} style={[styles.skeletonPremium, { width: 180, height: 18, marginBottom: 6 }]} />
-                ))}
-              </View>
-            </Animated.View>
-            
-            {/* Skeleton for Form Cards */}
-            {[1,2].map((_, index) => (
-              <Animated.View key={index} style={[styles.formCardPremium, { opacity: 0.7, marginBottom: 25 }]}>  
-                <View style={[styles.skeletonPremium, { width: 160, height: 22, marginBottom: 20 }]} />
-                {[1,2,3,4,5,6].map((_,i) => (
-                  <View key={i} style={[styles.skeletonPremium, { width: '100%', height: 48, marginBottom: 16, borderRadius: 12 }]} />
-                ))}
-                <View style={[styles.skeletonPremium, { width: 120, height: 48, borderRadius: 12 }]} />
-              </Animated.View>
-            ))}
-          </View>
-        </ScrollView>
+        {/* skeleton content ของคุณ */}
       </View>
     );
   }
@@ -750,74 +417,39 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <View style={styles.containerPremium}>
       <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
-      
-      {/* Floating Particles Background */}
-      <View style={styles.particlesContainer}>
-        {floatingAnims.map((anim, index) => (
+
+      {/* Particles */}
+      <View style={styles.particlesContainer} pointerEvents="none">
+        {particles.map((p, i) => (
           <Animated.View
-            key={index}
-            style={[
-              styles.floatingParticle,
-              {
-                transform: [
-                  { translateX: anim.x },
-                  { translateY: anim.y },
-                  { scale: anim.scale },
-                ],
-                opacity: anim.opacity,
-              },
-            ]}
+            key={i}
+            pointerEvents="none"
+            style={[styles.floatingParticle, { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity }]}
           />
         ))}
       </View>
 
-      {/* Premium Header - Full Screen */}
+      {/* Header */}
       <Animated.View
-        style={[
-          styles.headerContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
+        renderToHardwareTextureAndroid
+        shouldRasterizeIOS
+        style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
-        <LinearGradient
-          colors={['#FD501E', '#FF6B40', '#FD501E']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
+        <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
           <SafeAreaView style={styles.safeAreaHeader}>
             <View style={styles.headerTopRow}>
-              <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-            
             <View style={styles.headerContent}>
               <Text style={styles.headerTitle}>{t('profileSettings')}</Text>
               <Text style={styles.headerSubtitle}>{t('completePremiumProfile')}</Text>
-              
-              {/* Floating decorative elements */}
-              <Animated.View 
-                style={[
-                  styles.floatingDecor,
-                  { transform: [{ rotate: spin }] }
-                ]}
-              >
+
+              <Animated.View style={[styles.floatingDecor,  { transform: [{ rotate: spin }] }]}>
                 <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
               </Animated.View>
-              
-              <Animated.View 
-                style={[
-                  styles.floatingDecor2,
-                  { transform: [{ rotate: spin }] }
-                ]}
-              >
+              <Animated.View style={[styles.floatingDecor2, { transform: [{ rotate: spin }] }]}>
                 <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
               </Animated.View>
             </View>
@@ -825,164 +457,86 @@ const ProfileScreen = ({ navigation }) => {
         </LinearGradient>
       </Animated.View>
 
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-      >
-        <ScrollView 
-          style={[styles.scrollViewPremium, styles.scrollViewWithMargin]}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView style={[styles.scrollViewPremium, styles.scrollViewWithMargin]} showsVerticalScrollIndicator={false} bounces>
           <View style={styles.contentContainer}>
-            {/* Premium Profile Progress Card */}
+            {/* Progress */}
             <Animated.View
+              renderToHardwareTextureAndroid
+              shouldRasterizeIOS
               style={[
                 styles.progressCardPremium,
-                {
-                  opacity: cardAnims[0]?.opacity || 1,
-                  transform: [
-                    { translateY: cardAnims[0]?.translateY || 0 },
-                    { scale: cardAnims[0]?.scale || 1 },
-                  ],
-                },
+                { opacity: cardAnims[0].opacity, transform: [{ translateY: cardAnims[0].translateY }, { scale: cardAnims[0].scale }] }
               ]}
             >
-              <LinearGradient
-                colors={['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.05)']}
-                style={styles.progressGradient}
-              >
+              <LinearGradient colors={['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.05)']} style={styles.progressGradient}>
                 <View style={styles.progressHeader}>
                   <MaterialCommunityIcons name="account-check" size={24} color="#FD501E" />
                   <Text style={styles.titlePremium}>{t('completeYourProfile')}</Text>
                 </View>
-                
                 <View style={styles.progressBarBackgroundPremium}>
-                  <Animated.View 
-                    style={[
-                      styles.progressBarFillPremium, 
-                      { 
-                        width: `${progressPercent}%`,
-                        transform: [{ scale: pulseAnim }]
-                      }
-                    ]} 
-                  />
+                  <Animated.View style={[styles.progressBarFillPremium, { width: `${progressPercent}%`, transform: [{ scale: pulseScale }] }]} />
                 </View>
+                <Text style={styles.infoTextPremium}>{t('getBestBooking')}</Text>
 
-                <Text style={styles.infoTextPremium}>
-                  {t('getBestBooking')}
-                </Text>
-                
                 <View style={styles.verificationListPremium}>
                   {[
-                    { label: t('verifiedEmail'), verified: isEmailVerified },
+                    { label: t('verifiedEmail'), verified: !!customerData.email },
                     { label: t('verifiedProfile'), verified: isProfileVerified },
                     { label: t('verifiedId'), verified: isIdVerified, nav: 'IDCardCameraScreen' },
                     { label: t('verifiedBankAccount'), verified: isBankVerified, nav: 'BankVerificationScreen' }
                   ].map((item, index) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       key={index}
                       style={styles.verificationItem}
                       onPress={() => {
-                        if (item.nav === 'IDCardCameraScreen') {
-                          // Check if profile is verified before allowing ID verification
-                          if (!isProfileVerified) {
-                            Alert.alert(
-                              t('pleaseUpdateProfile'),
-                              t('profileNotComplete'),
-                              [
-                                { text: 'OK', style: 'default' }
-                              ]
-                            );
-                            return;
-                          }
+                        if ((item.nav === 'IDCardCameraScreen' || item.nav === 'BankVerificationScreen') && !isProfileVerified) {
+                          Alert.alert(t('pleaseUpdateProfile'), item.nav === 'IDCardCameraScreen' ? t('profileNotComplete') : t('profileIncompleteBank'));
+                          return;
                         }
-                        
-                        if (item.nav === 'BankVerificationScreen') {
-                          // Check if profile is verified before allowing bank verification
-                          if (!isProfileVerified) {
-                            Alert.alert(
-                              t('pleaseUpdateProfile'),
-                              t('profileIncompleteBank'),
-                              [
-                                { text: 'OK', style: 'default' }
-                              ]
-                            );
-                            return;
-                          }
-                        }
-                        
                         item.nav && navigation.navigate(item.nav);
                       }}
                       activeOpacity={item.nav ? 0.7 : 1}
                     >
                       <View style={[styles.verificationIcon, item.verified ? styles.verifiedIcon : styles.unverifiedIcon]}>
-                        <MaterialIcons 
-                          name={item.verified ? "check" : "close"} 
-                          size={16} 
-                          color={item.verified ? "#22C55E" : "#EF4444"} 
-                        />
+                        <MaterialIcons name={item.verified ? "check" : "close"} size={16} color={item.verified ? "#22C55E" : "#EF4444"} />
                       </View>
-                      <Text style={item.verified ? styles.verifiedPremium : styles.unverifiedPremium}>
-                        {item.label}
-                      </Text>
-                      {item.nav && (
-                        <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
-                      )}
+                      <Text style={item.verified ? styles.verifiedPremium : styles.unverifiedPremium}>{item.label}</Text>
+                      {item.nav && <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />}
                     </TouchableOpacity>
                   ))}
                 </View>
               </LinearGradient>
             </Animated.View>
 
-            {/* Premium Personal Information Form */}
+            {/* Form */}
             <Animated.View
+              renderToHardwareTextureAndroid
+              shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                {
-                  opacity: cardAnims[1]?.opacity || 1,
-                  transform: [
-                    { translateY: cardAnims[1]?.translateY || 0 },
-                    { scale: cardAnims[1]?.scale || 1 },
-                  ],
-                },
+                { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }, { scale: cardAnims[1].scale }] }
               ]}
             >
               <View style={styles.sectionHeaderPremium}>
                 <MaterialCommunityIcons name="account-edit" size={24} color="#FD501E" />
                 <Text style={styles.sectionTitlePremium}>{t('personalInformation')}</Text>
               </View>
-              
+
               <View style={styles.inputRowPremium}>
                 <View style={styles.inputWrapperPremium}>
                   <Text style={styles.inputLabelPremium}>{t('firstName')}</Text>
-                  <TextInput 
-                    style={styles.inputPremium} 
-                    placeholder={t('enterFirstName')} 
-                    value={Firstname}
-                    onChangeText={setFirstname}
-                    placeholderTextColor="#9CA3AF"
-                  />
+                  <TextInput style={styles.inputPremium} placeholder={t('enterFirstName')} value={Firstname} onChangeText={setFirstname} placeholderTextColor="#9CA3AF" />
                 </View>
                 <View style={styles.inputWrapperPremium}>
                   <Text style={styles.inputLabelPremium}>{t('lastName')}</Text>
-                  <TextInput 
-                    style={styles.inputPremium} 
-                    placeholder={t('enterLastName')} 
-                    value={Lastname}
-                    onChangeText={setLastname}
-                    placeholderTextColor="#9CA3AF"
-                  />
+                  <TextInput style={styles.inputPremium} placeholder={t('enterLastName')} value={Lastname} onChangeText={setLastname} placeholderTextColor="#9CA3AF" />
                 </View>
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('countryCode')}</Text>
-                <TouchableOpacity
-                  style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]}
-                  onPress={toggleTeleModal}
-                  activeOpacity={0.8}
-                >
+                <TouchableOpacity style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]} onPress={toggleTeleModal} activeOpacity={0.8}>
                   <Text style={styles.buttonTextPremium}>{selectedTele}</Text>
                   <MaterialIcons name="expand-more" size={20} color="#FD501E" />
                 </TouchableOpacity>
@@ -990,34 +544,17 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('phoneNumber')}</Text>
-                <TextInput
-                  style={styles.inputPremium}
-                  placeholder={t('enterPhoneNumber')}
-                  value={tel}
-                  onChangeText={setTel}
-                  keyboardType="numeric"
-                  placeholderTextColor="#9CA3AF"
-                />
+                <TextInput style={styles.inputPremium} placeholder={t('enterPhoneNumber')} value={tel} onChangeText={setTel} keyboardType="numeric" placeholderTextColor="#9CA3AF" />
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('emailAddress')}</Text>
-                <TextInput 
-                  style={[styles.inputPremium, styles.disabledPremium]} 
-                  placeholder={t('emailAddress')} 
-                  value={email} 
-                  editable={false}
-                  placeholderTextColor="#9CA3AF"
-                />
+                <TextInput style={[styles.inputPremium, styles.disabledPremium]} placeholder={t('emailAddress')} value={email} editable={false} placeholderTextColor="#9CA3AF" />
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('nationality')}</Text>
-                <TouchableOpacity
-                  style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]}
-                  onPress={toggleCountryModal}
-                  activeOpacity={0.8}
-                >
+                <TouchableOpacity style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]} onPress={toggleCountryModal} activeOpacity={0.8}>
                   <Text style={styles.buttonTextPremium}>{selectedCountry}</Text>
                   <MaterialIcons name="expand-more" size={20} color="#FD501E" />
                 </TouchableOpacity>
@@ -1025,14 +562,8 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('dateOfBirth')}</Text>
-                <TouchableOpacity
-                  style={styles.buttonPremium}
-                  onPress={() => setShowPicker(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonTextPremium}>
-                    {birthdate ? formatDate(birthdate) : t('selectBirthday')}
-                  </Text>
+                <TouchableOpacity style={styles.buttonPremium} onPress={() => setShowPicker(true)} activeOpacity={0.8}>
+                  <Text style={styles.buttonTextPremium}>{birthdate ? formatDate(birthdate) : t('selectBirthday')}</Text>
                   <MaterialIcons name="calendar-today" size={20} color="#FD501E" />
                 </TouchableOpacity>
               </View>
@@ -1047,57 +578,41 @@ const ProfileScreen = ({ navigation }) => {
                   style={{ width: '100%', alignItems: 'center' }}
                 />
               )}
-              
-              <TouchableOpacity 
-                style={styles.saveButtonPremium} 
-                onPress={handleSave}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#FD501E', '#FF6B40']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.saveGradient}
-                >
+
+              <TouchableOpacity style={styles.saveButtonPremium} onPress={handleSave} activeOpacity={0.8}>
+                <LinearGradient colors={['#FD501E', '#FF6B40']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.saveGradient}>
                   <MaterialIcons name="save" size={20} color="#FFFFFF" />
                   <Text style={styles.saveButtonTextPremium}>{t('saveProfile')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Premium Change Password Form */}
+            {/* Change Password */}
             <Animated.View
+              renderToHardwareTextureAndroid
+              shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                {
-                  opacity: cardAnims[2]?.opacity || 1,
-                  transform: [
-                    { translateY: cardAnims[2]?.translateY || 0 },
-                    { scale: cardAnims[2]?.scale || 1 },
-                  ],
-                },
+                { opacity: cardAnims[2].opacity, transform: [{ translateY: cardAnims[2].translateY }, { scale: cardAnims[2].scale }] }
               ]}
             >
               <View style={styles.sectionHeaderPremium}>
                 <MaterialCommunityIcons name="lock-reset" size={24} color="#FD501E" />
                 <Text style={styles.sectionTitlePremium}>{t('changePassword')}</Text>
               </View>
-              
+
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('currentPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
-                  <TextInput 
-                    style={styles.inputFlexPremium} 
-                    placeholder={t('enterCurrentPassword')} 
+                  <TextInput
+                    style={styles.inputFlexPremium}
+                    placeholder={t('enterCurrentPassword')}
                     secureTextEntry={!showCurrentPassword}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity 
-                    onPress={() => setShowCurrentPassword((prev) => !prev)}
-                    style={styles.eyeButtonPremium}
-                  >
+                  <TouchableOpacity onPress={() => setShowCurrentPassword(p => !p)} style={styles.eyeButtonPremium}>
                     <Entypo name={showCurrentPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
@@ -1106,18 +621,15 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('newPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
-                  <TextInput 
-                    style={styles.inputFlexPremium} 
-                    placeholder={t('enterNewPassword')} 
+                  <TextInput
+                    style={styles.inputFlexPremium}
+                    placeholder={t('enterNewPassword')}
                     secureTextEntry={!showNewPassword}
                     value={newPassword}
                     onChangeText={setNewPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity 
-                    onPress={() => setShowNewPassword((prev) => !prev)}
-                    style={styles.eyeButtonPremium}
-                  >
+                  <TouchableOpacity onPress={() => setShowNewPassword(p => !p)} style={styles.eyeButtonPremium}>
                     <Entypo name={showNewPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
@@ -1126,34 +638,22 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('confirmPassword')}</Text>
                 <View style={styles.passwordFieldPremium}>
-                  <TextInput 
-                    style={styles.inputFlexPremium} 
-                    placeholder={t('confirmNewPassword')} 
+                  <TextInput
+                    style={styles.inputFlexPremium}
+                    placeholder={t('confirmNewPassword')}
                     secureTextEntry={!showConfirmPassword}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity 
-                    onPress={() => setShowConfirmPassword((prev) => !prev)}
-                    style={styles.eyeButtonPremium}
-                  >
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(p => !p)} style={styles.eyeButtonPremium}>
                     <Entypo name={showConfirmPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <TouchableOpacity 
-                style={styles.saveButtonPremium} 
-                onPress={handleChangePassword}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#FD501E', '#FF6B40']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.saveGradient}
-                >
+              <TouchableOpacity style={styles.saveButtonPremium} onPress={handleChangePassword} activeOpacity={0.8}>
+                <LinearGradient colors={['#FD501E', '#FF6B40']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.saveGradient}>
                   <MaterialIcons name="lock" size={20} color="#FFFFFF" />
                   <Text style={styles.saveButtonTextPremium}>{t('changePassword')}</Text>
                 </LinearGradient>
@@ -1163,40 +663,31 @@ const ProfileScreen = ({ navigation }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Premium Modals */}
+      {/* Modals */}
       <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
         <View style={styles.modalOverlayPremium}>
           <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
-              style={styles.modalGradient}
-            >
+            <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']} style={styles.modalGradient}>
               <View style={styles.modalHeaderPremium}>
                 <Text style={styles.modalTitlePremium}>{t('selectCountryCode')}</Text>
                 <TouchableOpacity onPress={toggleTeleModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              
               <TextInput
                 placeholder={t('searchCountry')}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
-                autoComplete="off"
-                autoCorrect={false}
-                autoCapitalize="none"
+                autoComplete="off" autoCorrect={false} autoCapitalize="none"
               />
-              
               <FlatList
                 data={filteredTelePhones}
+                keyExtractor={(_, i) => `tel-${i}`}
+                removeClippedSubviews
                 renderItem={({ item }) => (
-                  <TouchableOpacity 
-                    style={styles.optionItemPremium} 
-                    onPress={() => handleSelectTele(item)}
-                    activeOpacity={0.7}
-                  >
+                  <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectTele(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>
                       {item.sys_countries_nameeng === 'Please Select'
                         ? t('pleaseSelect')
@@ -1204,7 +695,6 @@ const ProfileScreen = ({ navigation }) => {
                     </Text>
                   </TouchableOpacity>
                 )}
-                keyExtractor={(item, index) => index.toString()}
                 showsVerticalScrollIndicator={false}
               />
             </LinearGradient>
@@ -1215,44 +705,32 @@ const ProfileScreen = ({ navigation }) => {
       <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
         <View style={styles.modalOverlayPremium}>
           <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
-              style={styles.modalGradient}
-            >
+            <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']} style={styles.modalGradient}>
               <View style={styles.modalHeaderPremium}>
                 <Text style={styles.modalTitlePremium}>{t('selectNationality')}</Text>
                 <TouchableOpacity onPress={toggleCountryModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              
               <TextInput
                 placeholder={t('searchCountry')}
                 value={searchQueryCountry}
                 onChangeText={setSearchQueryCountry}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
-                autoComplete="off"
-                autoCorrect={false}
-                autoCapitalize="none"
+                autoComplete="off" autoCorrect={false} autoCapitalize="none"
               />
-              
               <FlatList
                 data={filteredCountry}
+                keyExtractor={(_, i) => `ct-${i}`}
+                removeClippedSubviews
                 renderItem={({ item }) => (
-                  <TouchableOpacity 
-                    style={styles.optionItemPremium} 
-                    onPress={() => handleSelectCountry(item)}
-                    activeOpacity={0.7}
-                  >
+                  <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectCountry(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>
-                      {item.sys_countries_nameeng === 'Please Select'
-                        ? t('pleaseSelect')
-                        : `${item.sys_countries_nameeng}`}
+                      {item.sys_countries_nameeng === 'Please Select' ? t('pleaseSelect') : `${item.sys_countries_nameeng}`}
                     </Text>
                   </TouchableOpacity>
                 )}
-                keyExtractor={(item, index) => index.toString()}
                 showsVerticalScrollIndicator={false}
               />
             </LinearGradient>
@@ -1261,5 +739,6 @@ const ProfileScreen = ({ navigation }) => {
       </Modal>
     </View>
   );
-}
+};
+
 export default ProfileScreen;
