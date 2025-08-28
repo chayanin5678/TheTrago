@@ -151,8 +151,9 @@
           "alipaylite"
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "TheTrago needs camera access to scan QR codes for ticket verification and to upload ID documents for booking verification.",
-        "NSPhotoLibraryUsageDescription": "TheTrago needs access to your photo library to upload profile pictures and ID documents for account verification.",
+  "NSCameraUsageDescription": "TheTrago needs access to your camera to scan QR codes for ticket verification and to capture ID documents (e.g. passport or ID card) when verifying bookings.",
+  "NSPhotoLibraryUsageDescription": "TheTrago needs access to your photo library so you can choose and upload a profile photo or attach ID documents (for example, passport or government ID) for account verification and bookings.",
+  "NSPhotoLibraryAddUsageDescription": "TheTrago may save generated tickets or receipts to your photo library when you choose to save a ticket image.",
         "NSSpeechRecognitionUsageDescription": "TheTrago may use speech recognition to enhance voice input features for better user experience.",
         "NSLocationWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",

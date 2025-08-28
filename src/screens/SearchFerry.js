@@ -43,8 +43,8 @@ const SearchFerry = ({ navigation, route }) => {
     ROUND_TRIP: t('roundTrip')
   };
 
-  const [tripType, setTripType] = useState(t('oneWayTrip'));
-  const [tripTypeSearch, setTripTypeSearch] = useState(t('oneWayTrip'));
+  const [tripType, setTripType] = useState(TRIP_TYPES.ONE_WAY);
+  const [tripTypeSearch, setTripTypeSearch] = useState(TRIP_TYPES.ONE_WAY);
 
   // Date states
   const [detaDepart, setDetaDepart] = useState(() => {
@@ -63,7 +63,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name, countryId: customerData.countrycode });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
 
-  const [tripTypeSearchResult, settripTypeSearchResult] = useState("Depart Trip");
+  const [tripTypeSearchResult, settripTypeSearchResult] = useState(TRIP_TYPES.ONE_WAY);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infant, setInfant] = useState(0);
@@ -799,7 +799,7 @@ const SearchFerry = ({ navigation, route }) => {
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
               // Ultra premium glass morphism
-              backdropFilter: 'blur(30px)',
+              // backdropFilter: 'blur(30px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             },
           ]}
         >
@@ -1007,7 +1007,7 @@ const SearchFerry = ({ navigation, route }) => {
               elevation: Platform.OS === 'android' ? 0 : 20,
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
-              backdropFilter: 'blur(25px)',
+              // backdropFilter: 'blur(25px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             }}>
               <View style={{
                 flexDirection: 'row',
@@ -1233,7 +1233,7 @@ const SearchFerry = ({ navigation, route }) => {
           paddingVertical: hp('1.5%'),
           backgroundColor: 'rgba(255,255,255,0.1)',
           borderRadius: wp('4%'),
-          backdropFilter: 'blur(10px)',
+          // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.2)',
         }}>
@@ -1277,7 +1277,7 @@ const SearchFerry = ({ navigation, route }) => {
               elevation: 4,
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.3)',
-              backdropFilter: 'blur(15px)',
+              // backdropFilter: 'blur(15px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             }}
             onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
             activeOpacity={0.8}
@@ -1310,7 +1310,7 @@ const SearchFerry = ({ navigation, route }) => {
             elevation: 8,
             borderWidth: getResponsiveSize(wp('0.2%'), wp('0.15%'), wp('0.1%')),
             borderColor: 'rgba(0, 18, 51, 0.06)',
-            backdropFilter: 'blur(20px)',
+            // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             // iPad-specific margins and max width
             marginHorizontal: getResponsiveSize(wp('1%'), wp('5%'), wp('10%')),
             maxWidth: isTablet ? 800 : '100%',
@@ -1439,7 +1439,7 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 0 : 4,
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }]}
                 onPress={() => setPassengerModalVisible(true)}
               >
@@ -1777,7 +1777,7 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 0 : 4,
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }]}
               >
                 <View style={[headStyles.suggestionIconBox, {
@@ -1857,7 +1857,7 @@ const SearchFerry = ({ navigation, route }) => {
                   elevation: Platform.OS === 'android' ? 0 : 4,
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
-                  backdropFilter: 'blur(10px)',
+                  // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }]}
               >
                 <View style={[headStyles.suggestionIconBox, {
@@ -1910,7 +1910,7 @@ const SearchFerry = ({ navigation, route }) => {
                 elevation: Platform.OS === 'android' ? 0 : 4,
                 borderWidth: 0.5,
                 borderColor: 'rgba(0, 18, 51, 0.05)',
-                backdropFilter: 'blur(10px)',
+                // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
               }]}>
                 <TouchableOpacity
                   onPress={() => {
@@ -4597,7 +4597,7 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: wp('50%'),
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
-                  backdropFilter: 'blur(20px)',
+                  // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }}>
                   {/* Previous Button */}
                   <TouchableOpacity
@@ -4733,7 +4733,7 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: wp('50%'),
                   borderWidth: 1,
                   borderColor: 'rgba(255, 214, 0, 0.12)',
-                  backdropFilter: 'blur(20px)',
+                  // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }}>
                   {/* Previous Button */}
                   <TouchableOpacity

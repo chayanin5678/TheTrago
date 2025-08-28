@@ -10,7 +10,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
-import { useAuth } from '../../contex../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 // Apple Authentication - conditional import
 let AppleAuthentication;
 try {
@@ -40,6 +40,34 @@ import { GOOGLE_CONFIG } from '../../config/socialConfig';
 
 
 const { width, height } = Dimensions.get('window');
+
+// Small helper to parse a JWT (identityToken) safely without external deps
+const parseJwt = (token) => {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    let jsonPayload = null;
+
+    if (typeof atob === 'function') {
+      const decoded = atob(base64);
+      jsonPayload = decodeURIComponent(Array.prototype.map.call(decoded, function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+    } else if (typeof Buffer !== 'undefined') {
+      jsonPayload = Buffer.from(base64, 'base64').toString('utf8');
+    } else {
+      // fallback: try decodeURIComponent on atob-like behavior
+      return null;
+    }
+
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.log('parseJwt error', e);
+    return null;
+  }
+};
 
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
@@ -102,18 +130,18 @@ export default function LoginScreen({ navigation }) {
     } else {
       updateCustomerData({ email: '', password: '', remember: false });
     }
-    
+
     console.log(email, password);
     setIsLoading(true);
-    
+
     try {
       const loginResponse = await axios.post(`${ipAddress}/login`, {
         email: email,  // ใช้ค่า email จาก state
         password: password  // ใช้ค่า password จาก state
       });
-  
+
       console.log(loginResponse.data); // แสดงข้อมูลที่ได้รับจาก API
-  
+
       if (loginResponse.data.token) {
         // Use AuthContext login method
         await login(loginResponse.data.token);
@@ -124,9 +152,9 @@ export default function LoginScreen({ navigation }) {
           email: email,  // ใช้ค่า email จาก state
           token: loginResponse.data.token  // ใช้ token จากการ login
         });
-  
+
         console.log(tokenResponse.data); // Log the token update response
-  
+
         // AuthContext จะจัดการการ navigate อัตโนมัติ
         setIsLoading(false);
         console.log('Login successful. AuthContext will handle navigation automatically.');
@@ -146,7 +174,7 @@ export default function LoginScreen({ navigation }) {
     // Check if Google Sign-In is available (not in Expo Go)
     if (!GoogleSignin) {
       Alert.alert(
-        t('googleSignInNotAvailable'), 
+        t('googleSignInNotAvailable'),
         t('googleSignInRequiresBuild'),
         [{ text: t('understood') }]
       );
@@ -155,22 +183,22 @@ export default function LoginScreen({ navigation }) {
 
     try {
       setSocialLoading(prev => ({ ...prev, google: true }));
-      
+
       // ตรวจสอบการกำหนดค่า
       console.log('Google Config:', GOOGLE_CONFIG);
       console.log('Checking Play Services...');
       await GoogleSignin.hasPlayServices();
-      
+
       console.log('Starting Google Sign-In...');
       const userInfo = await GoogleSignin.signIn();
-      
+
       console.log('Google User Info:', userInfo);
-      
+
       // ตรวจสอบว่ามีอีเมลหรือไม่ (กรณีผู้ใช้เลือกซ่อนอีเมล)
       const userEmail = userInfo.user.email || `${userInfo.user.id}@privaterelay.appleid.com`;
-      
+
       // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
-      const socialLoginResponse = await axios.post(`${ipAddress}/AppApi/social-login`, {
+      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
         provider: 'google',
         providerId: userInfo.user.id,
         email: userEmail,
@@ -191,9 +219,9 @@ export default function LoginScreen({ navigation }) {
       console.log('Google Sign-In Error:', error);
       console.log('Error Code:', error.code);
       console.log('Error Message:', error.message);
-      
+
       let errorMessage = t('googleSignInGeneralError');
-      
+
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
         return;
@@ -206,7 +234,7 @@ export default function LoginScreen({ navigation }) {
       } else if (error.message) {
         errorMessage = `${t('errorPrefix')} ${error.message}`;
       }
-      
+
       Alert.alert('เตือน', errorMessage);
     } finally {
       setSocialLoading(prev => ({ ...prev, google: false }));
@@ -216,12 +244,12 @@ export default function LoginScreen({ navigation }) {
   // Facebook Login Handler
   const handleFacebookLogin = async () => {
     console.log('Starting Facebook Login...');
-    
+
     // Check if Facebook SDK is available
     if (!LoginManager || !AccessToken) {
       console.log('Facebook SDK not available');
       Alert.alert(
-        t('facebookSignInNotAvailable'), 
+        t('facebookSignInNotAvailable'),
         t('facebookSignInRequiresBuild'),
         [{ text: t('understood') }]
       );
@@ -231,10 +259,10 @@ export default function LoginScreen({ navigation }) {
     try {
       setSocialLoading(prev => ({ ...prev, facebook: true }));
       console.log('Attempting Facebook login...');
-      
+
       const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
       console.log('Facebook login result:', result);
-      
+
       if (result.isCancelled) {
         console.log('Facebook login was cancelled');
         return;
@@ -243,7 +271,7 @@ export default function LoginScreen({ navigation }) {
       console.log('Getting Facebook access token...');
       const data = await AccessToken.getCurrentAccessToken();
       console.log('Facebook access token data:', data);
-      
+
       if (!data) {
         console.log('No Facebook access token available');
         Alert.alert(t('error'), t('cannotAccessFacebookEmail'));
@@ -254,7 +282,7 @@ export default function LoginScreen({ navigation }) {
       console.log('Fetching Facebook user info...');
       const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,first_name,last_name,picture.type(large)`);
       const facebookUserInfo = await facebookResponse.json();
-      
+
       console.log('Facebook User Info:', facebookUserInfo);
 
       // ตรวจสอบว่ามี email หรือไม่
@@ -286,7 +314,7 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       console.log('Facebook Login Error:', error);
       console.log('Error details:', error.message, error.stack);
-      
+
       if (error.response) {
         console.log('API Error Response:', error.response.data);
         Alert.alert('เตือน', `${t('apiError')}: ${error.response.data.message || t('unknownReason')}`);
@@ -303,11 +331,11 @@ export default function LoginScreen({ navigation }) {
 
   // Apple Sign-In Handler
   const handleAppleSignIn = async () => {
-    // Check if Apple Authentication is available
-    if (!AppleAuthentication) {
+    // Check if Apple Authentication is available (works only in proper iOS builds)
+    if (!AppleAuthentication || !AppleAuthentication.isAvailableAsync) {
       Alert.alert(
-        'Apple Sign-In ไม่พร้อมใช้งান', 
-        'Apple Sign-In ต้องใช้ Development Build และไม่สามารถทำงานใน Expo Go ได้',
+        t('appleSignInError'),
+        t('appleSignInNotAvailable') || 'Apple Sign-In is not available on this device or in this build. Please test on a proper iOS device with a release/development build.',
         [{ text: t('understood') }]
       );
       return;
@@ -315,7 +343,14 @@ export default function LoginScreen({ navigation }) {
 
     try {
       setSocialLoading(prev => ({ ...prev, apple: true }));
-      
+
+      // Confirm platform availability before calling signInAsync
+      const available = await AppleAuthentication.isAvailableAsync?.();
+      if (!available) {
+        Alert.alert(t('appleSignInError'), t('appleSignInNotAvailable'));
+        return;
+      }
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -325,20 +360,51 @@ export default function LoginScreen({ navigation }) {
 
       console.log('Apple Credential:', credential);
 
-      // จัดการกับอีเมลที่อาจจะถูกซ่อน
-      const userEmail = credential.email || `${credential.user}@privaterelay.appleid.com`;
-      
-      // ส่งข้อมูลไปยัง API
-      const socialLoginResponse = await axios.post(`${ipAddress}/AppApi/social-login`, {
-        provider: 'apple',
-        providerId: credential.user,
-        email: userEmail,
-        name: credential.fullName ? 
-          `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null,
-        firstName: credential.fullName?.givenName || null,
-        lastName: credential.fullName?.familyName || null,
-        isEmailPrivate: !credential.email, // บอกว่าอีเมลถูกซ่อนหรือไม่
-      });
+      // จัดการกับอีเมลที่อาจจะถูกซ่อน: ถ้า credential.email เป็น null ให้ลองดึงจาก identityToken
+      let userEmail = credential.email || null;
+      if (!userEmail && credential.identityToken) {
+        const payload = parseJwt(credential.identityToken);
+        if (payload && payload.email) {
+          userEmail = payload.email;
+          console.log('Extracted email from identityToken:', userEmail);
+        }
+      }
+
+      if (!userEmail) {
+        // ให้ fallback เป็น privaterelay address ถ้าไม่มีอีเมลจริง
+        userEmail = `${credential.user}@privaterelay.appleid.com`;
+      }
+
+      // ส่งข้อมูลไปยัง API (ปรับปรุงการจับข้อผิดพลาดเพื่อเก็บรายละเอียดของ 400 response)
+      let socialLoginResponse;
+      try {
+        socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+          provider: 'apple',
+          providerId: credential.user,
+          email: userEmail,
+          name: credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null,
+          firstName: credential.fullName?.givenName || null,
+          lastName: credential.fullName?.familyName || null,
+          isEmailPrivate: !credential.email,
+          identityToken: credential.identityToken,
+          authorizationCode: credential.authorizationCode,
+          audience: parseJwt(credential.identityToken)?.aud || null,
+        });
+      } catch (err) {
+        console.log('Apple Sign-In -> backend request failed');
+        if (err.response) {
+          console.log('Backend response status:', err.response.status);
+          console.log('Backend response data:', JSON.stringify(err.response.data));
+          Alert.alert('เตือน', `Apple Sign-In failed: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+        } else if (err.request) {
+          console.log('No response received from backend:', err.request);
+          Alert.alert('เตือน', t('cannotConnectToServer'));
+        } else {
+          console.log('Axios error:', err.message);
+          Alert.alert('เตือน', t('appleSignInError'));
+        }
+        throw err; // rethrow to be handled by outer catch and finally
+      }
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
@@ -348,29 +414,29 @@ export default function LoginScreen({ navigation }) {
       }
     } catch (error) {
       console.log('Apple Sign-In Error:', error);
-      
+
       if (error.code === 'ERR_CANCELED') {
         // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
         return;
       }
-      
+
       Alert.alert('เตือน', t('appleSignInError'));
     } finally {
       setSocialLoading(prev => ({ ...prev, apple: false }));
     }
   };
-  
+
 
 
   return (
     <View style={styles.container}>
       {/* Set StatusBar for cross-platform consistency */}
-      <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="#FD501E" 
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#FD501E"
         translucent={Platform.OS === 'android'}
       />
-      
+
       {/* Premium Background */}
       <LinearGradient
         colors={['#ffffff', '#fefefe', '#fff9f4', '#fef5ed', '#fff2e8', '#ffffff']}
@@ -378,11 +444,11 @@ export default function LoginScreen({ navigation }) {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
-      
-      <SafeAreaView 
+
+      <SafeAreaView
         style={[
-          styles.safeArea, 
-          Platform.OS === 'android' && Platform.Version >= 31 ? 
+          styles.safeArea,
+          Platform.OS === 'android' && Platform.Version >= 31 ?
             { paddingTop: insets.top } : // Android 15 edge-to-edge
             { paddingTop: StatusBar.currentHeight || 0 }
         ]}
@@ -392,213 +458,213 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
               <Text style={styles.loadingText}>
-                {socialLoading.google ? t('signInWithGoogle') : 
-                 socialLoading.facebook ? t('signInWithFacebook') : 
-                 t('signingYouIn')}
+                {socialLoading.google ? t('signInWithGoogle') :
+                  socialLoading.facebook ? t('signInWithFacebook') :
+                    t('signingYouIn')}
               </Text>
             </View>
           </BlurView>
         )}
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
-        <Animated.View 
-          style={[
-            styles.heroSection,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ],
-            },
-          ]}
-        >
-          <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
-          <Text style={styles.welcomeSubtext}>{t('signInToContinue')}</Text>
-        </Animated.View>
+          {/* Hero Section */}
+          <Animated.View
+            style={[
+              styles.heroSection,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim }
+                ],
+              },
+            ]}
+          >
+            <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
+            <Text style={styles.welcomeSubtext}>{t('signInToContinue')}</Text>
+          </Animated.View>
 
-        {/* Main Content Card */}
-        <Animated.View 
-          style={[
-            styles.cardContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <BlurView intensity={50} tint="extraLight" style={styles.card}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.98)', 'rgba(255,252,248,0.99)', 'rgba(255,249,242,0.97)', 'rgba(255,255,255,0.95)']}
-              style={styles.cardGradient}
-            >
-              <View style={styles.cardHeader}>
-                <Text style={styles.title}>{t('signIn')}</Text>
-                <View style={styles.titleUnderline} />
-              </View>
-              
-              <View style={styles.subtitleContainer}>
-                <Text style={styles.subtitle}>{t('dontHaveAccount')}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
-                  <Text style={styles.link}>{t('createAccount')}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Premium Input Fields */}
-              <View style={styles.inputSection}>
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputIconContainer}>
-                    <MaterialIcons name="email" size={22} color="#FD501E" style={styles.inputIcon} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('usernameOrEmail')}
-                    placeholderTextColor="#aaa"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                  />
-                  <View style={styles.inputFocusLine} />
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputIconContainer}>
-                    <MaterialIcons name="lock" size={22} color="#FD501E" style={styles.inputIcon} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('password')}
-                    placeholderTextColor="#aaa"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <Icon name={showPassword ? 'eye' : 'eye-off'} size={22} color="#999" />
-                  </TouchableOpacity>
-                  <View style={styles.inputFocusLine} />
-                </View>
-              </View>
-
-              <View style={styles.row}>
-                <TouchableOpacity onPress={() => setRemember(!remember)} style={styles.checkboxContainer}>
-                  <MaterialIcons name={remember ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                  <Text style={styles.rememberText}>{t('rememberMe')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('ForgotPasswordScreen')}>
-                  <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Premium Sign In Button */}
-              <TouchableOpacity
-                style={styles.signInButton}
-                onPress={() => {
-                  setIsLoading(true);
-                  handleLogin();
-                }}
+          {/* Main Content Card */}
+          <Animated.View
+            style={[
+              styles.cardContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <BlurView intensity={50} tint="extraLight" style={styles.card}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.98)', 'rgba(255,252,248,0.99)', 'rgba(255,249,242,0.97)', 'rgba(255,255,255,0.95)']}
+                style={styles.cardGradient}
               >
-                <LinearGradient
-                  colors={['#FF6B35', '#FD501E', '#E8441C']}
-                  style={styles.buttonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <View style={styles.buttonContent}>
-                    <Text style={styles.signInText}>{t('signIn')}</Text>
-                    <MaterialIcons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
+                <View style={styles.cardHeader}>
+                  <Text style={styles.title}>{t('signIn')}</Text>
+                  <View style={styles.titleUnderline} />
+                </View>
+
+                <View style={styles.subtitleContainer}>
+                  <Text style={styles.subtitle}>{t('dontHaveAccount')}</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+                    <Text style={styles.link}>{t('createAccount')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Premium Input Fields */}
+                <View style={styles.inputSection}>
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputIconContainer}>
+                      <MaterialIcons name="email" size={22} color="#FD501E" style={styles.inputIcon} />
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('usernameOrEmail')}
+                      placeholderTextColor="#aaa"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                    />
+                    <View style={styles.inputFocusLine} />
                   </View>
-                </LinearGradient>
-              </TouchableOpacity>
 
-              {/* Social Login Section */}
-              <View style={styles.dividerContainer}>
-                <View style={styles.divider} />
-                <Text style={styles.orText}>{t('orContinueWith')}</Text>
-                <View style={styles.divider} />
-              </View>
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputIconContainer}>
+                      <MaterialIcons name="lock" size={22} color="#FD501E" style={styles.inputIcon} />
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('password')}
+                      placeholderTextColor="#aaa"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                      <Icon name={showPassword ? 'eye' : 'eye-off'} size={22} color="#999" />
+                    </TouchableOpacity>
+                    <View style={styles.inputFocusLine} />
+                  </View>
+                </View>
 
-              <View style={styles.socialContainer}>
-                {/* Apple Sign-In Button สำหรับ iOS */}
-                {Platform.OS === 'ios' && (
-                  <TouchableOpacity 
-                    style={styles.appleButtonCustom} 
-                    onPress={handleAppleSignIn}
-                    disabled={socialLoading.apple || isLoading}
+                <View style={styles.row}>
+                  <TouchableOpacity onPress={() => setRemember(!remember)} style={styles.checkboxContainer}>
+                    <MaterialIcons name={remember ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
+                    <Text style={styles.rememberText}>{t('rememberMe')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => navigation.navigate('ForgotPasswordScreen')}>
+                    <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Premium Sign In Button */}
+                <TouchableOpacity
+                  style={styles.signInButton}
+                  onPress={() => {
+                    setIsLoading(true);
+                    handleLogin();
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#FF6B35', '#FD501E', '#E8441C']}
+                    style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.signInText}>{t('signIn')}</Text>
+                      <MaterialIcons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Social Login Section */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.divider} />
+                  <Text style={styles.orText}>{t('orContinueWith')}</Text>
+                  <View style={styles.divider} />
+                </View>
+
+                <View style={styles.socialContainer}>
+                  {/* Apple Sign-In Button สำหรับ iOS */}
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity
+                      style={styles.appleButtonCustom}
+                      onPress={handleAppleSignIn}
+                      disabled={socialLoading.apple || isLoading}
+                    >
+                      <View style={styles.socialButtonContent}>
+                        {socialLoading.apple ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <FontAwesome name="apple" size={20} color="#FFFFFF" />
+                        )}
+                        <Text style={styles.appleButtonText}>
+                          {socialLoading.apple ? t('signInWithApple') : `Continue with Apple`}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Google Sign-In Button */}
+                  <TouchableOpacity
+                    style={styles.googleButtonCustom}
+                    onPress={handleGoogleSignIn}
+                    disabled={socialLoading.google || isLoading}
                   >
                     <View style={styles.socialButtonContent}>
-                      {socialLoading.apple ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      {socialLoading.google ? (
+                        <ActivityIndicator size="small" color="#757575" />
                       ) : (
-                        <FontAwesome name="apple" size={20} color="#FFFFFF" />
+                        <FontAwesome name="google" size={20} color="#EA4335" />
                       )}
-                      <Text style={styles.appleButtonText}>
-                        {socialLoading.apple ? t('signInWithApple') : `Continue with Apple`}
+                      <Text style={styles.socialButtonText}>
+                        {socialLoading.google ? t('signInWithGoogle') : `Continue with Google`}
                       </Text>
                     </View>
                   </TouchableOpacity>
-                )}
 
-                {/* Google Sign-In Button */}
-                <TouchableOpacity 
-                  style={styles.googleButtonCustom} 
-                  onPress={handleGoogleSignIn}
-                  disabled={socialLoading.google || isLoading}
-                >
-                  <View style={styles.socialButtonContent}>
-                    {socialLoading.google ? (
-                      <ActivityIndicator size="small" color="#757575" />
-                    ) : (
-                      <FontAwesome name="google" size={20} color="#EA4335" />
-                    )}
-                    <Text style={styles.socialButtonText}>
-                      {socialLoading.google ? t('signInWithGoogle') : `Continue with Google`}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Facebook Sign-In Button */}
-                <TouchableOpacity 
-                  style={styles.facebookButtonCustom} 
-                  onPress={handleFacebookLogin}
-                  disabled={socialLoading.facebook || isLoading}
-                >
-                  <View style={styles.socialButtonContent}>
-                    {socialLoading.facebook ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <FontAwesome name="facebook-f" size={20} color="#FFFFFF" />
-                    )}
-                    <Text style={styles.facebookButtonText}>
-                      {socialLoading.facebook ? t('signInWithFacebook') : `Continue with Facebook`}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
+                  {/* Facebook Sign-In Button */}
+                  <TouchableOpacity
+                    style={styles.facebookButtonCustom}
+                    onPress={handleFacebookLogin}
+                    disabled={socialLoading.facebook || isLoading}
+                  >
+                    <View style={styles.socialButtonContent}>
+                      {socialLoading.facebook ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <FontAwesome name="facebook-f" size={20} color="#FFFFFF" />
+                      )}
+                      <Text style={styles.facebookButtonText}>
+                        {socialLoading.facebook ? t('signInWithFacebook') : `Continue with Facebook`}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
 
-              {/* Policy Text */}
-              <Text style={styles.policyText}>
-                {t('byContinuing')}{' '}
-                <Text 
-                  style={styles.linkText}
-                  onPress={() => navigation.navigate('TermsScreen')}
-                >
-                  {t('termsOfUse')}
+                {/* Policy Text */}
+                <Text style={styles.policyText}>
+                  {t('byContinuing')}{' '}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() => navigation.navigate('TermsScreen')}
+                  >
+                    {t('termsOfUse')}
+                  </Text>
+                  {' '}{t('and')}{' '}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+                  >
+                    {t('privacyPolicy')}
+                  </Text>
+                  {t('ofTheTrago')}.
                 </Text>
-                {' '}{t('and')}{' '}
-                <Text 
-                  style={styles.linkText}
-                  onPress={() => navigation.navigate('PrivacyPolicyScreen')}
-                >
-                  {t('privacyPolicy')}
-                </Text>
-                {t('ofTheTrago')}.
-              </Text>
-            </LinearGradient>
-          </BlurView>
-        </Animated.View>
-      </ScrollView>
+              </LinearGradient>
+            </BlurView>
+          </Animated.View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
