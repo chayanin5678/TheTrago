@@ -16,7 +16,7 @@ export default {
         "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c"
       }
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
@@ -54,7 +54,7 @@ export default {
     "jsEngine": "jsc",
     "ios": {
       "bundleIdentifier": "com.thetrago.android",
-      "buildNumber": "3",
+      "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,

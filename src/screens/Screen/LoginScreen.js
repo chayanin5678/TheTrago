@@ -7,14 +7,15 @@ import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ipAddress from "../../config/ipconfig";
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-// Apple Authentication - conditional import
-let AppleAuthentication;
+// Apple Authentication - using react-native-apple-authentication
+let appleAuth, AppleButton;
 try {
-  AppleAuthentication = require('expo-apple-authentication');
+  const appleAuthLib = require('@invertase/react-native-apple-authentication');
+  appleAuth = appleAuthLib.default;
+  AppleButton = appleAuthLib.AppleButton;
 } catch (error) {
   console.log('Apple Authentication not available');
 }
@@ -331,11 +332,11 @@ export default function LoginScreen({ navigation }) {
 
   // Apple Sign-In Handler
   const handleAppleSignIn = async () => {
-    // Check if Apple Authentication is available (works only in proper iOS builds)
-    if (!AppleAuthentication || !AppleAuthentication.isAvailableAsync) {
+    // Check if Apple Authentication is available
+    if (!appleAuth) {
       Alert.alert(
         t('appleSignInError'),
-        t('appleSignInNotAvailable') || 'Apple Sign-In is not available on this device or in this build. Please test on a proper iOS device with a release/development build.',
+        'Apple Sign-In is not available. Please ensure you have @invertase/react-native-apple-authentication installed and configured.',
         [{ text: t('understood') }]
       );
       return;
@@ -344,58 +345,80 @@ export default function LoginScreen({ navigation }) {
     try {
       setSocialLoading(prev => ({ ...prev, apple: true }));
 
-      // Confirm platform availability before calling signInAsync
-      const available = await AppleAuthentication.isAvailableAsync?.();
-      if (!available) {
-        Alert.alert(t('appleSignInError'), t('appleSignInNotAvailable'));
-        return;
-      }
-
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
+      // Check if Apple Sign-In is available on this device
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
       });
 
-      console.log('Apple Credential:', credential);
+      console.log('Apple Auth Response:', appleAuthRequestResponse);
 
-      // จัดการกับอีเมลที่อาจจะถูกซ่อน: ถ้า credential.email เป็น null ให้ลองดึงจาก identityToken
-      let userEmail = credential.email || null;
-      if (!userEmail && credential.identityToken) {
-        const payload = parseJwt(credential.identityToken);
-        if (payload && payload.email) {
-          userEmail = payload.email;
+      const { identityToken, nonce, user: appleUserId, email, fullName, authorizationCode } = appleAuthRequestResponse;
+
+      if (!identityToken) {
+        throw new Error('No identity token received from Apple');
+      }
+
+      // จัดการกับอีเมลที่อาจจะถูกซ่อน: ถ้า email เป็น null ให้ลองดึงจาก identityToken
+      let userEmail = email || null;
+      let tokenPayload = null;
+      if (identityToken) {
+        tokenPayload = parseJwt(identityToken);
+        console.log('Parsed identity token payload:', tokenPayload);
+        if (!userEmail && tokenPayload && tokenPayload.email) {
+          userEmail = tokenPayload.email;
           console.log('Extracted email from identityToken:', userEmail);
         }
       }
 
       if (!userEmail) {
         // ให้ fallback เป็น privaterelay address ถ้าไม่มีอีเมลจริง
-        userEmail = `${credential.user}@privaterelay.appleid.com`;
+        userEmail = `${appleUserId}@privaterelay.appleid.com`;
       }
 
-      // ส่งข้อมูลไปยัง API (ปรับปรุงการจับข้อผิดพลาดเพื่อเก็บรายละเอียดของ 400 response)
+      // ส่งข้อมูลไปยัง API - ใช้ format ที่ server คาดหวัง
+      const aud = tokenPayload?.aud || null;
+      console.log('Sending to server - aud:', aud, 'providerId:', appleUserId);
+      
       let socialLoginResponse;
       try {
         socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
           provider: 'apple',
-          providerId: credential.user,
+          providerId: appleUserId,
           email: userEmail,
-          name: credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null,
-          firstName: credential.fullName?.givenName || null,
-          lastName: credential.fullName?.familyName || null,
-          isEmailPrivate: !credential.email,
-          identityToken: credential.identityToken,
-          authorizationCode: credential.authorizationCode,
-          audience: parseJwt(credential.identityToken)?.aud || null,
+          name: fullName ? `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim() : null,
+          firstName: fullName?.givenName || null,
+          lastName: fullName?.familyName || null,
+          photo: null, // Apple ไม่ให้รูป
+          identityToken: identityToken,
+          authorizationCode: authorizationCode,
+          accessToken: authorizationCode || null,
+          // ส่งทั้ง audience และ aud เพื่อให้ server เลือกใช้
+          audience: aud || null,
+          aud: aud || null,
+          nonce: nonce || null,
         });
+        console.log('Apple sign-in success:', socialLoginResponse.data);
       } catch (err) {
         console.log('Apple Sign-In -> backend request failed');
+        console.log('Error details:', {
+          status: err?.response?.status,
+          statusText: err?.response?.statusText,
+          data: err?.response?.data,
+          message: err?.message
+        });
+        
         if (err.response) {
           console.log('Backend response status:', err.response.status);
           console.log('Backend response data:', JSON.stringify(err.response.data));
-          Alert.alert('เตือน', `Apple Sign-In failed: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+          
+          // ถ้าเป็น 500 error และเป็น development mode ให้แสดงรายละเอียด
+          if (err.response.status === 500) {
+            const errorDetail = err.response.data?.detail || err.response.data?.message || 'Unknown server error';
+            Alert.alert('เตือน', `Apple Sign-In server error: ${errorDetail}`);
+          } else {
+            Alert.alert('เตือน', `Apple Sign-In failed: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+          }
         } else if (err.request) {
           console.log('No response received from backend:', err.request);
           Alert.alert('เตือน', t('cannotConnectToServer'));
@@ -415,12 +438,17 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       console.log('Apple Sign-In Error:', error);
 
-      if (error.code === 'ERR_CANCELED') {
+      if (error.code === appleAuth.Error.CANCELED) {
         // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
         return;
       }
 
-      Alert.alert('เตือน', t('appleSignInError'));
+      let errorMessage = t('appleSignInError');
+      if (error.message && error.message.includes('not available')) {
+        errorMessage = 'Apple Sign-In is not available on this device';
+      }
+
+      Alert.alert('เตือน', errorMessage);
     } finally {
       setSocialLoading(prev => ({ ...prev, apple: false }));
     }
