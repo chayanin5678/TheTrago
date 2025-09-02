@@ -10,15 +10,8 @@ import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-// Apple Authentication - using react-native-apple-authentication
-let appleAuth, AppleButton;
-try {
-  const appleAuthLib = require('@invertase/react-native-apple-authentication');
-  appleAuth = appleAuthLib.default;
-  AppleButton = appleAuthLib.AppleButton;
-} catch (error) {
-  console.log('Apple Authentication not available');
-}
+// Apple Authentication - using expo-apple-authentication
+import * as AppleAuthentication from 'expo-apple-authentication';
 // Social login imports - conditional for Expo Go compatibility
 let GoogleSignin, statusCodes, LoginManager, AccessToken;
 try {
@@ -69,6 +62,9 @@ const parseJwt = (token) => {
     return null;
   }
 };
+
+// Constants
+const BUNDLE_ID = 'com.thetrago.android'; // Bundle ID จาก app.json สำหรับ Apple Sign-In audience
 
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
@@ -195,8 +191,17 @@ export default function LoginScreen({ navigation }) {
 
       console.log('Google User Info:', userInfo);
 
-      // ตรวจสอบว่ามีอีเมลหรือไม่ (กรณีผู้ใช้เลือกซ่อนอีเมล)
-      const userEmail = userInfo.user.email || `${userInfo.user.id}@privaterelay.appleid.com`;
+      // ตรวจสอบว่าต้องมีอีเมลจริงเพื่อใช้งาน
+      if (!userInfo.user.email) {
+        Alert.alert(
+          'ต้องการอีเมล',
+          'กรุณาแชร์อีเมลของคุณเพื่อใช้งาน Google Sign-In หรือลองเข้าสู่ระบบด้วยวิธีอื่น',
+          [{ text: t('understood') }]
+        );
+        return;
+      }
+
+      const userEmail = userInfo.user.email;
 
       // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
       const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
@@ -207,7 +212,6 @@ export default function LoginScreen({ navigation }) {
         firstName: userInfo.user.givenName || null,
         lastName: userInfo.user.familyName || null,
         photo: userInfo.user.photo,
-        isEmailPrivate: !userInfo.user.email, // บอกว่าอีเมลถูกซ่อนหรือไม่
       });
 
       if (socialLoginResponse.data.token) {
@@ -332,34 +336,40 @@ export default function LoginScreen({ navigation }) {
 
   // Apple Sign-In Handler
   const handleAppleSignIn = async () => {
-    // Check if Apple Authentication is available
-    if (!appleAuth) {
-      Alert.alert(
-        t('appleSignInError'),
-        'Apple Sign-In is not available. Please ensure you have @invertase/react-native-apple-authentication installed and configured.',
-        [{ text: t('understood') }]
-      );
-      return;
-    }
-
     try {
       setSocialLoading(prev => ({ ...prev, apple: true }));
 
       // Check if Apple Sign-In is available on this device
-      const appleAuthRequestResponse = await appleAuth.performRequest({
-        requestedOperation: appleAuth.Operation.LOGIN,
-        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(
+          t('appleSignInError'),
+          'Apple Sign-In is not available on this device',
+          [{ text: t('understood') }]
+        );
+        return;
+      }
+
+      // Perform Apple Sign-In
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
       });
 
-      console.log('Apple Auth Response:', appleAuthRequestResponse);
+      console.log('Apple Auth Response:', credential);
+      console.log('Apple fullName:', fullName);
+      console.log('Apple email:', email);
+      console.log('Apple user ID:', appleUserId);
 
-      const { identityToken, nonce, user: appleUserId, email, fullName, authorizationCode } = appleAuthRequestResponse;
+      const { identityToken, authorizationCode, user: appleUserId, email, fullName } = credential;
 
       if (!identityToken) {
         throw new Error('No identity token received from Apple');
       }
 
-      // จัดการกับอีเมลที่อาจจะถูกซ่อน: ถ้า email เป็น null ให้ลองดึงจาก identityToken
+      // จัดการกับอีเมลที่ได้จาก Apple - ไม่ซ่อนอีเมล
       let userEmail = email || null;
       let tokenPayload = null;
       if (identityToken) {
@@ -371,14 +381,46 @@ export default function LoginScreen({ navigation }) {
         }
       }
 
+      // ตรวจสอบว่าต้องมีอีเมลเพื่อใช้งาน
       if (!userEmail) {
-        // ให้ fallback เป็น privaterelay address ถ้าไม่มีอีเมลจริง
-        userEmail = `${appleUserId}@privaterelay.appleid.com`;
+        Alert.alert(
+          'ต้องการอีเมล',
+          'กรุณาแชร์อีเมลของคุณเพื่อใช้งาน Apple Sign-In หรือลองเข้าสู่ระบบด้วยวิธีอื่น',
+          [{ text: t('understood') }]
+        );
+        return;
       }
 
-      // ส่งข้อมูลไปยัง API - ใช้ format ที่ server คาดหวัง
-      const aud = tokenPayload?.aud || null;
-      console.log('Sending to server - aud:', aud, 'providerId:', appleUserId);
+      // ส่งข้อมูลไปยัง API - ใช้ bundle ID เป็น audience
+      const aud = tokenPayload?.aud || BUNDLE_ID; // ใช้ bundle ID เป็น fallback
+      
+      // จัดการชื่อจาก Apple - ตรวจสอบทั้ง fullName object และ token payload
+      let displayName = null;
+      let firstName = fullName?.givenName || null;
+      let lastName = fullName?.familyName || null;
+      
+      // ถ้าไม่มีชื่อจาก fullName ให้ลองดึงจาก token payload
+      if (!firstName && !lastName && tokenPayload) {
+        // บางครั้ง Apple อาจจะใส่ชื่อใน token payload
+        firstName = tokenPayload.given_name || tokenPayload.first_name || null;
+        lastName = tokenPayload.family_name || tokenPayload.last_name || null;
+        console.log('Fallback names from token:', { firstName, lastName });
+      }
+      
+      // สร้าง displayName
+      if (firstName || lastName) {
+        displayName = `${firstName || ''} ${lastName || ''}`.trim();
+      }
+      
+      // หมายเหตุ: Apple จะส่งชื่อมาเฉพาะครั้งแรกที่ผู้ใช้ sign in เท่านั้น
+      // หากไม่มีชื่อ อาจจะเป็นเพราะผู้ใช้เคย sign in แล้ว หรือเลือกไม่แชร์ชื่อ
+      if (!displayName) {
+        console.log('Warning: No name received from Apple Sign-In. This is normal for returning users or users who chose not to share their name.');
+      }
+      
+      console.log('Apple fullName object:', fullName);
+      console.log('Processed name - displayName:', displayName, 'firstName:', firstName, 'lastName:', lastName);
+      console.log('Sending to server - aud:', aud, 'providerId:', appleUserId, 'bundleId:', BUNDLE_ID);
       
       let socialLoginResponse;
       try {
@@ -386,17 +428,18 @@ export default function LoginScreen({ navigation }) {
           provider: 'apple',
           providerId: appleUserId,
           email: userEmail,
-          name: fullName ? `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim() : null,
-          firstName: fullName?.givenName || null,
-          lastName: fullName?.familyName || null,
+          name: displayName,
+          firstName: firstName,
+          lastName: lastName,
           photo: null, // Apple ไม่ให้รูป
           identityToken: identityToken,
           authorizationCode: authorizationCode,
           accessToken: authorizationCode || null,
-          // ส่งทั้ง audience และ aud เพื่อให้ server เลือกใช้
-          audience: aud || null,
-          aud: aud || null,
-          nonce: nonce || null,
+          // ใช้ bundle ID เป็น audience หลัก
+          audience: BUNDLE_ID,
+          aud: BUNDLE_ID,
+          bundleId: BUNDLE_ID, // ส่ง bundle ID แยกต่างหาก
+          nonce: null, // Expo Apple Auth ไม่ส่ง nonce
         });
         console.log('Apple sign-in success:', socialLoginResponse.data);
       } catch (err) {
@@ -438,7 +481,8 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       console.log('Apple Sign-In Error:', error);
 
-      if (error.code === appleAuth.Error.CANCELED) {
+      // Handle cancellation with Expo Apple Authentication
+      if (error.code === 'ERR_CANCELED' || error.code === 'ERR_REQUEST_CANCELED') {
         // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
         return;
       }
@@ -481,14 +525,15 @@ export default function LoginScreen({ navigation }) {
             { paddingTop: StatusBar.currentHeight || 0 }
         ]}
       >
-        {(isLoading || socialLoading.google || socialLoading.facebook) && (
+        {(isLoading || socialLoading.google || socialLoading.facebook || socialLoading.apple) && (
           <BlurView intensity={80} tint="light" style={styles.loadingContainer}>
             <View style={styles.loadingContent}>
               <ActivityIndicator size="large" color="#FD501E" />
               <Text style={styles.loadingText}>
                 {socialLoading.google ? t('signInWithGoogle') :
                   socialLoading.facebook ? t('signInWithFacebook') :
-                    t('signingYouIn')}
+                    socialLoading.apple ? t('signInWithApple') :
+                      t('signingYouIn')}
               </Text>
             </View>
           </BlurView>
@@ -617,7 +662,7 @@ export default function LoginScreen({ navigation }) {
                   {/* Apple Sign-In Button สำหรับ iOS */}
                   {Platform.OS === 'ios' && (
                     <TouchableOpacity
-                      style={styles.appleButtonCustom}
+                      style={[styles.socialButton, styles.appleButton]}
                       onPress={handleAppleSignIn}
                       disabled={socialLoading.apple || isLoading}
                     >
@@ -627,7 +672,7 @@ export default function LoginScreen({ navigation }) {
                         ) : (
                           <FontAwesome name="apple" size={20} color="#FFFFFF" />
                         )}
-                        <Text style={styles.appleButtonText}>
+                        <Text style={[styles.socialButtonText, { color: '#FFFFFF' }]}>
                           {socialLoading.apple ? t('signInWithApple') : `Continue with Apple`}
                         </Text>
                       </View>
@@ -636,7 +681,7 @@ export default function LoginScreen({ navigation }) {
 
                   {/* Google Sign-In Button */}
                   <TouchableOpacity
-                    style={styles.googleButtonCustom}
+                    style={[styles.socialButton, styles.googleButton]}
                     onPress={handleGoogleSignIn}
                     disabled={socialLoading.google || isLoading}
                   >
@@ -646,7 +691,7 @@ export default function LoginScreen({ navigation }) {
                       ) : (
                         <FontAwesome name="google" size={20} color="#EA4335" />
                       )}
-                      <Text style={styles.socialButtonText}>
+                      <Text style={[styles.socialButtonText, { color: '#3C4043' }]}>
                         {socialLoading.google ? t('signInWithGoogle') : `Continue with Google`}
                       </Text>
                     </View>
@@ -654,7 +699,7 @@ export default function LoginScreen({ navigation }) {
 
                   {/* Facebook Sign-In Button */}
                   <TouchableOpacity
-                    style={styles.facebookButtonCustom}
+                    style={[styles.socialButton, styles.facebookButton]}
                     onPress={handleFacebookLogin}
                     disabled={socialLoading.facebook || isLoading}
                   >
@@ -664,7 +709,7 @@ export default function LoginScreen({ navigation }) {
                       ) : (
                         <FontAwesome name="facebook-f" size={20} color="#FFFFFF" />
                       )}
-                      <Text style={styles.facebookButtonText}>
+                      <Text style={[styles.socialButtonText, { color: '#FFFFFF' }]}>
                         {socialLoading.facebook ? t('signInWithFacebook') : `Continue with Facebook`}
                       </Text>
                     </View>
@@ -934,104 +979,53 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     gap: 12,
   },
-  thirdPartyContainer: {
-    flexDirection: 'column',
-    gap: 12,
-    marginTop: Platform.OS === 'ios' ? 15 : 0,
-  },
-  appleButton: {
-    height: 50,
+  // Unified social button styles
+  socialButton: {
+    height: 52,
     borderRadius: 12,
-    marginBottom: 15,
-  },
-  appleButtonCustom: {
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: '#000000',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  appleButtonContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  appleButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  googleButtonCustom: {
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DADCE0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  facebookButtonCustom: {
-    height: 50,
-    borderRadius: 12,
+  socialButtonWrapper: {
+    position: 'relative',
+  },
+  // Apple Button Styles
+  appleButton: {
+    backgroundColor: '#000000',
+  },
+  // Google Button Styles
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#DADCE0',
+  },
+  // Facebook Button Styles
+  facebookButton: {
     backgroundColor: '#1877F2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
+  // Button content and text styles
   socialButtonContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
+    height: '100%',
   },
   socialButtonText: {
-    color: '#3C4043',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  facebookButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
-  },
-  socialButton: {
-    flex: 1,
-    borderRadius: 18,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-  },
-  socialBlur: {
-    overflow: 'hidden',
-  },
-  socialGradient: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialText: {
     marginLeft: 10,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    textAlign: 'center',
+    // สีจะถูกกำหนดแยกในแต่ละปุ่ม
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   policyText: {
     fontSize: 13,

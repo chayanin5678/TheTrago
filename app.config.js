@@ -16,7 +16,7 @@ export default {
         "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c"
       }
     },
-    "version": "1.0.1",
+    "version": "1.0.2",
     
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
@@ -28,7 +28,7 @@ export default {
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 1,
       "package": "com.thetrago.android",
       "permissions": [
         "CAMERA"
