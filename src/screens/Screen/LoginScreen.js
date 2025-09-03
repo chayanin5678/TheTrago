@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import * as SecureStore from 'expo-secure-store';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,6 +90,7 @@ export default function LoginScreen({ navigation }) {
       try {
         GoogleSignin.configure({
           webClientId: GOOGLE_CONFIG.webClientId, // จาก Google Cloud Console
+          iosClientId: GOOGLE_CONFIG.iosClientId, // สำหรับ iOS
           offlineAccess: GOOGLE_CONFIG.offlineAccess,
           forceCodeForRefreshToken: GOOGLE_CONFIG.forceCodeForRefreshToken,
         });
@@ -143,6 +145,10 @@ export default function LoginScreen({ navigation }) {
         // Use AuthContext login method
         await login(loginResponse.data.token);
         console.log('AuthContext: Login successful, token saved via AuthContext');
+
+        // Save user email to SecureStore for BookingScreen
+        await SecureStore.setItemAsync('userEmail', email);
+        console.log('User email saved to SecureStore:', email);
 
         // Use a different variable name to avoid overwriting `loginResponse`
         const tokenResponse = await axios.post(`${ipAddress}/Token`, {
@@ -216,6 +222,9 @@ export default function LoginScreen({ navigation }) {
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
+        // Save user email to SecureStore for BookingScreen
+        await SecureStore.setItemAsync('userEmail', userEmail);
+        console.log('Google Sign-In: User email saved to SecureStore:', userEmail);
         Alert.alert(t('success'), t('googleSignInSuccess'));
       } else {
         Alert.alert('เตือน', t('googleSignInError'));
@@ -312,6 +321,9 @@ export default function LoginScreen({ navigation }) {
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
+        // Save user email to SecureStore for BookingScreen
+        await SecureStore.setItemAsync('userEmail', facebookUserInfo.email);
+        console.log('Facebook Sign-In: User email saved to SecureStore:', facebookUserInfo.email);
         Alert.alert(t('success'), t('facebookSignInSuccess'));
       } else {
         Alert.alert('เตือน', t('facebookSignInError'));
@@ -474,6 +486,9 @@ export default function LoginScreen({ navigation }) {
 
       if (socialLoginResponse.data.token) {
         await login(socialLoginResponse.data.token);
+        // Save user email to SecureStore for BookingScreen
+        await SecureStore.setItemAsync('userEmail', userEmail);
+        console.log('Apple Sign-In: User email saved to SecureStore:', userEmail);
         Alert.alert(t('success'), t('appleSignInSuccess'));
       } else {
         Alert.alert('เตือน', t('appleSignInError'));

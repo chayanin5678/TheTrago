@@ -35,29 +35,31 @@ const BookingScreen = () => {
   const [otp, setOTP] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [isOTPLogin, setIsOTPLogin] = useState(false); // Track if user logged in via OTP on this screen
-  const [bookings, setBookings] = useState([]); // Store booking data from API
-  const [isLoadingBookings, setIsLoadingBookings] = useState(false); // Loading state for bookings
-  const [imageErrors, setImageErrors] = useState({}); // Track image loading errors
+  const [isOTPLogin, setIsOTPLogin] = useState(false);
+  const [bookings, setBookings] = useState([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+  const [imageErrors, setImageErrors] = useState({});
   
-  // Animation for loading spinner
   const spinValue = useState(new Animated.Value(0))[0];
   
-  // Check if user is already logged in when component mounts
+  useEffect(() => {
+    // Email state changed
+  }, [email]);
+  
   useEffect(() => {
     checkAuthStatus();
   }, []);
   
-  // Add focus effect to check auth status when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log('BookingScreen: Screen focused, checking auth status...');
-      debugCurrentEmailState(); // Debug current email state first
+      console.log('📱 BookingScreen focused - clearing state and checking auth...');
+      setEmail('');
+      setBookings([]);
+      setIsLoggedIn(false);
       checkAuthStatus();
     }, [])
   );
 
-  // Listen for Account logout to automatically logout from BookingScreen
   useFocusEffect(
     React.useCallback(() => {
       const checkAccountLogout = async () => {
@@ -66,22 +68,8 @@ const BookingScreen = () => {
           const bookingToken = await SecureStore.getItemAsync('bookingToken');
           const isOTPLoginFlag = await SecureStore.getItemAsync('isOTPLogin');
           
-          // Only logout if:
-          // 1. User was logged in via Account previously (userToken existed before)
-          // 2. userToken is now gone (Account logout)
-          // 3. bookingToken still exists
-          // 4. Current login is NOT from OTP
           if (!userToken && bookingToken && isLoggedIn && isOTPLoginFlag !== 'true') {
-            console.log('🔄 Account logout detected, logging out from BookingScreen...');
-            console.log('🔄 This is NOT an OTP login, so safe to logout');
             await handleLogout();
-          } else {
-            console.log('🔄 Logout check - conditions not met:');
-            console.log('  userToken:', !!userToken);
-            console.log('  bookingToken:', !!bookingToken);
-            console.log('  isLoggedIn:', isLoggedIn);
-            console.log('  isOTPLogin:', isOTPLoginFlag === 'true');
-            console.log('  Should logout?', !userToken && bookingToken && isLoggedIn && isOTPLoginFlag !== 'true');
           }
         } catch (error) {
           console.error('Error checking account logout:', error);
@@ -92,85 +80,32 @@ const BookingScreen = () => {
     }, [isLoggedIn])
   );
   
-  // Add function to debug all SecureStore keys
-  const debugSecureStore = async () => {
-    try {
-      console.log('=== DEBUG: All SecureStore values ===');
-      const keys = ['userToken', 'userEmail', 'bookingToken', 'bookingEmail', 'isOTPLogin'];
-      
-      for (const key of keys) {
-        try {
-          const value = await SecureStore.getItemAsync(key);
-          console.log(`SecureStore['${key}']:`, value ? `"${value}" (length: ${value.length})` : 'null');
-        } catch (error) {
-          console.log(`SecureStore['${key}']:`, 'ERROR -', error.message);
-        }
-      }
-      console.log('=== END DEBUG ===');
-    } catch (error) {
-      console.error('Debug SecureStore error:', error);
-    }
-  };
-  
-  // Add function to debug current email state
-  const debugCurrentEmailState = () => {
-    console.log('=== CURRENT EMAIL STATE DEBUG ===');
-    console.log('📧 Email field state:', email || 'empty');
-    console.log('📧 Email field length:', email ? email.length : 0);
-    console.log('📧 isLoggedIn:', isLoggedIn);
-    console.log('📧 isOTPLogin:', isOTPLogin);
-    console.log('📧 showOTP:', showOTP);
-    console.log('📧 Email being displayed to user:', email || '[no email]');
-    console.log('=== END EMAIL STATE DEBUG ===');
-  };
-  
   const checkAuthStatus = async () => {
     try {
-      console.log('=== BookingScreen: Starting auth check ===');
+      console.log('🔍 CheckAuthStatus: Starting auth check...');
+      setIsCheckingAuth(true);
       
-      // Debug all SecureStore values first
-      await debugSecureStore();
-      
-      // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise((resolve) => {
         setTimeout(() => {
-          console.log('BookingScreen: Auth check timeout');
           resolve({ authToken: null, userEmail: null, otpLoginFlag: null });
-        }, 3000); // 3 second timeout
+        }, 3000);
       });
       
-      // ตรวจสอบทั้ง bookingToken และ userToken (จากหน้า Account)
       const authPromise = Promise.all([
-        SecureStore.getItemAsync('bookingToken'), // ใช้ bookingToken แยกจาก userToken
-        SecureStore.getItemAsync('bookingEmail'), // ใช้ bookingEmail แยกจาก userEmail
-        SecureStore.getItemAsync('userToken'),    // ตรวจสอบ userToken จากหน้า Account ด้วย
-        SecureStore.getItemAsync('userEmail'),    // ตรวจสอบ userEmail จากหน้า Account ด้วย
-        SecureStore.getItemAsync('isOTPLogin')    // Check if user logged in via OTP
+        SecureStore.getItemAsync('bookingToken'),
+        SecureStore.getItemAsync('bookingEmail'),
+        SecureStore.getItemAsync('userToken'),
+        SecureStore.getItemAsync('userEmail'),
+        SecureStore.getItemAsync('isOTPLogin')
       ]).then(([bookingToken, bookingEmail, userToken, userEmail, otpLoginFlag]) => {
-        console.log('BookingScreen: Retrieved from SecureStore:', { 
-          hasBookingToken: !!bookingToken, 
-          hasUserToken: !!userToken,
-          hasBookingEmail: !!bookingEmail,
-          hasUserEmail: !!userEmail,
-          bookingTokenLength: bookingToken?.length || 0,
-          userTokenLength: userToken?.length || 0,
-          bookingEmail: bookingEmail,
-          userEmail: userEmail,
-          isOTPLogin: otpLoginFlag === 'true'
-        });
+        console.log('📧 SecureStore values retrieved:');
+        console.log('  userToken:', userToken ? 'exists' : 'null');
+        console.log('  userEmail:', userEmail || 'null');
+        console.log('  bookingToken:', bookingToken ? 'exists' : 'null');
+        console.log('  bookingEmail:', bookingEmail || 'null');
+        console.log('  otpLoginFlag:', otpLoginFlag || 'null');
         
-        console.log('📧 Email from Account (userEmail):', userEmail);
-        console.log('📧 Email from Booking (bookingEmail):', bookingEmail);
-        
-        // ตรวจสอบว่า Account ถูก logout หรือไม่ 
-        // หาก userToken หายไปแต่ bookingToken ยังอยู่ แสดงว่า Account logout แล้ว
-        // แต่ถ้าเป็น OTP login ไม่ต้อง logout
         if (!userToken && bookingToken && otpLoginFlag !== 'true') {
-          console.log('🔄 Account logout detected! userToken is gone but bookingToken still exists');
-          console.log('🔄 This means user logged out from Account screen');
-          console.log('🔄 Current login is NOT from OTP, so will logout from BookingScreen too');
-          
-          // ถ้าตรวจพบว่า Account logout แล้ว และไม่ใช่ OTP login ให้ logout จาก BookingScreen ด้วย
           Promise.all([
             SecureStore.deleteItemAsync('bookingToken'),
             SecureStore.deleteItemAsync('bookingEmail'),
@@ -181,11 +116,7 @@ const BookingScreen = () => {
             setOTP(['', '', '', '', '', '']);
             setShowOTP(false);
             setIsOTPLogin(false);
-            
-            console.log('🔄 BookingScreen logout completed due to Account logout');
           }).catch((error) => {
-            console.error('Error during auto-logout:', error);
-            // ถึงแม้จะมี error ก็ให้ logout ได้
             setIsLoggedIn(false);
             setEmail('');
             setOTP(['', '', '', '', '', '']);
@@ -195,112 +126,74 @@ const BookingScreen = () => {
           
           setIsCheckingAuth(false);
           return;
-        } else if (!userToken && bookingToken && otpLoginFlag === 'true') {
-          console.log('🔄 No userToken but this is OTP login - keeping BookingScreen logged in');
-          console.log('🔄 OTP login should not be affected by Account logout');
         }
         
-        // ให้ความสำคัญกับ userToken จากหน้า Account ก่อน
         const authToken = userToken || bookingToken;
-        const email = userEmail || bookingEmail;
+        const selectedEmail = userEmail || bookingEmail;
         const loginSource = userToken ? 'Account' : (bookingToken ? 'OTP' : null);
         
-        console.log('🔍 Email Comparison Debug:');
-        console.log('  userEmail (from Account):', userEmail || 'null');
-        console.log('  bookingEmail (from OTP):', bookingEmail || 'null');
-        console.log('  Final email selected:', email || 'null');
-        console.log('  Email source priority: userEmail > bookingEmail');
-        console.log('  Will use email from:', loginSource === 'Account' ? 'Account screen' : 'OTP login');
-        console.log('  📊 Email Match Check:');
-        console.log('    - userEmail (Account):', userEmail || 'null');
-        console.log('    - bookingEmail (OTP):', bookingEmail || 'null');
-        console.log('    - Final email selected:', email || 'null');
-        console.log('    - All emails are accepted (no specific requirement)');
+        console.log('🔍 Email selection logic:');
+        console.log('  selectedEmail:', selectedEmail || 'null');
+        console.log('  loginSource:', loginSource || 'null');
+        console.log('  userEmail priority:', userEmail || 'null');
+        console.log('  bookingEmail fallback:', bookingEmail || 'null');
         
-        return { authToken, userEmail: email, otpLoginFlag, loginSource };
+        return { authToken, userEmail: selectedEmail, otpLoginFlag, loginSource };
       });
       
       const { authToken, userEmail, otpLoginFlag, loginSource } = await Promise.race([authPromise, timeoutPromise]);
       
-      console.log('📧 === FINAL EMAIL SELECTION DEBUG ===');
-      console.log('📧 Selected authToken:', authToken ? (authToken.length > 20 ? `${authToken.substring(0, 20)}...` : authToken) : 'null');
-      console.log('📧 Selected userEmail:', userEmail || 'null');
-      console.log('📧 Login source:', loginSource || 'null');
-      console.log('📧 Will this email be used?', !!userEmail);
-      console.log('📧 === END FINAL EMAIL DEBUG ===');
-      
       if (authToken) {
-        console.log('✅ BookingScreen: Valid token found, user is already logged in, skipping OTP');
-        console.log('BookingScreen: Token type:', authToken.startsWith('eyJ') ? 'JWT' : 'Simple');
-        console.log('BookingScreen: Email available:', !!userEmail);
-        console.log('BookingScreen: Login source:', loginSource);
-        console.log('BookingScreen: OTP Login Flag:', otpLoginFlag);
-        
-        console.log('📧 Email validation for booking:');
-        console.log('  Current stored email:', userEmail);
-        console.log('  Login source:', loginSource);
-        console.log('  Authentication strategy: Accept any valid email from Account login or OTP');
-        
-        // Simplified authentication logic:
-        // 1. If user has valid token from Account or OTP, accept it
-        // 2. No email validation required - accept any email from Account
-        // 3. Only show login if no token exists
-        
-        console.log('✅ User authentication accepted:', {
-          hasUserEmail: !!userEmail,
-          loginSource,
-          reason: loginSource === 'Account' ? 'Account login - email accepted' : 'OTP login - email verified'
-        });
-        
-        // Set email if available, otherwise keep current state
+        console.log('✅ Auth token found, processing login...');
         if (userEmail) {
-          console.log('📧 BEFORE setEmail - current email state:', email);
-          setEmail(userEmail);
-          console.log('📧 AFTER setEmail called - should update to:', userEmail);
-          console.log('📧 Email set from stored data:', userEmail);
-          console.log('📧 Email source:', loginSource === 'Account' ? 'userEmail (Account)' : 'bookingEmail (OTP)');
-          console.log('📧 Current email field state before update:', email);
-          console.log('📧 Email field will be updated to:', userEmail);
-          console.log('📧 Email consistency check:');
-          console.log('  - Setting email to UI field:', userEmail);
-          console.log('  - Email source:', loginSource === 'Account' ? 'Account (md_member_email)' : 'OTP verification');
-          console.log('  - Email will be accepted as valid');
+          console.log('📧 Setting email in UI:');
+          console.log('  Current email state:', email || 'empty');
+          console.log('  New email from auth:', userEmail);
+          console.log('  Email needs update:', email !== userEmail);
           
-          // Debug email state after setting with longer delay
+          if (email !== userEmail) {
+            setBookings([]);
+            setIsLoadingBookings(true);
+          }
+          
+          setEmail(userEmail);
+          console.log('📧 Email state updated to:', userEmail);
+          
           setTimeout(() => {
-            console.log('📧 DELAYED CHECK - Email state after 500ms:', email);
-            debugCurrentEmailState();
-          }, 500);
-        } else {
-          console.log('⚠️ No email found in storage - user will need to enter email manually');
-          console.log('📧 Current email field state (unchanged):', email);
-          console.log('📧 User can enter any valid email address');
-          // Don't pre-fill email - let user enter their own email
+            console.log('🔄 Fetching bookings for email:', userEmail, 'activeTab:', activeTab);
+            let status;
+            switch (activeTab) {
+              case 'upcoming':
+                status = 0;
+                break;
+              case 'cancelled':
+                status = 2;
+                break;
+              case 'past':
+                status = 1;
+                break;
+              default:
+                status = 0;
+            }
+            
+            console.log('🔄 Calling fetchBookingsWithEmail with:', userEmail, 'status:', status);
+            fetchBookingsWithEmail(userEmail, status);
+          }, 100);
         }
         
         setIsLoggedIn(true);
-        setShowOTP(false); // ไม่ให้แสดง OTP screen
+        setShowOTP(false);
         
-        // ตั้งค่า isOTPLogin ตาม login source
         const isFromOTP = loginSource === 'OTP' && otpLoginFlag === 'true';
-        const isFromAccount = loginSource === 'Account';
-        
         setIsOTPLogin(isFromOTP);
         
-        console.log('🔍 Auth check found existing token - State updated:');
-        console.log('  isLoggedIn:', true);
-        console.log('  loginSource:', loginSource);
+        console.log('✅ Auth state updated:');
+        console.log('  isLoggedIn: true');
+        console.log('  email:', userEmail || 'null');
+        console.log('  loginSource:', loginSource || 'null');
         console.log('  isOTPLogin:', isFromOTP);
-        console.log('  isFromAccount:', isFromAccount);
-        console.log('  Logout button will be', isFromOTP ? 'VISIBLE (OTP login)' : 'HIDDEN (Account login)');
       } else {
-        console.log('❌ BookingScreen: No token found, user needs to login with OTP');
-        console.log('BookingScreen: authToken:', authToken);
-        console.log('BookingScreen: userEmail:', userEmail);
-        console.log('BookingScreen: otpLoginFlag:', otpLoginFlag);
-        console.log('📊 Debug - What caused login screen to show:');
-        console.log('  - authToken is falsy:', !authToken);
-        console.log('  - authToken value:', JSON.stringify(authToken));
+        console.log('❌ No auth token found, showing login screen');
         setIsLoggedIn(false);
         setIsOTPLogin(false);
       }
@@ -308,7 +201,6 @@ const BookingScreen = () => {
       console.error('BookingScreen: Error checking auth status:', error);
       setIsLoggedIn(false);
     } finally {
-      console.log('BookingScreen: Auth check completed, setting isCheckingAuth to false');
       setIsCheckingAuth(false);
     }
   };
@@ -338,18 +230,52 @@ const BookingScreen = () => {
     return emailRegex.test(email);
   };
 
-  // Function to fetch bookings from API
-  const fetchBookings = async (status) => {
-    if (!email || email.trim() === '') {
-      console.log('📧 No email available for booking fetch');
+  const fetchBookingsWithEmail = async (specificEmail, status) => {
+    if (!specificEmail || specificEmail.trim() === '') {
       setBookings([]);
       return;
     }
 
     setIsLoadingBookings(true);
     try {
-      console.log(`📋 Fetching bookings for status ${status} with email: ${email.trim()}`);
-      
+      const response = await fetch(`${ipAddress}/checkbooking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          md_booking_email: specificEmail.trim(),
+          md_booking_status: status.toString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data && Array.isArray(data.data)) {
+        setBookings(data.data);
+      } else {
+        setBookings([]);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings with specific email:', error);
+      setBookings([]);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  };
+
+  const fetchBookings = async (status) => {
+    if (!email || email.trim() === '') {
+      setBookings([]);
+      return;
+    }
+
+    setIsLoadingBookings(true);
+    try {
       const response = await fetch(`${ipAddress}/checkbooking`, {
         method: 'POST',
         headers: {
@@ -361,73 +287,53 @@ const BookingScreen = () => {
         }),
       });
 
-      console.log('📋 Booking API Response status:', response.status);
-      console.log('📋 Booking API Response status text:', response.statusText);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('📋 Booking API Response data:', data);
 
       if (data && Array.isArray(data.data)) {
         setBookings(data.data);
-        console.log(`📋 Successfully loaded ${data.data.length} bookings for status ${status}`);
-        
-        // Debug company image data with correct field name
-        data.data.forEach((booking, index) => {
-          console.log(`📸 Booking ${index + 1} - Company Image Debug:`, {
-            md_company_picname: booking.md_company_picname,
-            company_name: booking.md_company_nameeng || booking.md_company_namethai,
-            full_image_url: booking.md_company_picname ? `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}` : 'no image available',
-            all_booking_fields: Object.keys(booking)
-          });
-        });
       } else {
-        console.log('📋 No bookings found or invalid data format');
         setBookings([]);
       }
     } catch (error) {
-      console.error('📋 Error fetching bookings:', error);
+      console.error('Error fetching bookings:', error);
       setBookings([]);
     } finally {
       setIsLoadingBookings(false);
     }
   };
 
-  // Effect to fetch bookings when tab changes or email is available
   useEffect(() => {
     if (isLoggedIn && email && email.trim() !== '') {
+      setBookings([]);
+      setIsLoadingBookings(true);
+      
       let status;
       switch (activeTab) {
         case 'upcoming':
-          status = 0; // Confirmed
+          status = 0;
           break;
         case 'cancelled':
-          status = 2; // Cancelled
+          status = 2;
           break;
         case 'past':
-          status = 1; // Completed
+          status = 1;
           break;
         default:
           status = 0;
       }
+      
       fetchBookings(status);
     }
   }, [activeTab, isLoggedIn, email]);
 
   const sendOTP = async (retryCount = 0) => {
-    // Ensure retryCount is always a number
     if (typeof retryCount !== 'number') {
       retryCount = 0;
     }
-    
-    console.log('📧 === SEND OTP DEBUG ===');
-    console.log('📧 Email from state:', email || 'empty');
-    console.log('📧 Email trimmed:', email.trim() || 'empty');
-    console.log('📧 Email length:', email ? email.length : 0);
-    console.log('📧 === END SEND OTP DEBUG ===');
     
     if (!email || email.trim() === '') {
       Alert.alert(
@@ -447,11 +353,6 @@ const BookingScreen = () => {
 
     setIsLoading(true);
     try {
-      // ส่ง OTP จริงผ่าน API
-      console.log('Sending OTP to:', `${ipAddress}/send-otp`);
-      console.log('Request body:', { email: email.trim(), language: selectedLanguage });
-      console.log('Retry attempt:', retryCount);
-      
       const response = await fetch(`${ipAddress}/send-otp`, {
         method: 'POST',
         headers: {
@@ -463,21 +364,13 @@ const BookingScreen = () => {
         }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-
-      // ตรวจสอบ Content-Type ก่อนที่จะ parse JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await response.text();
-        console.error('API returned non-JSON response (Status:', response.status, '):', textResponse);
         
-        // ตรวจสอบว่าเป็น CloudFlare error page หรือไม่
         const isCloudFlareError = textResponse.includes('cloudflare.com') && textResponse.includes('Bad gateway');
         
-        // ถ้าเป็น 502 และยังไม่ retry ให้ลองใหม่อีกครั้ง
         if (response.status === 502 && retryCount < 2) {
-          console.log('502 error detected, retrying...');
           setIsLoading(false);
           
           const retryMessage = isCloudFlareError 
@@ -503,13 +396,8 @@ const BookingScreen = () => {
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        console.log('✅ OTP sent successfully');
-        console.log('OTP response data:', data);
-        
         setShowOTP(true);
-        // Clear previous OTP values when showing OTP screen
         setOTP(['', '', '', '', '', '']);
-        // Focus first OTP input when OTP screen appears
         setTimeout(() => {
           otpRefs[0].current?.focus();
         }, 300);
@@ -520,9 +408,6 @@ const BookingScreen = () => {
             `OTP code has been sent to:\n${email.trim()}\n\nPlease check your inbox and Spam/Junk folder\nOTP code will expire in 10 minutes`
         );
       } else {
-        console.error('API Error Response:', data);
-        
-        // Handle specific server errors
         let errorTitle = selectedLanguage === 'th' ? 'ไม่สามารถส่ง OTP ได้' : 'Failed to Send OTP';
         let errorMessage = '';
         
@@ -538,32 +423,15 @@ const BookingScreen = () => {
         }
         
         Alert.alert(errorTitle, errorMessage);
-        return; // Don't throw error, just return
+        return;
       }
     } catch (error) {
-      console.error('Send OTP Error Details:', {
-        message: error.message,
-        stack: error.stack,
-        url: `${ipAddress}/send-otp`,
-        email: email.trim()
-      });
-      
       let errorMessage = selectedLanguage === 'th' ? 
         'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง' : 
         'Unable to send OTP. Please try again.';
       
-      // Handle specific error types
-      if (error.message.includes('Failed to send OTP')) {
-        errorMessage = selectedLanguage === 'th' ? 
-          'เซิร์ฟเวอร์ TheTrago ไม่สามารถส่งอีเมล OTP ได้\n\nสาเหตุที่เป็นไปได้:\n• ระบบอีเมลของเซิร์ฟเวอร์มีปัญหา\n• การตั้งค่า SMTP มีข้อผิดพลาด\n• อีเมลที่กรอกอาจไม่ถูกต้อง\n\nกรุณาลองใหม่ในอีกสักครู่ หรือติดต่อฝ่ายสนับสนุน' : 
-          'TheTrago server cannot send OTP email\n\nPossible causes:\n• Server email system issues\n• SMTP configuration error\n• Invalid email address\n\nPlease try again later or contact support';
-      } else if (error.message.includes('500')) {
-        errorMessage = selectedLanguage === 'th' ? 
-          'เซิร์ฟเวอร์ TheTrago มีปัญหาภายใน (Error 500)\n\nระบบอีเมล OTP อาจมีปัญหาชั่วคราว\nกรุณาลองใหม่ในอีกสักครู่\n\nหากปัญหายังคงอยู่ กรุณาติดต่อฝ่ายสนับสนุน' : 
-          'TheTrago server internal error (Error 500)\n\nOTP email system may have temporary issues\nPlease try again in a moment\n\nIf problem persists, please contact support';
-      } else if (error.message.includes('502')) {
+      if (error.message.includes('502')) {
         if (retryCount < 2) {
-          console.log('502 error in catch, retrying...');
           setIsLoading(false);
           Alert.alert(
             selectedLanguage === 'th' ? 'กำลังลองใหม่...' : 'Retrying...',
@@ -598,12 +466,6 @@ const BookingScreen = () => {
   const verifyOTP = async (otpArray = null) => {
     const otpCode = otpArray ? otpArray.join('') : otp.join('');
     
-    console.log('=== OTP Verification Debug ===');
-    console.log('OTP Code entered:', otpCode);
-    console.log('OTP Code length:', otpCode.length);
-    console.log('Email being used:', email.trim());
-    console.log('Language:', selectedLanguage);
-    
     if (otpCode.length !== 6) {
       Alert.alert(
         selectedLanguage === 'th' ? 'OTP ไม่ครบ' : 'Incomplete OTP',
@@ -612,7 +474,6 @@ const BookingScreen = () => {
       return;
     }
 
-    // Check if OTP contains only numbers
     if (!/^\d{6}$/.test(otpCode)) {
       Alert.alert(
         selectedLanguage === 'th' ? 'OTP ไม่ถูกต้อง' : 'Invalid OTP Format',
@@ -623,10 +484,6 @@ const BookingScreen = () => {
 
     setIsLoading(true);
     try {
-      // ยืนยัน OTP จริงผ่าน API
-      console.log('Verifying OTP at:', `${ipAddress}/verify-otp`);
-      console.log('Request body:', { email: email.trim(), otp: otpCode, language: selectedLanguage });
-      
       const response = await fetch(`${ipAddress}/verify-otp`, {
         method: 'POST',
         headers: {
@@ -639,77 +496,39 @@ const BookingScreen = () => {
         }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-
-      // ตรวจสอบ Content-Type ก่อนที่จะ parse JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await response.text();
-        console.error('API returned non-JSON response (Status:', response.status, '):', textResponse);
         throw new Error(`Server error (${response.status}): ${textResponse.substring(0, 200)}...`);
       }
 
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        // เก็บ token หรือ user data ที่ได้จาก API ใช้ SecureStore แต่ key แยกจากหน้า Account
         if (data.token) {
-          // เก็บ token และ email สำหรับการใช้งานต่อไป แยกจากหน้า Account
-          await SecureStore.setItemAsync('bookingToken', data.token);  // ใช้ bookingToken แยกจาก userToken
+          await SecureStore.setItemAsync('bookingToken', data.token);
           await SecureStore.setItemAsync('bookingEmail', email.trim());
         } else {
-          // หากไม่มี token จาก API ให้เก็บข้อมูลพื้นฐาน
-          await SecureStore.setItemAsync('bookingToken', 'verified');  // ใช้ bookingToken แยกจาก userToken
+          await SecureStore.setItemAsync('bookingToken', 'verified');
           await SecureStore.setItemAsync('bookingEmail', email.trim());
         }
         
-        // Save OTP login flag to SecureStore to persist across tab changes
         await SecureStore.setItemAsync('isOTPLogin', 'true');
         
         setIsLoggedIn(true);
         setShowOTP(false);
-        setIsOTPLogin(true); // This is OTP login method
-        
-        console.log('✅ OTP Login Success - State updated:');
-        console.log('  isLoggedIn:', true);
-        console.log('  isOTPLogin:', true);
-        console.log('  email saved:', email.trim());
-        console.log('  📧 Email consistency final check:');
-        console.log('    - Email being saved:', email.trim());
-        console.log('    - Email source: OTP verification');
-        console.log('    - All verified emails are accepted');
-        console.log('  Logout button should now be visible!');
-        console.log('  Token saved to SecureStore for persistence');
-        
-        // Debug what we saved - ใช้ key ที่ถูกต้องสำหรับ BookingScreen
-        const savedToken = await SecureStore.getItemAsync('bookingToken');
-        const savedEmail = await SecureStore.getItemAsync('bookingEmail');
-        const savedOTPFlag = await SecureStore.getItemAsync('isOTPLogin');
-        console.log('📱 Saved to SecureStore:');
-        console.log('  bookingToken:', savedToken);
-        console.log('  bookingEmail:', savedEmail);
-        console.log('  isOTPLogin:', savedOTPFlag);
+        setIsOTPLogin(true);
         
         Alert.alert(
           selectedLanguage === 'th' ? 'เข้าสู่ระบบสำเร็จ' : 'Login Successful',
           selectedLanguage === 'th' ? 'ยินดีต้อนรับเข้าสู่ระบบ' : 'Welcome to The Trago'
         );
       } else {
-        console.error('Verify API Error Response:', data);
-        console.log('=== OTP Verification Failed ===');
-        console.log('Server response status:', response.status);
-        console.log('Server response message:', data.message);
-        console.log('OTP that was sent:', otpCode);
-        console.log('Email that was used:', email.trim());
-        
-        // Clear OTP on error for fresh input
         setOTP(['', '', '', '', '', '']);
         setTimeout(() => {
           otpRefs[0].current?.focus();
         }, 100);
         
-        // Show more detailed error message
         let errorTitle = selectedLanguage === 'th' ? 'OTP ไม่ถูกต้อง' : 'Invalid OTP';
         let errorMessage = '';
         
@@ -731,14 +550,6 @@ const BookingScreen = () => {
         Alert.alert(errorTitle, errorMessage);
       }
     } catch (error) {
-      console.error('Verify OTP Error Details:', {
-        message: error.message,
-        stack: error.stack,
-        url: `${ipAddress}/verify-otp`,
-        email: email.trim(),
-        otp: otpCode
-      });
-      
       let errorMessage = selectedLanguage === 'th' ? 
         'ไม่สามารถยืนยัน OTP ได้ กรุณาลองใหม่อีกครั้ง' : 
         'Unable to verify OTP. Please try again.';
@@ -775,17 +586,13 @@ const BookingScreen = () => {
     newOTP[index] = value;
     setOTP(newOTP);
     
-    // Auto focus next input when typing
     if (value && index < 5) {
       otpRefs[index + 1].current?.focus();
     }
     
-    // Auto verify when all 6 digits are filled
     if (value && index === 5) {
-      // Check if all digits are filled
       const isComplete = newOTP.every(digit => digit !== '');
       if (isComplete) {
-        // Auto verify after a short delay and pass the completed OTP array
         setTimeout(() => {
           verifyOTP(newOTP);
         }, 300);
@@ -794,7 +601,6 @@ const BookingScreen = () => {
   };
 
   const handleOTPKeyPress = (index, key) => {
-    // Auto focus previous input when backspace on empty field
     if (key === 'Backspace' && !otp[index] && index > 0) {
       otpRefs[index - 1].current?.focus();
     }
@@ -806,7 +612,6 @@ const BookingScreen = () => {
 
   const resendOTP = () => {
     setOTP(['', '', '', '', '', '']);
-    // Focus first OTP input after resetting
     setTimeout(() => {
       otpRefs[0].current?.focus();
     }, 100);
@@ -815,33 +620,24 @@ const BookingScreen = () => {
 
   const handleLogout = async () => {
     try {
-      // ใช้ SecureStore แต่ใช้ key แยกจากหน้า Account
-      await SecureStore.deleteItemAsync('bookingToken');  // ใช้ bookingToken แยกจาก userToken
-      await SecureStore.deleteItemAsync('bookingEmail');  // ลบ bookingEmail ด้วย
-      await SecureStore.deleteItemAsync('isOTPLogin'); // Clear OTP login flag
+      await SecureStore.deleteItemAsync('bookingToken');
+      await SecureStore.deleteItemAsync('bookingEmail');
+      await SecureStore.deleteItemAsync('isOTPLogin');
       setIsLoggedIn(false);
-      setEmail(''); // Clear email state
+      setEmail('');
       setOTP(['', '', '', '', '', '']);
       setShowOTP(false);
-      setIsOTPLogin(false); // Reset OTP login flag
-      
-      console.log('📱 Logout completed - All booking data cleared:');
-      console.log('  bookingToken: deleted');
-      console.log('  bookingEmail: deleted');
-      console.log('  isOTPLogin: deleted');
-      console.log('  email state: cleared');
+      setIsOTPLogin(false);
     } catch (error) {
       console.error('Error logging out:', error);
-      // ถึงแม้จะมี error ก็ให้ logout ได้
       setIsLoggedIn(false);
-      setEmail(''); // Clear email state even on error
+      setEmail('');
       setOTP(['', '', '', '', '', '']);
       setShowOTP(false);
-      setIsOTPLogin(false); // Reset OTP login flag
+      setIsOTPLogin(false);
     }
   };
 
-  // Loading spinner component
   const LoadingSpinner = () => {
     const spin = spinValue.interpolate({
       inputRange: [0, 1],
@@ -855,15 +651,16 @@ const BookingScreen = () => {
     );
   };
 
-  const renderLoginScreen = () => (
-    <KeyboardAvoidingView 
-      style={styles.loginContainer}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.loginScrollContent}
-        showsVerticalScrollIndicator={false}
+  const renderLoginScreen = () => {
+    return (
+      <KeyboardAvoidingView 
+        style={styles.loginContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView 
+          contentContainerStyle={styles.loginScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.loginIllustration}>
           <View style={styles.loginIconContainer}>
             <MaterialCommunityIcons name="email-outline" size={60} color="#FD501E" />
@@ -892,7 +689,6 @@ const BookingScreen = () => {
                 placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={(newEmail) => {
-                  console.log('📧 Email input changed:', newEmail);
                   setEmail(newEmail);
                 }}
                 keyboardType="email-address"
@@ -969,7 +765,7 @@ const BookingScreen = () => {
               style={styles.backButton} 
               onPress={() => {
                 setShowOTP(false);
-                setOTP(['', '', '', '', '', '']); // Clear OTP when going back
+                setOTP(['', '', '', '', '', '']);
               }}
             >
               <MaterialCommunityIcons name="arrow-left" size={20} color="#6B7280" />
@@ -981,7 +777,8 @@ const BookingScreen = () => {
         )}
       </ScrollView>
     </KeyboardAvoidingView>
-  );
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
@@ -1048,7 +845,6 @@ const BookingScreen = () => {
   );
 
   const renderBookingItem = (booking) => {
-    // Map API data to display format
     const statusConfig = {
       0: { 
         icon: 'clock-outline', 
@@ -1079,20 +875,6 @@ const BookingScreen = () => {
                   source={{ uri: `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}` }} 
                   style={styles.companyImage}
                   resizeMode="cover"
-                  onLoad={() => {
-                    console.log(`✅ Image loaded successfully: ${booking.md_company_picname}`);
-                  }}
-                  onError={(error) => {
-                    console.log(`❌ Image failed to load: ${booking.md_company_picname}`);
-                    console.log('Image error:', error.nativeEvent.error);
-                    console.log('Full URL attempted:', `https://thetrago.com/Api/uploads/company/${booking.md_company_picname}`);
-                  }}
-                  onLoadStart={() => {
-                    console.log(`🔄 Image loading started: ${booking.md_company_picname}`);
-                  }}
-                  onLoadEnd={() => {
-                    console.log(`🏁 Image loading ended: ${booking.md_company_picname}`);
-                  }}
                 />
               ) : (
                 <MaterialCommunityIcons name="ferry" size={20} color="#FD501E" />
@@ -1181,30 +963,11 @@ const BookingScreen = () => {
     );
   };
 
-  const mockBookings = [
-    {
-      id: 1,
-      route: 'Valletta → Gozo',
-      company: 'GoZo High Speed',
-      refNumber: 'TG68091_2014',
-      departureTime: 'Sat, 08 Mar 25 09:45',
-      arriveTime: 'Sat, 08 Mar 25 10:30',
-      passenger: '1 Adult',
-      seat: 'Economy'
-    }
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Debug current email state in console */}
-      {console.log('🔍 RENDER DEBUG - Current email being used:', email || '[no email]')}
-      {console.log('🔍 RENDER DEBUG - isLoggedIn:', isLoggedIn)}
-      {console.log('🔍 RENDER DEBUG - isOTPLogin:', isOTPLogin)}
-      
       {isCheckingAuth ? (
-        // Loading screen while checking authentication
         <View style={styles.loadingContainer}>
           <Animated.View style={{ transform: [{ rotate: spinValue.interpolate({
             inputRange: [0, 1],
@@ -1220,7 +983,6 @@ const BookingScreen = () => {
         renderLoginScreen()
       ) : (
         <>
-          {/* Ultra Premium Header */}
           <View style={styles.headerContainer}>
             <LinearGradient
               colors={['#FFFFFF', '#F8FAFC']}
@@ -1232,8 +994,6 @@ const BookingScreen = () => {
                 <Text style={styles.headerTitle}>
                   {selectedLanguage === 'th' ? 'การจองของฉัน' : 'My booking'}
                 </Text>
-                {/* Debug log for logout button */}
-                {console.log('🔍 Logout button debug:', { isOTPLogin, isLoggedIn })}
                 {isOTPLogin && (
                   <TouchableOpacity 
                     style={styles.logoutButton}
@@ -1246,7 +1006,6 @@ const BookingScreen = () => {
             </LinearGradient>
           </View>
 
-          {/* Ultra Premium Tab Bar */}
           <View style={styles.tabContainer}>
             <View style={styles.tabBackground}>
               {tabs.map((tab, index) => (
@@ -1285,7 +1044,6 @@ const BookingScreen = () => {
             </View>
           </View>
 
-          {/* Content */}
           <ScrollView 
             style={styles.contentContainer} 
             showsVerticalScrollIndicator={false}

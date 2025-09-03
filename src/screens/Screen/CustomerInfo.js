@@ -1356,6 +1356,7 @@ const CustomerInfo = ({ navigation }) => {
                     placeholder={t('mobileNumber') || 'Mobile Number'}
                     value={mobileNumber}
                     keyboardType="number-pad"
+                    returnKeyType="done"
                     onChangeText={(text) => {
                       setmobileNumber(text);
                       setErrors((prev) => ({ ...prev, mobileNumber: false }));
@@ -1463,6 +1464,7 @@ const CustomerInfo = ({ navigation }) => {
                       placeholder={t('enterYourMobileNumber') || 'Enter your mobile number'}
                       style={[styles.input, contactErrors.mobile && styles.errorInput]}
                       keyboardType="number-pad"
+                      returnKeyType="done"
                       value={mobileNumber}
                       onChangeText={text => {
                         setmobileNumber(text);

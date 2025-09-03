@@ -46,7 +46,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await SecureStore.deleteItemAsync('userToken');
-      console.log('AuthContext: User logged out, token removed');
+      await SecureStore.deleteItemAsync('userEmail');
+      console.log('AuthContext: User logged out, token and email removed');
       setIsLoggedIn(false);
       setIsLoading(false);
     } catch (error) {

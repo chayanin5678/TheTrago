@@ -25,7 +25,7 @@
         "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c",
         "build": {
           "version": "1.0.2",
-          "buildNumber": "1"
+          "buildNumber": "2"
         }
       }
     },
@@ -136,9 +136,9 @@
       ]
     ],
     "ios": {
-      "versionCode": 1,
+      "versionCode": 2,
       "version": "1.0.2",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "bundleIdentifier": "com.thetrago.android",
       "supportsTablet": true,
       "requireFullScreen": false,
@@ -163,7 +163,7 @@
         ],
         "CFBundleDisplayName": "TheTrago",
         "CFBundleName": "TheTrago",
-        "CFBundleVersion": "1",
+        "CFBundleVersion": "2",
         "CFBundleShortVersionString": "1.0.2",
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait",

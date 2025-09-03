@@ -3,7 +3,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 export default {
   "expo": {
     "owner": "chayanin0937",
-    "name": IS_DEV ? "TheTrago (Dev)" : "TheTrago",
+    "name": "TheTrago",
     "slug": "TheTrago",
     "scheme": "thetrago",
     "extra": {
@@ -28,7 +28,7 @@ export default {
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 1,
+      "versionCode": 2,
       "package": "com.thetrago.android",
       "permissions": [
         "CAMERA"
@@ -53,8 +53,8 @@ export default {
     ],
     "jsEngine": "jsc",
     "ios": {
-      "bundleIdentifier": "com.thetrago.android",
-      "buildNumber": "1",
+      "bundleIdentifier": "com.thetrago.ios",
+      "buildNumber": "2",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,

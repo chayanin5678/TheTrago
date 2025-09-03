@@ -986,7 +986,7 @@ const SearchFerry = ({ navigation, route }) => {
         </LinearGradient>
         {/* Enhanced Ultra Premium Title and Filters Section */}
        
-        <Modal visible={tripTypeSearchResult === 'Depart Trip' ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
+        <Modal visible={tripTypeSearchResult === t('departTrip') ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
           <View style={{
             flex: 1,
             backgroundColor: 'rgba(0,18,51,0.7)',
@@ -1024,7 +1024,7 @@ const SearchFerry = ({ navigation, route }) => {
                   {t('ferryOperators')}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+                  onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
                   style={{
                     backgroundColor: 'rgba(248,250,252,0.8)',
                     padding: wp('2.5%'),
@@ -1042,7 +1042,7 @@ const SearchFerry = ({ navigation, route }) => {
 
               {/* Enhanced Select All / Clear All Button */}
               <TouchableOpacity
-                onPress={tripTypeSearchResult === 'Depart Trip' ? toggleSelectAllDepart : toggleSelectAllReturn}
+                onPress={tripTypeSearchResult === t('departTrip') ? toggleSelectAllDepart : toggleSelectAllReturn}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -1060,7 +1060,7 @@ const SearchFerry = ({ navigation, route }) => {
                 activeOpacity={0.8}
               >
                 <Icon
-                  name={tripTypeSearchResult === 'Depart Trip' ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
+                  name={tripTypeSearchResult === t('departTrip') ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
                   size={wp('6%')}
                   color="#FD501E"
                   style={{ marginRight: wp('3%') }}
@@ -1081,7 +1081,7 @@ const SearchFerry = ({ navigation, route }) => {
                 showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
               >
-                {tripTypeSearchResult === 'Depart Trip'
+                {tripTypeSearchResult === t('departTrip')
                   ? availableCompaniesDepart.map((company, index) => (
                     <TouchableOpacity
                       key={company}
@@ -1163,7 +1163,7 @@ const SearchFerry = ({ navigation, route }) => {
 
               {/* Enhanced Ultra Premium Apply Button */}
               <TouchableOpacity
-                onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+                onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
                 style={{
                   backgroundColor: '#FD501E',
                   padding: hp('2.2%'),
@@ -1279,7 +1279,7 @@ const SearchFerry = ({ navigation, route }) => {
               borderColor: 'rgba(255, 255, 255, 0.3)',
               // backdropFilter: 'blur(15px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             }}
-            onPress={() => tripTypeSearchResult === 'Depart Trip' ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+            onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
             activeOpacity={0.8}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1400,6 +1400,7 @@ const SearchFerry = ({ navigation, route }) => {
                 ]}
                 onPress={() => {
                   setTripType(t('returnTrip'));
+                  settripTypeSearchResult(t('departTrip')); // Auto focus on Depart Trip when selecting round trip
                   updateCustomerData({
                     roud: 2
                   })
@@ -3439,14 +3440,14 @@ const SearchFerry = ({ navigation, route }) => {
                     <TouchableOpacity
                       style={[
                         styles.tripTypeOneWayButton,
-                        tripTypeSearchResult === "Depart Trip" && styles.activeButton,
+                        tripTypeSearchResult === t('departTrip') && styles.activeButton,
                       ]}
-                      onPress={() => settripTypeSearchResult("Depart Trip")}
+                      onPress={() => settripTypeSearchResult(t('departTrip'))}
                     >
                       <Text
                         style={[
                           styles.tripTypeText,
-                          tripTypeSearchResult === "Depart Trip" && styles.activeText,
+                          tripTypeSearchResult === t('departTrip') && styles.activeText,
                         ]}
                       >
                         {t('departTrip')}
@@ -3469,7 +3470,7 @@ const SearchFerry = ({ navigation, route }) => {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  {tripTypeSearchResult === 'Depart Trip' && (<>
+                  {tripTypeSearchResult === t('departTrip') && (<>
 
                     {pagedDataDepart.map((item, index) => (
                       <TouchableOpacity
@@ -4402,7 +4403,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     if (isonewaystatus) {
                                       navigation.navigate('TripDetail');
                                     } else {
-                                      settripTypeSearchResult("Depart Trip");
+                                      settripTypeSearchResult(t('departTrip'));
                                     }
                                   }}
                                 >
@@ -4412,7 +4413,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     fontWeight: 'bold',
                                     letterSpacing: 0.5,
                                   }}>
-                                    Book Now
+                                    {t('bookNow')}
                                   </Text>
                                 </TouchableOpacity>
                               </View>
@@ -4572,7 +4573,7 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {/* Enhanced Ultra Premium Pagination - Depart Trip */}
           {
-            tripTypeSearchResult === 'Depart Trip' && filteredDepartData != null && departTrips.length > 0 && (
+            tripTypeSearchResult === t('departTrip') && filteredDepartData != null && departTrips.length > 0 && (
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -4708,7 +4709,7 @@ const SearchFerry = ({ navigation, route }) => {
 
           {/* Enhanced Ultra Premium Pagination - Return Trip */}
           {
-            tripTypeSearchResult === 'Return Trip' && filteredReturnData != null && returnTrips.length > 0 && (
+            tripTypeSearchResult === t('returnTrip') && filteredReturnData != null && returnTrips.length > 0 && (
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',

@@ -8,15 +8,15 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-  "buildType": "apk",
-  "releaseChannel": "default"
+        "buildType": "apk",
+        "releaseChannel": "default"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-  "buildType": "apk",
-  "releaseChannel": "default"
+        "buildType": "apk",
+        "releaseChannel": "default"
       }
     },
     "production": {

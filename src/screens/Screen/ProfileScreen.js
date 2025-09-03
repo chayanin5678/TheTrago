@@ -544,7 +544,15 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('phoneNumber')}</Text>
-                <TextInput style={styles.inputPremium} placeholder={t('enterPhoneNumber')} value={tel} onChangeText={setTel} keyboardType="numeric" placeholderTextColor="#9CA3AF" />
+                <TextInput 
+                  style={styles.inputPremium} 
+                  placeholder={t('enterPhoneNumber')} 
+                  value={tel} 
+                  onChangeText={setTel} 
+                  keyboardType="numeric" 
+                  returnKeyType="done"
+                  placeholderTextColor="#9CA3AF" 
+                />
               </View>
 
               <View style={styles.inputWrapperPremium}>

@@ -932,6 +932,11 @@ const translations = {
   cannotGenerateReport: 'ไม่สามารถสร้างรายงานได้ในขณะนี้',
   company: 'บริษัท',
   date: 'วันที่',
+  
+  // Terms and Privacy Content
+  termsContent: '1. ลิขสิทธิ์\nThe Trago.com (เลขทะเบียนบริษัท 0905560003303) The Trago.com เป็นเจ้าของหรือผู้ได้รับอนุญาตอย่างถูกต้องสำหรับสิทธิ์ทั้งหมดในเว็บไซต์ www.thetrago.com\n\n2. การยืนยัน\nลูกค้ามีความรับผิดชอบในการตรวจสอบการเลือกวันที่เดินทาง เวลา และปลายทางให้ถูกต้องก่อนทำการชำระเงิน เมื่อชำระเงินและออกใบสรุปการสั่งซื้อ/หมายเลขการจอง/รายการเดินทางแล้ว ที่นั่งจะได้รับการยืนยันทันที ผู้โดยสารที่มีอายุมากกว่า 3 ปีต้องซื้อที่นั่ง\n\n3. การยกเลิกและการคืนเงิน\nไม่สามารถคืนเงินได้หากวันเดินทางเหลือน้อยกว่า 72 ชั่วโมง การยกเลิกต้องร้องขออย่างน้อย 72 ชั่วโมงก่อนออกเดินทางเพื่อมีสิทธิ์ได้รับเงินคืน การคืนเงินจะดำเนินการภายใน 1-7 วันทำการไปยังวิธีการชำระเงินเดิม\n\n4. ความถูกต้อง\nคูปองเรือเฟอร์รี่ออกในชื่อผู้โดยสารซึ่งเป็นของส่วนบุคคลและไม่สามารถโอนได้ มีผลเฉพาะวันที่และการเดินทางที่ออกให้เท่านั้น\n\n5. การเช็คอิน\nผู้โดยสารทุกคนต้องติดต่อเช็คอินที่เคาน์เตอร์อย่างน้อย 30 นาทีล่วงหน้าก่อนเวลาออกเดินทาง\n\nสำหรับนักท่องเที่ยวต่างชาติอาจใช้เวลาในการตรวจคนเข้าเมืองมากกว่า ผู้โดยสารมีความรับผิดชอบในการมาถึงตรงเวลาก่อนเรือออก หากผู้โดยสารไม่สามารถขึ้นเรือตรงเวลาได้ ผู้โดยสารต้องจัดการขนส่งไปยังปลายทางเอง\n\nในกรณีที่ลูกค้ามีจำนวนมากกว่าที่ระบุในคูปองหรืออายุทารกเกินเงื่อนไขของบริษัทเรือ บริษัทเรือจะเรียกเก็บค่าใช้จ่ายส่วนต่างจากลูกค้าทันทีที่เคาน์เตอร์\n\n6. คูปองเรือเฟอร์รี่\nคูปองจะส่งทางอีเมลเมื่อการจองเสร็จสิ้น หากไม่ได้รับคูปอง กรุณาติดต่อเราทางอีเมลหรือโทรศัพท์เพื่อแจ้งปัญหา ทีมสนับสนุนลูกค้าจะช่วยตรวจสอบและส่งคูปองใหม่\n\nกรุณาพิมพ์คูปองหรือบันทึกหน้าจอบนโทรศัพท์เพื่อแสดงให้เจ้าหน้าที่\n\nThe Trago ขอสงวนสิทธิ์ในการเปลี่ยนแปลงรายการตั้วตั๋วที่จองไว้โดยอัตโนมัติหากมีบริการสำหรับเส้นทางเดียวกันหรือใกล้เคียง\n\n7. ไม่มาขึ้น\nหากไม่สามารถขึ้นเรือหรือรถบัสตรงเวลาหรือตามกำหนดการ จะถูกเรียกเก็บค่าโดยสารเต็มจำนวนและจะไม่ได้รับเงินคืน\n\n8. เงื่อนไขตั๋วผู้โดยสาร\nบริษัทไม่รับผิดชอบความล่าช้าในการขึ้นเรือ การเบี่ยงเบนหรือการเปลี่ยนแปลงเส้นทางที่กำหนดเนื่องจากสภาพอากาศไม่ดีหรือคำสั่งของเจ้าหน้าที่ท่าเรือ ผู้โดยสารมีสิทธิ์นำกระเป๋าเดินทางได้สูงสุด 2 ชิ้น และน้ำหนักรวมสูงสุด 15 กิโลกรัม บริษัทไม่รับผิดชอบต่อความเสียหายหรือการสูญหายของสัมภาระที่อยู่ในการดูแลส่วนบุคคลของผู้โดยสารระหว่างการเดินทาง\n\n9. สิทธิ์ของบริษัทรถรับส่ง\nบริษัทรถรับส่งขอสงวนสิทธิ์ในการเปลี่ยนแปลงหรือแก้ไขรายการเดินทางโดยไม่แจ้งให้ทราบล่วงหน้า ที่นั่งรถตู้/รถบัสขึ้นอยู่กับการออกแบบของบริษัท The Trago.com จะไม่รับผิดชอบต่อการเปลี่ยนแปลงกำหนดการรถตู้/รถบัสอย่างกะทันหันและลูกค้ารอที่จุดขึ้นรถ/จุดรับผิด\n\n10. ความต้องการที่นั่งรถตู้/รถบัส\nบริษัทจะจัดหารถตู้/รถบัสที่เป็นของบริษัทเองหรือเช่าจากบุคคลที่สาม บริษัทพยายามอย่างสมเหตุสมผลในการส่งมอบประเภทรถยนต์ตามที่ลูกค้าจอง อย่างไรก็ตาม บริษัทขอสงวนสิทธิ์ในการเปลี่ยน ลดระดับ หรือยกระดับประเภทรถยนต์ที่ลูกค้าจองในกรณีที่มีสถานการณ์ที่ไม่สามารถคาดเดาได้\n\nบริษัทจะไม่รับผิดชอบต่อค่าใช้จ่ายที่อาจเกิดขึ้นจากลูกค้าอันเนื่องมาจากความล่าช้าของรถตู้/รถบัส\n\nผู้โดยสารที่มีอายุมากกว่า 3 ปีต้องซื้อที่นั่ง บริษัทจะไม่รับผิดชอบต่อผลกระทบทางกฎหมายใดๆ ที่เกิดจากผู้โดยสารที่ไม่ปฏิบัติตามข้อกำหนด\n\n11. ประกาศทางกฎหมาย The Trago.com\nThe Trago.com จะไม่รับผิดชอบและจะไม่คืนเงินเนื่องจากการกระทำใดๆ ที่ดำเนินการโดยพันธมิตรบริษัทเรือเฟอร์รี่/รถรับส่ง หรือเหตุการณ์ใดๆ ที่เกิดขึ้นทางด้านพันธมิตร ตัวอย่างเช่น The Trago.com จะไม่รับผิดชอบต่อการเปลี่ยนแปลงอย่างกะทันหันจากบริษัทเรือเฟอร์รี่หรือบริษัทรถรับส่ง หมายเลขที่นั่ง ตารางเวลา วันเวลาออกเดินทาง วันเวลาถึง การสูญหายหรืออุบัติเหตุที่เกิดขึ้นระหว่างการใช้เรือเฟอร์รี่/รถรับส่ง หรือไม่มีบริการเรือเฟอร์รี่/รถรับส่ง อย่างไรก็ตาม ลูกค้าสามารถร้องเรียนกับเราได้ และเราจะดำเนินการที่จำเป็นเพื่อป้องกันไม่ให้เหตุการณ์ดังกล่าวเกิดขึ้นอีกในอนาคต\n\nThe Trago.com จะไม่รวมความรับผิดชอบต่อสิ่งต่อไปนี้:\n\n(ก) เรือเฟอร์รี่/รถรับส่งไม่ออกเดินทาง/ไม่มาถึงตรงเวลา\n(ข) การรักษาคุณภาพของเรือเฟอร์รี่/รถรับส่ง พฤติกรรมของเจ้าหน้าที่ และความตรงต่อเวลา\n(ค) ผู้ประกอบการเรือเฟอร์รี่/รถรับส่งยกเลิกบริการเนื่องจากเหตุผลที่หลีกเลี่ยงไม่ได้\n(ง) กระเป๋าเดินทางของลูกค้าสูญหาย/ถูกขโมย/เสียหาย\n(จ) ลูกค้ารออยู่ที่จุดขึ้นเรือ/จุดรับผิด (กรุณาโทรหาผู้ประกอบการเรือเฟอร์รี่/รถรับส่งเพื่อสอบถามจุดขึ้นเรือที่แน่นอน)\n(ฉ) ผู้ประกอบการเรือเฟอร์รี่/รถรับส่งเปลี่ยนจุดขึ้นเรือและ/หรือใช้รถรับส่ง (เช่น รถตู้ย้าย) ที่จุดขึ้นเรือเพื่อพาลูกค้าไปยังจุดออกเดินทางของเรือเฟอร์รี่\n(ช) The Trago.com ไม่รับผิดชอบต่อการเปลี่ยนแปลงอย่างกะทันหันของเรือเฟอร์รี่/รถรับส่ง ตารางเวลา วันเวลาออกเดินทาง วันเวลาถึง การสูญหายหรืออุบัติเหตุที่เกิดขึ้นระหว่างการใช้เรือเฟอร์รี่/รถรับส่ง\n(ซ) ผู้ประกอบการเรือเฟอร์รี่/รถรับส่งขอเพิ่มค่าโดยสารก่อนเดินทาง เนื่องจากสถานการณ์ราคาน้ำมัน\n\n12. หลักฐานทางการเงิน\nข้าพเจ้ายืนยันว่าหลักฐานการชำระเงิน (ใบโอนเงิน) เป็นเอกสารที่ถูกต้องและแท้จริง ไม่ใช่เอกสารปลอม ไม่ได้เพิ่มหรือลดข้อความ หรือแก้ไขด้วยวิธีใดๆ หากต่อมาตรวจพบว่าเป็นเอกสารปลอม ข้าพเจ้าจะรับผิดชอบต่อการละเมิดกฎหมายแต่เพียงผู้เดียว',
+  
+  privacyContent: 'The Trago มุ่งมั่นในการเคารพและปกป้องความเป็นส่วนตัวของคุณและปฏิบัติตามกฎหมายการปกป้องข้อมูลและความเป็นส่วนตัว เราได้จัดทำนโยบายความเป็นส่วนตัวนี้เพื่อช่วยให้คุณเข้าใจวิธีที่เราเก็บรวบรวม ใช้ จัดเก็บ และปกป้องข้อมูลของคุณในฐานะลูกค้าของเรา โปรดใช้เวลาสักครู่เพื่ออ่านส่วนต่างๆ ด้านล่างและเรียนรู้วิธีที่เราอาจใช้ข้อมูลส่วนบุคคลของคุณ\n\nสำหรับบริการทั้งหมดของเรา ผู้ควบคุมข้อมูล บริษัทที่รับผิดชอบความเป็นส่วนตัวของคุณคือ The Trago\n\nคุณควรอ่านประกาศนี้ร่วมกับนโยบายคุกกี้ของเราและข้อกำหนดและเงื่อนไขการใช้งานสำหรับเว็บไซต์ The Trago และข้อกำหนดและเงื่อนไขแยกต่างหากใดๆ ที่ออกให้กับการจอง Thetrago หรือผลิตภัณฑ์และบริการอื่นๆ ของคุณ\n\nฐานกฎหมายของเราสำหรับการใช้ข้อมูลส่วนบุคคลของคุณ\nเราจะประมวลผลข้อมูลส่วนบุคคลของคุณเฉพาะในกรณีที่เรามีฐานกฎหมายในการดำเนินการดังกล่าว ฐานกฎหมายจะขึ้นอยู่กับเหตุผลที่ The Trago ได้เก็บรวบรวมและจำเป็นต้องใช้ข้อมูลของคุณ ภายใต้กฎหมายการปกป้องข้อมูล EU และสหราชอาณาจักร ในกรณีส่วนใหญ่ ฐานกฎหมายจะเป็น:\n\nเพราะเราจำเป็นต้องใช้ข้อมูลของคุณเพื่อประมวลผลการจองของคุณ ดำเนินการตามการเตรียมการเดินทางของคุณ และดำเนินการตามสัญญาที่เรามีกับคุณ\nเพราะเป็นผลประโยชน์อันชอบธรรมของ The Trago ในฐานะบริษัทที่จะใช้ข้อมูลส่วนบุคคลของคุณเพื่อดำเนินการและปรับปรุงธุรกิจของเราในฐานะผู้ให้บริการการเดินทาง\nเพราะเราจำเป็นต้องใช้ข้อมูลส่วนบุคคลของคุณเพื่อปฏิบัติตามภาระผูกพันทางกฎหมาย\nเพื่อปกป้องผลประโยชน์ที่สำคัญของคุณหรือบุคคลอื่น\nเพราะคุณได้ให้ความยินยอมกับ The Trago ในการใช้ข้อมูลของคุณเพื่อวัตถุประสงค์เฉพาะ\nหากการประมวลผลข้อมูลของคุณอยู่ภายใต้กฎหมายอื่นๆ ฐานของการประมวลผลข้อมูลของคุณอาจแตกต่างจากที่ระบุข้างต้นและอาจในสถานการณ์เหล่านั้นขึ้นอยู่กับความยินยอมของคุณในทุกกรณี\n\nข้อมูลส่วนบุคคลประเภทใดที่เราเก็บรวบรวมจากคุณ?\nเราพยายามเก็บรวบรวมและใช้ข้อมูลส่วนบุคคลของคุณด้วยความรู้และความยินยอมของคุณเท่านั้น เราเก็บรวบรวมข้อมูลเมื่อคุณใช้เว็บไซต์ The Trago ผลิตภัณฑ์หรือบริการใดๆ ของเรา หรือติดต่อกับเรา ข้อมูลนี้และรายละเอียดของใครก็ตามที่เดินทางกับคุณจำเป็นสำหรับการปฏิบัติตามสัญญาของเราที่เพียงพอกับคุณและเพื่อให้เราปฏิบัติตามภาระผูกพันทางกฎหมายของเรา หากไม่มี เราอาจไม่สามารถให้บริการทั้งหมดที่ร้องขอแก่คุณได้\n\nเราเก็บรวบรวมข้อมูลส่วนบุคคลหมวดหมู่ต่อไปนี้:\n\nที่คุณให้กับเราเพื่อทำให้การจองของคุณสมบูรณ์และจัดการหรือบริการอื่นที่คุณได้ร้องขอจากเรา: ตัวอย่างเช่น ชื่อ ที่อยู่ อีเมล รายละเอียดการติดต่อ วันเกิด เพศ หมายเลขหนังสือเดินทาง รายละเอียดรถยนต์ของคุณ และข้อมูลการชำระเงิน ข้อมูลที่ต้องการจะขึ้นอยู่กับความต้องการของผู้ประกอบการเรือเฟอร์รี่\nข้อมูลเกี่ยวกับการเตรียมการเดินทางของคุณ: ตัวอย่างเช่น รายการเดินทางและข้อมูลอื่นๆ ที่เกี่ยวข้องกับการจองของคุณ\nข้อมูลเกี่ยวกับบริการที่เราให้กับคุณในอดีต: รายละเอียดของการจองใดๆ ที่คุณได้ทำกับเราในอดีต รวมถึงข้อเสนอแนะของลูกค้าที่คุณอาจให้ไว้\nข้อมูลเกี่ยวกับการใช้เว็บไซต์ ศูนย์ติดต่อ และแอปพลิเคชันมือถือของเรา: เพื่อช่วยให้เราปรับแต่งประสบการณ์ของคุณและปรับปรุงเว็บไซต์ของเรา เราเก็บรวบรวมข้อมูลเกี่ยวกับการค้นหาและเนื้อหาที่คุณได้ดูบนเว็บไซต์ของเราโดยใช้คุกกี้และเทคโนโลยีที่คล้ายกัน\nเราใช้ข้อมูลส่วนบุคคลของคุณเพื่ออะไร?\nเพื่อดำเนินการและจัดการการจองของคุณและส่งมอบบริการอื่นๆ ที่คุณได้ขอ\nเพื่อส่งการอัปเดตสถานะ หากได้รับการร้องขอ และการสื่อสารบริการ\nเพื่อให้บริการที่ปรับแต่งตามความต้องการของคุณและปฏิบัติต่อคุณในลักษณะที่เป็นส่วนตัวมากขึ้น\nเพื่อดำเนินการวิเคราะห์และการวิจัยตลาด\nเพื่อปรับปรุงเว็บไซต์ ผลิตภัณฑ์ และบริการของเรา\nเพื่อการจัดการและการบริหาร\nเพื่อดำเนินการตลาดและแจ้งให้คุณทราบเกี่ยวกับผลิตภัณฑ์และบริการของ The Trago\n\nเราจะส่งการตลาดให้คุณเมื่อใด?\nเราอาจส่งข้อความการตลาดผ่านอีเมลเพื่อให้คุณทันสมัยกับข้อเสนอล่าสุดและดีที่สุด การเปิดตัวตารางเวลาเรือเฟอร์รี่ และเพื่อช่วยคุณหาราคา Thetrago\n\nคุณสามารถหยุดรับข้อความการตลาดจากเราได้ตลอดเวลาโดย:\n\nคลิกลิงก์ยกเลิกการสมัครที่พบในข้อความการตลาดทางอีเมลใดๆ\nตอบกลับข้อความการตลาดทางอีเมลด้วยคำขอให้ยกเลิกการสมัคร\nติดต่อทีมบริการลูกค้าของเรา\nเมื่อคุณทำเช่นนี้ เราจะอัปเดตรายละเอียดบัญชีของคุณเพื่อให้คุณไม่ได้รับข้อความการตลาดอีก ในขณะที่เราจะอัปเดตรายละเอียดของคุณให้เร็วที่สุด โปรดอนุญาตให้ใช้เวลาสูงสุด 2 วันทำการเพื่อให้มีผล การยกเลิกการสมัครข้อความการตลาดจะไม่หยุดการสื่อสารบริการ เช่น การยืนยันการจองและการอัปเดต\n\nเราจะแบ่งปันข้อมูลของคุณกับผู้อื่นเมื่อใด?\nเมื่อคุณทำการจอง เราอาจจำเป็นต้องแบ่งปันข้อมูลส่วนบุคคลของคุณกับผู้ให้บริการ (เช่น ผู้ประกอบการเรือเฟอร์รี่ ผู้ให้บริการประกันภัย ผู้จัดจำหน่ายผลิตภัณฑ์) ของบริการและผลิตภัณฑ์ที่คุณซื้อ ข้อมูลนี้อาจถูกแบ่งปันกับบุคคลที่สามอื่นๆ รวมถึงเจ้าหน้าที่ท่าเรือ ศุลกากร และสำนักงานหนังสือเดินทาง ซึ่งจำเป็นเพื่อดำเนินการตามสัญญาบริการเรือเฟอร์รี่\n\nเราอาจเปิดเผยข้อมูลเกี่ยวกับคุณ บัญชีของคุณ และประวัติการจองไปยัง:\n\nบริษัทภายในกลุ่ม The Trago เพื่อวัตถุประสงค์และภายใต้เงื่อนไขของนโยบายความเป็นส่วนตัวนี้\nในกรณีที่เราได้รับการปรับโครงสร้างใหม่หรือถูกขายให้กับบุคคลที่สาม ซึ่งในกรณีนี้คุณตกลงว่าข้อมูลส่วนบุคคลใดๆ ที่เราถือเกี่ยวกับคุณอาจถูกโอนไปยังหน่วยงานที่ปรับโครงสร้างใหม่หรือบุคคลที่สามนั้นเพื่อวัตถุประสงค์และภายใต้เงื่อนไขของนโยบายความเป็นส่วนตัวนี้\nเราจะไม่ขายหรือส่งผ่านข้อมูลส่วนบุคคลของคุณไปยังบุคคลที่สาม (นอกเหนือจากที่ระบุข้างต้น) เว้นแต่คุณได้ให้อนุญาตกับเราหรือจำเป็นต้องส่งมอบและปรับปรุงผลิตภัณฑ์และบริการที่สั่งหรือใช้โดยคุณ ตัวอย่างเช่น เราอาจเปิดเผยข้อมูลของคุณต่อบริษัทบัตรเครดิตเพื่อตรวจสอบรายละเอียดบัตรเครดิตของคุณและได้รับการชำระเงินเมื่อคุณซื้อผลิตภัณฑ์หรือบริการ อาจจำเป็นต้องส่งผ่านข้อมูลของคุณไปยังองค์กรที่คุณได้สั่งผลิตภัณฑ์หรือบริการใดๆ\n\nThe Trago อาจถูกบังคับให้เปิดเผยข้อมูลส่วนบุคคลของคุณเพื่อปฏิบัติตามข้อกำหนดหรือภาระผูกพันทางกฎหมายหรือกฎระเบียบใดๆ ตามกฎหมายที่บังคับใช้\n\nเราใช้คุกกี้อย่างไร?\nเราอาจใช้คุกกี้เพื่อบันทึกรายละเอียด เช่น ข้อมูลประจำตัวผู้ใช้และรายละเอียดการลงทะเบียนทั่วไปบนพีซีของคุณ ซึ่งช่วยให้เราจดจำคุณในการเยี่ยมชมครั้งต่อๆ ไป เพื่อให้คุณไม่ต้องป้อนรายละเอียดการลงทะเบียนใหม่ทุกครั้งที่เยี่ยมชมเรา และช่วยให้เราปรับแต่งประสบการณ์ของคุณและปรับปรุงเว็บไซต์ของเรา\n\nขึ้นอยู่กับประเภทของเบราว์เซอร์ที่คุณใช้ คุณอาจสามารถกำหนดค่าเบราว์เซอร์ของคุณเพื่อให้:\n\nคุณได้รับการแจ้งให้ยอมรับหรือปฏิเสธคุกกี้เป็นรายบุคคล\nคุณอาจสามารถป้องกันไม่ให้เบราว์เซอร์ของคุณยอมรับคุกกี้ใดๆ เลย\nคุณควรอ้างอิงไปยังผู้จัดหาหรือผู้ผลิตของเว็บเบราว์เซอร์ของคุณสำหรับรายละเอียดเฉพาะเกี่ยวกับความปลอดภัยของคุกกี้\n\nคุณสามารถอ่านเพิ่มเติมเกี่ยวกับนโยบายคุกกี้ของเราที่นี่\n\nสิทธิ์ของคุณเกี่ยวกับข้อมูลส่วนบุคคลของคุณ\nการเข้าถึงและโอนข้อมูล: คุณมีสิทธิ์ขอสำเนาข้อมูลส่วนบุคคลใดๆ ที่เราถือเกี่ยวกับคุณหรือให้โอนไปยังบุคคลที่สาม เราอาจขอให้คุณแสดงหลักฐานที่เหมาะสมเพื่อยืนยันตัวตนของคุณก่อนตอบสนองต่อคำขอของคุณ\n\nเมื่อตัวตนของคุณได้รับการยืนยันแล้ว เราจะตอบสนองให้เร็วที่สุดและในทุกกรณีภายใน 30 วันทำการ\n\nหากคุณมีบัญชีออนไลน์ คุณสามารถเข้าสู่ระบบบัญชีของคุณได้ตลอดเวลาเพื่อดูข้อมูลส่วนบุคคลใดๆ ที่จัดเก็บไว้ที่นั่น\n\nสิทธิ์ในการอัปเดตและแก้ไข: หากข้อมูลส่วนบุคคลใดๆ ที่เราถือเกี่ยวกับคุณไม่ถูกต้อง คุณมีสิทธิ์ให้แก้ไขข้อมูลนั้นหรือทำให้สมบูรณ์หากไม่สมบูรณ์\n\nสิทธิ์ในการร้องเรียน: หากคุณรู้สึกว่าเราจัดการข้อมูลของคุณผิดพลาดหรือละเมิดสิทธิ์ของคุณที่กำหนดไว้ภายใต้กฎหมายการปกป้องข้อมูล คุณสามารถแจ้งให้เราทราบโดยติดต่อทีมบริการลูกค้าของเราหรือยื่นเรื่องร้องเรียนต่อหน่วยงานกำกับดูแลที่รับผิดชอบการปกป้องข้อมูลในประเทศที่คุณอาศัยอยู่หรือสถานที่ที่ถูกกล่าวหาว่าละเมิด\n\nสิทธิ์ในการถูกลืม: คุณสามารถขอให้ลบข้อมูลส่วนบุคคลของคุณเมื่อไม่จำเป็นต้องประมวลผลธุรกรรมอีกต่อไปหรือเราไม่จำเป็นต้องเก็บข้อมูลตามกฎหมาย เมื่อข้อมูลส่วนบุคคลของคุณไม่จำเป็นอีกต่อไป คำขอใดๆ ให้ลบข้อมูลจะดำเนินการโดยไม่ชักช้า\n\nสิทธิ์ในการถอนความยินยอม: คุณสามารถถอนหรือจำกัดความยินยอมของคุณต่อการตลาดหรือการประมวลผลข้อมูลส่วนบุคคลของคุณทั้งหมดหรือบางส่วน เมื่อไม่จำเป็นอีกต่อไป\n\nวิธีการเข้าถึง แก้ไข หรือโอนข้อมูลของคุณ\nTrident Master Company Limited (www.thetrago.com)\n\nอีเมล: info@thetrago.com, sale@thetrago.com, info@worldferry.com\n\nโปรดระบุชื่อของคุณพร้อมกับหมายเลขอ้างอิงการจองและ/หรือหมายเลขบัญชีของคุณ เราจะขอบคุณหากคุณสามารถให้รายละเอียดโดยย่อของข้อมูลที่คุณต้องการสำเนา (ซึ่งช่วยให้เราสามารถค้นหาข้อมูลของคุณได้ง่ายขึ้น) เราจะดำเนินการทุกขั้นตอนที่สมเหตุสมผลเพื่อยืนยันตัวตนของคุณก่อนให้รายละเอียดข้อมูลส่วนบุคคลใดๆ ที่เราอาจถือเกี่ยวกับคุณ\n\nข้อมูลส่วนบุคคลของคุณและประเทศนอก EU\nข้อมูลลูกค้าทั้งหมดของเราจัดเก็บบนเซิร์ฟเวอร์ที่อยู่ใน EU เพื่อปฏิบัติตามสัญญาของเรากับคุณ เราอาจจำเป็นต้องส่งรายละเอียดส่วนบุคคลบางส่วนของคุณไปยังผู้ประกอบการเรือเฟอร์รี่พันธมิตรของเรานอก EU ในกรณีที่จำเป็น เราดำเนินการจำกัดข้อมูลที่โอนเฉพาะข้อมูลที่จำเป็นเพื่อปฏิบัติตามสัญญา\n\nเราปกป้องความเป็นส่วนตัวและสิทธิ์ของคุณผ่านการใช้ข้อกำหนดการปกป้องข้อมูลมาตรฐานของคณะกรรมาธิการยุโรป\n\nการเก็บรักษาและการทำให้ข้อมูลส่วนบุคคลไม่เป็นที่รู้จัก\nเราเก็บข้อมูลส่วนบุคคลของคุณเป็นเวลา 3 ปีนับจากวันที่การจองครั้งสุดท้ายหรือการปฏิสัมพันธ์ หรือหากนานกว่านั้น เป็นระยะเวลาใดๆ ที่เราจำเป็นต้องเก็บข้อมูลส่วนบุคคลเพื่อปฏิบัติตามข้อกำหนดทางกฎหมายและกฎระเบียบของเรา หลังจากเวลานี้ผ่านไป เราจะทำให้ข้อมูลทั้งหมดไม่เป็นที่รู้จักเพื่อให้ไม่สามารถระบุตัวบุคคลได้อีกต่อไป\n\nความปลอดภัยของข้อมูล\nThe Trago ตระหนักว่าลูกค้ามีความกังวลเพิ่มขึ้นเกี่ยวกับวิธีที่บริษัทปกป้องข้อมูลส่วนบุคคลจากการใช้ในทางที่ผิดและการละเมิด และเกี่ยวกับความเป็นส่วนตัวโดยทั่วไป The Trago กำลังตรวจสอบและปรับปรุงขั้นตอน กฎ และวิธีการด้านเทคนิค กายภาพ และการจัดการอย่างต่อเนื่องเพื่อปกป้องข้อมูลส่วนบุคคลของคุณจากการเข้าถึงโดยไม่ได้รับอนุญาต การสูญหายโดยอุบัติเหตุ และ/หรือการทำลาย\n\nการเปลี่ยนแปลงนโยบายนี้\nเราอาจเปลี่ยนแปลงหน้านี้และนโยบายความเป็นส่วนตัวของเราเป็นครั้งคราวเพื่อสะท้อนการเปลี่ยนแปลงในวิธีที่เราประมวลผลข้อมูลของคุณ\n\nหากมีการเปลี่ยนแปลงที่สำคัญใดๆ เราจะทำให้ชัดเจนผ่านเว็บไซต์หรือผ่านวิธีการติดต่ออื่น เช่น อีเมล\n\nการสนับสนุนความเป็นส่วนตัว\nTrident Master Co., Ltd., (www.thetrago.com) ขอสงวนสิทธิ์ในการแก้ไขหรือเปลี่ยนแปลงข้อความนโยบายความเป็นส่วนตัวนี้ได้ตลอดเวลาและเพื่อตอบสนองต่อการเปลี่ยนแปลงในกฎหมายการปกป้องข้อมูลและความเป็นส่วนตัวที่บังคับใช้',
   },
   en: {
     // Account Screen
@@ -1780,6 +1785,179 @@ const translations = {
     notifications: 'Notifications',
     notificationsDesc: 'Configure alert preferences',
     deleteAccountDesc: 'Permanently remove account',
+    
+    // Terms and Privacy Content
+    termsContent: `1. Copyright
+The Trago.com (Company Registration No.0905560003303) The Trago.com is the sole owner or lawful license of all right to www.thetrago.com
+
+2. Confirmation
+Customers are responsible to make sure the selection on travelling date, time and destination are correct before making payment. By making payment and the issuance of Order Summary/Booking number/ Itinerary, the seats are confirmed immediately. All passengers above the age of 3 years old will be required to purchase a seat.
+
+3. Cancellations and Refunds
+Refunds are not available if the travel date is less than 72 hours away. Cancellations must be requested at least 72 hours before departure to qualify for a refund. Refunds will be processed within 1-7 business days to the original payment method.
+
+4. Validity
+Ferry voucher is issued in the passenger's name which is personal and non-transferable. It is valid only for the date and the trip for which it was issued.
+
+5. Check –in
+All Passenger(s) has to contact to check-in at the counter at least 30 minutes in advance before departure time.
+
+For foreign tourists might take more time at immigration so it is passenger(s) responsibility to make sure you can reach it on time before the ferry leaves. If passenger fail to board on time, passenger has to arrange your own transport to the destination.
+
+In case a customer is more than the total that stated on the voucher or infant ages is over than boat company conditions , the boat company will charge the difference of amount from a customer right away at the counter.
+
+6. Ferry voucher
+The voucher will send to you on e-mail when your booking is completed. If you have not received the voucher, please contact us by email or phone call to inform us the issues. Our customer support team will assist you to check and resend the voucher.
+
+Please print the voucher or screen shot on your phone to show to the staff.
+
+The Trago reserves the right to automatically change your reserved ticket itinerary if there are services for the same route or close round.
+
+7. No Show
+If you are unable to board the ferry or bus on time or according to the schedule, you will be charged the full fare and will not be refunded.
+
+8. Passenger's ticket conditions
+Company is not responsible for any delay for boarding, deviation or modification of the scheduled route, due to bad weather conditions or pier authority orders. Passengers are entitled to carry maximum 2 pieces of baggage and maximum weight of the total luggage is 15 kilograms. The company is not responsible for any damage or loss of luggage retained under passenger's personal care during the trip.
+
+9. Shuttle Companies Rights
+Shuttle Company reserves the right to change or amend the itineraries without prior notice. Van/Bus seating depending on company design. The Trago.com will not responsible for any sudden change in van/bus schedules and customer waiting at the wrong boarding/pick-up point.
+
+10. Request on Van/Bus Seating Requirement
+Company will provide the van/bus that are either self-owned or on charter from third parties. Company makes reasonable efforts to deliver the type of vehicle accord to what the customer booked for. However, the company reserves the right to replace, downgrade or upgrade the vehicle type booked by the customers in the event of unforeseen circumstances.
+
+The company will not be held responsible for any contingent cost incurred by the customer arising from the van/bus delay.
+
+All passengers above the age of 3 years old will be required to purchase a seat. The company shall not be responsible for any legal implications resulted from passengers not complying with the regularities.
+
+11. The Trago.com Legal Notice
+The Trago.com will not liable and will not refund due to any action carried out by our ferry/shuttle company partners, or any event happens at our partner's side. For instances, The Trago.com will not be responsible for any sudden change from ferry company or shuttle company , seat number(s), schedules, departure date & time, arrival date & time, loss or accident incurred while taking the ferry/shuttle or no ferry/shuttle service provided. However, customer may complain to us, and we will take necessary actions to prevent such things from happen again in the future.
+
+The Trago.com will not include the following responsible of ,
+
+(a) Ferry/Shuttle not departing / reaching on time.
+
+(b) Maintaining the quality of Ferry/Shuttle, staff behavior and punctuality.
+
+(c) Ferry/Shuttle operator canceling the service due to unavoidable reasons.
+
+(d) The baggage of the customer getting lost / stolen / damaged.
+
+(e) The customer waiting at the wrong boarding point/pick-up point (please call the ferry/shuttle operator to find out the exact boarding point).
+
+(f) The Ferry/Shuttle operator changing the boarding point and/or using a pick-up vehicle (i.e : van transfer) at the boarding point to take customers to the ferry departure point.
+
+(g) The Trago.com is not be responsible for any sudden change in Ferry/Shuttle, schedules, departure date & time, arrival date & time, loss or accident incurred while taking ferry/shuttle.
+
+(h) Ferry / shuttle operators Request a fare increase before travelling. As the oil price situation
+
+12. Financial proof
+I confirm that the proof of payment. (Transfer slip) is a true and correct document It is not a fake document. Add or shorten the message Or modify by any means If it is later detected that it is a fake document I solely accept my breach of the law.`,
+    
+    privacyContent: `The Trago is committed to respecting and protecting your privacy and complying with data protection and privacy laws. We have provided this Privacy Policy to help you understand how we collect, use, store, and protect your information as one of our customers. Please take a few moments to read the sections below and learn how we may use your personal information.
+
+For all our services, the data controller, the company responsible for your privacy is The Trago
+
+You should read this notice in conjunction with our cookies policy and the terms & conditions of use for The Trago websites and any separate terms & conditions issued with your booking of Thetrago or other products and services.
+
+Our Legal Basis for Using Your Personal Information
+We will only process your personal information where we have a legal basis to do so. The legal basis will depend on the reason or reasons The Trago has collected and needs to use your information. Under EU and UK data protection laws, in almost all cases the legal basis will be:
+
+Because we need to use your information to process your booking, fulfill your travel arrangements, and otherwise perform the contract we have with you.
+Because it is in The Trago's legitimate interests as a company to use your personal information to operate and improve our business as a travel provider.
+Because we need to use your personal information to comply with a legal obligation.
+>To protect the vital interests of you or another person.
+Because you have consented to The Trago using your information for a particular purpose.
+If processing of your data is subject to any other laws, then the basis of processing your data may be different to that set out above and may in those circumstances be based on your consent in all cases.
+
+What Types of Personal Information Do We Collect From You?
+We endeavor to collect and use your personal information only with your knowledge and consent. We collect information when you use the The Trago website, one of our products or services, or communicate with us. This information and the details of anyone traveling with you are necessary for the adequate performance of our contract with you and to allow us to comply with our legal obligations. Without it, we may not be able to provide you with all requested services.
+
+We collect the following categories of personal information:
+
+you provide to us to complete and manage your booking or another service you have requested from us: For example, your name, address, email, contact details, date of birth, gender, passport number, your vehicle details, and payment information. The exact information required will depend on the requirements of the ferry operator.
+Information about your travel arrangements: For example, your travel itinerary and other information related to your booking.
+Information about the services we have provided to you in the past: Details of any past bookings you have made with us, including any customer feedback you may have provided.
+Information about your use of our websites, contact centers, and mobile applications: To help us to personalize your experience and improve our website, we collect information about your searches and the content you have viewed on our website using cookies and similar technologies.
+What Do We Use Your Personal Information For?
+To fulfill and manage your bookings and deliver any other services you have asked for.
+To send you status updates, if requested, and service communications.
+To provide services tailored to your requirements and to treat you in a more personal way.
+To carry out analysis and market research.
+To improve our websites, products, and services.
+For management and administrative purposes.
+To carry out marketing and keep you informed of The Trago 's products and services.
+When Will We Send You Marketing?
+We may send you marketing messages via email to keep you up to date with the latest and best offers, ferry timetable releases, and to help you find Thetrago prices.
+
+You can stop receiving marketing messages from us at any time by:
+
+Clicking the unsubscribe link found in any email marketing message
+Replying to an email marketing message with a request to be unsubscribed
+Contacting our Customer Service Team
+Once you do this, we will update your account details so you don't receive any more marketing messages. While we will update your details as quickly as possible, please allow for up to 2 business days for this to take effect. Unsubscribing from marketing messages will not stop service communications, such as booking confirmations and updates.
+
+When Will We Share Your Information With Others?
+When you make a booking, we may need to share your personal information with the providers (e.g., ferry operators, insurance providers, product distributors) of the services and products you're purchasing. This information may also be shared with other third parties, including port authorities, customs, and passport offices, where this is necessary to fulfill the ferry service contract.
+
+We may disclose information about you, your account, and booking history to:
+
+Companies within the The Trago Group for the purposes and subject to the terms of this Privacy Policy.
+In the event that we undergo re-organization or are sold to a third party, in which case you agree that any personal information we hold about you may be transferred to that re-organized entity or third party for the purposes and subject to the terms of this Privacy Policy.
+We will not sell or pass your personal information to third parties (other than as set out above) unless you have given us permission or unless it is necessary to deliver and improve upon the products and services ordered or used by you. For example, we may disclose your data to a credit card company to validate your credit card details and obtain payment when you buy a product or service. It may also be necessary to pass your data to the organization from whom you have ordered any products or services.
+
+The Trago may also be obliged to disclose your personal information to meet any legal or regulatory requirements or obligations in accordance with applicable law.
+
+How We Use Cookies?
+We may use cookies to record details such as a user identity and general registration details on your PC. This helps us recognize you on subsequent visits so that you do not have to re-enter your registration details each time you visit us and allows us to personalize your experience and improve our website.
+
+Depending upon the type of browser you are using, you may be able to configure your browser so that:
+
+You are prompted to accept or reject cookies on an individual basis
+You may be able to prevent your browser from accepting any cookies at all.
+You should refer to the supplier or manufacturer of your web browser for specific details about cookie security.
+
+You can read more about our cookie policy here.
+
+Your Rights Regarding Your Personal Information
+to Access & Transfer Data: You have the right to request a copy of any personal information that we hold about you or to have it transferred to a third party. We may ask you to supply appropriate evidence to verify your identity before responding to your request.
+
+Once your identity has been verified, we will respond as quickly as possible and in any event within 30 business days.
+
+If you have an online account, you can log in to your account at any time to view any personal information stored there.
+
+Right to Update & Amend: If any of the personal information we hold on you is inaccurate, you have the right to have that information corrected or completed where it is incomplete.
+
+Right to Complain: If you feel at any point that we have mishandled your data or infringed upon your rights set out under data protection laws, you can let us know by getting in touch with our customer service team or lodge a complaint with the supervisory authority responsible for data protection in the country you live in or the place of the alleged infringement.
+
+Right to be Forgotten: You can request to have your personal information erased when it is no longer required to process a transaction or we are not legally required to retain the information. Where your personal information is no longer required, any request to have the information erased will be carried out without undue delay.
+
+Right to Withdraw Consent: You can withdraw or restrict your consent to marketing or the processing of your personal information completely or partially, where it is no longer required.
+
+How to Access, Amend or Transfer Your Information
+  Trident Master Company Limited (www.thetrago.com)
+  
+  Email : info@thetrago.com , sale@thetrago.com , info@worldferry.com
+  
+  Please quote your name together with your booking reference and/or account number. We would be grateful if you could also provide brief details of what information you want a copy of (this helps us to more readily locate your data). We will take all reasonable steps to confirm your identity before providing you with details of any personal information we may hold about you.
+  
+  Your Personal Information and Countries Outside the EU
+  All our customer data is stored on servers held within the EU. To perform our contract with you, we may need to send some of your personal details to our partner ferry operators outside of the EU. Where this is necessary, we take steps to restrict the data transferred to only the data that is required to perform the contract.
+  
+  We protect your privacy and your rights through the use of the European Commission's standard data protection clauses.
+  
+  Retaining and Anonymizing Personal Data
+  We keep your personal information for either 3 years from the date of your last booking or interaction or, if longer, for any period for which we are required to keep personal information to comply with our legal and regulatory requirements. After this time has passed, we anonymize all data so that it is no longer personally identifiable.
+  
+  Information Security
+  The Trago recognizes that its customers are increasingly concerned about how companies protect personal information from misuse and abuse and about privacy in general. The Trago is constantly reviewing and enhancing its technical, physical and managerial procedures and rules to protect your personal data from unauthorised access, accidental loss and/or destruction.
+  
+  Changes to this Policy
+  We may occasionally make changes to this page and our Privacy Policy to reflect changes in how we are processing your data.
+  
+  If there are any significant changes, we make these clear either through the website or through another means of contact such as email.
+  
+  Privacy Support
+  Trident Master Co,. Ltd,. (www.thetrago.com) reserves the right to amend or modify this Privacy Policy Statement at any time and in response to changes in applicable data protection and privacy legislation.`
   }
 };
 

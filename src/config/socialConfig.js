@@ -4,7 +4,7 @@
 export const GOOGLE_CONFIG = {
   // ได้จาก Google Cloud Console > APIs & Services > Credentials
   webClientId: '602898525189-amhn5fd2a6eomriijlubb87c3bbc13gm.apps.googleusercontent.com', // Client ID ที่ได้จาก Google Console
-  iosClientId: 'YOUR_GOOGLE_IOS_CLIENT_ID', // สำหรับ iOS
+  iosClientId: '136037103391-eh2cdfgsle1m1aepspcu9p9vjulo4p78.apps.googleusercontent.com', // สำหรับ iOS
   offlineAccess: true,
   hostedDomain: '', // optional
   forceCodeForRefreshToken: true,
