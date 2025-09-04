@@ -350,6 +350,93 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
+  
+  // Banking Payment Styles
+  bankSelectionContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: wp('3%'),
+    padding: wp('4%'),
+    marginTop: hp('1%'),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  bankSelectionTitle: {
+    fontSize: wp('4%'),
+    fontWeight: '600',
+    color: '#1E293B',
+    marginBottom: hp('1.5%'),
+    textAlign: 'center',
+  },
+  bankGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: hp('2%'),
+  },
+  bankOptionCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('2.5%'),
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    padding: wp('3%'),
+    marginBottom: hp('1%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: hp('6%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  selectedBankCard: {
+    borderColor: '#FD501E',
+    backgroundColor: '#FFF7F5',
+    shadowColor: '#FD501E',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  bankOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  bankOptionText: {
+    fontSize: wp('3.5%'),
+    fontWeight: '500',
+    color: '#374151',
+    textAlign: 'center',
+    flex: 1,
+  },
+  selectedBankText: {
+    color: '#FD501E',
+    fontWeight: '600',
+  },
+  bankCheckIcon: {
+    marginLeft: wp('1%'),
+  },
+  bankingInfoContainer: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: wp('2%'),
+    padding: wp('3%'),
+    borderLeftWidth: 4,
+    borderLeftColor: '#FD501E',
+  },
+  bankingInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp('0.8%'),
+  },
+  bankingInfoText: {
+    fontSize: wp('3.2%'),
+    color: '#475569',
+    marginLeft: wp('2%'),
+    flex: 1,
+    lineHeight: wp('4.5%'),
+  },
 });
 
 export default styles;

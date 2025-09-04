@@ -1050,7 +1050,7 @@ const TripDetail = ({ navigation, route }) => {
     });
   };
 
-  const EXTRA_TOP_GUTTER = 50;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
 
 
@@ -1113,7 +1113,6 @@ const TripDetail = ({ navigation, route }) => {
               shadowOpacity: 0.15,
               shadowRadius: getResponsiveSize(25, 20, 15),
               shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
-              elevation: 18,
               padding: getResponsiveSize(10, 8, 6),
               minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
@@ -1154,7 +1153,6 @@ const TripDetail = ({ navigation, route }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: getResponsiveSize(12, 10, 8),
                 shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
-                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1318,7 +1316,6 @@ const TripDetail = ({ navigation, route }) => {
                     shadowColor: '#001233',
                     shadowOpacity: 0.08,
                     shadowRadius: wp('3%'),
-                    //  elevation: 8,
                     borderWidth: wp('0.2%'),
                     borderColor: 'rgba(0, 18, 51, 0.06)',
                     overflow: 'hidden',
@@ -1488,7 +1485,6 @@ const TripDetail = ({ navigation, route }) => {
                       shadowColor: '#001233',
                       shadowOpacity: 0.08,
                       shadowRadius: wp('3%'),
-                      //  elevation: 8,
                       position: 'relative',
                     }}>
                       {/* Card Header Skeleton */}
@@ -1636,7 +1632,6 @@ const TripDetail = ({ navigation, route }) => {
                     shadowOpacity: 0.1,
                     shadowRadius: 20,
                     shadowOffset: { width: 0, height: 8 },
-                    //  elevation: 8,
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.08)',
                     marginHorizontal: wp('4%')
@@ -2208,7 +2203,6 @@ const TripDetail = ({ navigation, route }) => {
                           shadowOpacity: 0.13,
                           shadowRadius: 16,
                           shadowOffset: { width: 0, height: 8 },
-                          //  elevation: 7,
                           overflow: 'visible',
                           padding: 0,
                           borderRadius: 32,

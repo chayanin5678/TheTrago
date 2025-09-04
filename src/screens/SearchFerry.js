@@ -763,7 +763,7 @@ const SearchFerry = ({ navigation, route }) => {
   }, [boatAnim]);
 
 
-  const EXTRA_TOP_GUTTER = 50;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
 
 
@@ -793,7 +793,6 @@ const SearchFerry = ({ navigation, route }) => {
               shadowOpacity: 0.15,
               shadowRadius: getResponsiveSize(25, 20, 15),
               shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
-              elevation: 18,
               padding: getResponsiveSize(10, 8, 6),
               minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
@@ -834,7 +833,6 @@ const SearchFerry = ({ navigation, route }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: getResponsiveSize(12, 10, 8),
                 shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
-                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -863,7 +861,6 @@ const SearchFerry = ({ navigation, route }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: getResponsiveSize(12, 10, 8),
                 shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
-                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
                 minWidth: getResponsiveSize(70, 80, 90),
@@ -910,7 +907,6 @@ const SearchFerry = ({ navigation, route }) => {
                     shadowOpacity: 0.2,
                     shadowRadius: 16,
                     shadowOffset: { width: 0, height: 6 },
-                    elevation: 10,
                     position: 'relative',
                   }}
                 >
@@ -965,7 +961,6 @@ const SearchFerry = ({ navigation, route }) => {
                           shadowOpacity: 0.08,
                           shadowRadius: 6,
                           shadowOffset: { width: 0, height: 2 },
-                          elevation: selectedCurrency === currency.md_currency_code ? 2 : 0,
                         }}
                       >
                         <Text style={{ fontSize: 16, color: '#333' }}>
@@ -1274,7 +1269,6 @@ const SearchFerry = ({ navigation, route }) => {
               shadowOpacity: 0.1,
               shadowRadius: wp('1.5%'),
               shadowOffset: { width: 0, height: hp('0.25%') },
-              elevation: 4,
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.3)',
               // backdropFilter: 'blur(15px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1307,7 +1301,6 @@ const SearchFerry = ({ navigation, route }) => {
             shadowOffset: { width: 0, height: getResponsiveSize(hp('0.6%'), hp('0.4%'), hp('0.3%')) },
             shadowOpacity: 0.08,
             shadowRadius: getResponsiveSize(wp('3%'), wp('2%'), wp('1.5%')),
-            elevation: 8,
             borderWidth: getResponsiveSize(wp('0.2%'), wp('0.15%'), wp('0.1%')),
             borderColor: 'rgba(0, 18, 51, 0.06)',
             // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required

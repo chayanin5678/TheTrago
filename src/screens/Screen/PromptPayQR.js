@@ -13,8 +13,10 @@ import * as MediaLibrary from 'expo-media-library';
 import moment from "moment-timezone";
 import LogoTheTrago from "./../../components/component/Logo";
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PromptPayScreen({ route, navigation }) {
+  const insets = useSafeAreaInsets();
   const { Paymenttotal, selectedOption, usePoints, pointsToUse, pointsToEarn } = route.params;
 
   // 🔍 Debug route params ที่ได้รับมา
@@ -35,6 +37,7 @@ export default function PromptPayScreen({ route, navigation }) {
   const [intervalId, setIntervalId] = useState(null);
   const [actualBookingCode, setActualBookingCode] = useState(null); // เก็บ booking code ที่สร้างจริง
 
+      const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
   // Function สำหรับการอัปเดตคะแนน
   const updateUserPoints = async (pointsToDeduct, pointsToAdd) => {
     try {
@@ -430,15 +433,10 @@ export default function PromptPayScreen({ route, navigation }) {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: Platform.OS === 'ios' ? 0 : -20,
+              paddingTop: insets.top + EXTRA_TOP_GUTTER,
               borderBottomLeftRadius: 40,
               borderBottomRightRadius: 40,
               paddingBottom: 8,
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: 25,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 18,
               padding: 10,
               minHeight: hp('12%'),
               borderWidth: 1,
@@ -456,7 +454,7 @@ export default function PromptPayScreen({ route, navigation }) {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: Platform.OS === 'android' ? 70 : -10,
+                marginTop: 0,
                 height: 56,
               },
             ]}
@@ -471,11 +469,6 @@ export default function PromptPayScreen({ route, navigation }) {
                 borderRadius: 25,
                 padding: 8,
                 zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -490,13 +483,20 @@ export default function PromptPayScreen({ route, navigation }) {
           </View>
         </LinearGradient>
 
+        <ScrollView
+          contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
+          showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior="automatic"
+          bounces={false}
+        >
+
         {/* Ultra Premium Title Section */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           marginTop: hp('1.5%'),
-          marginHorizontal: wp('5%'),
+          marginHorizontal: wp('0%'),
           marginBottom: hp('2.5%'),
           paddingHorizontal: wp('4%'),
           paddingVertical: hp('2%'),
@@ -505,11 +505,6 @@ export default function PromptPayScreen({ route, navigation }) {
           backdropFilter: 'blur(15px)',
           borderWidth: 1.5,
           borderColor: 'rgba(255,255,255,0.25)',
-          shadowColor: '#000',
-          shadowOpacity: 0.08,
-          shadowRadius: wp('3%'),
-          shadowOffset: { width: 0, height: hp('0.5%') },
-          elevation: 6,
         }}>
           <View style={{ flex: 1 }}>
             <Text style={[
@@ -522,9 +517,6 @@ export default function PromptPayScreen({ route, navigation }) {
                 textAlign: 'left',
                 marginLeft: 0,
                 lineHeight: wp('8.5%'),
-                textShadowColor: 'rgba(0,0,0,0.4)',
-                textShadowRadius: 6,
-                textShadowOffset: { width: 2, height: 2 },
               }
             ]}>
               {t('promptPayQR')}
@@ -535,21 +527,11 @@ export default function PromptPayScreen({ route, navigation }) {
               fontWeight: '600',
               marginTop: hp('0.8%'),
               letterSpacing: 0.5,
-              textShadowColor: 'rgba(0,0,0,0.3)',
-              textShadowRadius: 3,
-              textShadowOffset: { width: 1, height: 1 },
             }}>
               {t('scanToCompletePayment')}
             </Text>
           </View>
         </View>
-
-        <ScrollView
-          contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
-          showsVerticalScrollIndicator={false}
-          contentInsetAdjustmentBehavior="automatic"
-          bounces={false}
-        >
 
           {loading ? (
             <>
@@ -571,16 +553,14 @@ export default function PromptPayScreen({ route, navigation }) {
               <View style={styles.qrCard}>
                 {qrUri && (
                   <>
-                    <View style={styles.qrContainer}>
-                      <Image
-                        source={{ uri: qrUri }}
-                        style={styles.qr}
-                        resizeMode="contain"
-                      />
-                    </View>
+                    <Image
+                      source={{ uri: qrUri }}
+                      style={styles.qr}
+                      resizeMode="contain"
+                    />
                     <View style={styles.amountContainer}>
                       <Text style={styles.amountLabel}>{t('totalAmount')}</Text>
-                      <Text style={styles.amountValue}>{customerData.symbol} {(Math.round(Paymenttotal * 100) / 100).toFixed(2)}</Text>
+                      <Text style={styles.amountValue}>{customerData.symbol} {Number((Math.round(Paymenttotal * 100) / 100).toFixed(2)).toLocaleString()}</Text>
                     </View>
                   </>
                 )}
@@ -639,11 +619,6 @@ const styles = StyleSheet.create({
     borderRadius: wp('7%'),
     padding: wp('8%'),
     marginBottom: hp('2.5%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.25,
-    shadowRadius: wp('8%'),
-    shadowOffset: { width: 0, height: hp('1.5%') },
-    elevation: 20,
     borderWidth: wp('0.3%'),
     borderColor: 'rgba(253, 80, 30, 0.12)',
     backdropFilter: 'blur(30px)',
@@ -653,33 +628,18 @@ const styles = StyleSheet.create({
   qrCard: {
     backgroundColor: 'rgba(255,255,255,0.98)',
     borderRadius: wp('7%'),
-    padding: wp('8%'),
+    padding: wp('2%'),
     marginBottom: hp('4%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.25,
-    shadowRadius: wp('8%'),
-    shadowOffset: { width: 0, height: hp('1.5%') },
-    elevation: 20,
     borderWidth: wp('0.3%'),
     borderColor: 'rgba(253, 80, 30, 0.12)',
     backdropFilter: 'blur(30px)',
     width: '100%',
     alignItems: 'center',
   },
-  qrContainer: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: wp('5%'),
-    padding: wp('4%'),
-    marginBottom: hp('3%'),
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
-  },
   qr: {
-    width: wp('60%'),
-    height: wp('60%'),
+    width: wp('90%'),
+    height: wp('90%'),
+    marginBottom: hp('3%'),
   },
   amountContainer: {
     alignItems: 'center',
@@ -702,9 +662,6 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     fontWeight: '900',
     letterSpacing: -0.5,
-    textShadowColor: 'rgba(253, 80, 30, 0.2)',
-    textShadowRadius: 2,
-    textShadowOffset: { width: 1, height: 1 },
   },
   actionSection: {
     flexDirection: 'row',
@@ -717,11 +674,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: wp('2%'),
     borderRadius: wp('4%'),
-    shadowColor: '#64748B',
-    shadowOpacity: 0.3,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    elevation: 12,
   },
   saveButtonGradient: {
     paddingVertical: hp('2%'),
@@ -743,11 +695,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: wp('2%'),
     borderRadius: wp('4%'),
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.4,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    elevation: 12,
   },
   cancelButtonGradient: {
     paddingVertical: hp('2%'),
@@ -762,8 +709,6 @@ const styles = StyleSheet.create({
     fontSize: wp('4.2%'),
     fontWeight: '700',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowRadius: 2,
   },
   // Premium Skeleton Loader Styles
   skeletonContainer: {

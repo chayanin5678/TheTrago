@@ -30,6 +30,7 @@ const AffiliateScreen = ({ navigation }) => {
 
   const [affiliateEnabled, setAffiliateEnabled] = useState(false);
   const [enabling, setEnabling] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const [affiliateData, setAffiliateData] = useState({
     upcoming: 0,
@@ -72,7 +73,11 @@ const AffiliateScreen = ({ navigation }) => {
           userData.md_member_affiliate_status ??
           userData.md_affiliate_status ??
           0;
-        setAffiliateEnabled(isOn(statusRaw));
+        
+        // ไม่ reset state ถ้าได้เปิดใช้งานไปแล้ว (ป้องกันการกระตุก)
+        if (!affiliateEnabled) {
+          setAffiliateEnabled(isOn(statusRaw));
+        }
 
         const possibleMemberId =
           response.data.memberId ||
@@ -102,7 +107,11 @@ const AffiliateScreen = ({ navigation }) => {
         const up = fallbackResponse.data.user;
 
         const statusRaw2 = up?.md_member_affiliate_status ?? up?.md_affiliate_status ?? 0;
-        setAffiliateEnabled(isOn(statusRaw2));
+        
+        // ไม่ reset state ถ้าได้เปิดใช้งานไปแล้ว (ป้องกันการกระตุก)
+        if (!affiliateEnabled) {
+          setAffiliateEnabled(isOn(statusRaw2));
+        }
 
         const memberId = up?.memberId || up?.md_member_no || 'M033048';
         setUserProfile(up);
@@ -110,8 +119,10 @@ const AffiliateScreen = ({ navigation }) => {
         return;
       }
     } catch (error) {
-      // ดึงข้อมูลไม่ได้ → ปิดไว้ก่อน
-      setAffiliateEnabled(false);
+      // ดึงข้อมูลไม่ได้ → ปิดไว้ก่อน (แต่ไม่ reset ถ้าเปิดไว้แล้ว)
+      if (!affiliateEnabled) {
+        setAffiliateEnabled(false);
+      }
       setUserProfile({
         memberId: 'M033048',
         name: 'Default User',
@@ -165,6 +176,7 @@ const AffiliateScreen = ({ navigation }) => {
 const enableAffiliate = async () => {
   try {
     setEnabling(true);
+    setIsTransitioning(true);
 
     const token = await SecureStore.getItemAsync('userToken');
     if (!token) {
@@ -186,16 +198,26 @@ const enableAffiliate = async () => {
     );
 
     if (res?.data?.status === 'success') {
+      // อัปเดต state ทันทีเพื่อป้องกันการกระตุก
       setAffiliateEnabled(true);
+      
+      // รอให้ UI transition เสร็จ
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+      
+      // ดึงโปรไฟล์อีกรอบเพื่อให้ state สอดคล้องฐานข้อมูล (ทำในพื้นหลัง)
+      loadUserProfile();
+      
+      // แสดง success message
       Alert.alert(t('success') || 'สำเร็จ', t('affiliateEnabledMsg') || 'เปิดใช้งาน Affiliate แล้ว');
-      // ดึงโปรไฟล์อีกรอบเพื่อให้ state สอดคล้องฐานข้อมูล
-      await loadUserProfile();
     } else {
       throw new Error(res?.data?.message || 'Enable affiliate failed');
     }
   } catch (e) {
     const msg = e?.response?.data?.message || e?.message || (t('tryAgain') || 'ลองใหม่อีกครั้ง');
     Alert.alert(t('error') || 'เกิดข้อผิดพลาด', msg);
+    setIsTransitioning(false);
   } finally {
     setEnabling(false);
   }
@@ -436,29 +458,38 @@ const enableAffiliate = async () => {
           {/* ส่วนลิงก์และสรุปจะแสดงเมื่อเปิดใช้งานแล้ว */}
           {affiliateEnabled && (
             <>
-              <MetricCard
-                title={t('totalListings') || 'Total Listings'}
-                value={affiliateData.totalListings}
-                icon="format-list-bulleted"
-                color="#10B981"
-              />
-              <MetricCard
-                title={t('earning') || 'Earning'}
-                value={`฿${affiliateData.earning.toFixed(2)}`}
-                icon="trending-up"
-                color="#3B82F6"
-              />
+              {isTransitioning ? (
+                <View style={styles.transitionContainer}>
+                  <ActivityIndicator size="large" color="#FD501E" />
+                  <Text style={styles.transitionText}>{t('loadingAffiliate') || 'กำลังโหลดข้อมูล Affiliate...'}</Text>
+                </View>
+              ) : (
+                <>
+                  <MetricCard
+                    title={t('totalListings') || 'Total Listings'}
+                    value={affiliateData.totalListings}
+                    icon="format-list-bulleted"
+                    color="#10B981"
+                  />
+                  <MetricCard
+                    title={t('earning') || 'Earning'}
+                    value={`฿${affiliateData.earning.toFixed(2)}`}
+                    icon="trending-up"
+                    color="#3B82F6"
+                  />
 
-              <LinkCard
-                title={t('yourAffiliate') || 'Your Affiliate:'}
-                subtitle={t('shareLink40') || 'Share this link and earn up to 40% commission on bookings!'}
-                link={referralLink}
-              />
-              <LinkCard
-                title={t('inviteFriends') || 'Invite friends:'}
-                subtitle={t('shareAppLink') || 'Share this link to open TheTrago app!'}
-                link={inviteLink}
-              />
+                  <LinkCard
+                    title={t('yourAffiliate') || 'Your Affiliate:'}
+                    subtitle={t('shareLink40') || 'Share this link and earn up to 40% commission on bookings!'}
+                    link={referralLink}
+                  />
+                  <LinkCard
+                    title={t('inviteFriends') || 'Invite friends:'}
+                    subtitle={t('shareAppLink') || 'Share this link to open TheTrago app!'}
+                    link={inviteLink}
+                  />
+                </>
+              )}
             </>
           )}
         </View>
@@ -589,6 +620,29 @@ const styles = StyleSheet.create({
   metricContent: { flex: 1 },
   metricValue: { fontSize: wp('5%'), fontWeight: 'bold', color: '#1F2937', marginBottom: 4 },
   metricTitle: { fontSize: wp('3.5%'), color: '#6B7280', fontWeight: '500' },
+
+  // transition
+  transitionContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: wp('8%'),
+    borderRadius: wp('3%'),
+    marginBottom: hp('2%'),
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: hp('20%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  transitionText: {
+    fontSize: wp('4%'),
+    color: '#6B7280',
+    marginTop: hp('2%'),
+    textAlign: 'center',
+    fontWeight: '500',
+  },
 
   // link card
   linkCard: {

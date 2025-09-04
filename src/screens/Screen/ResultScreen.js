@@ -31,6 +31,8 @@ const ResultScreen = ({ navigation, route }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
 
+      const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
+
   // ฟังก์ชันจัดการ countrycode ให้มี + เพียงตัวเดียว
   const formatCountryCode = (code) => {
     if (!code) return '';
@@ -571,15 +573,10 @@ const ResultScreen = ({ navigation, route }) => {
             {
               width: '100%',
               marginLeft: '0%',
-              marginTop: -20,
+              paddingTop: insets.top + EXTRA_TOP_GUTTER,
               borderBottomLeftRadius: 45,
               borderBottomRightRadius: 45,
               paddingBottom: 12,
-              shadowColor: '#001233',
-              shadowOpacity: 0.18,
-              shadowRadius: 30,
-              shadowOffset: { width: 0, height: 10 },
-              elevation: 22,
               padding: 12,
               minHeight: hp('13%'),
               borderWidth: 1.5,
@@ -597,7 +594,7 @@ const ResultScreen = ({ navigation, route }) => {
                 paddingHorizontal: 0,
                 paddingTop: 0,
                 position: 'relative',
-                marginTop: -10,
+                marginTop: 0,
                 height: 56,
               },
             ]}
@@ -612,11 +609,6 @@ const ResultScreen = ({ navigation, route }) => {
                 borderRadius: 28,
                 padding: 10,
                 zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.25,
-                shadowRadius: 15,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 12,
                 borderWidth: 1.5,
                 borderColor: 'rgba(253, 80, 30, 0.12)',
                 backdropFilter: 'blur(20px)',
@@ -647,11 +639,6 @@ const ResultScreen = ({ navigation, route }) => {
           backdropFilter: 'blur(15px)',
           borderWidth: 1.5,
           borderColor: 'rgba(255,255,255,0.25)',
-          shadowColor: '#000',
-          shadowOpacity: 0.08,
-          shadowRadius: wp('3%'),
-          shadowOffset: { width: 0, height: hp('0.5%') },
-          elevation: 6,
         }}>
           <View style={{ flex: 1 }}>
             <Text style={[
@@ -664,9 +651,6 @@ const ResultScreen = ({ navigation, route }) => {
                 textAlign: 'left', 
                 marginLeft: 0,
                 lineHeight: wp('8.5%'),
-                textShadowColor: 'rgba(0,0,0,0.4)',
-                textShadowRadius: 6,
-                textShadowOffset: { width: 2, height: 2 },
               }
             ]}>
               {success ? t('bookingConfirmed') : t('bookingFailed')}
@@ -677,9 +661,6 @@ const ResultScreen = ({ navigation, route }) => {
               fontWeight: '600',
               marginTop: hp('0.8%'),
               letterSpacing: 0.5,
-              textShadowColor: 'rgba(0,0,0,0.3)',
-              textShadowRadius: 3,
-              textShadowOffset: { width: 1, height: 1 },
             }}>
               {success ? t('ticketConfirmed') : t('contactSupport')}
             </Text>

@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    // elevation: 3,
   },
 
   inputBox: {
@@ -80,7 +79,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    // elevation: 2,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'flex-start', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
@@ -94,7 +92,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    // elevation: 2,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'space-between',
@@ -165,7 +162,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    // elevation: 2,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'center',
@@ -185,7 +181,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    // elevation: 2,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'center',
@@ -246,7 +241,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('1%') },
     shadowOpacity: 0.2,
     shadowRadius: wp('4%'),
-    // elevation: 15,
     borderWidth: wp('0.2%'),
     borderColor: 'rgba(253, 80, 30, 0.12)',
   },
@@ -293,7 +287,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.8%') },
     shadowOpacity: 0.15,
     shadowRadius: wp('3%'),
-    // elevation: 8,
     borderWidth: wp('0.2%'),
     borderColor: 'rgba(253, 80, 30, 0.08)',
   },
@@ -485,7 +478,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.2%') },
     shadowOpacity: 0.06,
     shadowRadius: wp('1.5%'),
-    // elevation: 3,
   },
   timetable: {
     fontSize: 12,
@@ -593,7 +585,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.2%') },
     shadowOpacity: 0.08,
     shadowRadius: wp('1.5%'),
-    // elevation: 3,
   },
   BackButtonText: {
     color: '#64748B',
@@ -617,7 +608,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.4%') },
     shadowOpacity: 0.25,
     shadowRadius: wp('2%'),
-    // elevation: 8,
   },
   searchButtonText: {
     color: '#FFFFFF',
@@ -649,7 +639,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('1%') },
     shadowOpacity: 0.15,
     shadowRadius: wp('4%'),
-    // elevation: 12,
   },
   icon: {
     marginLeft: 10,
@@ -672,7 +661,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.2%') },
     shadowOpacity: 0.06,
     shadowRadius: wp('1.5%'),
-    // elevation: 3,
   },
   optionItem: {
     paddingVertical: hp('1.5%'),
@@ -688,7 +676,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('0.1%') },
     shadowOpacity: 0.04,
     shadowRadius: wp('0.8%'),
-    // elevation: 2,
   },
   optionText: {
     fontSize: wp('4%'),

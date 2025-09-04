@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoTheTrago from '../../components/component/Logo';
@@ -8,6 +8,7 @@ import Textinput from '../../components/component/Textinput';
 import ipAddress from '../../config/ipconfig';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
+import * as SecureStore from 'expo-secure-store';
 import { useLanguage } from './LanguageContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -344,6 +345,18 @@ const CustomerInfo = ({ navigation }) => {
   const [PriceReturn, setPriceReturn] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [setError] = useState('');
+  const [hasToken, setHasToken] = useState(false);
+
+  // Check if user has token (is logged in)
+  const checkToken = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+      setHasToken(!!token);
+    } catch (error) {
+      console.log('Error checking token:', error);
+      setHasToken(false);
+    }
+  };
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -367,6 +380,8 @@ const CustomerInfo = ({ navigation }) => {
   }
 
   useEffect(() => {
+    checkToken(); // Check token on component mount
+    
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -607,8 +622,8 @@ const CustomerInfo = ({ navigation }) => {
       if (!Lastname) newErrors.Lastname = true;
       if (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTele = true;
       if (!mobileNumber) newErrors.mobileNumber = true;
-      if (!email) newErrors.email = true;
-
+      
+      // Email validation
       if (!email) {
         newErrors.email = true;
       } else {
@@ -663,7 +678,13 @@ const CustomerInfo = ({ navigation }) => {
         setShowAllErrors(true);
         if (newErrors.email) {
           Alert.alert(t('invalidEmail') || 'Invalid Email', t('pleaseEnterValidEmail') || 'Please enter a valid email address.', [
-            { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
+            { 
+              text: t('ok') || 'OK', 
+              onPress: () => {
+                console.log('OK Pressed');
+                // Don't clear errors here - let user fix the email first
+              } 
+            }
           ]);
         } else {
           Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredFields') || 'Please fill in all required fields.', [
@@ -840,8 +861,10 @@ const CustomerInfo = ({ navigation }) => {
           throw new Error('Network response was not ok');
         }
         const timetableData = await timetableResponse.json();
+        console.log('Timetable Depart Data:', timetableData); // Debug log
         if (timetableData && Array.isArray(timetableData.data)) {
           settimetableDepart(timetableData.data);
+          console.log('Timetable Depart Set:', timetableData.data); // Debug log
         } else {
           console.error('Data is not an array', timetableData);
           settimetableDepart([]);
@@ -863,7 +886,7 @@ const CustomerInfo = ({ navigation }) => {
     loadData();
   }, [customerData.timeTableReturnId]);
 
-    const EXTRA_TOP_GUTTER = 50;
+    const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
   if (isLoading) {
     return (
@@ -917,11 +940,6 @@ const CustomerInfo = ({ navigation }) => {
                 borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
                 borderBottomRightRadius: getResponsiveSize(40, 35, 30),
                 paddingBottom: getResponsiveSize(8, 6, 5),
-                shadowColor: '#001233',
-                shadowOpacity: 0.15,
-                shadowRadius: getResponsiveSize(25, 20, 15),
-                shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
-                elevation: 18,
                 padding: getResponsiveSize(10, 8, 6),
                 minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
                 borderWidth: 1,
@@ -958,11 +976,6 @@ const CustomerInfo = ({ navigation }) => {
                   borderRadius: getResponsiveSize(25, 22, 20),
                   padding: getResponsiveSize(8, 10, 12),
                   zIndex: 2,
-                  shadowColor: '#FD501E',
-                  shadowOpacity: 0.2,
-                  shadowRadius: getResponsiveSize(12, 10, 8),
-                  shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
-                  elevation: 8,
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.1)',
                 }}
@@ -1006,9 +1019,6 @@ const CustomerInfo = ({ navigation }) => {
                   textAlign: 'left',
                   marginLeft: 0,
                   lineHeight: wp('8%'),
-                  textShadowColor: 'rgba(0,0,0,0.3)',
-                  textShadowRadius: 4,
-                  textShadowOffset: { width: 1, height: 1 },
                 }
               ]}>
                 {t('customerInformation') || 'Customer Information'}
@@ -1019,8 +1029,6 @@ const CustomerInfo = ({ navigation }) => {
                 fontWeight: '500',
                 marginTop: hp('0.5%'),
                 letterSpacing: 0.3,
-                textShadowColor: 'rgba(0,0,0,0.2)',
-                textShadowRadius: 2,
               }}>
                 {t('findYourPerfectJourney') || 'Find your perfect journey'}
               </Text>
@@ -1055,10 +1063,6 @@ const CustomerInfo = ({ navigation }) => {
                   borderRadius: wp('5%'),
                   padding: wp('5%'),
                   marginBottom: hp('3%'),
-                  shadowColor: '#001233',
-                  shadowOpacity: 0.08,
-                  shadowRadius: 20,
-                  shadowOffset: { width: 0, height: 8 },
                   borderWidth: 1,
                   borderColor: 'rgba(200, 200, 200, 0.2)',
                 }}>
@@ -1109,11 +1113,6 @@ const CustomerInfo = ({ navigation }) => {
               borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
               borderBottomRightRadius: getResponsiveSize(40, 35, 30),
               paddingBottom: getResponsiveSize(8, 6, 5),
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: getResponsiveSize(25, 20, 15),
-              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
-              elevation: 18,
               padding: getResponsiveSize(10, 8, 6),
               minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
@@ -1154,7 +1153,6 @@ const CustomerInfo = ({ navigation }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: getResponsiveSize(12, 10, 8),
                 shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
-                elevation: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1172,8 +1170,6 @@ const CustomerInfo = ({ navigation }) => {
         </LinearGradient>
 
       
-
-        <StatusBar barStyle="light-content" backgroundColor="#FD501E" translucent />
 
         <KeyboardAvoidingView
           behavior="padding"
@@ -1378,10 +1374,27 @@ const CustomerInfo = ({ navigation }) => {
                     value={email}
                     onChangeText={(text) => {
                       setemail(text);
-                      setErrors((prev) => ({ ...prev, email: false }));
+                      
+                      // Real-time email validation
+                      if (text && text.length > 0) {
+                        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                        if (!emailRegex.test(text)) {
+                          // Don't clear errors immediately, let validation show
+                        } else {
+                          // Clear errors when email is valid
+                          setErrors((prev) => ({ ...prev, email: false }));
+                          setContactErrors(prev => ({ ...prev, email: false }));
+                        }
+                      } else {
+                        // Clear errors when field is empty
+                        setErrors((prev) => ({ ...prev, email: false }));
+                        setContactErrors(prev => ({ ...prev, email: false }));
+                      }
                     }}
-                    style={[styles.input, (errors.email || (showAllErrors && !email)) && styles.errorInput, customerData.email && styles.disabledInput]}
-                    editable={!customerData.email}
+                    style={[styles.input, (errors.email || contactErrors.email || (showAllErrors && !email)) && styles.errorInput, hasToken && styles.disabledInput]}
+                    editable={!hasToken}
+                    selectTextOnFocus={!hasToken}
+                    keyboardType="email-address"
                   />
                 </View>
               ) : (
@@ -1486,9 +1499,13 @@ const CustomerInfo = ({ navigation }) => {
                       style={[styles.input, contactErrors.email && styles.errorInput]}
                       keyboardType="email-address"
                       value={email}
+                      editable={true}
+                      selectTextOnFocus={true}
                       onChangeText={text => {
                         setemail(text);
+                        // Clear both error states when user starts typing
                         setContactErrors(prev => ({ ...prev, email: false }));
+                        setErrors(prev => ({ ...prev, email: false }));
                       }}
                     />
                   </View>
@@ -1501,31 +1518,32 @@ const CustomerInfo = ({ navigation }) => {
                   <View style={styles.promo}>
                     <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>{t('bookingSummary') || 'Booking Summary'}</Text>
                     <View style={styles.divider} />
-                    {timetableDepart.map((item, index) => (
-                      <View key={index}>
-                        <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
+                    {timetableDepart && timetableDepart.length > 0 ? (
+                      timetableDepart.map((item, index) => (
+                        <View key={index}>
+                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
-                        <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                          {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
+                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                            {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
                           <AntDesign name="arrowright" size={14} color="#FD501E" />
                           {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                         </Text>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'} </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                            {(selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai) || 'Loading...'}
                           </Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                            {(selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai) || 'Loading...'}
                           </Text>
                         </View>
                         <View style={styles.rowpromo}>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'} </Text>
                           <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_nameth}
+                            {(selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_namethai) || 'Loading...'}
                           </Text>
                         </View>
                         <View style={styles.rowpromo}>
@@ -1584,13 +1602,21 @@ const CustomerInfo = ({ navigation }) => {
 
                         <View style={styles.divider} />
                       </View>
-                    ))}
+                    ))
+                    ) : (
+                      <View>
+                        <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>
+                          {t('loadingTimetable') || 'Loading timetable information...'}
+                        </Text>
+                      </View>
+                    )}
                     {customerData.roud === 2 && (
                       <>
-                        {timetableReturn.map((item, index) => (
-                          <View key={index}>
-                            <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
-                            <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                        {timetableReturn && timetableReturn.length > 0 ? (
+                          timetableReturn.map((item, index) => (
+                            <View key={index}>
+                              <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
+                              <Text style={{ marginTop: 5, color: '#FD501E' }}>
                               {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
                               <AntDesign name="arrowright" size={14} color="#FD501E" />
                               {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
@@ -1598,18 +1624,18 @@ const CustomerInfo = ({ navigation }) => {
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
                               <Text style={{ color: '#666666' }}>
-                                {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_nameth}
+                                {(selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai) || 'Loading...'}
                               </Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
                               <Text style={{ color: '#666666' }}>
-                                {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_nameth}
+                                {(selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai) || 'Loading...'}
                               </Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
-                              <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                              <Text style={{ color: '#666666' }}>{(selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_namethai) || 'Loading...'}</Text>
                             </View>
                             <View style={styles.rowpromo}>
                               <Text style={{ color: '#666666' }}>{t('departureData') || 'Departure Data'}</Text>
@@ -1667,7 +1693,14 @@ const CustomerInfo = ({ navigation }) => {
                             </View>
                             <View style={styles.divider} />
                           </View>
-                        ))}
+                        ))
+                        ) : (
+                          <View>
+                            <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>
+                              {t('loadingReturnTimetable') || 'Loading return timetable information...'}
+                            </Text>
+                          </View>
+                        )}
                       </>
                     )}
                     <View style={styles.rowpromo}>
