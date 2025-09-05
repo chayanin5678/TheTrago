@@ -271,12 +271,12 @@ const AccountScreen = ({ navigation }) => {
   // image picker
   const pickImage = async () => {
     Alert.alert(
-      "Select Profile Picture",
-      "Choose how you'd like to update your profile picture",
+      t('updateProfilePicture') || "อัพเดทรูปโปรไฟล์",
+      t('updateProfilePictureDesc') || "เลือกวิธีที่คุณต้องการอัพเดทรูปโปรไฟล์ รูปภาพของคุณจะใช้สำหรับการยืนยันตัวตนและช่วยให้เจ้าหน้าที่เรือระบุตัวคุณได้ในระหว่างการขึ้นเรือ",
       [
-        { text: "Camera", onPress: () => openCamera(), style: "default" },
-        { text: "Photo Library", onPress: () => openImageLibrary(), style: "default" },
-        { text: "Cancel", style: "cancel" }
+        { text: t('takePhoto') || "ถ่ายภาพ", onPress: () => openCamera(), style: "default" },
+        { text: t('chooseFromLibrary') || "เลือกจากคลังภาพ", onPress: () => openImageLibrary(), style: "default" },
+        { text: t('cancel') || "ยกเลิก", style: "cancel" }
       ],
       { cancelable: true }
     );
@@ -285,7 +285,10 @@ const AccountScreen = ({ navigation }) => {
   const openCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission Required", "Camera access is required to take photos.");
+      Alert.alert(
+        t('cameraAccessRequired') || "ต้องการสิทธิ์เข้าถึงกล้อง", 
+        t('cameraAccessDesc') || "TheTrago ต้องการสิทธิ์เข้าถึงกล้องเพื่อถ่ายภาพโปรไฟล์ สิ่งนี้จะช่วยให้ผู้ใช้อื่นและผู้ปฏิบัติงานเรือระบุตัวคุณได้ในระหว่างการขึ้นเรือและรับประกันประสบการณ์การเดินทางที่เป็นส่วนตัว"
+      );
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -303,7 +306,10 @@ const AccountScreen = ({ navigation }) => {
   const openImageLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission Required", "Photo library access is required to select images.");
+      Alert.alert(
+        t('photoLibraryAccessRequired') || "ต้องการสิทธิ์เข้าถึงคลังภาพ", 
+        t('photoLibraryAccessDesc') || "TheTrago ต้องการสิทธิ์เข้าถึงคลังภาพของคุณเพื่อเลือกและอัพโหลดรูปโปรไฟล์ รูปโปรไฟล์ของคุณจะแสดงในการตั้งค่าบัญชีและใช้โดยผู้ปฏิบัติงานเรือเพื่อยืนยันตัวตนในระหว่างการเช็คอิน เพื่อรับประกันประสบการณ์การจองที่ปลอดภัยและเป็นส่วนตัว รูปภาพอื่นจะไม่ถูกเข้าถึงหรือจัดเก็บ"
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -333,17 +339,17 @@ const AccountScreen = ({ navigation }) => {
 
       const result = await response.json();
       if (!(response.ok && result.status === 'success')) {
-        throw new Error(result.message || "Upload failed");
+        throw new Error(result.message || (t('uploadFailed') || "การอัพโหลดล้มเหลว"));
       }
     } catch (error) {
       console.error('Upload error:', error);
       setProfileImage(null);
       Alert.alert(
-        "Upload Failed ❌",
-        "There was an error updating your profile picture. Please try again.",
+        t('uploadFailedTitle') || "การอัพโหลดล้มเหลว ❌",
+        t('uploadFailedDesc') || "เกิดข้อผิดพลาดในการอัพเดทรูปโปรไฟล์ของคุณ กรุณาลองใหม่อีกครั้ง",
         [
-          { text: "Try Again", onPress: () => pickImage() },
-          { text: "Cancel", style: "cancel" }
+          { text: t('tryAgain') || "ลองใหม่", onPress: () => pickImage() },
+          { text: t('cancel') || "ยกเลิก", style: "cancel" }
         ]
       );
     } finally {
@@ -444,7 +450,7 @@ const AccountScreen = ({ navigation }) => {
                 {isUploading && (
                   <View style={styles.uploadingOverlay}>
                     <ActivityIndicator size="large" color="#FD501E" />
-                    <Text style={styles.uploadingText}>Uploading...</Text>
+                    <Text style={styles.uploadingText}>{t('uploading') || "กำลังอัพโหลด..."}</Text>
                   </View>
                 )}
 

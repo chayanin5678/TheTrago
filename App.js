@@ -316,7 +316,7 @@ const MainNavigator = () => {
           title: selectedLanguage === 'th' ? 'ตั๋ว' : 'Booking',
         }} 
       />
-        <Tab.Screen 
+        {/* <Tab.Screen 
     name="Web"                                  // ✅ แท็บใหม่
     component={TheTragoWebViewScreen}           // ✅ ใช้หน้าจอ WebView
     options={{ title: t('web') || 'Web' }}      // ✅ ปรับชื่อจากภาษาที่เลือกได้
@@ -327,7 +327,7 @@ const MainNavigator = () => {
         options={{ 
           title: isLoggedIn ? t('account') : t('login'),
         }} 
-      />
+      /> */}
     </Tab.Navigator>
   );
 };

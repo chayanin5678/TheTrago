@@ -214,8 +214,8 @@ const IDCardCameraScreen = ({ navigation }) => {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          t('cameraPermissionRequired') || "Camera Permission Required",
-          t('cameraPermissionMessage') || "Please allow camera access.",
+          t('cameraPermissionRequired') || "Camera Access Required",
+          t('cameraPermissionIDMessage') || "TheTrago needs camera access to capture your ID card or passport for identity verification. This photo will be processed to extract your personal information automatically and securely verify your identity for ferry bookings. Your document photo is encrypted and used only for verification purposes.",
           [{ text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }, { text: t('cancel') || "Cancel", style: 'cancel' }]
         );
         return;
@@ -240,7 +240,7 @@ const IDCardCameraScreen = ({ navigation }) => {
     } catch (e) {
       console.error('openCamera error:', e);
       setIsProcessing(false);
-      Alert.alert('Error', 'Unable to open camera.');
+      Alert.alert(t('error') || 'Error', t('unableToOpenCamera') || 'Unable to open camera.');
     }
   };
 
@@ -249,9 +249,9 @@ const IDCardCameraScreen = ({ navigation }) => {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          "Gallery Permission Required",
-          "Please allow photo library access.",
-          [{ text: "Open Settings", onPress: () => Linking.openSettings() }, { text: "Cancel", style: "cancel" }]
+          t('galleryPermissionRequired') || "Photo Library Access Required",
+          t('galleryPermissionIDMessage') || "TheTrago needs access to your photo library to select an ID card or passport photo for identity verification. Only the selected document image will be processed to extract your personal information and verify your identity for secure ferry bookings. No other photos will be accessed or stored.",
+          [{ text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }, { text: t('cancel') || "Cancel", style: "cancel" }]
         );
         return;
       }
@@ -275,7 +275,7 @@ const IDCardCameraScreen = ({ navigation }) => {
     } catch (e) {
       console.error('openGallery error:', e);
       setIsProcessing(false);
-      Alert.alert('Error', 'Unable to open gallery.');
+      Alert.alert(t('error') || 'Error', t('unableToOpenGallery') || 'Unable to open gallery.');
     }
   };
 
@@ -408,7 +408,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         setOcrText(ocrResult);
         parseIDText(ocrResult);
         setOcrProgress('');
-        Alert.alert('Scanned Successfully', 'Please verify the extracted number.');
+        Alert.alert(t('scannedSuccessfully') || 'Scanned Successfully', t('verifyExtractedNumber') || 'Please verify the extracted number.');
       } else {
         throw new Error('No text detected from document');
       }
@@ -465,23 +465,23 @@ const IDCardCameraScreen = ({ navigation }) => {
 
     if (foundId) {
       setIdNumber(foundId);
-      Alert.alert('Number Found', `${documentType} Number: ${foundId}`);
+      Alert.alert(t('numberFound') || 'Number Found', `${documentType} ${t('number') || 'Number'}: ${foundId}`);
     } else {
-      Alert.alert('Not Found', 'Could not detect document number. Please enter manually or retake.');
+      Alert.alert(t('notFound') || 'Not Found', t('couldNotDetectNumber') || 'Could not detect document number. Please enter manually or retake.');
     }
   };
 
   const handleSave = async () => {
     if (!idNumber) {
-      Alert.alert('Missing Information', `Please enter your ${documentType} number.`);
+      Alert.alert(t('missingInformation') || 'Missing Information', t('pleaseEnterDocumentNumber') || `Please enter your ${documentType} number.`);
       return;
     }
     if (!photo) {
-      Alert.alert('Missing Document', `Please upload your ${documentType.toLowerCase()} photo.`);
+      Alert.alert(t('missingDocument') || 'Missing Document', t('pleaseUploadDocumentPhoto') || `Please upload your ${documentType.toLowerCase()} photo.`);
       return;
     }
     if (!token) {
-      Alert.alert('Authentication Error', 'Please login again.');
+      Alert.alert(t('authenticationError') || 'Authentication Error', t('pleaseLoginAgain') || 'Please login again.');
       return;
     }
 
@@ -525,19 +525,19 @@ const IDCardCameraScreen = ({ navigation }) => {
                   const txt = await res.text();
                   if (res.ok) {
                     setIsProcessing(false);
-                    Alert.alert('Success', 'ID number updated.', [{ text: 'OK', onPress: () => navigation.navigate('ProfileScreen') }]);
+                    Alert.alert(t('success') || 'Success', t('idNumberUpdated') || 'ID number updated.', [{ text: t('ok') || 'OK', onPress: () => navigation.navigate('ProfileScreen') }]);
                   } else {
                     setIsProcessing(false);
-                    Alert.alert('Update Not Supported', 'Please take a new photo to update.', [
-                      { text: 'Take New Photo', onPress: () => pickImage() },
-                      { text: 'Cancel', style: 'cancel' }
+                    Alert.alert(t('updateNotSupported') || 'Update Not Supported', t('takeNewPhotoToUpdate') || 'Please take a new photo to update.', [
+                      { text: t('takeNewPhoto') || 'Take New Photo', onPress: () => pickImage() },
+                      { text: t('cancel') || 'Cancel', style: 'cancel' }
                     ]);
                   }
                 } catch (err) {
                   setIsProcessing(false);
-                  Alert.alert('Update Failed', 'Please take a new photo to update.', [
-                    { text: 'Take New Photo', onPress: () => pickImage() },
-                    { text: 'Cancel', style: 'cancel' }
+                  Alert.alert(t('updateFailed') || 'Update Failed', t('takeNewPhotoToUpdate') || 'Please take a new photo to update.', [
+                    { text: t('takeNewPhoto') || 'Take New Photo', onPress: () => pickImage() },
+                    { text: t('cancel') || 'Cancel', style: 'cancel' }
                   ]);
                 }
               }
@@ -561,19 +561,19 @@ const IDCardCameraScreen = ({ navigation }) => {
 
       if (uploadResponse.ok && result?.status === 'success') {
         setIsProcessing(false);
-        Alert.alert('Success', 'Your verification has been submitted.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        Alert.alert(t('success') || 'Success', t('verificationSubmitted') || 'Your verification has been submitted.', [{ text: t('ok') || 'OK', onPress: () => navigation.goBack() }]);
       } else {
         throw new Error(result?.message || `Upload failed (${uploadResponse.status})`);
       }
     } catch (error) {
       setIsProcessing(false);
-      let message = 'Unable to save. Please try again.';
-      if (/network|fetch/i.test(error.message)) message = 'Network error. Please try again.';
-      if (/auth|token/i.test(error.message)) message = 'Authentication error. Please login again.';
-      if (/Only .png, .jpg, .jpeg/i.test(error.message)) message = 'Invalid file format. Use JPG/PNG.';
-      Alert.alert('Upload Failed', message, [
-        { text: 'Try Again', onPress: () => handleSave() },
-        { text: 'Cancel', style: 'cancel' }
+      let message = t('unableToSave') || 'Unable to save. Please try again.';
+      if (/network|fetch/i.test(error.message)) message = t('networkError') || 'Network error. Please try again.';
+      if (/auth|token/i.test(error.message)) message = t('authenticationErrorLogin') || 'Authentication error. Please login again.';
+      if (/Only .png, .jpg, .jpeg/i.test(error.message)) message = t('invalidFileFormat') || 'Invalid file format. Use JPG/PNG.';
+      Alert.alert(t('uploadFailed') || 'Upload Failed', message, [
+        { text: t('tryAgain') || 'Try Again', onPress: () => handleSave() },
+        { text: t('cancel') || 'Cancel', style: 'cancel' }
       ]);
     }
   };
