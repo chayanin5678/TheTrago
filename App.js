@@ -320,14 +320,14 @@ const MainNavigator = () => {
     name="Web"                                  // ✅ แท็บใหม่
     component={TheTragoWebViewScreen}           // ✅ ใช้หน้าจอ WebView
     options={{ title: t('web') || 'Web' }}      // ✅ ปรับชื่อจากภาษาที่เลือกได้
-  />
+  /> */}
       <Tab.Screen 
         name="Login" 
         component={AccountTabNavigator} 
         options={{ 
           title: isLoggedIn ? t('account') : t('login'),
         }} 
-      /> */}
+      />
     </Tab.Navigator>
   );
 };

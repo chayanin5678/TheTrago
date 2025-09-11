@@ -146,6 +146,21 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.3,
     flex: 1,
   },
+  realOcrBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  realOcrText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#22C55E',
+    letterSpacing: 0.2,
+  },
   existingDataBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,25 +256,53 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
+    height: 60,
     justifyContent: 'flex-end',
+    padding: 15,
   },
-  retakeButton: {
+  documentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    gap: 5,
+    gap: 8,
   },
-  retakeButtonText: {
+  documentStatus: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+
+  // Existing Document Info
+  existingDocumentInfo: {
+    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  existingDocumentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  existingDocumentTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22C55E',
+    letterSpacing: 0.2,
+  },
+  existingDocumentDate: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  existingDocumentNote: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
   },
 
   // Input Premium
@@ -341,6 +384,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 15,
     marginTop: 10,
+    marginBottom: 25,
   },
   closeButton: {
     flex: 1,
@@ -544,6 +588,12 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#EF4444',
     marginTop: 8,
+  },
+  imageErrorSubtext: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+    textAlign: 'center',
   },
   imageErrorUri: {
     fontSize: 10,

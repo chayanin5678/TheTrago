@@ -801,7 +801,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                 <Text style={styles.existingDocumentDate}>
                   {(t('lastUpdated') || 'Last updated')}: {new Date(existingPassportInfo.last_updated).toLocaleDateString('en-US')}
                 </Text>
-                <Text style={styles.existingDocumentNote}>You can upload a new document to replace the existing one</Text>
+                <Text style={styles.existingDocumentNote}>{t('replaceExistingDocument') || 'You can upload a new document to replace the existing one'}</Text>
               </View>
             )}
 
@@ -815,17 +815,21 @@ const IDCardCameraScreen = ({ navigation }) => {
                     <Animated.View style={{ transform: [{ rotate: uploadLoadingSpin }] }}>
                       <MaterialCommunityIcons name="loading" size={24} color="#FFFFFF" />
                     </Animated.View>
-                    <Text style={styles.uploadTextProcessing}>{ocrProgress || 'Processing...'}</Text>
+                    <Text style={styles.uploadTextProcessing}>{ocrProgress || (t('processing') || 'Processing...')}</Text>
                   </>
                 ) : photo ? (
                   <>
                     <MaterialIcons name="check-circle" size={24} color="#FFFFFF" />
-                    <Text style={styles.uploadTextSuccess}>Document Uploaded</Text>
+                    <Text style={styles.uploadTextSuccess}>{t('documentUploaded') || 'Document Uploaded'}</Text>
                   </>
                 ) : (
                   <>
                     <MaterialCommunityIcons name="camera" size={24} color="#FD501E" />
-                    <Text style={styles.uploadText}>Upload {documentType}</Text>
+                    <Text style={styles.uploadText}>
+                      {documentType === 'ID Card' 
+                        ? (t('uploadIdCard') || 'Upload ID Card')
+                        : (t('uploadPassport') || 'Upload Passport')}
+                    </Text>
                   </>
                 )}
               </LinearGradient>
@@ -842,8 +846,8 @@ const IDCardCameraScreen = ({ navigation }) => {
                   {imageLoadError ? (
                     <View style={styles.imageErrorContainer}>
                       <MaterialCommunityIcons name="image-broken-variant" size={48} color="#9CA3AF" />
-                      <Text style={styles.imageErrorText}>Image failed to load</Text>
-                      <Text style={styles.imageErrorSubtext}>The document image could not be displayed</Text>
+                      <Text style={styles.imageErrorText}>{t('imageFailedToLoad') || 'Image failed to load'}</Text>
+                      <Text style={styles.imageErrorSubtext}>{t('documentImageError') || 'The document image could not be displayed'}</Text>
                     </View>
                   ) : (
                     <Image
@@ -859,8 +863,8 @@ const IDCardCameraScreen = ({ navigation }) => {
                       <MaterialCommunityIcons name="shield-check" size={16} color="#22C55E" />
                       <Text style={styles.documentStatus}>
                         {existingPassportInfo.has_document && typeof photo === 'string' && photo.includes('thetrago.com')
-                          ? 'Previously Uploaded Document'
-                          : 'Verified Document'}
+                          ? (t('previouslyUploadedDocumentShort') || 'Previously Uploaded Document')
+                          : (t('verifiedDocument') || 'Verified Document')}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -873,7 +877,7 @@ const IDCardCameraScreen = ({ navigation }) => {
                 <Animated.View style={{ transform: [{ rotate: loadingSpin }] }}>
                   <MaterialCommunityIcons name="loading" size={20} color="#FD501E" />
                 </Animated.View>
-                <Text style={styles.loadingText}>Loading existing data...</Text>
+                <Text style={styles.loadingText}>{t('loadingExistingData') || 'Loading existing data...'}</Text>
               </View>
             )}
           </Animated.View>
@@ -897,12 +901,12 @@ const IDCardCameraScreen = ({ navigation }) => {
                     <Animated.View style={{ transform: [{ rotate: saveLoadingSpin }] }}>
                       <MaterialCommunityIcons name="loading" size={20} color="#FFFFFF" />
                     </Animated.View>
-                    <Text style={styles.saveButtonTextPremium}>Processing...</Text>
+                    <Text style={styles.saveButtonTextPremium}>{t('processing') || 'Processing...'}</Text>
                   </>
                 ) : (
                   <>
                     <MaterialIcons name="save" size={20} color="#FFFFFF" />
-                    <Text style={styles.saveButtonTextPremium}>Save</Text>
+                    <Text style={styles.saveButtonTextPremium}>{t('save') || 'Save'}</Text>
                   </>
                 )}
               </LinearGradient>

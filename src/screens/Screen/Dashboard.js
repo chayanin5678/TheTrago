@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert,
-  SafeAreaView, Animated, Easing, Dimensions, Platform
+  Animated, Easing, Dimensions, Platform
 } from 'react-native';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from './LanguageContext';
 import { useCustomer } from './CustomerContext';
 import ipAddress from '../../config/ipconfig';
-import CrossPlatformStatusBar from '../../components/component/CrossPlatformStatusBar';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const Dashboard = ({ navigation }) => {
   const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
+  const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState({ upcoming: 0, cancelled: 0, completed: 0 });
   const [userPoints, setUserPoints] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -234,7 +235,6 @@ const Dashboard = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <CrossPlatformStatusBar barStyle="light-content" backgroundColor="#FD501E" />
 
       {/* Header แบบ Contact: ใช้ headerAnim */}
       <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerAnim }] }]}>
@@ -243,7 +243,7 @@ const Dashboard = ({ navigation }) => {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
         >
-          <SafeAreaView style={styles.safeAreaHeader}>
+          <View style={[styles.safeAreaHeader, { paddingTop: insets.top }]}>
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -273,7 +273,7 @@ const Dashboard = ({ navigation }) => {
                 ]}
               />
             ))}
-          </SafeAreaView>
+          </View>
         </LinearGradient>
       </Animated.View>
 

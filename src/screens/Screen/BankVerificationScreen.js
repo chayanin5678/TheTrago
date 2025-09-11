@@ -6,8 +6,6 @@ import {
   Image,
   TextInput,
   ScrollView,
-  SafeAreaView,
-  StatusBar,
   Animated,
   Easing,
   Dimensions,
@@ -22,6 +20,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomer } from './CustomerContext.js';
 import { useLanguage } from './LanguageContext';
 import { Linking } from 'react-native';
@@ -34,6 +33,7 @@ const { height: screenHeight } = Dimensions.get('window');
 const BankVerificationScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
   const [selectedBank, setSelectedBank] = useState(t('selectBankName') || 'Select Bank Name');
@@ -727,7 +727,6 @@ const BankVerificationScreen = ({ navigation }) => {
 
   return (
     <View style={styles.containerPremium}>
-      <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
 
       {/* Particles */}
       <View style={styles.particlesContainer} pointerEvents="none">
@@ -750,7 +749,7 @@ const BankVerificationScreen = ({ navigation }) => {
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <SafeAreaView style={styles.safeAreaHeader}>
+          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top  : insets.top }]}>
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -768,7 +767,7 @@ const BankVerificationScreen = ({ navigation }) => {
                 <MaterialCommunityIcons name="shield-check" size={16} color="rgba(255,255,255,0.2)" />
               </Animated.View>
             </View>
-          </SafeAreaView>
+          </View>
         </LinearGradient>
       </Animated.View>
 
@@ -825,16 +824,39 @@ const BankVerificationScreen = ({ navigation }) => {
                 keyboardType="numeric"
               />
             </View>
+          </Animated.View>
 
-            <View style={styles.inputWrapperPremium}>
-              <Text style={styles.inputLabelPremium}>{t('uploadBankBookDocument') || 'Upload your book bank document'} *</Text>
-
-              <View style={styles.ocrStatusBanner}>
-                <MaterialCommunityIcons name="information-outline" size={16} color="#3B82F6" />
-                <Text style={styles.ocrStatusText}>
-                  {t('appWorksOCROptional') || '📱 App works perfectly! OCR is optional - manual entry is always available'}
-                </Text>
+          {/* Upload Document Section */}
+          <Animated.View
+            renderToHardwareTextureAndroid
+            shouldRasterizeIOS
+            style={[
+              styles.formCardPremium,
+              { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }, { scale: cardAnims[1].scale }] }
+            ]}
+          >
+            <View style={styles.sectionHeaderPremium}>
+              <MaterialCommunityIcons name="camera-plus" size={24} color="#FD501E" />
+              <Text style={styles.sectionTitlePremium}>{t('uploadBankBookDocument') || 'Upload your book bank document'} *</Text>
+              <View style={styles.realOcrBadge}>
+                <MaterialCommunityIcons name="check-circle" size={12} color="#22C55E" />
+                <Text style={styles.realOcrText}>{t('realOCR') || 'REAL OCR'}</Text>
               </View>
+            </View>
+
+              {/* Previously uploaded document section */}
+              {existingBankInfo.has_document && existingBankInfo.document_path && (
+                <View style={styles.existingDocumentInfo}>
+                  <View style={styles.existingDocumentHeader}>
+                    <MaterialCommunityIcons name="file-document" size={20} color="#22C55E" />
+                    <Text style={styles.existingDocumentTitle}>{t('previouslyUploadedBankDocument') || 'Previously Uploaded Bank Document'}</Text>
+                  </View>
+                  <Text style={styles.existingDocumentDate}>
+                    {(t('lastUpdated') || 'Last updated')}: {new Date(existingBankInfo.last_updated).toLocaleDateString('en-US')}
+                  </Text>
+                  <Text style={styles.existingDocumentNote}>{t('replaceExistingDocument') || 'You can upload a new document to replace the existing one'}</Text>
+                </View>
+              )}
 
               <TouchableOpacity style={styles.uploadButtonPremium} onPress={pickImage} activeOpacity={0.8} disabled={isProcessing}>
                 <LinearGradient colors={photo ? ['#22C55E', '#16A34A'] : ['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.1)']} style={styles.uploadGradient}>
@@ -869,37 +891,43 @@ const BankVerificationScreen = ({ navigation }) => {
                   ]}
                 >
                   <View style={styles.documentContainer}>
-                    <Image
-                      source={{ uri: photo }}
-                      style={styles.documentImage}
-                      onError={() => setImageLoadError(true)}
-                      onLoad={() => setImageLoadError(false)}
-                    />
-                    {imageLoadError && (
+                    {imageLoadError ? (
                       <View style={styles.imageErrorContainer}>
-                        <MaterialIcons name="error" size={32} color="#EF4444" />
-                        <Text style={styles.imageErrorText}>{t('failedToLoadImage') || 'Failed to load image'}</Text>
-                        <Text style={styles.imageErrorUri}>{photo}</Text>
+                        <MaterialCommunityIcons name="image-broken-variant" size={48} color="#9CA3AF" />
+                        <Text style={styles.imageErrorText}>{t('imageFailedToLoad') || 'Image failed to load'}</Text>
+                        <Text style={styles.imageErrorSubtext}>{t('documentImageError') || 'The document image could not be displayed'}</Text>
                       </View>
+                    ) : (
+                      <Image
+                        source={{ uri: photo }}
+                        style={styles.documentImage}
+                        onError={() => setImageLoadError(true)}
+                        onLoadStart={() => setImageLoadError(false)}
+                        onLoad={() => setImageLoadError(false)}
+                      />
                     )}
-                    <View style={styles.documentOverlay}>
-                      <TouchableOpacity style={styles.retakeButton} onPress={pickImage} activeOpacity={0.8}>
-                        <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
-                        <Text style={styles.retakeButtonText}>{t('retake') || 'Retake'}</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.3)']} style={styles.documentOverlay}>
+                      <View style={styles.documentInfo}>
+                        <MaterialCommunityIcons name="shield-check" size={16} color="#22C55E" />
+                        <Text style={styles.documentStatus}>
+                          {existingBankInfo.has_document && typeof photo === 'string' && photo.includes('thetrago.com')
+                            ? (t('previouslyUploadedDocumentShort') || 'Previously Uploaded Document')
+                            : (t('verifiedDocument') || 'Verified Document')}
+                        </Text>
+                      </View>
+                    </LinearGradient>
                   </View>
                 </Animated.View>
               )}
-            </View>
+          </Animated.View>
 
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.saveButtonPremium, styles.saveButtonFullWidth]}
-                onPress={saveBankVerification}
-                activeOpacity={0.8}
-                disabled={isLoadingBank}
-              >
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.saveButtonPremium, styles.saveButtonFullWidth]}
+              onPress={saveBankVerification}
+              activeOpacity={0.8}
+              disabled={isLoadingBank}
+            >
                 <LinearGradient colors={['#FD501E', '#FF6B40']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.saveGradient}>
                   {isLoadingBank ? (
                     <Animated.View style={{ transform: [{ rotate: spinFast }] }}>
@@ -914,7 +942,6 @@ const BankVerificationScreen = ({ navigation }) => {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          </Animated.View>
 
           {/* Info Card */}
           <Animated.View

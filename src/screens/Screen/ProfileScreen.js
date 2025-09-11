@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Modal, FlatList,
-  KeyboardAvoidingView, SafeAreaView, StatusBar, Animated, Easing, Dimensions,
+  KeyboardAvoidingView, Animated, Easing, Dimensions,
   Alert, Platform, InteractionManager
 } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,7 +19,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const ProfileScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
-  const insets = useSafeAreaInsets();
 
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
@@ -383,7 +382,6 @@ const ProfileScreen = ({ navigation }) => {
   if (isLoading) {
     return (
       <View style={styles.containerPremium}>
-        <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
         <View style={styles.particlesContainer} pointerEvents="none">
           {particles.map((p, i) => (
             <Animated.View key={i} style={[styles.floatingParticle, { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity }]} />
@@ -392,7 +390,7 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.headerContainer}>
           <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-            <SafeAreaView style={styles.safeAreaHeader}>
+            <View style={styles.safeAreaHeader}>
               <View style={styles.headerTopRow}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                   <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -405,7 +403,7 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
                 </Animated.View>
               </View>
-            </SafeAreaView>
+            </View>
           </LinearGradient>
         </View>
 
@@ -415,8 +413,7 @@ const ProfileScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.containerPremium}>
-      <StatusBar barStyle="light-content" backgroundColor="#FD501E" />
+    <View style={[styles.containerPremium, { paddingTop: insets.top + (Platform.OS === 'ios' ? 0 : 0) }]}>
 
       {/* Particles */}
       <View style={styles.particlesContainer} pointerEvents="none">
@@ -436,7 +433,7 @@ const ProfileScreen = ({ navigation }) => {
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <SafeAreaView style={styles.safeAreaHeader}>
+          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top + 20 : insets.top }]}>
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -453,7 +450,7 @@ const ProfileScreen = ({ navigation }) => {
                 <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
               </Animated.View>
             </View>
-          </SafeAreaView>
+          </View>
         </LinearGradient>
       </Animated.View>
 

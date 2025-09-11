@@ -29,13 +29,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     borderRadius: 16,
     padding: 6,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
     elevation: 3,
   },
   tab: {
@@ -51,13 +44,6 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
     elevation: 6,
   },
   tabActiveBackground: {
@@ -107,13 +93,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     marginBottom: 16,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
     elevation: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.04)',
@@ -232,13 +211,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
     borderRadius: 24,
     padding: 8,
-    shadowColor: '#6366F1',
-    shadowOffset: {
-      width: 0,
-      height: 20,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 40,
     elevation: 20,
   },
   phoneScreen: {
@@ -336,13 +308,6 @@ const styles = StyleSheet.create({
   },
   startBookingButton: {
     borderRadius: 16,
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
     elevation: 12,
   },
   startBookingGradient: {
@@ -379,16 +344,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(253, 80, 30, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
     elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(253, 80, 30, 0.1)',
   },
   emailSection: {
     marginBottom: 20,
@@ -429,10 +385,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     backgroundColor: 'rgba(255,255,255,0.98)',
-    shadowColor: 'rgba(253, 80, 30, 0.2)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
   emailInputFilled: {
@@ -461,22 +413,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     backgroundColor: 'rgba(255,255,255,0.98)',
-    shadowColor: 'rgba(253, 80, 30, 0.2)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
   otpInputFilled: {
     borderColor: '#FD501E',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
   otpInputDisabled: {
@@ -486,20 +427,13 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     borderRadius: 16,
-    shadowColor: '#FD501E',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
     elevation: 12,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
   },
   disabledButton: {
-    shadowOpacity: 0.1,
+    opacity: 0.6,
   },
   buttonGradient: {
     paddingVertical: 18,

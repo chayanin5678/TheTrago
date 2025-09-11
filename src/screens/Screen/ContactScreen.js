@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     paddingTop: 145, // เพิ่มจาก 125 เป็น 145
   },
   scrollContent: {
-    paddingBottom: hp('30%'), // เพิ่มจาก 10% เป็น 20% เพื่อให้เลื่อนได้ถึงจุดสุดท้าย
+    paddingBottom: hp('10%'), // ลดจาก 30% เป็น 15% เพื่อลดระยะห่างด้านล่าง
   },
   heroSection: {
     margin: wp('5%'),

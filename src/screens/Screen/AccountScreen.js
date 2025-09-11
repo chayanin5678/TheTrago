@@ -11,7 +11,6 @@ import {
   TouchableWithoutFeedback,
   Easing,
   Alert,
-  SafeAreaView,
   Dimensions,
   Platform,
   Modal,
@@ -22,6 +21,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ipAddress from "../../config/ipconfig";
 import { useCustomer } from './CustomerContext.js';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,6 +33,7 @@ const AccountScreen = ({ navigation }) => {
   const { logout } = useAuth();
   const { selectedLanguage, changeLanguage, t } = useLanguage();
   const { updateCustomerData } = useCustomer();
+  const insets = useSafeAreaInsets();
 
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -388,7 +389,7 @@ const AccountScreen = ({ navigation }) => {
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <SafeAreaView style={styles.safeAreaHeader}>
+          <View style={[styles.safeAreaHeader, { paddingTop: insets.top }]}>
             <View style={styles.headerContent}>
               <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettingsModal(true)} activeOpacity={0.8}>
                 <MaterialIcons name="settings" size={24} color="#FFFFFF" />
@@ -405,7 +406,7 @@ const AccountScreen = ({ navigation }) => {
                 <MaterialCommunityIcons name="star-four-points" size={16} color="rgba(255,255,255,0.2)" />
               </Animated.View>
             </View>
-          </SafeAreaView>
+          </View>
         </LinearGradient>
       </Animated.View>
 
