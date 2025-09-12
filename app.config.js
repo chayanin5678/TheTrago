@@ -2,7 +2,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 
 export default {
   "expo": {
-    "owner": "chayanin0937",
+    "owner": "chayanin5678",
     "name": "TheTrago",
     "slug": "TheTrago",
     "scheme": "thetrago",
@@ -13,10 +13,10 @@ export default {
         "subdomain": "thetrago"
       },
       "eas": {
-        "projectId": "65688437-f30d-4cab-a314-1be4eeaf847c"
+        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
       }
     },
-    "version": "1.0.2",
+    "version": "1.0.3",
     
     "orientation": "portrait",
     "icon": "./assets/icontrago.png",
@@ -28,7 +28,7 @@ export default {
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "package": "com.thetrago.android",
       "permissions": [
         "CAMERA"
@@ -38,6 +38,14 @@ export default {
       "expo-secure-store",
       "expo-mail-composer",
       "expo-apple-authentication",
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1326238592032941",
+          "clientToken": "ee3279fa98c503a79f50275c3c6799ca",
+          "displayName": "TheTrago"
+        }
+      ],
       [
         "expo-build-properties",
         {
@@ -54,13 +62,29 @@ export default {
     "jsEngine": "jsc",
     "ios": {
       "bundleIdentifier": "com.thetrago.ios",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to scan your ID card",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting and uploading images.",
-        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features."
+        "NSSpeechRecognitionUsageDescription": "This app may use speech recognition to enhance voice input features.",
+        "FacebookAppID": "1326238592032941",
+        "FacebookClientToken": "ee3279fa98c503a79f50275c3c6799ca",
+        "FacebookDisplayName": "TheTrago",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "thetrago",
+            "CFBundleURLSchemes": ["thetrago"]
+          },
+          {
+            "CFBundleURLName": "facebook",
+            "CFBundleURLSchemes": ["fb1326238592032941"]
+          }
+        ],
+        "LSApplicationQueriesSchemes": ["fbapi", "fb-messenger-share-api", "fbauth2", "fbshareextension"],
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+        "com.apple.developer.associated-domains": ["applinks:thetrago.com"]
       }
     }
   }

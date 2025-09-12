@@ -13,8 +13,13 @@ import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 // Apple Authentication - using expo-apple-authentication
 import * as AppleAuthentication from 'expo-apple-authentication';
-// Social login imports - conditional for Expo Go compatibility
-let GoogleSignin, statusCodes, LoginManager, AccessToken;
+// Social login imports - using expo-auth-session for better compatibility
+import * as AuthSession from 'expo-auth-session';
+import { AuthRequest, ResponseType } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+
+// Google Sign-In - conditional for Expo Go compatibility
+let GoogleSignin, statusCodes;
 try {
   const googleSignin = require('@react-native-google-signin/google-signin');
   GoogleSignin = googleSignin.GoogleSignin;
@@ -23,13 +28,8 @@ try {
   console.log('Google Sign-In not available in Expo Go');
 }
 
-try {
-  const fbSdk = require('react-native-fbsdk-next');
-  LoginManager = fbSdk.LoginManager;
-  AccessToken = fbSdk.AccessToken;
-} catch (error) {
-  console.log('Facebook SDK not available in Expo Go');
-}
+// WebBrowser configuration for better auth experience  
+WebBrowser.maybeCompleteAuthSession();
 
 import { GOOGLE_CONFIG } from '../../config/socialConfig';
 
@@ -255,78 +255,79 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  // Facebook Login Handler
+  // Facebook Login Handler using expo-auth-session
   const handleFacebookLogin = async () => {
-    console.log('Starting Facebook Login...');
-
-    // Check if Facebook SDK is available
-    if (!LoginManager || !AccessToken) {
-      console.log('Facebook SDK not available');
-      Alert.alert(
-        t('facebookSignInNotAvailable'),
-        t('facebookSignInRequiresBuild'),
-        [{ text: t('understood') }]
-      );
-      return;
-    }
+    console.log('Starting Facebook Login with expo-auth-session...');
 
     try {
       setSocialLoading(prev => ({ ...prev, facebook: true }));
-      console.log('Attempting Facebook login...');
 
-      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-      console.log('Facebook login result:', result);
-
-      if (result.isCancelled) {
-        console.log('Facebook login was cancelled');
-        return;
-      }
-
-      console.log('Getting Facebook access token...');
-      const data = await AccessToken.getCurrentAccessToken();
-      console.log('Facebook access token data:', data);
-
-      if (!data) {
-        console.log('No Facebook access token available');
-        Alert.alert(t('error'), t('cannotAccessFacebookEmail'));
-        return;
-      }
-
-      // ดึงข้อมูลผู้ใช้จาก Facebook Graph API
-      console.log('Fetching Facebook user info...');
-      const facebookResponse = await fetch(`https://graph.facebook.com/me?access_token=${data.accessToken}&fields=id,name,email,first_name,last_name,picture.type(large)`);
-      const facebookUserInfo = await facebookResponse.json();
-
-      console.log('Facebook User Info:', facebookUserInfo);
-
-      // ตรวจสอบว่ามี email หรือไม่
-      if (!facebookUserInfo.email) {
-        Alert.alert('เตือน', t('cannotAccessFacebookEmail'));
-        return;
-      }
-
-      // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
-      console.log('Sending to backend API...');
-      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
-        provider: 'facebook',
-        providerId: facebookUserInfo.id,
-        email: facebookUserInfo.email,
-        name: facebookUserInfo.name,
-        firstName: facebookUserInfo.first_name || null,
-        lastName: facebookUserInfo.last_name || null,
-        photo: facebookUserInfo.picture?.data?.url,
+      // Facebook OAuth configuration
+      const CLIENT_ID = '1326238592032941'; // Your Facebook App ID
+      const REDIRECT_URI = AuthSession.makeRedirectUri({
+        scheme: 'thetrago',
+        path: 'auth'
       });
 
-      console.log('Backend response:', socialLoginResponse.data);
+      console.log('Facebook Redirect URI:', REDIRECT_URI);
 
-      if (socialLoginResponse.data.token) {
-        await login(socialLoginResponse.data.token);
-        // Save user email to SecureStore for BookingScreen
-        await SecureStore.setItemAsync('userEmail', facebookUserInfo.email);
-        console.log('Facebook Sign-In: User email saved to SecureStore:', facebookUserInfo.email);
-        Alert.alert(t('success'), t('facebookSignInSuccess'));
+      // Create AuthRequest for Facebook
+      const request = new AuthRequest({
+        clientId: CLIENT_ID,
+        scopes: ['public_profile', 'email'],
+        redirectUri: REDIRECT_URI,
+        responseType: ResponseType.Code,
+        extraParams: {
+          display: 'popup',
+        },
+      });
+
+      // Facebook discovery endpoint
+      const discovery = {
+        authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
+        tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
+      };
+
+      // Start authentication
+      const result = await request.promptAsync(discovery);
+
+      console.log('Facebook Auth Result:', result);
+
+      if (result.type === 'success') {
+        const { code } = result.params;
+        
+        if (!code) {
+          throw new Error('No authorization code received from Facebook');
+        }
+
+        console.log('Facebook authorization code received:', code);
+
+        // Send code to backend for token exchange and user info
+        console.log('Sending to backend API...');
+        const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+          provider: 'facebook',
+          authCode: code,
+          redirectUri: REDIRECT_URI,
+        });
+
+        console.log('Backend response:', socialLoginResponse.data);
+
+        if (socialLoginResponse.data.token && socialLoginResponse.data.user) {
+          const userData = socialLoginResponse.data.user;
+          
+          await login(socialLoginResponse.data.token);
+          // Save user email to SecureStore for BookingScreen
+          await SecureStore.setItemAsync('userEmail', userData.email);
+          console.log('Facebook Sign-In: User email saved to SecureStore:', userData.email);
+          Alert.alert(t('success'), t('facebookSignInSuccess'));
+        } else {
+          Alert.alert('เตือน', t('facebookSignInError'));
+        }
+      } else if (result.type === 'cancel') {
+        console.log('Facebook login was cancelled');
+        return;
       } else {
-        Alert.alert('เตือน', t('facebookSignInError'));
+        throw new Error('Facebook authentication failed');
       }
     } catch (error) {
       console.log('Facebook Login Error:', error);
@@ -339,7 +340,7 @@ export default function LoginScreen({ navigation }) {
         console.log('Network Error:', error.request);
         Alert.alert('เตือน', t('cannotConnectToServer'));
       } else {
-        Alert.alert('เตือน', t('facebookLoginErrorGeneral'));
+        Alert.alert('เตือน', `Facebook Login Error: ${error.message}`);
       }
     } finally {
       setSocialLoading(prev => ({ ...prev, facebook: false }));
@@ -712,7 +713,7 @@ export default function LoginScreen({ navigation }) {
                     </View>
                   </TouchableOpacity>
 
-                  {/* Facebook Sign-In Button */}
+                  {/* Facebook Sign-In Button - using expo-auth-session */}
                   <TouchableOpacity
                     style={[styles.socialButton, styles.facebookButton]}
                     onPress={handleFacebookLogin}
