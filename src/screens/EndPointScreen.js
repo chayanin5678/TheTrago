@@ -124,14 +124,14 @@ const EndPointScreen = ({ navigation, route }) => {
       >
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <AntDesign name="arrowleft" size={24} color="#fff" />
+            <AntDesign name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('selectDestination')}</Text>
         </View>
         
         {/* Search Bar */}
         <View style={styles.searchBarWrap}>
-          <AntDesign name="search1" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
+          <AntDesign name="search" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder={t('searchCityOrAirport')}

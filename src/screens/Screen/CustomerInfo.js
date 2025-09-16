@@ -980,7 +980,7 @@ const CustomerInfo = ({ navigation }) => {
                   borderColor: 'rgba(253, 80, 30, 0.1)',
                 }}
               >
-                <AntDesign name="arrowleft" size={24} color="#FD501E" />
+                <AntDesign name="arrow-left" size={24} color="#FD501E" />
               </TouchableOpacity>
 
               {/* Logo - Center */}
@@ -1157,7 +1157,7 @@ const CustomerInfo = ({ navigation }) => {
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <AntDesign name="arrow-left" size={24} color="#FD501E" />
             </TouchableOpacity>
 
             {/* Logo - Center */}
@@ -1525,7 +1525,7 @@ const CustomerInfo = ({ navigation }) => {
 
                           <Text style={{ marginTop: 5, color: '#FD501E' }}>
                             {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                          <AntDesign name="arrowright" size={14} color="#FD501E" />
+                          <AntDesign name="arrow-right" size={14} color="#FD501E" />
                           {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                         </Text>
                         <View style={styles.rowpromo}>
@@ -1618,7 +1618,7 @@ const CustomerInfo = ({ navigation }) => {
                               <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                               <Text style={{ marginTop: 5, color: '#FD501E' }}>
                               {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                              <AntDesign name="arrowright" size={14} color="#FD501E" />
+                              <AntDesign name="arrow-right" size={14} color="#FD501E" />
                               {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                             </Text>
                             <View style={styles.rowpromo}>

@@ -7,6 +7,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -346,9 +352,23 @@ export default function App() {
         // Load fonts with better error handling
         try {
           await Font.loadAsync({
+            // Vector icon fonts (ensure icons render correctly)
+            ...Ionicons.font,
+            ...MaterialIcons.font,
+            ...Entypo.font,
+            ...FontAwesome.font,
+            ...AntDesign.font,
+            ...FontAwesome5.font,
+            // Custom app fonts
             'Domestos Sans Normal': require('./assets/fonts/Domestos SansNormal.ttf'),
             'Lilita One': require('./assets/fonts/LilitaOne-Regular.ttf'),
           });
+          // Debug: confirm icon font keys are available
+          try {
+            console.log('Icon fonts loaded: Ionicons=', !!Ionicons.font, 'MaterialIcons=', !!MaterialIcons.font, 'Entypo=', !!Entypo.font, 'FontAwesome=', !!FontAwesome.font, 'AntDesign keys sample=', Object.keys(AntDesign.font || {}).slice(0,5));
+          } catch (e) {
+            console.warn('Icon font logging failed', e);
+          }
           console.log('Fonts loaded successfully');
         } catch (fontError) {
           console.warn('Font loading failed:', fontError);

@@ -614,7 +614,7 @@ const ResultScreen = ({ navigation, route }) => {
                 backdropFilter: 'blur(20px)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <AntDesign name="arrow-left" size={24} color="#FD501E" />
             </TouchableOpacity>
 
             {/* Logo - Center */}
@@ -741,7 +741,7 @@ const ResultScreen = ({ navigation, route }) => {
               <View style={styles.infoRow}>
                 <Ionicons name="location-outline" size={16} color="#FD501E" />
                 <Text style={styles.infoText}> {customerData.startingpoint_name}</Text>
-                <AntDesign name="arrowright" size={12} color="#6B7280" style={{ marginHorizontal: 8 }} />
+                <AntDesign name="arrow-right" size={12} color="#6B7280" style={{ marginHorizontal: 8 }} />
                 <Text style={styles.infoText}>{customerData.endpoint_name}</Text>
               </View>
               

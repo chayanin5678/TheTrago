@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Animated, Image, StyleSheet, Dimensions, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ export default function SplashScreenComponent({ onAnimationEnd }) {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const loadingAnim = useRef(new Animated.Value(0)).current;
+  const [loadingPercent, setLoadingPercent] = useState(0);
   const particleAnims = useRef(
     [...Array(6)].map(() => ({
       translateY: new Animated.Value(0),
@@ -157,6 +158,21 @@ export default function SplashScreenComponent({ onAnimationEnd }) {
     outputRange: ['0%', '100%'],
   });
 
+  // Sync numeric percentage with loadingAnim value
+  useEffect(() => {
+    const id = loadingAnim.addListener(({ value }) => {
+      try {
+        const pct = Math.min(100, Math.max(0, Math.round(value * 100)));
+        setLoadingPercent(pct);
+      } catch (e) {
+        // ignore
+      }
+    });
+    return () => {
+      loadingAnim.removeListener(id);
+    };
+  }, [loadingAnim]);
+
   return (
     <View style={styles.container}>
       {/* Premium Gradient Background */}
@@ -244,18 +260,22 @@ export default function SplashScreenComponent({ onAnimationEnd }) {
           ]}
         />
         
-        {/* Main Logo */}
-        <Animated.Image
-          source={require('../../../assets/icontrago.png')}
+        {/* Main Logo - wrapped to create circular mask so logo isn't square */}
+        <Animated.View
           style={[
-            styles.logo,
+            styles.logoWrapper,
             {
               transform: [{ scale: scaleAnim }],
               opacity: opacityAnim,
             },
           ]}
-          resizeMode="contain"
-        />
+        >
+          <Image
+            source={require('../../../assets/icontrago.png')}
+            style={styles.logoImage}
+            resizeMode="cover"
+          />
+        </Animated.View>
       </View>
 
       {/* App Name */}
@@ -275,7 +295,7 @@ export default function SplashScreenComponent({ onAnimationEnd }) {
           },
         ]}
       >
-        <Text style={styles.appName}>TheTrago</Text>
+        <Text style={styles.appName}>The Trago</Text>
         <Text style={styles.appTagline}>Your Travel Companion</Text>
       </Animated.View>
 
@@ -288,6 +308,9 @@ export default function SplashScreenComponent({ onAnimationEnd }) {
           },
         ]}
       >
+        <Animated.Text style={[styles.loadingPercent, { opacity: opacityAnim }]}>
+          {loadingPercent}%
+        </Animated.Text>
         <View style={styles.loadingBar}>
           <Animated.View
             style={[
@@ -369,6 +392,28 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  /* New wrapper to mask the logo into a circle */
+  logoWrapper: {
+    width: width * 0.35,
+    height: width * 0.35,
+    borderRadius: (width * 0.35) / 2,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  /* Ensure the image fills the wrapper but keeps aspect ratio; use transparent background */
+  logoImage: {
+    width: '110%',
+    height: '110%',
+    resizeMode: 'cover',
+    backgroundColor: 'transparent',
+  },
   titleContainer: {
     marginTop: 40,
     alignItems: 'center',
@@ -412,5 +457,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
+  },
+  loadingPercent: {
+    color: 'rgba(255,255,255,0.95)',
+    fontWeight: '600',
+    marginBottom: 8,
+    fontSize: 14,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

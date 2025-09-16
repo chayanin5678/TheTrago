@@ -2,7 +2,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 
 export default {
   "expo": {
-    "owner": "chayanin5678",
+    "owner": "chayanin4534",
     "name": "TheTrago",
     "slug": "TheTrago",
     "scheme": "thetrago",
@@ -13,7 +13,7 @@ export default {
         "subdomain": "thetrago"
       },
       "eas": {
-        "projectId": "97592fc7-1001-4618-a8f8-8bd2b28ff78b"
+        "projectId": "74ac187e-236a-48db-8ae4-5aaa93e55f9a"
       }
     },
     "version": "1.0.3",
@@ -62,7 +62,7 @@ export default {
     "jsEngine": "jsc",
     "ios": {
       "bundleIdentifier": "com.thetrago.ios",
-      "buildNumber": "3",
+      "buildNumber": "7",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -82,8 +82,7 @@ export default {
             "CFBundleURLSchemes": ["fb1326238592032941"]
           }
         ],
-        "LSApplicationQueriesSchemes": ["fbapi", "fb-messenger-share-api", "fbauth2", "fbshareextension"],
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+  "LSApplicationQueriesSchemes": ["fbapi", "fb-messenger-share-api", "fbauth2", "fbshareextension"],
         "com.apple.developer.associated-domains": ["applinks:thetrago.com"]
       }
     }

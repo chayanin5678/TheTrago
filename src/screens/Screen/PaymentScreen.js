@@ -18,7 +18,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
 import styles from '../../styles/CSS/PaymentScreenStyles';
-import { NetworkInfo } from 'react-native-network-info';
+import NetInfo from '@react-native-community/netinfo';
 
 
 const isTablet = screenWidth >= 768;
@@ -50,7 +50,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const [timetableDepart, settimetableDepart] = useState([]);
   const [timetableReturn, settimetableReturn] = useState([]);
 
-  const [totalPayment, settotalPayment] = useState(0);
+  const [totalPayment, setTotalPayment] = useState(0);
   const [totalPaymentNumber, setTotalPaymentNumber] = useState(0);
   const [totalpaymentfee, setTotalPaymentfee] = useState(0);
 
@@ -199,7 +199,7 @@ const PaymentScreen = ({ navigation, route }) => {
     const totalPayment = customerData.total ? (parseFloat(customerData.total) + totalpaymentfee) : 0;
 
     setTotalPaymentfee(totalpaymentfee);
-    settotalPayment(formatNumber(totalPayment));
+  setTotalPayment(formatNumber(totalPayment));
   }, [customerData.total, paymentfee, pointsDiscount]); // เพิ่ม pointsDiscount ใน dependencies
 
   // Fetch user points
@@ -357,7 +357,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
     setTotalPaymentfee(totalpaymentfee);
     setTotalPaymentNumber(totalPayment); // เก็บเป็น number สำหรับการคำนวณ
-    settotalPayment(formatNumber(totalPayment)); // เก็บเป็น string สำหรับแสดงผล
+  setTotalPayment(formatNumber(totalPayment)); // เก็บเป็น string สำหรับแสดงผล
 
     // คำนวณคะแนนที่จะได้รับจาก subtotal (ก่อนหักคะแนน)
     calculatePointsToEarn(originalTotal);
@@ -612,7 +612,13 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   const getDeviceIpAddress = async () => {
-    try { return await NetworkInfo.getIPV4Address(); } catch (e) { }
+    try { 
+      // Use @react-native-community/netinfo to get network info
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.details && netInfo.details.ipAddress) {
+        return netInfo.details.ipAddress;
+      }
+    } catch (e) { }
     try {
       const res = await fetch('https://api64.ipify.org?format=json');
       const { ip } = await res.json();
@@ -724,95 +730,90 @@ const PaymentScreen = ({ navigation, route }) => {
 
 
 
-  useEffect(() => {
-    const handleDeepLink = async (event) => {
-      let url = event.url || "";
-      console.log("🔗 Deep Link Received:", url);
+ // ✅ แทนที่ useEffect เดิมทั้งบล็อกด้วยอันนี้
+useEffect(() => {
+  const handleDeepLink = async ({ url = "" }) => {
+    if (!url) return;
+    console.log("🔗 Deep Link Received:", url);
 
-      // ตรวจสอบว่าหน้าปัจจุบันคือ PromptPayScreen หรือไม่
-      const currentRoute = navigation.getCurrentRoute && navigation.getCurrentRoute();
-      if (currentRoute && currentRoute.name !== "PromptPayScreen") {
-        console.log("⏹️ Stop: Not on PromptPayScreen, skipping payment status check.");
-        return;
-      }
-
+    try {
       if (url.includes("payment/success")) {
-        try {
-          // ส่งคำขอตรวจสอบการชำระเงิน
-          const res = await axios.post(`${ipAddress}/check-charge`, {
-            charge_id: customerData.md_booking_paymentid,
-          });
-          console.log("LOG  Payment Status Response:", JSON.stringify(res.data));
-          // ถ้า authorize_uri เป็น null และไม่ได้อยู่ PromptPayScreen ให้หยุด
-          if (!res.data.authorize_uri && currentRoute && currentRoute.name !== "PromptPayScreen") {
-            console.log("⏹️ Stop: authorize_uri is null and not on PromptPayScreen");
-            return;
-          }
-          if (res.data.success && res.data.status === "successful") {
-            try {
-              // ✅ ตรวจสอบว่ามี booking code หรือไม่ (Credit Card จะมี, PromptPay อาจไม่มี)
-              const bookingCodeToUse = customerData.md_booking_code;
-              const bookingCodeReturnToUse = customerData.md_booking_code_return;
+        // ตรวจสถานะชำระเงินจากเซิร์ฟเวอร์
+        const res = await axios.post(`${ipAddress}/check-charge`, {
+          charge_id: customerData.md_booking_paymentid,
+        });
+        console.log("LOG Payment Status Response:", JSON.stringify(res.data));
 
-              if (!bookingCodeToUse) {
-                console.warn("⚠️ No booking code found - PromptPay payment will be handled by PromptPayQR screen");
-                // สำหรับ PromptPay ที่ยังไม่มี booking code ให้ไปหน้า success ได้เลย
-                // เพราะการสร้าง booking จะทำในหน้า PromptPayQR
-              } else {
-                console.log("✅ Using booking code from payment:", bookingCodeToUse);
-
-                // ✅ อัปเดตสถานะ booking ด้วย booking code ที่มีอยู่ (สำหรับ Credit Card)
-                await updatestatus(bookingCodeToUse);
-                console.log("✅ Booking status updated with code:", bookingCodeToUse);
-              }
-
-              if (bookingCodeReturnToUse) {
-                await updatestatus(bookingCodeReturnToUse);
-              }
-
-              // ✅ จัดการคะแนนหลังจากยืนยันการชำระเงินสำเร็จ
-              const pointsToDeduct = usePoints ? pointsToUse : 0;
-              const pointsToAdd = pointsToEarn || 0;
-
-              if (pointsToDeduct > 0 || pointsToAdd > 0) {
-                await updateUserPoints(pointsToDeduct, pointsToAdd);
-                console.log(`✅ Points updated: -${pointsToDeduct} +${pointsToAdd}`);
-              }
-
-            } catch (error) {
-              console.error("❌ Error managing points or booking status:", error);
-              Alert.alert(
-                t('pointsWarning') || "Points Warning",
-                t('pointsErrorMessage') || "Payment successful but there was an issue with points/booking management. Please contact support if needed."
-              );
+        if (res.data?.success && res.data?.status === "successful") {
+          try {
+            // อัปเดตสถานะ booking ถ้ามีโค้ด
+            const codes = [
+              customerData.md_booking_code,
+              customerData.md_booking_code_return,
+            ].filter(Boolean);
+            for (const code of codes) {
+              await updatestatus(code);
             }
-            navigation.navigate("ResultScreen", { success: true });
-          } else {
-            navigation.navigate("ResultScreen", { success: false });
+
+            // อัปเดตคะแนน
+            const pointsToDeduct = usePoints ? pointsToUse : 0;
+            const pointsToAdd = pointsToEarn || 0;
+            if (pointsToDeduct > 0 || pointsToAdd > 0) {
+              await updateUserPoints(pointsToDeduct, pointsToAdd);
+              console.log(`✅ Points updated: -${pointsToDeduct} +${pointsToAdd}`);
+            }
+          } catch (err) {
+            console.error("❌ Error managing points/booking:", err);
+            Alert.alert(
+              t('pointsWarning') || "Points Warning",
+              t('pointsErrorMessage') ||
+                "Payment successful but there was an issue with points/booking management. Please contact support if needed."
+            );
           }
-        } catch (error) {
-          console.error("Error checking charge:", error);
-          Alert.alert(t('error') || "❌ Error", t('errorProcessingPayment') || "There was an error processing your payment.");
+
+          navigation.navigate("ResultScreen", { success: true });
+        } else {
           navigation.navigate("ResultScreen", { success: false });
         }
       } else if (url.includes("payment/failure")) {
-        Alert.alert(t('paymentFailed') || "❌ Payment Failed", t('somethingWentWrong') || "Something went wrong with your payment.");
+        Alert.alert(
+          t('paymentFailed') || "❌ Payment Failed",
+          t('somethingWentWrong') || "Something went wrong with your payment."
+        );
         navigation.navigate("ResultScreen", { success: false });
       }
-    };
+    } catch (error) {
+      console.error("Error checking charge:", error);
+      Alert.alert(
+        t('error') || "❌ Error",
+        t('errorProcessingPayment') || "There was an error processing your payment."
+      );
+      navigation.navigate("ResultScreen", { success: false });
+    }
+  };
 
-    // ตรวจจับเมื่อแอปเปิดอยู่ (Foreground)
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+  // ฟัง deep link ตอนแอปเปิดอยู่
+  const subscription = Linking.addEventListener("url", handleDeepLink);
 
-    // ตรวจจับลิงก์ที่ใช้เปิดแอป (Background หรือ Closed State)
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
+  // กรณีเปิดแอปด้วยลิงก์ (background/closed)
+  Linking.getInitialURL().then((url) => {
+    if (url) handleDeepLink({ url });
+  });
 
-    return () => {
-      subscription.remove();
-    };
-  }, [navigation, paymentcode, totalPayment]); // ลบ bookingcode และ booking_code ออกจาก dependencies
+  return () => {
+    subscription.remove();
+  };
+}, [
+  navigation,
+  customerData.md_booking_paymentid,
+  customerData.md_booking_code,
+  customerData.md_booking_code_return,
+  usePoints,
+  pointsToUse,
+  pointsToEarn,
+  t,
+]);
+ // ลบ bookingcode และ booking_code ออกจาก dependencies
 
 
 
@@ -1018,7 +1019,7 @@ const PaymentScreen = ({ navigation, route }) => {
                     borderColor: 'rgba(253, 80, 30, 0.1)',
                   }}
                 >
-                  <AntDesign name="arrowleft" size={24} color="#FD501E" />
+                  <AntDesign name="arrow-left" size={24} color="#FD501E" />
                 </TouchableOpacity>
 
                 {/* Logo - Center */}
@@ -1172,7 +1173,7 @@ const PaymentScreen = ({ navigation, route }) => {
                               });
                             }}
                           >
-                            <AntDesign name="pluscircleo" size={18} color="#fff" style={{ marginRight: 6 }} />
+                            <AntDesign name="pluscircle" size={18} color="#fff" style={{ marginRight: 6 }} />
                             <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('addCard') || 'Add Card'}</Text>
                           </TouchableOpacity>
                         </View>
@@ -1299,7 +1300,7 @@ const PaymentScreen = ({ navigation, route }) => {
                           <Text style={{ fontWeight: 'bold' }}>{t('depart') || 'Depart'}</Text>
                           <Text style={{ marginTop: 5, color: '#FD501E' }}>
                             {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                            <AntDesign name="arrowright" size={14} color="#FD501E" />
+                            <AntDesign name="arrow-right" size={14} color="#FD501E" />
                             {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                           </Text>
                           <View style={styles.row}>
@@ -1386,7 +1387,7 @@ const PaymentScreen = ({ navigation, route }) => {
                               <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
                               <Text style={{ marginTop: 5, color: '#FD501E' }}>
                                 {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                                <AntDesign name="arrowright" size={14} color="#FD501E" />
+                                <AntDesign name="arrow-right" size={14} color="#FD501E" />
                                 {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                               </Text>
                               <View style={styles.row}>

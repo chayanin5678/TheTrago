@@ -473,7 +473,7 @@ export default function PromptPayScreen({ route, navigation }) {
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <AntDesign name="arrow-left" size={24} color="#FD501E" />
             </TouchableOpacity>
 
             {/* Logo - Center */}

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -837,7 +837,7 @@ const SearchFerry = ({ navigation, route }) => {
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <AntDesign name="arrow-left" size={24} color="#FD501E" />
             </TouchableOpacity>
 
             {/* Logo - Center */}
@@ -968,7 +968,7 @@ const SearchFerry = ({ navigation, route }) => {
                           {currency.md_currency_code})
                         </Text>
                         {selectedCurrency === currency.md_currency_code && (
-                          <AntDesign name="checkcircle" size={18} color="#FD501E" />
+                          <AntDesign name="check-circle" size={18} color="#FD501E" />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -2422,12 +2422,16 @@ const SearchFerry = ({ navigation, route }) => {
                   }}
                   activeOpacity={0.85}
                 >
-                  <Icon
-                    name={loading ? "hourglass-outline" : "search"}
-                    size={getResponsiveSize(wp('5%'), wp('4%'), wp('3.5%'))}
-                    color="#FFFFFF"
-                    style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }}
-                  />
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }} />
+                  ) : (
+                    <MaterialIcons
+                      name="search"
+                      size={getResponsiveSize(wp('5%'), wp('4%'), wp('3.5%'))}
+                      color="#FFFFFF"
+                      style={{ marginRight: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')) }}
+                    />
+                  )}
                   <Text style={[
                     styles.searchButtonText,
                     {

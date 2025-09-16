@@ -1157,7 +1157,7 @@ const TripDetail = ({ navigation, route }) => {
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
-              <AntDesign name="arrowleft" size={24} color="#FD501E" />
+              <AntDesign name="arrow-left" size={24} color="#FD501E" />
             </TouchableOpacity>
 
             {/* Logo - Center */}
@@ -2732,7 +2732,7 @@ const TripDetail = ({ navigation, route }) => {
                         <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
 
                         <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                          {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
+                           {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
                         </Text>
 
                         <View style={styles.rowpromo}>
@@ -2818,7 +2818,7 @@ const TripDetail = ({ navigation, route }) => {
                             <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('return') || 'Return'}</Text>
 
                             <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                              {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrowright" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
+                              {selectedLanguage === 'th' ? tripItem.startingpoint_namethai : tripItem.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? tripItem.endpoint_namethai : tripItem.endpoint_nameeng}
                             </Text>
 
                             <View style={styles.rowpromo}>
