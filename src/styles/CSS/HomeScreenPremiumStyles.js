@@ -108,7 +108,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowRadius: Platform.OS === 'android' ? 0 : 12,
     elevation: Platform.OS === 'android' ? 0 : 8,
     // Additional Android compatibility
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255, 255, 255, 0.98)',
   },
   headerBlur: {
     borderRadius: wp('6%'),
@@ -196,7 +196,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   searchSkeleton: {
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
   },
   searchContainer: {
@@ -204,8 +204,8 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     overflow: 'hidden',
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 5,
   },
   searchGradient: {
@@ -288,7 +288,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255, 255, 255, 0.98)',
   },
   servicesBlur: {
     borderRadius: 20,
@@ -329,7 +329,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     width: wp('14%'),
     height: wp('14%'),
     borderRadius: wp('7%'),
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
     marginBottom: 8,
   },
@@ -337,7 +337,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     height: 12,
     width: 40,
     borderRadius: 6,
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
   },
   serviceItem: {
@@ -349,7 +349,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(253,80,30,0.06)', // subtle light orange
   },
   serviceItemBlur: {
     borderRadius: 16,
@@ -373,7 +373,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(253,80,30,0.1)',
+  backgroundColor: 'rgba(253,80,30,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -411,7 +411,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   hotDealsSkeleton: {
     height: 50,
     borderRadius: 20,
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
   },
   hotDealsBlur: {
@@ -476,7 +476,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255,255,255,0.98)',
   },
   bannerBlur: {
     borderRadius: wp('4.5%'),
@@ -567,7 +567,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
     elevation: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255,255,255,0.98)',
   },
   destinationGradient: {
     position: 'relative',
@@ -582,7 +582,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   },
   destinationImageSkeleton: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     borderTopLeftRadius: wp('3%'),
     borderTopRightRadius: wp('3%'),
     overflow: 'hidden',
@@ -607,7 +607,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   destinationTextSkeleton: {
     height: wp('4%'), // Width-based height
     borderRadius: wp('1%'),
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
   },
   destinationName: {
@@ -668,7 +668,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: wp('1.5%'),
     elevation: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255,255,255,0.98)',
   },
   routeGradient: {
     position: 'relative',
@@ -685,7 +685,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   },
   routeImageSkeleton: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     borderTopLeftRadius: wp('3%'),
     borderTopRightRadius: wp('3%'),
     overflow: 'hidden',
@@ -730,7 +730,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   routeTextSkeleton: {
     height: wp('4%'),
     borderRadius: wp('1%'),
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
     marginTop: wp('1%'),
   },
@@ -797,7 +797,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     width: wp('90%'),
     height: hp('35%'),
     borderRadius: wp('6%'),
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     marginHorizontal: wp('5%'),
     overflow: 'hidden',
     alignSelf: 'center',
@@ -820,7 +820,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: hp('1%') },
     shadowOpacity: 0.25,
     shadowRadius: wp('3%'),
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: 'rgba(255,255,255,0.98)',
   },
   trendingCarouselBlur: {
     flex: 1,
@@ -1138,14 +1138,14 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   // Skeleton styles for attractions
   attractionImageSkeleton: {
     height: hp('12%'),
-    backgroundColor: '#eee',
+  backgroundColor: 'rgba(255,255,255,0.98)',
     overflow: 'hidden',
     borderTopLeftRadius: wp('4%'),
     borderTopRightRadius: wp('4%'),
   },
   attractionTextSkeleton: {
     height: hp('3%'),
-    backgroundColor: '#eee',
+    backgroundColor: 'rgba(255,255,255,0.98)',
     borderRadius: wp('1%'),
     overflow: 'hidden',
   },

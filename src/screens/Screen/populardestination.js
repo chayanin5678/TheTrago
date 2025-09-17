@@ -97,7 +97,7 @@ useEffect(() => {
             .fill(0)
             .map((_, idx) => (
               <View key={idx} style={[styles.itemContainer, { minHeight: hp('30%'), marginBottom: 20 }]}>
-                <View style={{ width: screenWidth * 0.9, height: hp('30%'), borderRadius: 12, overflow: 'hidden', backgroundColor: '#eee', position: 'relative' }}>
+                <View style={{ width: screenWidth * 0.9, height: hp('30%'), borderRadius: 12, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.98)', position: 'relative' }}>
                   <Animated.View
                     style={{
                       ...StyleSheet.absoluteFillObject,
@@ -120,8 +120,8 @@ useEffect(() => {
                     </Animated.View>
                   </Animated.View>
                 </View>
-                <View style={{ width: 140, height: 14, borderRadius: 8, backgroundColor: '#eee', marginTop: 16 }} />
-                <View style={{ width: 100, height: 10, borderRadius: 6, backgroundColor: '#eee', marginTop: 8 }} />
+                <View style={{ width: 140, height: 14, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.98)', marginTop: 16 }} />
+                <View style={{ width: 100, height: 10, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.98)', marginTop: 8 }} />
               </View>
             ))
         ) : (
@@ -140,7 +140,7 @@ useEffect(() => {
                     navigation.navigate('LocationDetail');
                   }}
                 >
-                  <View style={{ width: screenWidth * 0.9, height: hp('30%'), borderRadius: 12, overflow: 'hidden', backgroundColor: '#eee', position: 'relative' }}>
+                  <View style={{ width: screenWidth * 0.9, height: hp('30%'), borderRadius: 12, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.98)', position: 'relative' }}>
                     {!isLoaded && (
                       <Animated.View
                         style={{
@@ -208,8 +208,8 @@ useEffect(() => {
                     </>
                   ) : (
                     <>
-                      <View style={{ width: 140, height: 14, borderRadius: 8, backgroundColor: '#eee', marginTop: 6 }} />
-                      <View style={{ width: 100, height: 10, borderRadius: 6, backgroundColor: '#eee', marginTop: 4 }} />
+                      <View style={{ width: 140, height: 14, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.98)', marginTop: 6 }} />
+                      <View style={{ width: 100, height: 10, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.98)', marginTop: 4 }} />
                     </>
                   )}
                 </TouchableOpacity>

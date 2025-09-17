@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, StatusBar, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as SecureStore from 'expo-secure-store';
@@ -120,6 +122,9 @@ export default function LoginScreen({ navigation }) {
     ]).start();
   }, []);
 
+  // Use Expo proxy when running in Expo Go (appOwnership === 'expo')
+  const useProxyForDev = Constants.appOwnership === 'expo';
+
 
 
 
@@ -173,83 +178,119 @@ export default function LoginScreen({ navigation }) {
   };
 
   // Google Sign-In Handler
+  // Branch between native Google Sign-In (dev-client / standalone) and a web OAuth fallback (Expo Go / proxy)
   const handleGoogleSignIn = async () => {
-    // Check if Google Sign-In is available (not in Expo Go)
-    if (!GoogleSignin) {
-      Alert.alert(
-        t('googleSignInNotAvailable'),
-        t('googleSignInRequiresBuild'),
-        [{ text: t('understood') }]
-      );
+    // If native module is present, prefer native Google Sign-In
+    if (GoogleSignin) {
+      try {
+        setSocialLoading(prev => ({ ...prev, google: true }));
+
+        console.log('Google Config (native):', GOOGLE_CONFIG);
+        await GoogleSignin.hasPlayServices();
+
+        const userInfo = await GoogleSignin.signIn();
+        console.log('Google User Info (native):', userInfo);
+
+        if (!userInfo.user.email) {
+          Alert.alert(
+            'ต้องการอีเมล',
+            'กรุณาแชร์อีเมลของคุณเพื่อใช้งาน Google Sign-In หรือลองเข้าสู่ระบบด้วยวิธีอื่น',
+            [{ text: t('understood') }]
+          );
+          return;
+        }
+
+        const userEmail = userInfo.user.email;
+
+        const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+          provider: 'google',
+          providerId: userInfo.user.id,
+          email: userEmail,
+          name: userInfo.user.name,
+          firstName: userInfo.user.givenName || null,
+          lastName: userInfo.user.familyName || null,
+          photo: userInfo.user.photo,
+        });
+
+        if (socialLoginResponse.data.token) {
+          await login(socialLoginResponse.data.token);
+          await SecureStore.setItemAsync('userEmail', userEmail);
+          Alert.alert(t('success'), t('googleSignInSuccess'));
+        } else {
+          Alert.alert('เตือน', t('googleSignInError'));
+        }
+      } catch (error) {
+        console.log('Google Sign-In Error (native):', error);
+        let errorMessage = t('googleSignInGeneralError');
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) return;
+        if (error.code === statusCodes.IN_PROGRESS) errorMessage = t('signInInProgress');
+        if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) errorMessage = t('playServicesNotAvailable');
+        if (error.message) errorMessage = `${t('errorPrefix')} ${error.message}`;
+        Alert.alert('เตือน', errorMessage);
+      } finally {
+        setSocialLoading(prev => ({ ...prev, google: false }));
+      }
+
       return;
     }
 
+    // Fallback: Use expo-auth-session (web OAuth) which works in Expo Go via proxy or in native with the same redirect URI
     try {
       setSocialLoading(prev => ({ ...prev, google: true }));
 
-      // ตรวจสอบการกำหนดค่า
-      console.log('Google Config:', GOOGLE_CONFIG);
-      console.log('Checking Play Services...');
-      await GoogleSignin.hasPlayServices();
+      const REDIRECT_URI = AuthSession.makeRedirectUri({ scheme: 'thetrago', path: 'auth', useProxy: useProxyForDev });
+      console.log('Google Redirect URI (web fallback):', REDIRECT_URI);
 
-      console.log('Starting Google Sign-In...');
-      const userInfo = await GoogleSignin.signIn();
+      const discovery = {
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      };
 
-      console.log('Google User Info:', userInfo);
-
-      // ตรวจสอบว่าต้องมีอีเมลจริงเพื่อใช้งาน
-      if (!userInfo.user.email) {
-        Alert.alert(
-          'ต้องการอีเมล',
-          'กรุณาแชร์อีเมลของคุณเพื่อใช้งาน Google Sign-In หรือลองเข้าสู่ระบบด้วยวิธีอื่น',
-          [{ text: t('understood') }]
-        );
-        return;
-      }
-
-      const userEmail = userInfo.user.email;
-
-      // ส่งข้อมูลไปยัง API เพื่อตรวจสอบหรือสร้างบัญชี
-      const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
-        provider: 'google',
-        providerId: userInfo.user.id,
-        email: userEmail,
-        name: userInfo.user.name,
-        firstName: userInfo.user.givenName || null,
-        lastName: userInfo.user.familyName || null,
-        photo: userInfo.user.photo,
+      const request = new AuthRequest({
+        clientId: GOOGLE_CONFIG.webClientId,
+        scopes: ['openid', 'profile', 'email'],
+        redirectUri: REDIRECT_URI,
+        responseType: ResponseType.Code,
+        extraParams: { access_type: 'offline', prompt: 'consent' },
       });
 
-      if (socialLoginResponse.data.token) {
-        await login(socialLoginResponse.data.token);
-        // Save user email to SecureStore for BookingScreen
-        await SecureStore.setItemAsync('userEmail', userEmail);
-        console.log('Google Sign-In: User email saved to SecureStore:', userEmail);
-        Alert.alert(t('success'), t('googleSignInSuccess'));
+      const result = await request.promptAsync(discovery);
+      console.log('Google AuthResult (web):', result);
+
+      if (result.type === 'success') {
+        const { code } = result.params;
+        if (!code) throw new Error('No authorization code received from Google');
+
+        const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+          provider: 'google',
+          authCode: code,
+          redirectUri: REDIRECT_URI,
+        });
+
+        if (socialLoginResponse.data.token) {
+          const userEmail = socialLoginResponse.data.user?.email || null;
+          await login(socialLoginResponse.data.token);
+          if (userEmail) await SecureStore.setItemAsync('userEmail', userEmail);
+          Alert.alert(t('success'), t('googleSignInSuccess'));
+        } else {
+          Alert.alert('เตือน', t('googleSignInError'));
+        }
+      } else if (result.type === 'cancel') {
+        console.log('Google login cancelled (web)');
       } else {
-        Alert.alert('เตือน', t('googleSignInError'));
+        throw new Error('Google authentication failed');
       }
     } catch (error) {
-      console.log('Google Sign-In Error:', error);
-      console.log('Error Code:', error.code);
-      console.log('Error Message:', error.message);
-
-      let errorMessage = t('googleSignInGeneralError');
-
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // ผู้ใช้ยกเลิกการเข้าสู่ระบบ
-        return;
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        errorMessage = t('signInInProgress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        errorMessage = t('playServicesNotAvailable');
-      } else if (error.code === statusCodes.SIGN_IN_REQUIRED) {
-        errorMessage = t('pleaseSignInGoogle');
-      } else if (error.message) {
-        errorMessage = `${t('errorPrefix')} ${error.message}`;
+      console.log('Google Login Error (web):', error);
+      if (error.response) {
+        console.log('API Error Response:', error.response.data);
+        Alert.alert('เตือน', `${t('apiError')}: ${error.response.data.message || t('unknownReason')}`);
+      } else if (error.request) {
+        console.log('Network Error:', error.request);
+        Alert.alert('เตือน', t('cannotConnectToServer'));
+      } else {
+        Alert.alert('เตือน', `Google Login Error: ${error.message}`);
       }
-
-      Alert.alert('เตือน', errorMessage);
     } finally {
       setSocialLoading(prev => ({ ...prev, google: false }));
     }
@@ -264,9 +305,13 @@ export default function LoginScreen({ navigation }) {
 
       // Facebook OAuth configuration
       const CLIENT_ID = '1326238592032941'; // Your Facebook App ID
+      // Create a scheme-based redirect URI so OAuth redirects back into the app
+      // NOTE: Make sure this exact URI (for example: "thetrago://auth") is registered
+      // in your Facebook App -> Settings -> Valid OAuth Redirect URIs (or use the expo proxy URI).
       const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'thetrago',
-        path: 'auth'
+        path: 'auth',
+        useProxy: useProxyForDev
       });
 
       console.log('Facebook Redirect URI:', REDIRECT_URI);
@@ -697,7 +742,7 @@ export default function LoginScreen({ navigation }) {
 
                   {/* Google Sign-In Button */}
                   <TouchableOpacity
-                    style={[styles.socialButton, styles.googleButton]}
+                    style={[styles.socialButton, styles.googleButton, (socialLoading.google || isLoading) && styles.buttonDisabled]}
                     onPress={handleGoogleSignIn}
                     disabled={socialLoading.google || isLoading}
                   >
@@ -712,6 +757,8 @@ export default function LoginScreen({ navigation }) {
                       </Text>
                     </View>
                   </TouchableOpacity>
+
+     
 
                   {/* Facebook Sign-In Button - using expo-auth-session */}
                   <TouchableOpacity

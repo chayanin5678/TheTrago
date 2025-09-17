@@ -220,7 +220,12 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log("📌 Using userId:", userId);
 
       if (!userId) {
-        console.error("❌ No user ID found");
+        // แจ้งผู้ใช้ว่าเข้าสู่ระบบก่อนทำรายการชำระเงิน (ใช้ title + message + ปุ่ม)
+        Alert.alert(
+          t('warning') || 'Warning',
+          t('pleaseLoginToProceed') || 'กรุณาเข้าสู่ระบบก่อนดำเนินการชำระเงิน',
+          [{ text: t('ok') || 'ตกลง' }]
+        );
         setUserPoints(0);
         return;
       }
@@ -519,8 +524,9 @@ const PaymentScreen = ({ navigation, route }) => {
       } catch (e) {
         throw new Error(" Invalid JSON from token API");
       }
-      if (!tokenResponse.ok) throw new Error("Failed to create payment token");
-      if (!tokenData.success) throw new Error(tokenData.error || " Token API error");
+  if (!tokenResponse.ok) throw new Error("Failed to create payment token");
+  if (!tokenData.success) throw new Error(tokenData.error || "Token API error");
+  if (!tokenData.token) throw new Error("Payment token missing from token API response");
 
       // ✅ 2. ทำการชำระเงิน
       const paymentResponse = await fetch(`${ipAddress}/charge`, {
@@ -540,12 +546,14 @@ const PaymentScreen = ({ navigation, route }) => {
 
       if (!paymentResponse.ok) throw new Error("Payment failed");
       const paymentResult = await paymentResponse.json();
-      if (!paymentResult.success) throw new Error("Payment declined");
-      setpaymentcode(paymentResult.charge_id);
+      if (!paymentResult.success) throw new Error(paymentResult.message || "Payment declined");
+
+      const chargeId = paymentResult.charge_id || paymentResult.chargeId || '';
+      setpaymentcode(chargeId);
       updateCustomerData({
-        md_booking_paymentid: paymentResult.charge_id, // บันทึก Payment ID
+        md_booking_paymentid: chargeId, // บันทึก Payment ID
       });
-      console.log('✅ Payment code:', paymentcode);
+      console.log('✅ Payment code:', chargeId);
       // ✅ 3. เปิด Omise Authorize URL
 
       // แก้ไข: ไม่อัปเดต total ด้วยยอดรวม (totalPayment) แต่เก็บค่าธรรมเนียมแยก
@@ -567,7 +575,12 @@ const PaymentScreen = ({ navigation, route }) => {
 
         if (paymentResult.authorize_uri) {
           console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
-          await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+          try {
+            await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+          } catch (linkErr) {
+            console.error('❌ Failed to open authorize URI:', linkErr);
+            Alert.alert(t('warning') || 'Warning', t('cannotOpenLink') || 'ไม่สามารถเปิดลิงก์การชำระเงินได้');
+          }
         } else {
           throw new Error("No authorize URI found.");
         }
@@ -582,7 +595,8 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("❌ Error:", error);
       setIsLoading(false);
-      Alert.alert(t('error') || "Error", error.message);
+      const msg = (error && (error.message || error)) ? (error.message || String(error)) : t('unknownError') || 'An unknown error occurred';
+      Alert.alert(t('error') || "Error", msg);
     }
   };
 
@@ -1173,7 +1187,7 @@ useEffect(() => {
                               });
                             }}
                           >
-                            <AntDesign name="pluscircle" size={18} color="#fff" style={{ marginRight: 6 }} />
+                            <AntDesign name="plus" size={18} color="#fff" style={{ marginRight: 6 }} />
                             <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('addCard') || 'Add Card'}</Text>
                           </TouchableOpacity>
                         </View>

@@ -1238,12 +1238,9 @@ const HomeScreen = ({ navigation, route }) => {
                               }
                             }}
                           >
-                            <BlurView intensity={40} style={premiumStyles.serviceItemBlur}>
+                            <BlurView intensity={30} tint="light" style={premiumStyles.serviceItemBlur}>
                               <LinearGradient
-                                colors={index % 2 === 0
-                                  ? ['rgba(253,80,30,0.06)', 'rgba(255,107,53,0.03)']
-                                  : ['rgba(255,107,53,0.06)', 'rgba(253,80,30,0.03)']
-                                }
+                                colors={['rgba(253,80,30,0.08)', 'rgba(255,107,53,0.04)']}
                                 style={premiumStyles.serviceItemGradient}
                               >
                                 {item.item && (
@@ -1412,7 +1409,7 @@ const HomeScreen = ({ navigation, route }) => {
                 marginBottom: hp('1.5%'),
                 marginLeft: 0,
                 overflow: 'hidden',
-                backgroundColor: '#eee',
+                backgroundColor: 'rgba(255,255,255,0.98)',
                 alignSelf: 'flex-start',
               }}
             >
@@ -1560,7 +1557,7 @@ const HomeScreen = ({ navigation, route }) => {
                   marginBottom: hp('1.5%'),
                   marginLeft: 0,
                   overflow: 'hidden',
-                  backgroundColor: '#eee',
+                  backgroundColor: 'rgba(255,255,255,0.98)',
                   alignSelf: 'flex-start',
                 }}
               >
@@ -1781,7 +1778,7 @@ const HomeScreen = ({ navigation, route }) => {
                 marginBottom: hp('1%'),
                 marginLeft: 0,
                 overflow: 'hidden',
-                backgroundColor: '#eee',
+                backgroundColor: 'rgba(255,255,255,0.98)',
                 alignSelf: 'flex-start',
               }}
             >

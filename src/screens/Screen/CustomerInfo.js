@@ -47,7 +47,7 @@ const getTitleLabel = (value, t) => {
 
 // ===== Inline PassengerForm component (ต้องอยู่ก่อน CustomerInfo) =====
 const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors }, ref) => {
-  const { t } = useLanguage();
+  const { t, selectedLanguage } = useLanguage();
 
   // ใช้ options แบบ label/value (value เป็น EN เสมอ)
   const titleOptions = getTitleOptions(t);
@@ -101,9 +101,12 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
     }
   }));
 
-  const filteredCountries = telePhone.filter((item) =>
-    item.sys_countries_nameeng.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCountries = telePhone.filter((item) => {
+    const eng = (item.sys_countries_nameeng || '').toLowerCase();
+    const thai = (item.sys_countries_namethai || '').toLowerCase();
+    const q = searchQuery.toLowerCase();
+    return eng.includes(q) || thai.includes(q) || (`(+${item.sys_countries_telephone})`).includes(q);
+  });
 
   const handleFnameChange = (text) => {
     setFname(text);
@@ -169,6 +172,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         placeholder={t('firstName') || 'First Name'}
         value={fname}
         onChangeText={handleFnameChange}
+        placeholderTextColor="#374151"
         style={[styles.input, (fieldErrors.fname || (showAllErrors && !fname)) && styles.errorInput]}
       />
 
@@ -178,6 +182,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         placeholder={t('lastName') || 'Last Name'}
         value={lname}
         onChangeText={handleLnameChange}
+        placeholderTextColor="#374151"
         style={[styles.input, (fieldErrors.lname || (showAllErrors && !lname)) && styles.errorInput]}
       />
 
@@ -186,7 +191,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       <TouchableOpacity
         style={[styles.button, fieldErrors.nationality && styles.errorInput]}
         onPress={() => setNationalityModalVisible(true)}>
-        <Text style={styles.buttonText}>{selectedNationality}</Text>
+  <Text style={styles.buttonText}>{selectedNationality === 'Please Select' ? t('pleaseSelect') : selectedNationality}</Text>
         <Icon name="chevron-down" size={18} color={fieldErrors.nationality ? 'red' : '#FD501E'} style={styles.icon} />
       </TouchableOpacity>
       <Modal visible={isNationalityModalVisible} transparent animationType="fade" onRequestClose={() => setNationalityModalVisible(false)}>
@@ -197,30 +202,32 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
               value={searchQuery}
               onChangeText={setSearchQuery}
               style={styles.textInput}
-              placeholderTextColor="#888"
+              placeholderTextColor="#374151"
             />
             <FlatList
               data={telePhone.filter((item) => {
-                const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
+                const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng || ''} ${item.sys_countries_namethai || ''}`.toLowerCase();
                 return searchText.includes(searchQuery.toLowerCase());
               })}
               renderItem={({ item }) => (
                 <TouchableOpacity style={styles.optionItem} onPress={() => {
-                  if (item.sys_countries_nameeng === 'Please Select') {
+                  const isPlaceholder = (item.sys_countries_nameeng === 'Please Select') || (item.sys_countries_namethai === 'Please Select');
+                  const displayName = selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng;
+                  if (isPlaceholder) {
                     setSelectedNationality('Please Select');
                     setNationalityCode('');
                   } else {
-                    setSelectedNationality(`(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`);
+                    setSelectedNationality(`(+${item.sys_countries_telephone}) ${displayName}`);
                     setNationalityCode(item.sys_countries_code);
                     setFieldErrors((prev) => ({ ...prev, nationality: undefined }));
                   }
                   setNationalityModalVisible(false);
                   setSearchQuery('');
                 }}>
-                  <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                    {item.sys_countries_nameeng === 'Please Select'
-                      ? 'Please Select'
-                      : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                  <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
+                    {((item.sys_countries_nameeng === 'Please Select') || (item.sys_countries_namethai === 'Please Select'))
+                      ? t('pleaseSelect')
+                      : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -240,6 +247,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
         placeholder={t('passportNumber') || 'Passport Number'}
         value={passport}
         onChangeText={handlePassportChange}
+        placeholderTextColor="#374151"
         style={[styles.input, (fieldErrors.passport || (showAllErrors && !passport)) && styles.errorInput]}
       />
 
@@ -789,10 +797,9 @@ const CustomerInfo = ({ navigation }) => {
   };
 
   const handleSelectTele = (item) => {
-    const selectedValue =
-      item.sys_countries_nameeng === 'Please Select'
-        ? 'Please Select'
-        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
+    const isPlaceholder = (item.sys_countries_nameeng === 'Please Select') || (item.sys_countries_namethai === 'Please Select');
+    const displayName = selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng;
+    const selectedValue = isPlaceholder ? t('pleaseSelect') : `(+${item.sys_countries_telephone}) ${displayName}`;
 
     setSelectedTele(selectedValue);
     setCountry(item.sys_countries_code);
@@ -802,7 +809,9 @@ const CustomerInfo = ({ navigation }) => {
   };
 
   const filteredTelePhones = telePhone.filter((item) => {
-    const searchText = `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase();
+    const eng = (item.sys_countries_nameeng || '').toLowerCase();
+    const thai = (item.sys_countries_namethai || '').toLowerCase();
+    const searchText = `(+${item.sys_countries_telephone}) ${eng} ${thai}`.toLowerCase();
     return searchText.includes(searchQuery.toLowerCase());
   });
 
@@ -1292,6 +1301,7 @@ const CustomerInfo = ({ navigation }) => {
                       setFirstname(text);
                       setErrors((prev) => ({ ...prev, Firstname: false }));
                     }}
+                    placeholderTextColor="#374151"
                     style={[styles.input, (errors.Firstname || (showAllErrors && !Firstname)) && styles.errorInput]}
                   />
 
@@ -1303,6 +1313,7 @@ const CustomerInfo = ({ navigation }) => {
                       setLastname(text);
                       setErrors((prev) => ({ ...prev, Lastname: false }));
                     }}
+                    placeholderTextColor="#374151"
                     style={[styles.input, (errors.Lastname || (showAllErrors && !Lastname)) && styles.errorInput]}
                   />
 
@@ -1312,7 +1323,7 @@ const CustomerInfo = ({ navigation }) => {
                   <TouchableOpacity
                     style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
                     onPress={toggleTeleModal}>
-                    <Text style={styles.buttonText}>{selectedTele}</Text>
+                    <Text style={styles.buttonText}>{selectedTele === 'Please Select' ? t('pleaseSelect') : selectedTele}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                   </TouchableOpacity>
 
@@ -1325,16 +1336,16 @@ const CustomerInfo = ({ navigation }) => {
                           value={searchQuery}
                           onChangeText={setSearchQuery}
                           style={styles.textInput}
-                          placeholderTextColor="#888"
+                          placeholderTextColor="#374151"
                         />
                         <FlatList
                           data={filteredTelePhones}
                           renderItem={({ item }) => (
                             <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                              <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                                {item.sys_countries_nameeng === 'Please Select'
-                                  ? 'Please Select'
-                                  : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
+                              <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
+                                {(item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')
+                                  ? t('pleaseSelect')
+                                  : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
                               </Text>
                             </TouchableOpacity>
                           )}
@@ -1349,7 +1360,7 @@ const CustomerInfo = ({ navigation }) => {
                   </Modal>
 
                   <TextInput
-                    placeholder={t('mobileNumber') || 'Mobile Number'}
+                    placeholder={t('mobileNumber') || 'Phone number'}
                     value={mobileNumber}
                     keyboardType="number-pad"
                     returnKeyType="done"
@@ -1357,6 +1368,7 @@ const CustomerInfo = ({ navigation }) => {
                       setmobileNumber(text);
                       setErrors((prev) => ({ ...prev, mobileNumber: false }));
                     }}
+                    placeholderTextColor="#374151"
                     style={[styles.input, (errors.mobileNumber || (showAllErrors && !mobileNumber)) && styles.errorInput]}
                   />
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginBottom: 10 }}>
@@ -1372,6 +1384,7 @@ const CustomerInfo = ({ navigation }) => {
                   <TextInput
                     placeholder={t('enterYourEmail') || 'Enter Your Email'}
                     value={email}
+                    placeholderTextColor="#374151"
                     onChangeText={(text) => {
                       setemail(text);
                       
@@ -1439,7 +1452,7 @@ const CustomerInfo = ({ navigation }) => {
                     <TouchableOpacity
                       style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
                       onPress={toggleTeleModal}>
-                      <Text style={styles.buttonText}>{selectedTele}</Text>
+                      <Text style={styles.buttonText}>{selectedTele === 'Please Select' ? t('pleaseSelect') : selectedTele}</Text>
                       <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                     </TouchableOpacity>
 
@@ -1451,17 +1464,17 @@ const CustomerInfo = ({ navigation }) => {
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             style={styles.textInput}
-                            placeholderTextColor="#888"
+                            placeholderTextColor="#374151"
                           />
                           <FlatList
                             data={filteredTelePhones}
                             renderItem={({ item }) => (
                               <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                                <Text style={[styles.optionText, item.sys_countries_nameeng === 'Please Select']}>
-                                  {item.sys_countries_nameeng === 'Please Select'
-                                    ? 'Please Select'
-                                    : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
-                                </Text>
+                                <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
+                                    {(item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')
+                                      ? t('pleaseSelect')
+                                      : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
+                                  </Text>
                               </TouchableOpacity>
                             )}
                             keyExtractor={(item, index) => index.toString()}
@@ -1474,8 +1487,9 @@ const CustomerInfo = ({ navigation }) => {
                       </View>
                     </Modal>
                     <TextInput
-                      placeholder={t('enterYourMobileNumber') || 'Enter your mobile number'}
-                      style={[styles.input, contactErrors.mobile && styles.errorInput]}
+                      placeholder={t('enterYourMobileNumber') || 'Enter your phone number'}
+                        placeholderTextColor="#374151"
+                        style={[styles.input, contactErrors.mobile && styles.errorInput]}
                       keyboardType="number-pad"
                       returnKeyType="done"
                       value={mobileNumber}
@@ -1496,6 +1510,7 @@ const CustomerInfo = ({ navigation }) => {
                     <Text style={styles.textHead}>{t('email') || 'Email'}</Text>
                     <TextInput
                       placeholder={t('enterYourEmail') || 'Enter Your Email'}
+                      placeholderTextColor="#374151"
                       style={[styles.input, contactErrors.email && styles.errorInput]}
                       keyboardType="email-address"
                       value={email}
@@ -1725,7 +1740,7 @@ const CustomerInfo = ({ navigation }) => {
                     placeholder={t('couponCode') || 'Coupon code'}
                     value={code}
                     onChangeText={setcode}
-                    placeholderTextColor="#A1A1A1"
+                    placeholderTextColor="#374151"
                   />
 
                   <TouchableOpacity style={styles.applyButton} onPress={handlepromo}>

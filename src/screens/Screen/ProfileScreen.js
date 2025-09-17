@@ -19,6 +19,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const ProfileScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
+  const insets = useSafeAreaInsets();
 
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
