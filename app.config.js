@@ -81,6 +81,11 @@ export default {
             "CFBundleURLName": "facebook",
             "CFBundleURLSchemes": ["fb1326238592032941"]
           }
+          ,
+          {
+            "CFBundleURLName": "google",
+            "CFBundleURLSchemes": ["com.googleusercontent.apps.136037103391-eh2cdfgsle1m1aepspcu9p9vjulo4p78"]
+          }
         ],
   "LSApplicationQueriesSchemes": ["fbapi", "fb-messenger-share-api", "fbauth2", "fbshareextension"],
         "com.apple.developer.associated-domains": ["applinks:thetrago.com"]

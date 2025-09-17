@@ -94,6 +94,7 @@
           "react-native-responsive-screen",
           "react-native-skeleton-placeholder",
           "react-native-snap-carousel"
+          ,"react-native-network-info"
         ],
         "listUnknownPackages": false
       }
