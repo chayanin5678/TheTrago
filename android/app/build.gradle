@@ -92,8 +92,20 @@ android {
         applicationId 'com.chayanin5678.thetrago'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 49
+        versionName "1.4.9"
+        // Ensure native builds get a consistent CMake/NDK flag to opt into
+        // Android 15 compatible page-size behavior. This adds a global
+        // compile definition for C/C++ modules built during Gradle/CMake.
+        externalNativeBuild {
+            cmake {
+                // Append to existing C/C++ flags. This passes to CMake as
+                // CMAKE_C_FLAGS and CMAKE_CXX_FLAGS for all ABIs.
+                // The macro name here follows Android's guidance; adjust if
+                // Play console requires a different define.
+                cppFlags "-D__BIONIC_NO_PAGE_SIZE_MACRO"
+            }
+        }
     }
     signingConfigs {
         debug {
@@ -124,6 +136,13 @@ android {
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
+    // Workaround: disable specific lint detectors that cause OutOfMemory / lint crashes
+    // on some environments. This reduces strict lint checks during CI/local builds
+    // while we address the root causes in dependencies or upgrade lint.
+    lintOptions {
+        disable 'ApplySharedPref', 'CommitTransaction', 'Recycle', 'CommitPrefEdits'
     }
 }
 

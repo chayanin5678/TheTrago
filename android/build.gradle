@@ -12,6 +12,17 @@ buildscript {
   }
 }
 
+// Project properties: pin SDK and NDK versions so local and CI/EAS builds
+// use the same native toolchain. This helps ensure native libraries are
+// compiled with an NDK known to support Android 15 / 16 KB page-size.
+ext {
+  compileSdkVersion = 35
+  targetSdkVersion = 35
+  minSdkVersion = 24
+  buildToolsVersion = "35.0.0"
+  ndkVersion = "27.1.12297006"
+}
+
 def reactNativeAndroidDir = new File(
   providers.exec {
     workingDir(rootDir)
