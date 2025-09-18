@@ -929,7 +929,7 @@ const BookingScreen = () => {
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>
-              {selectedLanguage === 'th' ? 'เวลาออกเดินทาง' : 'Departure Time'}
+              {selectedLanguage === 'th' ? 'เวลา ขาไป' : 'Departure Time'}
             </Text>
             <Text style={styles.detailValue}>{booking.md_timetable_departuretime}</Text>
           </View>
@@ -945,9 +945,9 @@ const BookingScreen = () => {
               {selectedLanguage === 'th' ? 'ผู้โดยสาร' : 'Passengers'}
             </Text>
             <Text style={styles.detailValue}>
-              {booking.md_booking_adult > 0 ? `${booking.md_booking_adult} ${selectedLanguage === 'th' ? 'ผู้ใหญ่' : 'Adult'}` : ''}
-              {booking.md_booking_child > 0 ? ` ${booking.md_booking_child} ${selectedLanguage === 'th' ? 'เด็ก' : 'Child'}` : ''}
-              {booking.md_booking_infant > 0 ? ` ${booking.md_booking_infant} ${selectedLanguage === 'th' ? 'ทารก' : 'Infant'}` : ''}
+              {booking.md_booking_adult > 0 ? `${booking.md_booking_adult} ${t('adult') || (selectedLanguage === 'th' ? 'ผู้ใหญ่' : 'Adult')}` : ''}
+              {booking.md_booking_child > 0 ? ` ${booking.md_booking_child} ${t('child') || (selectedLanguage === 'th' ? 'เด็ก' : 'Child')}` : ''}
+              {booking.md_booking_infant > 0 ? ` ${booking.md_booking_infant} ${t('infant') || (selectedLanguage === 'th' ? 'ทารก' : 'Infant')}` : ''}
             </Text>
           </View>
           <View style={styles.detailRow}>

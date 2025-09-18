@@ -3,7 +3,7 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 export default {
   expo: {
     owner: "chayanin4534",
-    name: "TheTrago - Ferry Booking App",
+    name: "TheTrago",
     slug: "TheTrago",
     scheme: "thetrago",
     description:
@@ -18,7 +18,7 @@ export default {
     orientation: "default",
     icon: "./assets/icontrago.png",
     userInterfaceStyle: "light",
-    newArchEnabled: true,
+  newArchEnabled: true,
 
     plugins: [
       "expo-secure-store",
@@ -93,13 +93,11 @@ export default {
         NSLocationWhenInUseUsageDescription: "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
         NSLocationAlwaysAndWhenInUseUsageDescription: "TheTrago needs location access to show nearby ferry terminals and provide location-based services.",
 
-        // ใช้ background-fetch ได้เลย แต่ถ้าไม่ได้ทำ remote push background ให้คงไว้เฉพาะ background-fetch ก็ได้
-        UIBackgroundModes: ["background-fetch","remote-notification"],
+  // Use background fetch as 'fetch' (App Store requires the correct key value)
+  UIBackgroundModes: ["fetch","remote-notification"],
 
         CFBundleDisplayName: "TheTrago",
         CFBundleName: "TheTrago",
-        CFBundleVersion: "1",
-        CFBundleShortVersionString: "1.0.3",
         UISupportedInterfaceOrientations: [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationLandscapeLeft",

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator, UIManager, findNodeHandle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -82,6 +82,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [returnDate, setReturnDate] = useState(detaReturn);
 
   const [loading, setLoading] = useState(true);
+  const [didSearch, setDidSearch] = useState(false);
 
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -115,6 +116,13 @@ const SearchFerry = ({ navigation, route }) => {
   const [selectedSysmbol, setSelectedSysmbol] = useState('฿');
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [currencyList, setCurrencyList] = useState([]);
+
+  // Refs for scrolling to results
+  const mainScrollRef = useRef(null);
+  const resultsRef = useRef(null);
+  const firstItemRef = useRef(null);
+  const scrollContainerHeightRef = useRef(0);
+  const scrollContentHeightRef = useRef(0);
 
 
   const day = calendarStartDate?.substring(8, 10) || "";
@@ -474,7 +482,8 @@ const SearchFerry = ({ navigation, route }) => {
 
   const fetchFerryRoute = async () => {
     try {
-      // เริ่ม loading state
+      // Mark that a search was initiated and begin loading state
+      setDidSearch(true);
       setLoading(true);
       setError(''); // ล้าง error ก่อน
 
@@ -537,6 +546,11 @@ const SearchFerry = ({ navigation, route }) => {
 
         setDepartTrips(response.data.data.departtrip);
         setReturnTrips(response.data.data.returntrip);
+
+        // After setting trips, attempt to scroll to the results anchor (always call)
+        setTimeout(() => {
+          scrollToResults();
+        }, 250);
         // console.log('🚢 Depart Trips Count:', response.data.data.departtrip?.length || 0);
         // console.log('🔄 Return Trips Count:', response.data.data.returntrip?.length || 0);
 
@@ -564,6 +578,8 @@ const SearchFerry = ({ navigation, route }) => {
       } else {
         // console.log('❌ API returned unsuccessful status:', response.data);
         setError('ไม่สามารถโหลดข้อมูลได้');
+        // Ensure UI scrolls to the results area even if API returned no data
+        setTimeout(() => scrollToResults(), 200);
       }
     } catch (err) {
       // console.log('🚨 API Error caught:', err);
@@ -587,10 +603,99 @@ const SearchFerry = ({ navigation, route }) => {
       setDepartTrips([]);
       setReturnTrips([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+      // On error, also scroll to the results anchor so user sees the message
+      setTimeout(() => scrollToResults(), 200);
     } finally {
       setLoading(false);
     }
   };
+
+  // Helper: reliably scroll the main ScrollView to the results anchor.
+  const scrollToResults = () => {
+    try {
+      // Prefer measuring the actual first result item for precise alignment
+      const preferredRef = firstItemRef.current ? firstItemRef.current : resultsRef.current;
+      const target = preferredRef ? findNodeHandle(preferredRef) : null;
+      const scrollNode = mainScrollRef.current ? findNodeHandle(mainScrollRef.current) : null;
+
+      if (target && scrollNode && UIManager && UIManager.measureLayout) {
+        UIManager.measureLayout(
+          target,
+          scrollNode,
+          // onFail
+          () => {
+            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+              mainScrollRef.current.scrollTo({ y: 420, animated: true });
+            }
+          },
+          // onSuccess x,y,width,height
+          (x, y, width, height) => {
+            // Calculate top gutter so the first ticket sits below the header / safe area
+            const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER + 8; // small extra spacing
+            let scrollToY = Math.max(0, y - topGutter);
+            // Clamp to content bounds so we don't scroll past the end
+            const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
+            // Add a bottom buffer so we don't align the first item flush with the absolute bottom
+            const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
+            const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
+            if (scrollToY > effectiveMax) scrollToY = effectiveMax;
+            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+              mainScrollRef.current.scrollTo({ y: scrollToY, animated: true });
+            }
+          }
+        );
+      } else if (resultsRef.current && resultsRef.current.measure) {
+        const measureRef = preferredRef || resultsRef.current;
+        // measure returns pageY (absolute). We need to subtract the scrollView pageY to get relative offset.
+        measureRef.measure((x, y, width, height, pageX, pageY) => {
+          const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER + 8;
+          // If we can measure the ScrollView's pageY by measuring its node, use it to compute relative Y
+          const scrollNodeHandle = mainScrollRef.current ? findNodeHandle(mainScrollRef.current) : null;
+          if (scrollNodeHandle && UIManager && UIManager.measure) {
+            UIManager.measure(scrollNodeHandle, (sx, sy, sw, sh, spx, spy) => {
+              let relativeY = pageY - (spy || 0) - topGutter;
+              const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
+              const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
+              const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
+              if (relativeY > effectiveMax) relativeY = effectiveMax;
+              if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+                mainScrollRef.current.scrollTo({ y: Math.max(0, relativeY), animated: true });
+              }
+            });
+          } else {
+            // Fallback: use pageY directly but clamp
+            let relativeY = pageY - topGutter;
+            const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
+            const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
+            const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
+            if (relativeY > effectiveMax) relativeY = effectiveMax;
+            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+              mainScrollRef.current.scrollTo({ y: Math.max(0, relativeY), animated: true });
+            }
+          }
+        });
+      } else {
+        if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+          // Fallback: scroll to reasonable distance
+          mainScrollRef.current.scrollTo({ y: 420, animated: true });
+        }
+      }
+    } catch (e) {
+      // ignore measurement errors
+    }
+  };
+
+  // If a search was performed and loading finished, ensure we scroll to results (covers no-results case)
+  useEffect(() => {
+    if (!loading && didSearch) {
+      // small delay to allow rendering
+      const t = setTimeout(() => {
+        scrollToResults();
+        setDidSearch(false);
+      }, 220);
+      return () => clearTimeout(t);
+    }
+  }, [loading, didSearch]);
 
 
 
@@ -1215,7 +1320,14 @@ const SearchFerry = ({ navigation, route }) => {
             }
           ]}
           showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
+            style={{ flex: 1 }}
+            ref={mainScrollRef}
+            onLayout={(e) => {
+              scrollContainerHeightRef.current = e.nativeEvent.layout.height;
+            }}
+            onContentSizeChange={(w, h) => {
+              scrollContentHeightRef.current = h;
+            }}
         >
            <View style={{
           flexDirection: 'row',
@@ -2867,6 +2979,8 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {!loading && pagedDataDepart && pagedDataReturn && (
             <>
+              {/* Invisible anchor so scroll target exists even when there are no results */}
+              <View ref={resultsRef} style={{ width: '100%', height: 1 }} />
               {tripTypeSearch === t('oneWayTrip') && (
                 <>
                   {pagedDataDepart.map((item, index) => (
@@ -2879,7 +2993,7 @@ const SearchFerry = ({ navigation, route }) => {
                       style={{ width: '100%' }}
                     >
                       {/* Modern Ferry Ticket Design */}
-                      <View style={{
+                      <View ref={index === 0 ? firstItemRef : null} style={{
                         marginTop: 20,
                         backgroundColor: '#FFFFFF',
                         borderRadius: 20,
@@ -3479,7 +3593,7 @@ const SearchFerry = ({ navigation, route }) => {
                         style={{ width: '100%' }}
                       >
                         {/* Modern Ferry Ticket Design - Depart Trip */}
-                        <View style={{
+                        <View ref={index === 0 ? firstItemRef : null} style={{
                           marginTop: 20,
                           backgroundColor: '#FFFFFF',
                           borderRadius: 20,
@@ -4030,7 +4144,7 @@ const SearchFerry = ({ navigation, route }) => {
                         style={{ width: '100%' }}
                       >
                         {/* Modern Ferry Ticket Design - Return Trip */}
-                        <View style={{
+                        <View ref={index === 0 ? firstItemRef : null} style={{
                           marginTop: 20,
                           backgroundColor: '#FFFFFF',
                           borderRadius: 20,
@@ -4571,7 +4685,7 @@ const SearchFerry = ({ navigation, route }) => {
           {/* Enhanced Ultra Premium Pagination - Depart Trip */}
           {
             tripTypeSearchResult === t('departTrip') && filteredDepartData != null && departTrips.length > 0 && (
-              <View style={{
+              <View ref={resultsRef} style={{
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',

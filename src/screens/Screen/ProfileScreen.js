@@ -270,8 +270,10 @@ const ProfileScreen = ({ navigation }) => {
   const toggleCountryModal = () => setIsCountryModalVisible(v => !v);
 
   const handleSelectTele = (item) => {
-    const selectedValue = item.sys_countries_nameeng === 'Please Select'
-      ? t('pleaseSelect') : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
+  const defaultPleaseSelect = t('pleaseSelect') || 'Please Select';
+
+    const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect
+      ? defaultPleaseSelect : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
     setSelectedTele(selectedValue);
     setCountryName(item.sys_countries_nameeng);
     setCountrycode(item.sys_countries_telephone);
@@ -280,7 +282,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleSelectCountry = (item) => {
-    const selectedValue = item.sys_countries_nameeng === 'Please Select' ? t('pleaseSelect') : `${item.sys_countries_nameeng}`;
+  const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect ? defaultPleaseSelect : `${item.sys_countries_nameeng}`;
     setSelectedCountry(selectedValue);
     setCountryId(item.sys_countries_id);
     setErrors(prev => ({ ...prev, selectedCountry: false }));
@@ -304,7 +306,7 @@ const ProfileScreen = ({ navigation }) => {
       .then((r) => r.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: 'Please Select', sys_countries_code: '' }, ...data.data]);
+          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }, ...data.data]);
         } else {
           setTelePhone([]);
         }

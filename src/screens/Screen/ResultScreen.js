@@ -328,9 +328,9 @@ const ResultScreen = ({ navigation, route }) => {
         <table class="info-table">
           <tr><td><strong>Name:</strong></td><td>${convertTitleToEnglish(customerData.selectedTitle)} ${customerData.Firstname}  ${customerData.Lastname}</td></tr>
           <tr><td><strong>Tel.:</strong></td><td>(${formatCountryCode(customerData.countrycode)})  ${formatPhoneNumber(customerData.tel)}</td></tr>
-          <tr><td><strong>Adult:</strong></td><td>${customerData.adult} persons</td></tr>
-          ${customerData.child !== 0 ? `<tr><td><strong>Child:</strong></td><td>${customerData.child} persons</td></tr>` : ''}
-          ${customerData.infant !== 0 ? `<tr><td><strong>Infant:</strong></td><td>${customerData.infant} persons</td></tr>` : ''}
+          <tr><td><strong>${t('adult') || 'Adult'}:</strong></td><td>${customerData.adult} ${t('person') || 'persons'}</td></tr>
+          ${customerData.child !== 0 ? `<tr><td><strong>${t('child') || 'Child'}:</strong></td><td>${customerData.child} ${t('person') || 'persons'}</td></tr>` : ''}
+          ${customerData.infant !== 0 ? `<tr><td><strong>${t('infant') || 'Infant'}:</strong></td><td>${customerData.infant} ${t('person') || 'persons'}</td></tr>` : ''}
           <tr><td><strong>Payment Status:</strong></td><td><span class="highlight">Paid</span></td></tr>
         </table>
       </div>

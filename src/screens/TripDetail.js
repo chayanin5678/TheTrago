@@ -29,6 +29,16 @@ const TripDetail = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
 
+  // Default translated labels (use these instead of hard-coded English literals)
+  const defaultSelectTransportType = t('selectTransportType') || "Select Transport Type";
+  const defaultPleaseSelect = t('pleaseSelect') || "Please Select";
+  const defaultTransportTypeLabel = t('transportType') || 'Transport type';
+  const defaultINeedADropOff = t('iNeedADropOff') || 'I need a drop off';
+  const defaultDropOffArea = t('dropOffArea') || 'Drop off area';
+  const defaultHotelDropOffPoint = t('hotelDropOffPoint') || 'Hotel / Drop off point';
+  const defaultInputHotelDropOffPoint = t('inputHotelDropOffPoint') || 'Input Hotel / Drop off point';
+  const defaultDropOff = t('dropOff') || 'Drop off';
+
   // Animation States - เหมือนหน้า SearchFerry
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -116,14 +126,14 @@ const TripDetail = ({ navigation, route }) => {
   const [selectedPickupReturn, setSelectedPickupReturn] = useState("");
   const [selectedTranSportDropoffReturn, setSelectedTranSportDropoffReturn] = useState('0');
   const [selectedDropoffReturn, setSelectedDropoffReturn] = useState("");
-  const [selectedTransportPickupDepartName, setSelectedTransportPickupDepartName] = useState(t('selectTransportType') || "Select Transport Type");
-  const [selectedPickupDepartName, setSelectedPickupDepartName] = useState(t('pleaseSelect') || "Please Select");
-  const [selectedTransportDropoffDepartName, setSelectedTransportDropoffDepartName] = useState(t('selectTransportType') || "Select Transport Type");
-  const [selectedDropoffDepartName, setSelectedDropoffDepartName] = useState(t('pleaseSelect') || "Please Select");
-  const [selectedTransportPickupReturnName, setSelectedTransportPickupReturnName] = useState(t('selectTransportType') || "Select Transport Type");
-  const [selectedPickupReturnName, setSelectedPickupReturnName] = useState(t('pleaseSelect') || "Please Select");
-  const [selectedTransportDropoffReturnName, setSelectedTransportDropoffReturnName] = useState(t('selectTransportType') || "Select Transport Type");
-  const [selectedDropoffReturnName, setSelectedDropoffReturnName] = useState(t('pleaseSelect') || "Please Select");
+  const [selectedTransportPickupDepartName, setSelectedTransportPickupDepartName] = useState(defaultSelectTransportType);
+  const [selectedPickupDepartName, setSelectedPickupDepartName] = useState(defaultPleaseSelect);
+  const [selectedTransportDropoffDepartName, setSelectedTransportDropoffDepartName] = useState(defaultSelectTransportType);
+  const [selectedDropoffDepartName, setSelectedDropoffDepartName] = useState(defaultPleaseSelect);
+  const [selectedTransportPickupReturnName, setSelectedTransportPickupReturnName] = useState(defaultSelectTransportType);
+  const [selectedPickupReturnName, setSelectedPickupReturnName] = useState(defaultPleaseSelect);
+  const [selectedTransportDropoffReturnName, setSelectedTransportDropoffReturnName] = useState(defaultSelectTransportType);
+  const [selectedDropoffReturnName, setSelectedDropoffReturnName] = useState(defaultPleaseSelect);
   const [isModalTransportDepartPickupVisible, setModalTransportDepartPickupVisible] = useState(false);
   const [isModalDepartPickupVisible, setModalDepartPickupVisible] = useState(false);
   const [isModalTransportDepartDropoffVisible, setModalTransportDepartDropoffVisible] = useState(false);
@@ -149,7 +159,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTransportPickupDepartName(selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportPickupDepartName: false })); // Clear the error state
     setSelectedPickupDepart("");
-  setSelectedPickupDepartName(t('pleaseSelect') || "Please Select");
+  setSelectedPickupDepartName(defaultPleaseSelect);
     setAirPortPickupDepart('');
     toggleModalTransportPickupDepart();
   };
@@ -175,7 +185,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTransportDropoffDepartName(selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportDropoffDepartName: false })); // Clear the error state
     setSelectedDropoffDepart("");
-  setSelectedDropoffDepartName(t('pleaseSelect') || "Please Select");
+  setSelectedDropoffDepartName(defaultPleaseSelect);
     setAirPortDropoffDepart('');
     toggleModalTransportDropoffDepart();
   };
@@ -199,7 +209,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTransportPickupReturnName(selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportPickupReturnName: false })); // Clear the error state
     setSelectedPickupReturn("");
-  setSelectedPickupReturnName(t('pleaseSelect') || "Please Select");
+  setSelectedPickupReturnName(defaultPleaseSelect);
     setAirPortPickupReturn('');
     toggleModalTransportPickupReturn();
   };
@@ -224,7 +234,7 @@ const TripDetail = ({ navigation, route }) => {
     setSelectedTransportDropoffReturnName(selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng); // เก็บชื่อ
     setErrors((prev) => ({ ...prev, selectedTransportDropoffReturnName: false })); // Clear the error state
     setSelectedDropoffReturn("");
-  setSelectedDropoffReturnName(t('pleaseSelect') || "Please Select");
+  setSelectedDropoffReturnName(defaultPleaseSelect);
     setAirPortDropoffReturn('');
     toggleModalTransportDropoffReturn();
   };
@@ -949,7 +959,7 @@ const TripDetail = ({ navigation, route }) => {
     // --- เดิม ---
     if (pickupDepart) {
       if (!HotelpickupDepart) newErrors.HotelpickupDepart = true;
-      if (selectedTransportPickupDepartName === "Select Transport Type") newErrors.selectedTransportPickupDepartName = true;
+      if (selectedTransportPickupDepartName === defaultSelectTransportType) newErrors.selectedTransportPickupDepartName = true;
 
       // ต้องกรอก Flight No ถ้ารับที่สนามบิน
       if (airPortPickupDepart === 1 && !String(flightNoPickupDepart || '').trim()) {
@@ -1128,7 +1138,7 @@ const TripDetail = ({ navigation, route }) => {
               {
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
+                paddingHorizontal: getResponsiveSize(0, wp('1%'), wp('3%')),
                 paddingTop: 0,
                 position: 'relative',
                 marginTop: 0,
@@ -1189,7 +1199,7 @@ const TripDetail = ({ navigation, route }) => {
               styles.container,
               {
                 backgroundColor: 'transparent',
-                paddingHorizontal: 24,
+                paddingHorizontal: 16,
                 paddingTop: 8,
                 paddingBottom: Platform.OS === 'android' ? (Platform.Version >= 31 ? insets.bottom + hp('12%') : hp('12%')) : hp('12%'), // Android 15 Edge-to-Edge รองรับ
                 flexGrow: 1,
@@ -1209,7 +1219,7 @@ const TripDetail = ({ navigation, route }) => {
         <View style={{
           marginTop: hp('1%'),
           marginBottom: hp('2%'),
-          paddingHorizontal: wp('4%'),
+          paddingHorizontal: wp('2%'),
           paddingVertical: hp('1.5%'),
           backgroundColor: 'rgba(255,255,255,0.1)',
           borderRadius: wp('4%'),
@@ -1304,7 +1314,7 @@ const TripDetail = ({ navigation, route }) => {
                 }
               ]}>
                 {/* Enhanced Ultra Premium Loading Skeleton */}
-                <View style={{ paddingHorizontal: wp('2%') }}>
+                <View style={{ paddingHorizontal: wp('1%') }}>
                   {/* Enhanced Booking Section Skeleton */}
                   <View style={{
                     width: '100%',
@@ -1495,7 +1505,7 @@ const TripDetail = ({ navigation, route }) => {
                         borderTopRightRadius: wp('6%'),
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingHorizontal: wp('4%'),
+                        paddingHorizontal: wp('2%'),
                         justifyContent: 'space-between',
                       }}>
                         <View style={{
@@ -1634,7 +1644,7 @@ const TripDetail = ({ navigation, route }) => {
                     shadowOffset: { width: 0, height: 8 },
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.08)',
-                    marginHorizontal: wp('4%')
+                    marginHorizontal: wp('1%')
                   }}>
                     {/* Animated Loading Icon */}
                     <Animated.View style={{
@@ -1707,7 +1717,7 @@ const TripDetail = ({ navigation, route }) => {
                         borderTopLeftRadius: 24,
                         borderTopRightRadius: 24,
                         paddingVertical: 20,
-                        paddingHorizontal: 22,
+                        paddingHorizontal: 12,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -1725,7 +1735,7 @@ const TripDetail = ({ navigation, route }) => {
                                 color: '#fff',
                                 fontWeight: 'bold',
                                 fontSize: 18,
-                                maxWidth: wp('20%'),
+                                maxWidth: wp('28%'),
                                 overflow: 'hidden',
                                 flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                               }}
@@ -1736,7 +1746,7 @@ const TripDetail = ({ navigation, route }) => {
                               style={{
                                 color: '#fff',
                                 fontSize: 12,
-                                maxWidth: wp('30%'),
+                                maxWidth: wp('40%'),
                                 overflow: 'hidden',
                                 flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                               }}
@@ -1803,8 +1813,8 @@ const TripDetail = ({ navigation, route }) => {
                       {item.md_location_airport === 1 && (
                         <>
                           <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
-                          <TextInput
-                            style={[styles.input, errors.flightNoPickupDepart && styles.errorInput]}
+                            <TextInput
+                            style={[styles.inputSolid, errors.flightNoPickupDepart && styles.errorInput]}
                             value={flightNoPickupDepart}
                             onChangeText={(text) => {
                               setFlightNoPickupDepart(text);
@@ -1877,7 +1887,7 @@ const TripDetail = ({ navigation, route }) => {
 
                           {pickupDepart && (
                             <View>
-                              <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
+                              <Text style={styles.inputLabel}>{defaultTransportTypeLabel}</Text>
                               {/* Button ที่คลิกเพื่อเปิด Modal */}
 
 
@@ -1895,7 +1905,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_cartype_namethai: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
+                                      data={[{ md_cartype_nameeng: defaultSelectTransportType, md_cartype_namethai: defaultSelectTransportType, md_pickup_cartypeid: '0' }, ...TranSportDepartPickup]}
                                       renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupDepart(item)}>
                                           <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng}</Text>
@@ -1924,7 +1934,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                       <FlatList
-                                      data={[{ md_pickup_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select", md_transfer_namethai: t('pleaseSelect') || "Please Select" }, ...pickupAreaDepart]}
+                                      data={[{ md_pickup_id: "0", md_transfer_nameeng: defaultPleaseSelect, md_transfer_namethai: defaultPleaseSelect }, ...pickupAreaDepart]}
                                       renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupDepart(item)}>
                                           <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_transfer_namethai ? item.md_transfer_namethai : item.md_transfer_nameeng}</Text>
@@ -1940,7 +1950,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <>
                                   <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
                                   <TextInput
-                                    style={[styles.input, errors.flightNoPickupDepart && styles.errorInput]}
+                                    style={[styles.inputSolid, errors.flightNoPickupDepart && styles.errorInput]}
                                     value={flightNoPickupDepart}
                                     onChangeText={(text) => {
                                       setFlightNoPickupDepart(text);
@@ -2014,7 +2024,7 @@ const TripDetail = ({ navigation, route }) => {
                                   setErrors((prev) => ({ ...prev, HotelpickupDepart: false }));
                                 }}
                                 placeholderTextColor="rgba(55,65,81,0.45)"
-                                style={[styles.input, errors.HotelpickupDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                style={[styles.inputSolid, errors.HotelpickupDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                               />
                             </View>
                           )}
@@ -2030,12 +2040,12 @@ const TripDetail = ({ navigation, route }) => {
                         <View style={styles.section}>
                           <TouchableOpacity onPress={() => setDropoffDepart(!dropoffDepart)} style={styles.checkboxContainer}>
                             <MaterialIcons name={dropoffDepart ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                            <Text style={styles.label}>{t('iNeedADropOff') || 'I need a drop off'}</Text>
+                            <Text style={styles.label}>{defaultINeedADropOff}</Text>
                           </TouchableOpacity>
 
                           {dropoffDepart && (
                             <View>
-                              <Text style={styles.inputLabel}>{t('transportType') || 'Transport type'}</Text>
+                              <Text style={styles.inputLabel}>{defaultTransportTypeLabel}</Text>
                               <TouchableOpacity
                                 style={[styles.buttonSelect, errors.selectedTransportDropoffDepartName && styles.errorInput]}
                                 onPress={toggleModalTransportDropoffDepart}
@@ -2050,7 +2060,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_cartype_namethai: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffDepart]}
+                                      data={[{ md_cartype_nameeng: defaultSelectTransportType, md_cartype_namethai: defaultSelectTransportType, md_pickup_cartypeid: '0' }, ...TranSportDropoffDepart]}
                                       renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffDepart(item)}>
                                           <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng}</Text>
@@ -2068,7 +2078,7 @@ const TripDetail = ({ navigation, route }) => {
                               </Modal>
 
 
-                              <Text style={styles.inputLabel}>{t('dropOffArea') || 'Drop off area'}</Text>
+                              <Text style={styles.inputLabel}>{defaultDropOffArea}</Text>
                               <TouchableOpacity onPress={toggleModalDropoffDepart} style={styles.buttonSelect}>
                                 <Text style={styles.buttonText}>{selectedDropoffDepartName}</Text>
                                 <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -2078,7 +2088,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <View style={styles.modalOverlay}>
                                   <View style={styles.modalContentPre}>
                                     <FlatList
-                                      data={[{ md_dropoff_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select", md_transfer_namethai: t('pleaseSelect') || "Please Select" }, ...DropoffAreaDepart]}
+                                      data={[{ md_dropoff_id: "0", md_transfer_nameeng: defaultPleaseSelect, md_transfer_namethai: defaultPleaseSelect }, ...DropoffAreaDepart]}
                                       renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffDepart(item)}>
                                           <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_transfer_namethai ? item.md_transfer_namethai : item.md_transfer_nameeng}</Text>
@@ -2093,7 +2103,7 @@ const TripDetail = ({ navigation, route }) => {
                                 <>
                                   <Text style={styles.inputLabel}>Filght Number</Text>
                                   <TextInput
-                                    style={[styles.input, errors.flightNoDropoffDepart && styles.errorInput]}
+                                    style={[styles.inputSolid, errors.flightNoDropoffDepart && styles.errorInput]}
                                     value={flightNoDropoffDepart}
                                     onChangeText={(text) => {
                                       setFlightNoDropoffDepart(text);
@@ -2156,15 +2166,16 @@ const TripDetail = ({ navigation, route }) => {
                               )}
 
 
-                              <Text style={styles.inputLabel}>{t('hotelDropOffPoint') || 'Hotel / Drop off point'}</Text>
+                              <Text style={styles.inputLabel}>{defaultHotelDropOffPoint}</Text>
                               <TextInput
-                                placeholder={t('inputHotelDropOffPoint') || "Input Hotel / Drop off point"}
+                                placeholder={defaultInputHotelDropOffPoint}
+                                placeholderTextColor="rgba(55,65,81,0.45)"
                                 value={HoteldropoffDepart}
                                 onChangeText={(text) => {
                                   setHoteldropoffDepart(text);
                                   setErrors((prev) => ({ ...prev, HoteldropoffDepart: false }));
                                 }}
-                                style={[styles.input, errors.HoteldropoffDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                style={[styles.inputSolid, errors.HoteldropoffDepart && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                               />
                             </View>
                           )}
@@ -2216,7 +2227,7 @@ const TripDetail = ({ navigation, route }) => {
                           borderTopLeftRadius: 32,
                           borderTopRightRadius: 32,
                           paddingVertical: 20,
-                          paddingHorizontal: 22,
+                          paddingHorizontal: 12,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -2234,7 +2245,7 @@ const TripDetail = ({ navigation, route }) => {
                                   color: '#fff',
                                   fontWeight: 'bold',
                                   fontSize: 18,
-                                  maxWidth: wp('20%'),
+                                  maxWidth: wp('28%'),
                                   overflow: 'hidden',
                                   flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                                 }}
@@ -2245,7 +2256,7 @@ const TripDetail = ({ navigation, route }) => {
                                 style={{
                                   color: '#fff',
                                   fontSize: 12,
-                                  maxWidth: wp('30%'),
+                                  maxWidth: wp('40%'),
                                   overflow: 'hidden',
                                   flexWrap: 'wrap', // ให้ขึ้นบรรทัดใหม่ถ้ายาว
                                 }}
@@ -2311,8 +2322,8 @@ const TripDetail = ({ navigation, route }) => {
                         {item.md_location_airport === 1 && (
                           <>
                             <Text style={styles.inputLabel}>Filght Number</Text>
-                            <TextInput
-                              style={[styles.input, errors.flightNoPickupReturn && styles.errorInput]}
+                              <TextInput
+                              style={[styles.inputSolid, errors.flightNoPickupReturn && styles.errorInput]}
                               value={flightNoPickupReturn}
                               onChangeText={(text) => {
                                 setFlightNoPickupReturn(text);
@@ -2380,12 +2391,12 @@ const TripDetail = ({ navigation, route }) => {
                           <View style={styles.section}>
                             <TouchableOpacity onPress={() => setpickupReturn(!pickupReturn)} style={styles.checkboxContainer}>
                               <MaterialIcons name={pickupReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                              <Text style={styles.label}>I need a pick up</Text>
+                              <Text style={styles.label}>{t('iNeedAPickUp') || 'I need a pick up'}</Text>
                             </TouchableOpacity>
 
                             {pickupReturn && (
                               <View>
-                                <Text style={styles.inputLabel}>Transport type</Text>
+                                <Text style={styles.inputLabel}>{defaultTransportTypeLabel}</Text>
                                 {/* Button ที่คลิกเพื่อเปิด Modal */}
 
                                 <TouchableOpacity
@@ -2402,7 +2413,7 @@ const TripDetail = ({ navigation, route }) => {
                                   <View style={styles.modalOverlay}>
                                     <View style={styles.modalContentPre}>
                                       <FlatList
-                                        data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_cartype_namethai: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
+                                        data={[{ md_cartype_nameeng: defaultSelectTransportType, md_cartype_namethai: defaultSelectTransportType, md_pickup_cartypeid: '0' }, ...TranSportReturnPickup]}
                                         renderItem={({ item }) => (
                                           <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportPickupReturn(item)}>
                                             <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng}</Text>
@@ -2419,7 +2430,7 @@ const TripDetail = ({ navigation, route }) => {
                                   </View>
                                 </Modal>
 
-                                <Text style={styles.inputLabel}>Pick up area</Text>
+                                <Text style={styles.inputLabel}>{t('pickUpArea') || 'Pick up area'}</Text>
                                 <TouchableOpacity onPress={toggleModalPickupReturn} style={[styles.buttonSelect, errors.selectedTransportPickupDepartName && styles.errorInput]}>
                                   <Text style={styles.buttonText}>{selectedPickupReturnName}</Text>
                                   <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -2429,7 +2440,7 @@ const TripDetail = ({ navigation, route }) => {
                                   <View style={styles.modalOverlay}>
                                     <View style={styles.modalContentPre}>
                                       <FlatList
-                                        data={[{ md_pickup_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select", md_transfer_namethai: t('pleaseSelect') || "Please Select" }, ...pickupAreaReturn]}
+                                        data={[{ md_pickup_id: "0", md_transfer_nameeng: defaultPleaseSelect, md_transfer_namethai: defaultPleaseSelect }, ...pickupAreaReturn]}
                                         renderItem={({ item }) => (
                                           <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectPickupReturn(item)}>
                                             <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_transfer_namethai ? item.md_transfer_namethai : item.md_transfer_nameeng}</Text>
@@ -2444,8 +2455,8 @@ const TripDetail = ({ navigation, route }) => {
 
                                   <>
                                     <Text style={styles.inputLabel}>Filght Number</Text>
-                                    <TextInput
-                                      style={[styles.input, errors.flightNoPickupReturn && styles.errorInput]}
+                                      <TextInput
+                                      style={[styles.inputSolid, errors.flightNoPickupReturn && styles.errorInput]}
                                       value={flightNoPickupReturn}
                                       onChangeText={(text) => {
                                         setFlightNoPickupReturn(text);
@@ -2510,9 +2521,9 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-                                <Text style={styles.inputLabel}>Hotel / Pick up point</Text>
+                                <Text style={styles.inputLabel}>{t('hotelPickUpPoint') || 'Hotel / Pick up point'}</Text>
                                 <TextInput
-                                  placeholder="Input Hotel / Pick up point"
+                                  placeholder={t('inputHotelPickUpPoint') || 'Input Hotel / Pick up point'}
                                   value={HotelpickupReturn}
                                   onChangeText={(text) => {
                                     setHotelpickupReturn(text);
@@ -2535,12 +2546,12 @@ const TripDetail = ({ navigation, route }) => {
                           <View style={styles.section}>
                             <TouchableOpacity onPress={() => setDropoffReturn(!dropoffReturn)} style={styles.checkboxContainer}>
                               <MaterialIcons name={dropoffReturn ? "check-box" : "check-box-outline-blank"} size={24} color="#FD501E" />
-                              <Text style={styles.label}>I need a drop off</Text>
+                              <Text style={styles.label}>{defaultINeedADropOff}</Text>
                             </TouchableOpacity>
 
                             {dropoffReturn && (
                               <View>
-                                <Text style={styles.inputLabel}>Transport type</Text>
+                                <Text style={styles.inputLabel}>{defaultTransportTypeLabel}</Text>
                                 <TouchableOpacity
                                   style={[styles.buttonSelect, errors.selectedTransportDropoffReturn && styles.errorInput]}
                                   onPress={toggleModalTransportDropoffReturn}
@@ -2555,7 +2566,7 @@ const TripDetail = ({ navigation, route }) => {
                                   <View style={styles.modalOverlay}>
                                     <View style={styles.modalContentPre}>
                                       <FlatList
-                                        data={[{ md_cartype_nameeng: t('selectTransportType') || 'Select Transport Type', md_cartype_namethai: t('selectTransportType') || 'Select Transport Type', md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
+                                        data={[{ md_cartype_nameeng: defaultSelectTransportType, md_cartype_namethai: defaultSelectTransportType, md_pickup_cartypeid: '0' }, ...TranSportDropoffReturn]}
                                         renderItem={({ item }) => (
                                           <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectedTranSportDropoffReturn(item)}>
                                             <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_cartype_namethai ? item.md_cartype_namethai : item.md_cartype_nameeng}</Text>
@@ -2572,7 +2583,7 @@ const TripDetail = ({ navigation, route }) => {
                                   </View>
                                 </Modal>
 
-                                <Text style={styles.inputLabel}>Drop off area</Text>
+                                <Text style={styles.inputLabel}>{defaultDropOffArea}</Text>
                                 <TouchableOpacity onPress={toggleModalDropoffReturn} style={styles.buttonSelect}>
                                   <Text style={styles.buttonText}>{selectedDropoffReturnName}</Text>
                                   <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -2582,7 +2593,7 @@ const TripDetail = ({ navigation, route }) => {
                                   <View style={styles.modalOverlay}>
                                     <View style={styles.modalContentPre}>
                                       <FlatList
-                                        data={[{ md_dropoff_id: "0", md_transfer_nameeng: t('pleaseSelect') || "Please Select", md_transfer_namethai: t('pleaseSelect') || "Please Select" }, ...DropoffAreaReturn]}
+                                        data={[{ md_dropoff_id: "0", md_transfer_nameeng: defaultPleaseSelect, md_transfer_namethai: defaultPleaseSelect }, ...DropoffAreaReturn]}
                                         renderItem={({ item }) => (
                                           <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectDropoffReturn(item)}>
                                             <Text style={styles.optionText}>{selectedLanguage === 'th' && item.md_transfer_namethai ? item.md_transfer_namethai : item.md_transfer_nameeng}</Text>
@@ -2597,7 +2608,7 @@ const TripDetail = ({ navigation, route }) => {
                                   <>
                                     <Text style={styles.inputLabel}>Filght Number</Text>
                                     <TextInput
-                                      style={[styles.input, errors.flightNoDropoffReturn && styles.errorInput]}
+                                      style={[styles.inputSolid, errors.flightNoDropoffReturn && styles.errorInput]}
                                       value={flightNoDropoffReturn}
                                       onChangeText={(text) => {
                                         setFlightNoDropoffReturn(text);
@@ -2663,15 +2674,16 @@ const TripDetail = ({ navigation, route }) => {
 
 
 
-                                <Text style={styles.inputLabel}>Hotel / Drop off point</Text>
+                                <Text style={styles.inputLabel}>{defaultHotelDropOffPoint}</Text>
                                 <TextInput
-                                  placeholder="Input Hotel / Drop off point"
+                                  placeholder={defaultInputHotelDropOffPoint}
+                                  placeholderTextColor="rgba(55,65,81,0.45)"
                                   value={HoteldropoffReturn}
                                   onChangeText={(text) => {
                                     setHoteldropoffReturn(text);
                                     setErrors((prev) => ({ ...prev, HoteldropoffReturn: false }));
                                   }}
-                                  style={[styles.input, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
+                                  style={[styles.inputSolid, errors.HoteldropoffReturn && styles.errorInput]} // ใช้สีแดงเมื่อมีข้อผิดพลาด
                                 />
                               </View>
                             )}
@@ -2709,7 +2721,6 @@ const TripDetail = ({ navigation, route }) => {
                     borderColor: 'rgba(253,80,30,0.10)',
                     borderRadius: 24,
                     padding: wp('4%'),
-                    maxWidth: wp('100%'),
                     alignSelf: 'center',
                     overflow: 'visible',
                     position: 'relative',
@@ -2792,7 +2803,7 @@ const TripDetail = ({ navigation, route }) => {
 
                         {dropoffDepart && (
                           <View style={styles.rowpromo}>
-                            <Text>{t('dropOff') || 'Drop off'}</Text>
+                            <Text>{defaultDropOff}</Text>
                             <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
                           </View>
                         )}
@@ -2824,17 +2835,17 @@ const TripDetail = ({ navigation, route }) => {
                             </Text>
 
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Company</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'}</Text>
                               <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_company_namethai : tripItem.md_company_nameeng}</Text>
                             </View>
 
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Seat</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
                               <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_seat_namethai : tripItem.md_seat_nameeng}</Text>
                             </View>
 
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Boat</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'}</Text>
                               <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{selectedLanguage === 'th' ? tripItem.md_boattype_namethai : tripItem.md_boattype_nameeng}</Text>
                             </View>
 
@@ -2844,54 +2855,54 @@ const TripDetail = ({ navigation, route }) => {
                             </View>
 
                             <View style={styles.rowpromo}>
-                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>Departure Time</Text>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'}</Text>
                               <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
                                 {formatTime(tripItem.md_timetable_departuretime)} - {formatTime(tripItem.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(tripItem.md_timetable_time)}
                               </Text>
                             </View>
 
                             <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Adult x {customerData.adult}</Text>
+                              <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                               <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceadult).toFixed(2))}</Text>
                             </View>
 
                             {customerData.child !== 0 && (
                               <View style={styles.rowpromo}>
-                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Child x {customerData.child}</Text>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
                                 <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricechild).toFixed(2))}</Text>
                               </View>
                             )}
 
                             {customerData.infant !== 0 && (
                               <View style={styles.rowpromo}>
-                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>Infant x {customerData.infant}</Text>
+                                <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                                 <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.priceinfant).toFixed(2))}</Text>
                               </View>
                             )}
 
                             {pickupReturn && (
                               <View style={styles.rowpromo}>
-                                <Text>Pick up</Text>
+                                <Text>{t('pickUp') || 'Pick up'}</Text>
                                 <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricepickupdepart).toFixed(2))}</Text>
                               </View>
                             )}
 
                             {dropoffReturn && (
                               <View style={styles.rowpromo}>
-                                <Text>Drop off</Text>
+                                <Text>{defaultDropOff}</Text>
                                 <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
                               </View>
                             )}
 
                             {item.totalReturn.save != 0 && (
                               <View style={styles.rowpromo}>
-                                <Text>Discount</Text>
+                                <Text>{t('discount') || 'Discount'}</Text>
                                 <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.discount).toFixed(2))}</Text>
                               </View>
                             )}
 
                             <View style={styles.rowpromo}>
-                              <Text>Ticket fare</Text>
+                              <Text>{t('ticketFare') || 'Ticket fare'}</Text>
                               <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(parseFloat(item.totalReturn.showtotal).toFixed(2))}</Text>
                             </View>
 
