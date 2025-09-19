@@ -128,11 +128,12 @@ export const DesignTokens = {
     title: wp('7%'),
   },
   
+  // Shadows removed globally — keep utility but return no-op tokens
   shadows: {
-    light: CrossPlatformUtils.getUnifiedShadow('#000', 0.1, 2, 2),
-    medium: CrossPlatformUtils.getUnifiedShadow('#000', 0.15, 4, 4),
-    heavy: CrossPlatformUtils.getUnifiedShadow('#000', 0.2, 8, 8),
-    colored: CrossPlatformUtils.getUnifiedShadow('#FD501E', 0.15, 6, 6),
+    light: {},
+    medium: {},
+    heavy: {},
+    colored: {},
   },
 };
 

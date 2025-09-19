@@ -41,10 +41,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+  /* shadow/elevation removed */
     position: 'relative',
     overflow: 'hidden',
   },
@@ -83,9 +80,7 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+  /* textShadow removed */
   },
   headerSubtitle: {
     fontSize: 15,
@@ -126,10 +121,7 @@ export const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 25,
     marginBottom: 25,
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
+  /* shadow/elevation removed */
     borderWidth: 1,
     borderColor: 'rgba(253, 80, 30, 0.1)',
   },
@@ -182,10 +174,7 @@ export const styles = StyleSheet.create({
   uploadButtonPremium: {
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+  /* shadow/elevation removed */
     marginBottom: 20,
   },
   ocrStatusBanner: {
@@ -240,10 +229,7 @@ export const styles = StyleSheet.create({
   documentContainer: {
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
+  /* shadow/elevation removed */
     position: 'relative',
   },
   documentImage: {
@@ -324,10 +310,7 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     fontSize: 16,
     color: '#1F2937',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    /* shadow/elevation removed */
     fontWeight: '500',
   },
 
@@ -342,10 +325,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(209, 213, 219, 0.8)',
     borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    /* shadow/elevation removed */
   },
   buttonTextPremium: {
     fontSize: 16,
@@ -358,10 +338,7 @@ export const styles = StyleSheet.create({
   saveButtonPremium: {
     marginTop: 10,
     borderRadius: 18,
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    /* shadow/elevation removed */
     overflow: 'hidden',
   },
   saveGradient: {
@@ -410,10 +387,7 @@ export const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 25,
     marginBottom: 25,
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
+    /* shadow/elevation removed */
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.1)',
   },
@@ -449,10 +423,7 @@ export const styles = StyleSheet.create({
     height: 500,
     borderRadius: 25,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3,
-    shadowRadius: 30,
+  /* shadow/elevation removed */
   },
   modalGradient: {
     flex: 1,
@@ -491,10 +462,7 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     fontSize: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+  /* shadow/elevation removed */
   },
   optionItemPremium: {
     paddingVertical: 15,

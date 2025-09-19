@@ -894,10 +894,7 @@ const SearchFerry = ({ navigation, route }) => {
               borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
               borderBottomRightRadius: getResponsiveSize(40, 35, 30),
               paddingBottom: getResponsiveSize(8, 6, 5),
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: getResponsiveSize(25, 20, 15),
-              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+              /* shadow/elevation removed */
               padding: getResponsiveSize(10, 8, 6),
               minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
@@ -934,10 +931,7 @@ const SearchFerry = ({ navigation, route }) => {
                 borderRadius: getResponsiveSize(25, 22, 20),
                 padding: getResponsiveSize(8, 10, 12),
                 zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: getResponsiveSize(12, 10, 8),
-                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                /* shadow/elevation removed */
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -962,10 +956,7 @@ const SearchFerry = ({ navigation, route }) => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: getResponsiveSize(12, 10, 8),
-                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                /* shadow/elevation removed */
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
                 minWidth: getResponsiveSize(70, 80, 90),
@@ -1008,10 +999,7 @@ const SearchFerry = ({ navigation, route }) => {
                     paddingHorizontal: 20,
                     width: '100%',
                     maxWidth: 360,
-                    shadowColor: '#000',
-                    shadowOpacity: 0.2,
-                    shadowRadius: 16,
-                    shadowOffset: { width: 0, height: 6 },
+                    /* shadow/elevation removed */
                     position: 'relative',
                   }}
                 >
@@ -1063,9 +1051,7 @@ const SearchFerry = ({ navigation, route }) => {
                           justifyContent: 'space-between',
                           shadowColor:
                             selectedCurrency === currency.md_currency_code ? '#FD501E' : 'transparent',
-                          shadowOpacity: 0.08,
-                          shadowRadius: 6,
-                          shadowOffset: { width: 0, height: 2 },
+                          /* shadow/elevation removed */
                         }}
                       >
                         <Text style={{ fontSize: 16, color: '#333' }}>
@@ -1100,11 +1086,7 @@ const SearchFerry = ({ navigation, route }) => {
               maxWidth: wp('92%'),
               borderRadius: wp('6%'),
               padding: wp('6%'),
-              shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-              shadowOpacity: Platform.OS === 'android' ? 0 : 0.15,
-              shadowRadius: Platform.OS === 'android' ? 0 : wp('6%'),
-              shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('1%') },
-              elevation: Platform.OS === 'android' ? 0 : 20,
+              /* shadow/elevation removed */
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
               // backdropFilter: 'blur(25px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1129,10 +1111,7 @@ const SearchFerry = ({ navigation, route }) => {
                     backgroundColor: 'rgba(248,250,252,0.8)',
                     padding: wp('2.5%'),
                     borderRadius: wp('4%'),
-                    shadowColor: Platform.OS === 'android' ? 'transparent' : '#64748B',
-                    shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
-                    shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                    elevation: Platform.OS === 'android' ? 0 : 4,
+                    /* shadow/elevation removed */
                   }}
                   activeOpacity={0.7}
                 >
@@ -1152,10 +1131,7 @@ const SearchFerry = ({ navigation, route }) => {
                   borderRadius: wp('4%'),
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.05,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                  elevation: Platform.OS === 'android' ? 0 : 2,
+                  /* shadow/elevation removed */
                 }}
                 activeOpacity={0.8}
               >
@@ -1195,11 +1171,7 @@ const SearchFerry = ({ navigation, route }) => {
                         borderRadius: wp('4%'),
                         borderWidth: 1,
                         borderColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                        shadowColor: Platform.OS === 'android' ? 'transparent' : (selectedCompaniesDepart.includes(company) ? '#FD501E' : '#64748B'),
-                        shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 0.1 : 0.05),
-                        shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                        shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
-                        elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesDepart.includes(company) ? 4 : 2),
+                        /* shadow/elevation removed */
                       }}
                       activeOpacity={0.7}
                     >
@@ -1233,11 +1205,7 @@ const SearchFerry = ({ navigation, route }) => {
                         borderRadius: wp('4%'),
                         borderWidth: 1,
                         borderColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                        shadowColor: Platform.OS === 'android' ? 'transparent' : (selectedCompaniesReturn.includes(company) ? '#FD501E' : '#64748B'),
-                        shadowOpacity: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 0.1 : 0.05),
-                        shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                        shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.2%') },
-                        elevation: Platform.OS === 'android' ? 0 : (selectedCompaniesReturn.includes(company) ? 4 : 2),
+                        /* shadow/elevation removed */
                       }}
                       activeOpacity={0.7}
                     >
@@ -1269,11 +1237,7 @@ const SearchFerry = ({ navigation, route }) => {
                   padding: hp('2.2%'),
                   borderRadius: wp('5%'),
                   alignItems: 'center',
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
-                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.8%') },
-                  elevation: Platform.OS === 'android' ? 0 : 15,
+                  /* shadow/elevation removed */
                   borderWidth: 1,
                   borderColor: 'rgba(255, 255, 255, 0.25)',
                   // Premium gradient effect
@@ -1288,8 +1252,7 @@ const SearchFerry = ({ navigation, route }) => {
                     fontWeight: '800',
                     fontSize: wp('4.2%'),
                     letterSpacing: 0.5,
-                    textShadowColor: 'rgba(0,0,0,0.2)',
-                    textShadowRadius: 2,
+                    /* textShadow removed */
                   }}>
                     {t('applyFilters')}
                   </Text>
@@ -1353,9 +1316,7 @@ const SearchFerry = ({ navigation, route }) => {
               textAlign: 'left',
               marginBottom: hp('0.5%'),
               lineHeight: wp('7%'),
-              textShadowColor: 'rgba(0,0,0,0.3)',
-              textShadowRadius: 4,
-              textShadowOffset: { width: 1, height: 1 },
+              /* textShadow removed */
             }}>
               {t('searchFerry')}
             </Text>
@@ -1365,8 +1326,7 @@ const SearchFerry = ({ navigation, route }) => {
               fontWeight: '500',
               lineHeight: wp('4.5%'),
               letterSpacing: 0.3,
-              textShadowColor: 'rgba(0,0,0,0.2)',
-              textShadowRadius: 2,
+              /* textShadow removed */
             }}>
               {t('findYourPerfectJourney')}
             </Text>
@@ -1377,10 +1337,7 @@ const SearchFerry = ({ navigation, route }) => {
               paddingVertical: hp('1.5%'),
               paddingHorizontal: wp('5%'),
               borderRadius: wp('4%'),
-              shadowColor: '#FFFFFF',
-              shadowOpacity: 0.1,
-              shadowRadius: wp('1.5%'),
-              shadowOffset: { width: 0, height: hp('0.25%') },
+              /* shadow/elevation removed */
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.3)',
               // backdropFilter: 'blur(15px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1395,8 +1352,7 @@ const SearchFerry = ({ navigation, route }) => {
                 fontWeight: '700',
                 fontSize: wp('3.8%'),
                 letterSpacing: 0.5,
-                textShadowColor: Platform.OS === 'android' ? 'transparent' : 'rgba(0,0,0,0.2)',
-                textShadowRadius: Platform.OS === 'android' ? 0 : 2,
+                /* textShadow removed */
               }}>{t('filters')}</Text>
             </View>
           </TouchableOpacity>
@@ -1409,10 +1365,7 @@ const SearchFerry = ({ navigation, route }) => {
             padding: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
             marginBottom: getResponsiveSize(hp('2%'), hp('1.5%'), hp('1%')),
             // iPad-optimized shadows
-            shadowColor: '#001233',
-            shadowOffset: { width: 0, height: getResponsiveSize(hp('0.6%'), hp('0.4%'), hp('0.3%')) },
-            shadowOpacity: 0.08,
-            shadowRadius: getResponsiveSize(wp('3%'), wp('2%'), wp('1.5%')),
+            /* shadow/elevation removed */
             borderWidth: getResponsiveSize(wp('0.2%'), wp('0.15%'), wp('0.1%')),
             borderColor: 'rgba(0, 18, 51, 0.06)',
             // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1427,10 +1380,7 @@ const SearchFerry = ({ navigation, route }) => {
               borderRadius: getResponsiveSize(wp('3%'), wp('2.5%'), wp('2%')),
               padding: getResponsiveSize(wp('0.8%'), wp('0.6%'), wp('0.5%')),
               marginBottom: getResponsiveSize(hp('2%'), hp('1.5%'), hp('1%')),
-              shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-              shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-              shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
-              elevation: Platform.OS === 'android' ? 0 : 4,
+              /* shadow/elevation removed */
               borderWidth: 0.5,
               borderColor: 'rgba(0, 18, 51, 0.04)',
               // iPad-specific layout
@@ -1445,11 +1395,7 @@ const SearchFerry = ({ navigation, route }) => {
                     borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
                     paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
                     paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
-                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === t('oneWayTrip') ? '#FD501E' : 'transparent'),
-                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === t('oneWayTrip') ? 0.2 : 0),
-                    shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
-                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
-                    elevation: Platform.OS === 'android' ? 0 : (tripType === t('oneWayTrip') ? 6 : 0),
+                    /* shadow/elevation removed */
                     borderWidth: 0.5,
                     borderColor: tripType === t('oneWayTrip') ? 'rgba(255,255,255,0.2)' : 'transparent',
                     // iPad-specific button sizing
@@ -1473,8 +1419,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontWeight: tripType === TRIP_TYPES.ONE_WAY ? '700' : '600',
                       fontSize: getResponsiveSize(wp('3.5%'), wp('2.8%'), wp('2.2%')),
                       letterSpacing: 0.2,
-                      textShadowColor: tripType === TRIP_TYPES.ONE_WAY ? 'rgba(0,0,0,0.1)' : 'transparent',
-                      textShadowRadius: 1,
+                      /* textShadow removed */
                       textAlign: 'center',
                     }
                   ]}
@@ -1490,11 +1435,7 @@ const SearchFerry = ({ navigation, route }) => {
                     borderRadius: getResponsiveSize(wp('2.5%'), wp('2%'), wp('1.5%')),
                     paddingVertical: getResponsiveSize(hp('1.2%'), hp('1%'), hp('0.8%')),
                     paddingHorizontal: getResponsiveSize(wp('4%'), wp('3%'), wp('2.5%')),
-                    shadowColor: Platform.OS === 'android' ? 'transparent' : (tripType === t('returnTrip') ? '#FD501E' : 'transparent'),
-                    shadowOpacity: Platform.OS === 'android' ? 0 : (tripType === t('returnTrip') ? 0.2 : 0),
-                    shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('2%'), wp('1.5%'), wp('1%')),
-                    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: getResponsiveSize(hp('0.3%'), hp('0.25%'), hp('0.2%')) },
-                    elevation: Platform.OS === 'android' ? 0 : (tripType === t('returnTrip') ? 6 : 0),
+                    /* shadow/elevation removed */
                     borderWidth: 0.5,
                     borderColor: tripType === t('returnTrip') ? 'rgba(255,255,255,0.2)' : 'transparent',
                     // iPad-specific button sizing
@@ -1519,8 +1460,7 @@ const SearchFerry = ({ navigation, route }) => {
                       fontWeight: tripType === t('returnTrip') ? '700' : '600',
                       fontSize: getResponsiveSize(wp('3.5%'), wp('2.8%'), wp('2.2%')),
                       letterSpacing: 0.2,
-                      textShadowColor: tripType === t('returnTrip') ? 'rgba(0,0,0,0.1)' : 'transparent',
-                      textShadowRadius: 1,
+                      /* textShadow removed */
                       textAlign: 'center',
                     }
                   ]}
@@ -1539,10 +1479,7 @@ const SearchFerry = ({ navigation, route }) => {
                   backgroundColor: 'rgba(255,255,255,0.9)',
                   borderRadius: wp('3%'),
                   padding: wp('3%'),
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                  elevation: Platform.OS === 'android' ? 0 : 4,
+                  /* shadow/elevation removed */
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
                   // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1557,10 +1494,7 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: 28,
                   minHeight: 28,
                   backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                  elevation: Platform.OS === 'android' ? 0 : 2,
+                  /* shadow/elevation removed */
                 }]}>
                   <MaterialIcons name="groups" size={wp('5%')} color="#FD501E" />
                 </View>
@@ -1600,11 +1534,7 @@ const SearchFerry = ({ navigation, route }) => {
                   padding: 24,
                   width: '100%',
                   maxWidth: 420,
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#000',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
-                  shadowRadius: Platform.OS === 'android' ? 0 : 20,
-                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 10 },
-                  elevation: Platform.OS === 'android' ? 0 : 15,
+                  /* shadow/elevation removed */
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.1)'
                 }}>
@@ -1644,10 +1574,7 @@ const SearchFerry = ({ navigation, route }) => {
                       paddingVertical: 12,
                       paddingHorizontal: 16,
                       marginBottom: 10,
-                      shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                      shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
-                      shadowRadius: Platform.OS === 'android' ? 0 : 8,
-                      elevation: Platform.OS === 'android' ? 0 : 3,
+                      /* shadow/elevation removed */
                       borderWidth: 1,
                       borderColor: 'rgba(253, 80, 30, 0.1)'
                     }}>
@@ -1667,10 +1594,7 @@ const SearchFerry = ({ navigation, route }) => {
                             padding: 4,
                             borderRadius: 16,
                             backgroundColor: adults > 1 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                            shadowColor: Platform.OS === 'android' ? 'transparent' : (adults > 1 ? '#FD501E' : 'transparent'),
-                            shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-                            shadowRadius: Platform.OS === 'android' ? 0 : 4,
-                            elevation: Platform.OS === 'android' ? 0 : (adults > 1 ? 2 : 0)
+                            /* shadow/elevation removed */
                           }}
                         >
                           <Icon name="remove-circle" size={24} color={adults > 1 ? '#FD501E' : '#94A3B8'} />
@@ -1692,10 +1616,7 @@ const SearchFerry = ({ navigation, route }) => {
                             padding: 4,
                             borderRadius: 16,
                             backgroundColor: adults < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                            shadowColor: Platform.OS === 'android' ? 'transparent' : (adults < 10 ? '#FD501E' : 'transparent'),
-                            shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-                            shadowRadius: Platform.OS === 'android' ? 0 : 4,
-                            elevation: Platform.OS === 'android' ? 0 : (adults < 10 ? 2 : 0)
+                            /* shadow/elevation removed */
                           }}
                         >
                           <Icon name="add-circle" size={24} color={adults < 10 ? '#FD501E' : '#94A3B8'} />
@@ -1712,10 +1633,7 @@ const SearchFerry = ({ navigation, route }) => {
                       paddingVertical: 12,
                       paddingHorizontal: 16,
                       marginBottom: 10,
-                      shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                      shadowOpacity: Platform.OS === 'android' ? 0 : 0.08,
-                      shadowRadius: Platform.OS === 'android' ? 0 : 8,
-                      elevation: Platform.OS === 'android' ? 0 : 3,
+                      /* shadow/elevation removed */
                       borderWidth: 1,
                       borderColor: 'rgba(253, 80, 30, 0.1)'
                     }}>
@@ -1735,10 +1653,7 @@ const SearchFerry = ({ navigation, route }) => {
                             padding: 4,
                             borderRadius: 16,
                             backgroundColor: children > 0 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                            shadowColor: Platform.OS === 'android' ? 'transparent' : (children > 0 ? '#FD501E' : 'transparent'),
-                            shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-                            shadowRadius: Platform.OS === 'android' ? 0 : 4,
-                            elevation: Platform.OS === 'android' ? 0 : (children > 0 ? 2 : 0)
+                            /* shadow/elevation removed */
                           }}
                         >
                           <Icon name="remove-circle" size={24} color={children > 0 ? '#FD501E' : '#94A3B8'} />
@@ -1760,10 +1675,7 @@ const SearchFerry = ({ navigation, route }) => {
                             padding: 4,
                             borderRadius: 16,
                             backgroundColor: children < 10 ? 'rgba(253, 80, 30, 0.15)' : '#F1F5F9',
-                            shadowColor: Platform.OS === 'android' ? 'transparent' : (children < 10 ? '#FD501E' : 'transparent'),
-                            shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-                            shadowRadius: Platform.OS === 'android' ? 0 : 4,
-                            elevation: Platform.OS === 'android' ? 0 : (children < 10 ? 2 : 0)
+                            /* shadow/elevation removed */
                           }}
                         >
                           <Icon name="add-circle" size={24} color={children < 10 ? '#FD501E' : '#94A3B8'} />
@@ -1846,11 +1758,7 @@ const SearchFerry = ({ navigation, route }) => {
                       padding: 16,
                       alignItems: 'center',
                       marginTop: 12,
-                      shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                      shadowOpacity: Platform.OS === 'android' ? 0 : 0.3,
-                      shadowRadius: Platform.OS === 'android' ? 0 : 16,
-                      shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 6 },
-                      elevation: Platform.OS === 'android' ? 0 : 12,
+                      /* shadow/elevation removed */
                       borderWidth: 1,
                       borderColor: 'rgba(255, 255, 255, 0.2)'
                     }}
@@ -1877,10 +1785,7 @@ const SearchFerry = ({ navigation, route }) => {
                   backgroundColor: 'rgba(255,255,255,0.9)',
                   borderRadius: wp('3%'),
                   padding: wp('2.5%'),
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                  elevation: Platform.OS === 'android' ? 0 : 4,
+                  /* shadow/elevation removed */
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
                   // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1894,10 +1799,7 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: 24,
                   minHeight: 24,
                   backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                  elevation: Platform.OS === 'android' ? 0 : 2,
+                  /* shadow/elevation removed */
                 }]}>
                   <MaterialIcons name="directions-boat" size={wp('4.5%')} color="#FD501E" />
                 </View>
@@ -1938,11 +1840,7 @@ const SearchFerry = ({ navigation, route }) => {
                   justifyContent: 'center',
                   minWidth: 28,
                   minHeight: 28,
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.25,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                  shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.3%') },
-                  elevation: Platform.OS === 'android' ? 0 : 6,
+                  /* shadow/elevation removed */
                   borderWidth: 0.5,
                   borderColor: 'rgba(255, 255, 255, 0.2)',
                 }}>
@@ -1957,10 +1855,7 @@ const SearchFerry = ({ navigation, route }) => {
                   backgroundColor: 'rgba(255,255,255,0.9)',
                   borderRadius: wp('3%'),
                   padding: wp('2.5%'),
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.06,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('2%'),
-                  elevation: Platform.OS === 'android' ? 0 : 4,
+                  /* shadow/elevation removed */
                   borderWidth: 0.5,
                   borderColor: 'rgba(0, 18, 51, 0.05)',
                   // backdropFilter: 'blur(10px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
@@ -1973,10 +1868,7 @@ const SearchFerry = ({ navigation, route }) => {
                   minWidth: 24,
                   minHeight: 24,
                   backgroundColor: 'rgba(253, 80, 30, 0.1)',
-                  shadowColor: Platform.OS === 'android' ? 'transparent' : '#FD501E',
-                  shadowOpacity: Platform.OS === 'android' ? 0 : 0.1,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('1%'),
-                  elevation: Platform.OS === 'android' ? 0 : 2,
+                  /* shadow/elevation removed */
                 }]}>
                   <MaterialIcons name="location-on" size={wp('4.5%')} color="#FD501E" />
                 </View>

@@ -304,19 +304,18 @@ const styles = StyleSheet.create({
   headerGradient: {
     paddingBottom: 40, paddingHorizontal: 20,
     borderBottomLeftRadius: 35, borderBottomRightRadius: 35,
-    shadowColor: '#FD501E', shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35, shadowRadius: 20, position: 'relative', overflow: 'hidden',
+    /* shadow/elevation removed */ position: 'relative', overflow: 'hidden',
   },
   safeAreaHeader: { paddingTop: Platform.OS === 'android' ? 40 : 0 },
   headerContent: { alignItems: 'center', position: 'relative', zIndex: 3 },
   backButton: {
     position: 'absolute', top: 15, left: 0, width: 44, height: 44, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center',
-    zIndex: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4,
+    zIndex: 5, /* shadow/elevation removed */
   },
   headerTitle: {
     fontSize: 28, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+    /* textShadow removed */
   },
   headerSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.95)', textAlign: 'center', fontWeight: '500', letterSpacing: 0.3 },
 
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   // Card (My Bookings)
   card: {
     backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('3%'),
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 2,
+    /* shadow/elevation removed */
   },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: hp('1%') },
   cardTitle: { fontSize: wp('4.6%'), fontWeight: '800', color: '#0F172A' },

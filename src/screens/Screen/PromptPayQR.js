@@ -37,7 +37,7 @@ export default function PromptPayScreen({ route, navigation }) {
   const [intervalId, setIntervalId] = useState(null);
   const [actualBookingCode, setActualBookingCode] = useState(null); // เก็บ booking code ที่สร้างจริง
 
-      const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 16;
   // Function สำหรับการอัปเดตคะแนน
   const updateUserPoints = async (pointsToDeduct, pointsToAdd) => {
     try {
@@ -217,6 +217,20 @@ export default function PromptPayScreen({ route, navigation }) {
             }
 
             // ✅ อัปเดตสถานะการชำระเงิน (ไม่อัปเดตคะแนนใน updatestatus แล้ว)
+            // ส่งอีเมลตั๋วผ่าน endpoint สำหรับ booking code ที่มีอยู่
+            try {
+              const sendCodes = [customerData.md_booking_code, customerData.md_booking_code_return].filter(Boolean);
+              for (const code of sendCodes) {
+                try {
+                  await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
+                  console.log('✅ PromptPay: Sent ticket email for code:', code);
+                } catch (err) {
+                  console.error('❌ PromptPay: Failed to send ticket for code:', code, err);
+                }
+              }
+            } catch (err) {
+              console.error('❌ PromptPay: Error while sending ticket emails:', err);
+            }
             navigation.navigate("ResultScreen", { success: true });
             if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
           }
@@ -406,6 +420,21 @@ export default function PromptPayScreen({ route, navigation }) {
         // ✅ ใช้ booking code ที่ได้จาก createBooking เท่านั้น
         const bookingCodeFromCreateBooking = actualBookingCode;
         await updatestatus(bookingCodeFromCreateBooking);
+
+        // ส่งอีเมลตั๋วผ่าน endpoint สำหรับ booking code ที่สร้างขึ้น
+        try {
+          const sendCodes = [bookingCodeFromCreateBooking, customerData.md_booking_code_return].filter(Boolean);
+          for (const code of sendCodes) {
+            try {
+              await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
+              console.log('✅ PromptPay manual: Sent ticket email for code:', code);
+            } catch (err) {
+              console.error('❌ PromptPay manual: Failed to send ticket for code:', code, err);
+            }
+          }
+        } catch (err) {
+          console.error('❌ PromptPay manual: Error while sending ticket emails:', err);
+        }
       }
     } catch (e) {
       console.error('Error checking payment status on manual cancel:', e);

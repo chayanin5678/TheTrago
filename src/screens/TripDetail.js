@@ -1119,10 +1119,7 @@ const TripDetail = ({ navigation, route }) => {
               borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
               borderBottomRightRadius: getResponsiveSize(40, 35, 30),
               paddingBottom: getResponsiveSize(8, 6, 5),
-              shadowColor: '#001233',
-              shadowOpacity: 0.15,
-              shadowRadius: getResponsiveSize(25, 20, 15),
-              shadowOffset: { width: 0, height: getResponsiveSize(8, 6, 4) },
+              /* shadow removed */
               padding: getResponsiveSize(10, 8, 6),
               minHeight: getResponsiveSize(hp('12%'), hp('10%'), hp('8%')),
               borderWidth: 1,
@@ -1159,10 +1156,7 @@ const TripDetail = ({ navigation, route }) => {
                 borderRadius: getResponsiveSize(25, 22, 20),
                 padding: getResponsiveSize(8, 10, 12),
                 zIndex: 2,
-                shadowColor: '#FD501E',
-                shadowOpacity: 0.2,
-                shadowRadius: getResponsiveSize(12, 10, 8),
-                shadowOffset: { width: 0, height: getResponsiveSize(4, 3, 2) },
+                /* shadow removed */
                 borderWidth: 1,
                 borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
@@ -1278,9 +1272,7 @@ const TripDetail = ({ navigation, route }) => {
             letterSpacing: -0.5,
             textAlign: 'center',
             lineHeight: wp('8%'),
-            textShadowColor: 'rgba(0,0,0,0.3)',
-            textShadowRadius: 4,
-            textShadowOffset: { width: 1, height: 1 },
+            /* textShadow removed */
           }}>
             {t('shuttleTransfer') || 'Shuttle Transfer'}
           </Text>
@@ -1291,8 +1283,7 @@ const TripDetail = ({ navigation, route }) => {
             textAlign: 'center',
             marginTop: hp('0.5%'),
             letterSpacing: 0.3,
-            textShadowColor: 'rgba(0,0,0,0.2)',
-            textShadowRadius: 2,
+            /* textShadow removed */
           }}>
             {t('completeYourTripDetails') || 'Complete your trip details'}
           </Text>
@@ -1323,9 +1314,7 @@ const TripDetail = ({ navigation, route }) => {
                     backgroundColor: 'rgba(255,255,255,0.95)',
                     borderRadius: wp('6%'),
                     padding: wp('4%'),
-                    shadowColor: '#001233',
-                    shadowOpacity: 0.08,
-                    shadowRadius: wp('3%'),
+                    /* shadow removed */
                     borderWidth: wp('0.2%'),
                     borderColor: 'rgba(0, 18, 51, 0.06)',
                     overflow: 'hidden',
@@ -1492,9 +1481,7 @@ const TripDetail = ({ navigation, route }) => {
                       width: '100%',
                       borderWidth: wp('0.2%'),
                       borderColor: 'rgba(0,35,72,0.05)',
-                      shadowColor: '#001233',
-                      shadowOpacity: 0.08,
-                      shadowRadius: wp('3%'),
+                      /* shadow removed */
                       position: 'relative',
                     }}>
                       {/* Card Header Skeleton */}
@@ -1638,10 +1625,7 @@ const TripDetail = ({ navigation, route }) => {
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     borderRadius: 24,
                     padding: 32,
-                    shadowColor: '#FD501E',
-                    shadowOpacity: 0.1,
-                    shadowRadius: 20,
-                    shadowOffset: { width: 0, height: 8 },
+                    /* shadow removed */
                     borderWidth: 1,
                     borderColor: 'rgba(253, 80, 30, 0.08)',
                     marginHorizontal: wp('1%')
@@ -2211,10 +2195,7 @@ const TripDetail = ({ navigation, route }) => {
                           backgroundColor: 'rgba(255,255,255,0.97)',
                           borderWidth: 1.5,
                           borderColor: 'rgba(253,80,30,0.13)',
-                          shadowColor: '#FD501E',
-                          shadowOpacity: 0.13,
-                          shadowRadius: 16,
-                          shadowOffset: { width: 0, height: 8 },
+                          /* shadow removed */
                           overflow: 'visible',
                           padding: 0,
                           borderRadius: 32,
@@ -2724,10 +2705,7 @@ const TripDetail = ({ navigation, route }) => {
                     alignSelf: 'center',
                     overflow: 'visible',
                     position: 'relative',
-                    shadowColor: '#001233',
-                    shadowOpacity: 0.15,
-                    shadowRadius: wp('4%'),
-                    shadowOffset: { width: 0, height: hp('0.5%') },
+                    /* shadow removed */
                     backdropFilter: 'blur(20px)',
                   }]}>
                     <Text style={{

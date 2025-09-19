@@ -1747,11 +1747,7 @@ const HomeScreen = ({ navigation, route }) => {
                     paddingHorizontal: wp('6%'),
                     paddingVertical: hp('1%'),
                     borderRadius: wp('6%'),
-                    // elevation: 2, // ลบ elevation ตามที่ผู้ใช้ขอ
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 2,
+                    /* elevation and shadow removed */
                   }}
                 >
                   <Text style={{
@@ -2226,11 +2222,7 @@ const HomeScreen = ({ navigation, route }) => {
                   paddingHorizontal: wp('6%'),
                   paddingVertical: hp('1%'),
                   borderRadius: wp('6%'),
-                  elevation: 2,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 2,
+                  /* elevation and shadow removed */
                 }}
               >
                 <Text style={{

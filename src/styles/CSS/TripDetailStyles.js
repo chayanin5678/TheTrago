@@ -51,9 +51,7 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
     marginTop: hp('2%'),
     letterSpacing: -0.5,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowRadius: 4,
-    textShadowOffset: { width: 1, height: 1 },
+    /* textShadow removed */
   },
 
   bookingSection: {
@@ -64,10 +62,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 0,
     paddingBottom: 0,
-    shadowColor: '#F6F6F6',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    /* shadow/elevation removed */
   },
 
   inputBox: {
@@ -75,26 +70,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 10,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'flex-start', // จัดตำแหน่งให้เนื้อหาภายในอยู่ตรงกลาง
+    /* shadow/elevation removed */
   },
   inputBoxDrop: {
     flexDirection: 'row',
     backgroundColor: '#FFF',
     padding: 10,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'space-between',
+    /* shadow/elevation removed */
   },
   rowdepart: {
     flexDirection: 'row',
@@ -158,10 +147,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderBottomRightRadius: 0,
     borderTopRightRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'center',
@@ -169,6 +154,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     alignItems: 'center',
+    /* shadow/elevation removed */
   },
   tripTypeRoundButton: {
     flexDirection: 'row',
@@ -177,10 +163,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderBottomLeftRadius: 0,
     borderTopLeftRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'center',
@@ -189,6 +171,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     alignItems: 'center',
+    /* shadow/elevation removed */
   },
   activeButton: {
     backgroundColor: "#FD501E",
@@ -237,10 +220,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     // Unified cross-platform shadow
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('1%') },
-    shadowOpacity: 0.2,
-    shadowRadius: wp('4%'),
+    /* shadow/elevation removed */
     borderWidth: wp('0.2%'),
     borderColor: 'rgba(253, 80, 30, 0.12)',
   },
@@ -298,10 +278,7 @@ const styles = StyleSheet.create({
     marginVertical: hp('1%'),
     marginHorizontal: wp('0%'),
     // Unified cross-platform shadow
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
+    /* shadow/elevation removed */
     borderWidth: wp('0.1%'),
     borderColor: 'rgba(253, 80, 30, 0.06)',
   },
@@ -474,10 +451,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.3,
     // Unified cross-platform shadow
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: hp('0.15%') },
-    shadowOpacity: 0.05,
-    shadowRadius: wp('1%'),
+    /* shadow/elevation removed */
   },
   inputSolid: {
     borderWidth: wp('0.2%'),
@@ -599,10 +573,7 @@ const styles = StyleSheet.create({
     borderWidth: wp('0.1%'),
     borderColor: 'rgba(148, 163, 184, 0.2)',
     // Unified cross-platform shadow
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: hp('0.2%') },
-    shadowOpacity: 0.08,
-    shadowRadius: wp('1.5%'),
+    /* shadow/elevation removed */
   },
   BackButtonText: {
     color: '#64748B',
@@ -622,18 +593,14 @@ const styles = StyleSheet.create({
     borderWidth: wp('0.1%'),
     borderColor: 'rgba(255, 255, 255, 0.2)',
     // Unified cross-platform shadow
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('0.4%') },
-    shadowOpacity: 0.25,
-    shadowRadius: wp('2%'),
+    /* shadow/elevation removed */
   },
   searchButtonText: {
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: wp('4%'),
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowRadius: 2,
+    /* textShadow removed */
   },
   errorInput: {
     borderColor: 'red', // เปลี่ยนกรอบเป็นสีแดงเมื่อมีข้อผิดพลาด
@@ -690,10 +657,7 @@ const styles = StyleSheet.create({
     marginVertical: hp('0.2%'),
     backgroundColor: 'rgba(255,255,255,0.7)',
     // Unified cross-platform shadow
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: hp('0.1%') },
-    shadowOpacity: 0.04,
-    shadowRadius: wp('0.8%'),
+    /* shadow/elevation removed */
   },
   optionText: {
     fontSize: wp('4%'),

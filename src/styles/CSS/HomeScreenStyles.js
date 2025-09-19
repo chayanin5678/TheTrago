@@ -35,12 +35,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: hp('2%'),
     paddingBottom: hp('3%'),
-    // Unified shadow system for both iOS and Android
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('1%') },
-    shadowOpacity: 0.2,
-    shadowRadius: wp('4%'),
-    elevation: 12,
+  /* shadow/elevation removed */
     borderWidth: wp('0.3%'),
     borderColor: 'rgba(253, 80, 30, 0.1)',
     // Premium gradient border effect
@@ -71,12 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     padding: wp('4%'),
     borderRadius: wp('5%'),
-    // Unified shadow system for both platforms
-    shadowColor: 'rgba(253, 80, 30, 0.2)',
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    shadowOpacity: 0.15,
-    shadowRadius: wp('3%'),
-    elevation: 8,
+  /* shadow/elevation removed */
     marginHorizontal: wp('1%'),
     flex: 1,
     justifyContent: 'center',
@@ -155,11 +145,7 @@ const styles = StyleSheet.create({
   cardContainerDes: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  /* shadow/elevation removed */
     margin: 5,
 
     marginBottom: 25,
@@ -442,11 +428,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.98)',
     padding: hp('1.8%'),
     borderRadius: wp('6%'),
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('0.6%') },
-    shadowOpacity: 0.18,
-    shadowRadius: wp('3%'),
-    elevation: 8,
+  /* shadow/elevation removed */
     marginHorizontal: wp('1%'),
     flex: 1,
     justifyContent: 'flex-start',
@@ -494,11 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 10,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+  /* shadow/elevation removed */
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'space-between',
@@ -521,11 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 10,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+  /* shadow/elevation removed */
     marginHorizontal: 5,
     flex: 1,
     justifyContent: 'center',
@@ -580,11 +554,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: hp('3%'),
     // Ultra premium responsive button styling
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.4,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('1%') },
-    elevation: 10,
+  /* shadow/elevation removed */
     borderWidth: wp('0.5%'),
     borderColor: 'rgba(255,255,255,0.4)',
     position: 'relative',
@@ -604,9 +574,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: wp('4.5%'),
     letterSpacing: wp('0.25%'),
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: hp('0.1%') },
-    textShadowRadius: wp('0.5%'),
+  /* textShadow removed */
   },
   screen: {
     flex: 1,
@@ -663,11 +631,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('6%'),
     borderBottomRightRadius: wp('1%'),
     borderTopRightRadius: wp('1%'),
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    shadowOpacity: 0.15,
-    shadowRadius: wp('2%'),
-    elevation: 6,
+  /* shadow/elevation removed */
     marginHorizontal: wp('0.5%'),
     flex: 1,
     justifyContent: 'center',
@@ -701,11 +665,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('6%'),
     borderBottomLeftRadius: wp('1%'),
     borderTopLeftRadius: wp('1%'),
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    shadowOpacity: 0.15,
-    shadowRadius: wp('2%'),
-    elevation: 6,
+  /* shadow/elevation removed */
     marginHorizontal: wp('0.5%'),
     flex: 1,
     justifyContent: 'center',
@@ -735,9 +695,7 @@ const styles = StyleSheet.create({
   },
   activeButton: {
     backgroundColor: "#FD501E",
-    shadowOpacity: 0.3,
-    shadowRadius: wp('3%'),
-    elevation: 10,
+  /* shadow/elevation removed */
     borderColor: 'rgba(255,255,255,0.4)',
   },
   tripTypeText: {
@@ -762,9 +720,7 @@ const styles = StyleSheet.create({
   },
   activeText: {
     color: "#FFF",
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: hp('0.1%') },
-    textShadowRadius: wp('0.5%'),
+  /* textShadow removed */
   },
   dropdownIcon: {
     color: '#FD501E', // Orange color for the icon
@@ -818,11 +774,7 @@ const styles = StyleSheet.create({
     marginVertical: hp('1.2%'),
     marginHorizontal: wp('3%'),
     // Ultra premium shadow system
-    shadowColor: '#001233',
-    shadowOpacity: 0.08,
-    shadowRadius: wp('6%'),
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    elevation: 6,
+  /* shadow/elevation removed */
     // Subtle border for premium look
     borderWidth: wp('0.2%'),
     borderColor: 'rgba(0, 35, 72, 0.05)',
@@ -869,9 +821,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     maxWidth: wp('38%'),
     letterSpacing: wp('0.1%'),
-    textShadowColor: 'rgba(0,0,0,0.05)',
-    textShadowOffset: { width: 0, height: hp('0.1%') },
-    textShadowRadius: wp('0.5%'),
+  /* textShadow removed */
     lineHeight: wp('5.5%'),
   },
   tagContainer: {
@@ -891,11 +841,7 @@ const styles = StyleSheet.create({
     // Ultra premium glass effect for tags with responsive design
     borderWidth: wp('0.2%'),
     borderColor: 'rgba(253, 80, 30, 0.25)',
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.12,
-    shadowRadius: wp('1%'),
-    shadowOffset: { width: 0, height: hp('0.2%') },
-    elevation: 4,
+  /* shadow/elevation removed */
     // Responsive minimum size
     minWidth: wp('15%'),
     textAlign: 'center',
@@ -934,9 +880,7 @@ const styles = StyleSheet.create({
     color: '#FD501E',
     marginTop: hp('0.8%'),
     letterSpacing: wp('0.05%'),
-    textShadowColor: 'rgba(253, 80, 30, 0.2)',
-    textShadowOffset: { width: 0, height: hp('0.1%') },
-    textShadowRadius: wp('0.3%'),
+  /* textShadow removed */
   },
   middleContainer: {
     alignItems: 'center',
@@ -949,11 +893,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('8%'),
     borderWidth: wp('0.4%'),
     borderColor: 'rgba(253, 80, 30, 0.18)',
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 6,
+  /* shadow/elevation removed */
     minHeight: hp('16%'),
     position: 'relative',
     overflow: 'hidden',
@@ -1015,9 +955,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#1a1a1a',
     letterSpacing: wp('0.08%'),
-    textShadowColor: 'rgba(0,0,0,0.05)',
-    textShadowOffset: { width: 0, height: hp('0.1%') },
-    textShadowRadius: wp('0.3%'),
+  /* textShadow removed */
   },
   discount: {
     color: '#FD501E',
@@ -1194,11 +1132,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 172, 193, 0.15)',
     // Premium glass effect
-    shadowColor: '#00ACC1',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+  /* shadow/elevation removed */
   },
   remarkText: {
     fontSize: 14,
@@ -1234,11 +1168,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minHeight: hp('12%'),
     // Advanced shadow effects
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
+  /* shadow/elevation removed */
   },
   premiumCompanyLogo: {
     width: wp('14%'),
@@ -1248,11 +1178,7 @@ const styles = StyleSheet.create({
     borderWidth: wp('0.5%'),
     borderColor: 'rgba(255,255,255,0.4)',
     marginRight: wp('3%'),
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('1%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 4,
+  /* shadow/elevation removed */
     maxWidth: wp('16%'),
     maxHeight: hp('8%'),
   },
@@ -1269,11 +1195,7 @@ const styles = StyleSheet.create({
     borderRadius: wp('1.5%'),
     borderWidth: wp('0.5%'),
     borderColor: '#fff',
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.6,
-    shadowRadius: wp('1.2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 6,
+  /* shadow/elevation removed */
     minWidth: wp('3%'),
     minHeight: wp('3%'),
   },
@@ -1292,11 +1214,7 @@ const styles = StyleSheet.create({
     padding: wp('2.5%'),
     borderWidth: wp('0.3%'),
     borderColor: 'rgba(253, 80, 30, 0.35)',
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.25,
-    shadowRadius: wp('1.5%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 5,
+  /* shadow/elevation removed */
     minWidth: wp('12%'),
     minHeight: wp('12%'),
     alignItems: 'center',
@@ -1349,11 +1267,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+  /* shadow/elevation removed */
     backdropFilter: 'blur(10px)',
   },
   premiumGradientOverlay: {

@@ -14,11 +14,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     width: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    /* shadow/elevation removed */
   },
   qrModalTitle: {
     fontSize: 18,
@@ -81,10 +77,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 35,
     borderBottomRightRadius: 35,
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
+    /* shadow removed */
     position: 'relative',
     overflow: 'hidden',
   },
@@ -107,10 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    /* shadow removed */
   },
   headerTitle: {
     fontSize: 32,
@@ -118,9 +108,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    /* textShadow removed */
   },
   headerSubtitle: {
     fontSize: 15,
@@ -183,11 +171,7 @@ const styles = StyleSheet.create({
     padding: wp('4%'),
     borderRadius: wp('3%'),
     marginBottom: hp('1.5%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    /* shadow/elevation removed */
   },
   metricIcon: {
     width: 48,
@@ -218,11 +202,7 @@ const styles = StyleSheet.create({
     padding: wp('4%'),
     borderRadius: wp('3%'),
     marginBottom: hp('2%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    /* shadow/elevation removed */
   },
   linkTitle: {
     fontSize: wp('4%'),

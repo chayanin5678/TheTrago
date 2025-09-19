@@ -17,8 +17,7 @@ export const styles = StyleSheet.create({
     textAlign: 'left',
     color: '#FFFFFF',
     marginBottom: hp('2%'),
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowRadius: 2,
+  /* textShadow removed */
   },
   promo: {
     backgroundColor: 'rgba(255,255,255,0.95)',
@@ -26,10 +25,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     padding: wp('4%'),
     marginVertical: hp('1%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.15,
-    shadowRadius: wp('4%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
+  /* shadow/elevation removed */
     borderWidth: 1,
     borderColor: 'rgba(0, 18, 51, 0.08)',
     backdropFilter: 'blur(20px)',
@@ -63,10 +59,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginHorizontal: wp('2%'),
     marginBottom: hp('1%'),
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
+  /* shadow/elevation removed */
   },
   buttonText: {
     fontSize: wp('4%'),
@@ -88,10 +81,7 @@ export const styles = StyleSheet.create({
     maxHeight: '50%',
     borderRadius: wp('4%'),
     padding: wp('4%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.2,
-    shadowRadius: wp('5%'),
-    shadowOffset: { width: 0, height: hp('1%') },
+  /* shadow/elevation removed */
     ...(Platform.OS === 'android' ? {} : {
       borderWidth: 1,
       borderColor: 'rgba(0, 18, 51, 0.08)',
@@ -103,10 +93,7 @@ export const styles = StyleSheet.create({
     height: '40%',
     borderRadius: wp('4%'),
     padding: wp('4%'),
-    shadowColor: '#001233',
-    shadowOpacity: 0.2,
-    shadowRadius: wp('5%'),
-    shadowOffset: { width: 0, height: hp('1%') },
+  /* shadow/elevation removed */
     ...(Platform.OS === 'android' ? {} : {
       borderWidth: 1,
       borderColor: 'rgba(0, 18, 51, 0.08)',
@@ -154,10 +141,7 @@ export const styles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     alignItems: 'center',
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
+  /* shadow/elevation removed */
   },
   promoInput: {
     flex: 1,
@@ -196,17 +180,12 @@ export const styles = StyleSheet.create({
     paddingVertical: hp('1.5%'),
     marginHorizontal: wp('2%'),
     color: '#374151',
-    shadowColor: '#6B7280',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 3,
+  /* shadow/elevation removed */
   },
   errorInput: {
     borderColor: '#EF4444',
     borderWidth: 2,
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.2,
+  /* shadow/elevation removed */
   },
   rowButton: {
     width: '100%',
@@ -226,11 +205,7 @@ export const styles = StyleSheet.create({
     marginBottom: hp('2%'),
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
-    shadowColor: '#FFFFFF',
-    shadowOpacity: 0.1,
-    shadowRadius: wp('2%'),
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    elevation: 4,
+  /* shadow/elevation removed */
   },
   BackButtonText: {
     color: '#FFFFFF',
@@ -246,11 +221,7 @@ export const styles = StyleSheet.create({
     marginTop: hp('1%'),
     width: '45%',
     marginBottom: hp('4%'),
-    shadowColor: '#FD501E',
-    shadowOpacity: 0.4,
-    shadowRadius: wp('3%'),
-    shadowOffset: { width: 0, height: hp('0.5%') },
-    elevation: 8,
+  /* shadow/elevation removed */
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -259,8 +230,7 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: wp('4.5%'),
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowRadius: 1,
+  /* textShadow removed */
   },
   textInput: {
     borderWidth: 1,

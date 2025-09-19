@@ -40,6 +40,10 @@
         "autoIncrement": false
       }
     }
+    ,
+    "product": {
+      "extends": "production"
+    }
   },
   "submit": {
     "production": {}

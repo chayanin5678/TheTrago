@@ -12,3 +12,14 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# R8 / ProGuard rules added to address missing classes during minification
+# Referenced from build output: build/outputs/mapping/release/missing_rules.txt
+# Keep Omise UI classes used in layouts
+-keep class co.omise.android.ui.CreditCardActivity { <init>(); }
+-keep class co.omise.android.ui.CreditCardEditText { <init>(android.content.Context, android.util.AttributeSet); }
+
+# Suppress warnings for optional Card.IO and joda-convert classes that
+# are referenced at runtime in some libraries but not packaged here.
+-dontwarn io.card.payment.**
+-dontwarn org.joda.convert.**

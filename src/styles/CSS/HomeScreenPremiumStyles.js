@@ -101,12 +101,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     marginHorizontal: wp('3%'),
     borderRadius: wp('6%'),
     overflow: 'hidden',
-    // Unified shadow system for both platforms
-    shadowColor: Platform.OS === 'android' ? 'transparent' : '#000',
-    shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: 6 },
-    shadowOpacity: Platform.OS === 'android' ? 0 : 0.2,
-    shadowRadius: Platform.OS === 'android' ? 0 : 12,
-    elevation: Platform.OS === 'android' ? 0 : 8,
+  /* shadow/elevation removed */
     // Additional Android compatibility
   backgroundColor: 'rgba(255, 255, 255, 0.98)',
   },
@@ -202,11 +197,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   searchContainer: {
     borderRadius: 25,
     overflow: 'hidden',
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+  /* shadow/elevation removed */
   },
   searchGradient: {
     flexDirection: 'row',
@@ -282,12 +273,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
   servicesContainer: {
     borderRadius: 20,
     overflow: 'hidden',
-    // Unified shadow system for both platforms
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 6,
+  /* shadow/elevation removed */
   backgroundColor: 'rgba(255, 255, 255, 0.98)',
   },
   servicesBlur: {
@@ -344,11 +330,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(253,80,30,0.06)', // subtle light orange
   },
   serviceItemBlur: {
@@ -401,11 +383,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 8,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   hotDealsSkeleton: {
@@ -471,11 +449,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('4.5%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#FD501E',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
+  /* shadow/elevation removed */
   backgroundColor: 'rgba(255,255,255,0.98)',
   },
   bannerBlur: {
@@ -498,11 +472,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: hp('0.4%') },
-    shadowOpacity: 0.25,
-    shadowRadius: wp('1.5%'),
-    elevation: 6,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(255, 215, 0, 0.95)',
   },
   bannerBadgeText: {
@@ -562,11 +532,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('3%'), // More responsive border radius
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    shadowOpacity: 0.1,
-    shadowRadius: wp('1.5%'),
-    elevation: 4,
+  /* shadow/elevation removed */
   backgroundColor: 'rgba(255,255,255,0.98)',
   },
   destinationGradient: {
@@ -663,11 +629,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp('0.3%') },
-    shadowOpacity: 0.1,
-    shadowRadius: wp('1.5%'),
-    elevation: 4,
+  /* shadow/elevation removed */
   backgroundColor: 'rgba(255,255,255,0.98)',
   },
   routeGradient: {
@@ -815,11 +777,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('6%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp('1%') },
-    shadowOpacity: 0.25,
-    shadowRadius: wp('3%'),
+  /* shadow/elevation removed */
   backgroundColor: 'rgba(255,255,255,0.98)',
   },
   trendingCarouselBlur: {
@@ -896,9 +854,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: wp('1%'),
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+  /* textShadow removed */
   },
   trendingCarouselLocation: {
     fontSize: wp('4.2%'),
@@ -906,9 +862,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: wp('3%'),
     lineHeight: wp('5%'),
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+  /* textShadow removed */
   },
   trendingCarouselMeta: {
     flexDirection: 'row',
@@ -944,11 +898,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: wp('1%'),
     // Unified shadow system for both platforms
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+  /* shadow/elevation removed */
   },
 
   // Remove old grid styles (keep for backward compatibility but won't be used)
@@ -971,11 +921,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('4%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    shadowOpacity: 0.25,
-    shadowRadius: wp('3%'),
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(255,255,255,0.98)',
   },
   attractionTouchable: {
@@ -1015,11 +961,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   attractionRatingContainer: {
@@ -1041,11 +983,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('3%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(255, 215, 0, 0.95)',
   },
   attractionPopularBadgeGradient: {
@@ -1070,11 +1008,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // Unified shadow system for both platforms
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   attractionRankText: {
@@ -1161,11 +1095,7 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     borderRadius: wp('10%'),
     overflow: 'hidden',
     // Unified shadow system for both platforms
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: hp('0.8%') },
-    shadowOpacity: 0.3,
-    shadowRadius: wp('3%'),
+  /* shadow/elevation removed */
     backgroundColor: 'rgba(253, 80, 30, 0.95)',
   },
   showMoreBlur: {

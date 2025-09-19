@@ -1,6 +1,6 @@
 const IS_DEV = process.env.APP_VARIANT === 'development';
 
-export default {
+module.exports = {
   expo: {
     owner: "chayanin4534",
     name: "TheTrago",
@@ -15,6 +15,9 @@ export default {
       eas: { projectId: "74ac187e-236a-48db-8ae4-5aaa93e55f9a" }
     },
     version: "1.0.4",
+    android: {
+      package: "com.chayanin5678.TheTrago"
+    },
     orientation: "default",
     icon: "./assets/icontrago.png",
     userInterfaceStyle: "light",
@@ -60,7 +63,7 @@ export default {
 
     ios: {
       bundleIdentifier: "com.thetrago.ios",
-      buildNumber: "1",
+      buildNumber: "2",
       supportsTablet: true,
       requireFullScreen: false,
       userInterfaceStyle: "automatic",
@@ -82,10 +85,7 @@ export default {
         FacebookAppID: "1326238592032941",
         FacebookClientToken: "ee3279fa98c503a79f50275c3c6799ca",
         FacebookDisplayName: "TheTrago",
-        CFBundleURLTypes: [
-          { CFBundleURLName: "thetrago", CFBundleURLSchemes: ["thetrago"] },
-          { CFBundleURLName: "facebook", CFBundleURLSchemes: ["fb1326238592032941"] }
-        ],
+        // URL schemes and query schemes are handled by top-level `scheme` and plugins
         LSApplicationQueriesSchemes: ["fbapi","fb-messenger-share-api","fbauth2","fbshareextension"],
 
         // ❌ ลบ com.apple.developer.associated-domains ออกจาก infoPlist (เราใส่ไว้ที่ entitlements/associatedDomains แล้ว)
@@ -96,19 +96,8 @@ export default {
   // Use background fetch as 'fetch' (App Store requires the correct key value)
   UIBackgroundModes: ["fetch","remote-notification"],
 
-        CFBundleDisplayName: "TheTrago",
-        CFBundleName: "TheTrago",
-        UISupportedInterfaceOrientations: [
-          "UIInterfaceOrientationPortrait",
-          "UIInterfaceOrientationLandscapeLeft",
-          "UIInterfaceOrientationLandscapeRight"
-        ],
-        "UISupportedInterfaceOrientations~ipad": [
-          "UIInterfaceOrientationPortrait",
-          "UIInterfaceOrientationPortraitUpsideDown",
-          "UIInterfaceOrientationLandscapeLeft",
-          "UIInterfaceOrientationLandscapeRight"
-        ]
+        // App display name, bundle name and supported orientations are managed
+        // by top-level `name` and `orientation` in the Expo config.
       }
     },
 

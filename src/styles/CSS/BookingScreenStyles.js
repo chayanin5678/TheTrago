@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     borderRadius: 16,
     padding: 6,
-    elevation: 3,
+    /* elevation removed */
   },
   tab: {
     flex: 1,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: '#FFFFFF',
-    elevation: 6,
+    /* elevation removed */
   },
   tabActiveBackground: {
     position: 'absolute',
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     marginBottom: 16,
-    elevation: 8,
+    /* elevation removed */
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.04)',
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
     borderRadius: 24,
     padding: 8,
-    elevation: 20,
+    /* elevation removed */
   },
   phoneScreen: {
     flex: 1,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   startBookingButton: {
     borderRadius: 16,
-    elevation: 12,
+    /* elevation removed */
   },
   startBookingGradient: {
     paddingHorizontal: 32,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(253, 80, 30, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    /* elevation removed */
   },
   emailSection: {
     marginBottom: 20,
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     backgroundColor: 'rgba(255,255,255,0.98)',
-    elevation: 2,
+    /* elevation removed */
   },
   emailInputFilled: {
     borderColor: '#FD501E',
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     backgroundColor: 'rgba(255,255,255,0.98)',
-    elevation: 2,
+    /* elevation removed */
   },
   otpInputFilled: {
     borderColor: '#FD501E',
     backgroundColor: '#FFFFFF',
-    elevation: 2,
+    /* elevation removed */
   },
   otpInputDisabled: {
     backgroundColor: '#F3F4F6',
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     borderRadius: 16,
-    elevation: 12,
+    /* elevation removed */
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',

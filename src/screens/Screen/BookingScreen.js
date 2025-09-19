@@ -167,7 +167,7 @@ const BookingScreen = () => {
                 status = 0;
                 break;
               case 'cancelled':
-                status = 2;
+                status = 3;
                 break;
               case 'past':
                 status = 1;

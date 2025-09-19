@@ -785,7 +785,46 @@ useEffect(() => {
             );
           }
 
-          navigation.navigate("ResultScreen", { success: true });
+          // ส่งอีเมลตั๋วผ่าน endpoint สำหรับทุก booking code (depart + return)
+          try {
+            const sendCodes = [
+              customerData.md_booking_code,
+              customerData.md_booking_code_return,
+            ].filter(Boolean);
+            for (const code of sendCodes) {
+              try {
+                await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
+                console.log('✅ Sent ticket email for code:', code);
+              } catch (err) {
+                console.error('❌ Failed to send ticket for code:', code, err);
+              }
+            }
+          } catch (err) {
+            console.error('❌ Error while sending ticket emails:', err);
+          }
+
+          // ไปยังหน้าที่ผู้ใช้ต้องการ: กลับไปหน้า Payment แล้วเปิด PromptPay ถา้ต้องการ
+          try {
+            // กลับไปหน้า Payment (ถ้ายังอยู่ในสแต็ก ให้ไปแทน)
+            navigation.navigate('PaymentScreen');
+
+            // ถ้าการชำระเงินเป็น PromptPay (payment type 2) ให้ไปหน้าต่อไป
+            // เงื่อนไขยุบเหลือเช็คเฉพาะ `customerData.paymenttype` เพื่อป้องกันการนำทางผิดในกรณี card flow
+            if (Number(customerData.paymenttype) === 2) {
+              // ส่งพาราม์ให้ PromptPayScreen เหมือนการเรียกปกติ
+              navigation.navigate('PromptPayScreen', {
+                Paymenttotal: customerData.total,
+                selectedOption: customerData.paymenttype || selectedOption,
+                usePoints,
+                pointsToUse,
+                pointsToEarn,
+              });
+            }
+          } catch (navErr) {
+            console.error('Navigation error after payment success:', navErr);
+            // fallback: ไปหน้า Result
+            navigation.navigate('ResultScreen', { success: true });
+          }
         } else {
           navigation.navigate("ResultScreen", { success: false });
         }

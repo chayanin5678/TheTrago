@@ -31,7 +31,7 @@ const ResultScreen = ({ navigation, route }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
 
-      const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
+      const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 16;
 
   // ฟังก์ชันจัดการ countrycode ให้มี + เพียงตัวเดียว
   const formatCountryCode = (code) => {
@@ -488,21 +488,8 @@ const ResultScreen = ({ navigation, route }) => {
   }, []);
 
 
-  const sendTicket = async () => {
-    try {
-      const response = await axios.post(`https://thetrago.com/ferry/sendticket/${customerData.bookingcode}`);
-      console.log('Email sent successfully: ', response.data);
-    } catch (error) {
-      console.error('Error sending email: ', error);
-    }
-  };
-
-  useEffect(() => {
-    if (success) {
-      sendTicket();
-    }
-
-  }, []);
+          // Client triggers ticket email sending via `https://thetrago.com/ferry/sendticket/{code}`
+          // (restored: client will POST for depart and return booking codes)
 
   const printTicket = async () => {
     try {

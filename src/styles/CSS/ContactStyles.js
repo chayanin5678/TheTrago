@@ -14,18 +14,10 @@ export const ContactStyles = StyleSheet.create({
   // Ultra Premium Shadows
   premiumShadows: {
     goldShadow: {
-      shadowColor: '#FFD700',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 15,
-      elevation: 12,
+      /* shadow/elevation removed */
     },
     cardShadow: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 6,
+      /* shadow/elevation removed */
     },
   },
 
@@ -37,9 +29,7 @@ export const ContactStyles = StyleSheet.create({
       color: '#FFD700',
       textAlign: 'center',
       letterSpacing: 1,
-      textShadowColor: 'rgba(255, 215, 0, 0.5)',
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 4,
+  /* textShadow removed */
     },
     sectionTitle: {
       fontSize: 22,
