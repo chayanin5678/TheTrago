@@ -14,7 +14,7 @@ module.exports = {
       deeplink: { host: "thetrago", path: "/", subdomain: "thetrago" },
       eas: { projectId: "74ac187e-236a-48db-8ae4-5aaa93e55f9a" }
     },
-    version: "1.0.4",
+  version: "1.0.5",
     android: {
       package: "com.chayanin5678.TheTrago"
     },
@@ -63,7 +63,7 @@ module.exports = {
 
     ios: {
       bundleIdentifier: "com.thetrago.ios",
-      buildNumber: "2",
+  buildNumber: "3",
       supportsTablet: true,
       requireFullScreen: false,
       userInterfaceStyle: "automatic",
