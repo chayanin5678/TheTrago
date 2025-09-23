@@ -10,6 +10,7 @@ import ipAddress from '../config/ipconfig';
 const EndPointScreen = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const headerPaddingTop = Math.max(insets.top - 20, 0);
   const { startingPointId } = route.params || {};
   const [searchText, setSearchText] = useState('');
   const [allDestinations, setAllDestinations] = useState([]);
@@ -104,22 +105,13 @@ const EndPointScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView 
-      style={[
-        { flex: 1, backgroundColor: '#fff' },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใช้ insets แทน
-        }
-      ]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header รองรับ Android 15 Edge-to-Edge */}
-      <LinearGradient 
-        colors={["#FD501E", "#FF7B3E"]} 
+      <LinearGradient
+        colors={["#FD501E", "#FF7B3E"]}
         style={[
           styles.headerBg,
-          Platform.OS === 'android' && Platform.Version >= 31 && {
-            paddingTop: insets.top, // เพิ่ม padding สำหรับ status bar
-          }
+          { paddingTop: headerPaddingTop },
         ]}
       >
         <View style={styles.headerRow}>
@@ -131,7 +123,7 @@ const EndPointScreen = ({ navigation, route }) => {
         
         {/* Search Bar */}
         <View style={styles.searchBarWrap}>
-          <AntDesign name="search" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
+          <MaterialIcons name="search" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder={t('searchCityOrAirport')}
@@ -140,6 +132,11 @@ const EndPointScreen = ({ navigation, route }) => {
             onChangeText={setSearchText}
             underlineColorAndroid="transparent"
           />
+          {searchText ? (
+            <TouchableOpacity onPress={() => setSearchText('')} style={{ paddingHorizontal: 12 }}>
+              <AntDesign name="close" size={18} color="#B7B7B7" />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </LinearGradient>
 
@@ -172,7 +169,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     minHeight: 160,
     justifyContent: 'flex-end',
-    marginTop: Platform.OS === 'ios' ? -50 : 0,
+    marginTop: Platform.OS === 'ios' ? -50 : -20,
   },
   headerRow: {
     flexDirection: 'row',

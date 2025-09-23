@@ -1,4 +1,5 @@
-const IS_DEV = process.env.APP_VARIANT === 'development';
+const APP_VERSION = "1.0.5";
+const IOS_BUILD_NUMBER = "1";
 
 module.exports = {
   expo: {
@@ -14,7 +15,7 @@ module.exports = {
       deeplink: { host: "thetrago", path: "/", subdomain: "thetrago" },
       eas: { projectId: "74ac187e-236a-48db-8ae4-5aaa93e55f9a" }
     },
-  version: "1.0.4",
+  version: APP_VERSION,
     android: {
       package: "com.chayanin5678.TheTrago"
     },
@@ -63,7 +64,7 @@ module.exports = {
 
     ios: {
       bundleIdentifier: "com.thetrago.ios",
-  buildNumber: "2",
+      buildNumber: IOS_BUILD_NUMBER,
       supportsTablet: true,
       requireFullScreen: false,
       userInterfaceStyle: "automatic",
@@ -95,6 +96,13 @@ module.exports = {
 
   // Use background fetch as 'fetch' (App Store requires the correct key value)
   UIBackgroundModes: ["fetch","remote-notification"],
+
+  // Standard version keys so Info.plist contains both values explicitly
+  CFBundleShortVersionString: APP_VERSION,
+  CFBundleVersion: IOS_BUILD_NUMBER,
+
+  // Combined version+build string expected by some integrations
+  "CFBundleShortVersionString+CFundleVersion": `${APP_VERSION}+${IOS_BUILD_NUMBER}`,
 
         // App display name, bundle name and supported orientations are managed
         // by top-level `name` and `orientation` in the Expo config.

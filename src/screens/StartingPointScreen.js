@@ -12,6 +12,7 @@ import { useLanguage } from './Screen/LanguageContext';
 const StartingPointScreen = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const headerPaddingTop = Math.max(insets.top - 20, 0);
   const [provinces, setProvinces] = useState([]);
   const [filteredProvinces, setFilteredProvinces] = useState([]);
   const [allStartingPoints, setAllStartingPoints] = useState([]);
@@ -103,25 +104,16 @@ const StartingPointScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView 
-      style={[
-        { flex: 1, backgroundColor: '#fff' },
-        Platform.OS === 'android' && Platform.Version >= 31 && {
-          paddingTop: 0, // ใช้ insets แทน
-        }
-      ]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header รองรับ Android 15 Edge-to-Edge */}
-      <LinearGradient 
-        colors={["#FD501E", "#FF7B3E"]} 
+      <LinearGradient
+        colors={["#FD501E", "#FF7B3E"]}
         style={[
           styles.headerBg,
-          Platform.OS === 'android' && Platform.Version >= 31 && {
-            paddingTop: insets.top, // เพิ่ม padding สำหรับ status bar
-          }
+          { paddingTop: headerPaddingTop,  marginTop: -50 },
         ]}
       >
-        <View style={styles.headerRow}>
+        <View style={[styles.headerRow, {  }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <AntDesign name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
@@ -130,7 +122,7 @@ const StartingPointScreen = ({ navigation, route }) => {
         
         {/* Search Bar */}
         <View style={styles.searchBarWrap}>
-          <AntDesign name="search" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
+          <MaterialIcons name="search" size={20} color="#B7B7B7" style={{ marginLeft: 14, marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder={ t('searchCityOrAirport') }
@@ -139,6 +131,11 @@ const StartingPointScreen = ({ navigation, route }) => {
             onChangeText={setSearchQuery}
             underlineColorAndroid="transparent"
           />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingHorizontal: 12 }}>
+              <AntDesign name="close" size={18} color="#B7B7B7" />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </LinearGradient>
 
