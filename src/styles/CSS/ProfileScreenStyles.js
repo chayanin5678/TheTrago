@@ -113,7 +113,7 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   scrollViewWithMargin: {
-    marginTop: 140, // เพิ่มระยะห่างเพื่อไม่ให้ทับกับ header
+    marginTop: 40, // move content further up under the header
   },
   contentContainer: {
     padding: 20,

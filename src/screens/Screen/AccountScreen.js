@@ -43,6 +43,7 @@ const AccountScreen = ({ navigation }) => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedLanguageLocal, setSelectedLanguageLocal] = useState(selectedLanguage);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // press scale
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -244,6 +245,18 @@ const AccountScreen = ({ navigation }) => {
         }
       } catch (error) {
         console.error('fetch profile error:', error);
+        try {
+          await logout();
+        } catch (e) {
+          console.warn('logout failed during fetch error handling', e);
+        }
+        // Reset to the root tab route 'Login' (the AccountTabNavigator) so navigation handles the action
+        try {
+          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+        } catch (resetErr) {
+          console.warn('navigation.reset to Login failed, falling back to navigate', resetErr);
+          navigation.navigate('Login');
+        }
       } finally {
         setIsLoading(false);
         setIsLoadingProfile(false);
@@ -386,6 +399,7 @@ const AccountScreen = ({ navigation }) => {
       <Animated.View
         renderToHardwareTextureAndroid
         shouldRasterizeIOS
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
@@ -417,7 +431,12 @@ const AccountScreen = ({ navigation }) => {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces style={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight }]}
+        showsVerticalScrollIndicator={false}
+        bounces
+        style={[styles.scrollView, { marginTop: 0 }]}
+      >
         {/* Profile Card */}
         <Animated.View
           renderToHardwareTextureAndroid

@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
 import axios from 'axios';
 import { styles } from '../../styles/CSS/CustomerInfoStyles';
+import tripStyles from '../../styles/CSS/TripDetailStyles';
 
 
 const isTablet = screenWidth >= 768;
@@ -1106,7 +1107,7 @@ const CustomerInfo = ({ navigation }) => {
     <View style={{ flex: 1 }}>
 
       <LinearGradient
-        colors={['#001233', '#002A5C', '#FD501E']}
+        colors={['#002A5C', '#2563EB']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1.2 }}
         style={{ flex: 1 }}
@@ -1200,6 +1201,15 @@ const CustomerInfo = ({ navigation }) => {
             ]}
             contentInsetAdjustmentBehavior="automatic"
           >
+               {/* Step Component */}
+            <View style={{
+              alignItems: 'center',
+              marginTop: hp('1%'),
+              marginBottom: hp('2%'),
+            }}>
+              <Step logoUri={2} />
+            </View>
+
               <View style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -1246,15 +1256,7 @@ const CustomerInfo = ({ navigation }) => {
             </Text>
           </View>
         </View>
-            {/* Step Component */}
-            <View style={{
-              alignItems: 'center',
-              marginTop: hp('1%'),
-              marginBottom: hp('2%'),
-            }}>
-              <Step logoUri={2} />
-            </View>
-
+         
             {/* Content Container */}
             <View style={styles.contentContainer}>
               {/* เงื่อนไขแสดงฟอร์มตาม international */}
@@ -1528,211 +1530,222 @@ const CustomerInfo = ({ navigation }) => {
               )}
 
               {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => (
-                <View key={index}>
+                <View key={index} style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
+                  <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
+                    <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
+                      <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+                    </View>
 
-                  <View style={styles.promo}>
-                    <Text style={[styles.title, { color: '#1E293B', fontSize: wp('5%'), fontWeight: '800', marginBottom: hp('2%'), textAlign: 'left' }]}>{t('bookingSummary') || 'Booking Summary'}</Text>
-                    <View style={styles.divider} />
-                    {timetableDepart && timetableDepart.length > 0 ? (
-                      timetableDepart.map((item, index) => (
-                        <View key={index}>
-                          <Text style={{ fontWeight: '800', fontSize: wp('4.5%'), color: '#1E293B', marginBottom: hp('1%') }}>{t('depart') || 'Depart'}</Text>
+                    <View style={tripStyles.premiumContent}>
+                      {timetableDepart && timetableDepart.length > 0 ? (
+                        timetableDepart.map((item, idx) => (
+                          <View key={idx}>
+                            <Text style={tripStyles.sectionHeading}>{t('depart') || 'Depart'}</Text>
 
-                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                            {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                          <AntDesign name="arrow-right" size={14} color="#FD501E" />
-                          {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
-                        </Text>
-                        <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('company') || 'Company'} </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {(selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai) || 'Loading...'}
-                          </Text>
-                        </View>
-                        <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('seat') || 'Seat'}</Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {(selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai) || 'Loading...'}
-                          </Text>
-                        </View>
-                        <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('boat') || 'Boat'} </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>
-                            {(selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_namethai) || 'Loading...'}
-                          </Text>
-                        </View>
-                        <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureData') || 'Departure Data'}</Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}> {formatDate(customerData.departdate)}</Text>
-                        </View>
-                        <View style={styles.rowpromo}>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{t('departureTime') || 'Departure Time'} : </Text>
-                          <Text style={{ color: '#6B7280', fontSize: wp('3.5%'), fontWeight: '500' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                        </View>
-
-                        <View style={[styles.rowpromo, { marginTop: hp('1%') }]}>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
-                          <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceadult)}</Text>
-                        </View>
-                        {customerData.child !== 0 && (
-                          <View style={styles.rowpromo}>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('child') || 'Child'} x {customerData.child}</Text>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.pricechild)}</Text>
-                          </View>
-                        )}
-                        {customerData.infant !== 0 && (
-                          <View style={styles.rowpromo}>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{t('infant') || 'infant'} x {customerData.infant}</Text>
-                            <Text style={{ fontSize: wp('3.8%'), fontWeight: '600', color: '#374151' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceinfant)}</Text>
-                          </View>
-                        )}
-                        {customerData.pickupDepartId && (
-                          <View style={styles.rowpromo}>
-                            <Text>{t('pickUp') || 'Pick up'}</Text>
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricepickupdepart)}</Text>
-                          </View>
-                        )}
-                        {customerData.dropoffDepartId && (
-                          <View style={styles.rowpromo}>
-                            <Text>{t('dropOff') || 'Drop off'}</Text>
-                            <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricedropoffdepart)}</Text>
-                          </View>
-                        )}
-                        {all.totalDepart.save != 0 && (
-                          <View style={styles.rowpromo}>
-                            <Text>{t('discount') || 'Discount'}</Text>
-                            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
-                          </View>
-                        )}
-                        {all.totalDepart.promotionprice != 0 && (
-                          <View style={styles.rowpromo}>
-                            <Text>{t('promotionCode') || 'Promotion Code'}</Text>
-                            <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
-                          </View>
-                        )}
-                        <View style={styles.rowpromo}>
-                          <Text>{t('ticketFare') || 'Ticket fare'}</Text>
-                          <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
-                        </View>
-
-                        <View style={styles.divider} />
-                      </View>
-                    ))
-                    ) : (
-                      <View>
-                        <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>
-                          {t('loadingTimetable') || 'Loading timetable information...'}
-                        </Text>
-                      </View>
-                    )}
-                    {customerData.roud === 2 && (
-                      <>
-                        {timetableReturn && timetableReturn.length > 0 ? (
-                          timetableReturn.map((item, index) => (
-                            <View key={index}>
-                              <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
-                              <Text style={{ marginTop: 5, color: '#FD501E' }}>
-                              {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
-                              <AntDesign name="arrow-right" size={14} color="#FD501E" />
-                              {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
+                            <Text style={tripStyles.routeText}>
+                              {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}
                             </Text>
-                            <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                              <Text style={{ color: '#666666' }}>
-                                {(selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai) || 'Loading...'}
-                              </Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
                             </View>
-                            <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                              <Text style={{ color: '#666666' }}>
-                                {(selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai) || 'Loading...'}
-                              </Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
                             </View>
-                            <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
-                              <Text style={{ color: '#666666' }}>{(selectedLanguage === 'en' ? item.md_boattype_nameeng : item.md_boattype_namethai) || 'Loading...'}</Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
                             </View>
-                            <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>{t('departureData') || 'Departure Data'}</Text>
-                              <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('departureDate') || 'Departure Date'}</Text>
+                              <Text style={tripStyles.premiumValue}>{formatDate(customerData.departdate)}</Text>
                             </View>
-                            <View style={styles.rowpromo}>
-                              <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
-                              <Text style={{ color: '#666666' }}>
-                                {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
-                              </Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                              <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                             </View>
-                            <View style={[styles.rowpromo, { marginTop: 5 }]}>
-                              <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
-                              <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceadult)}</Text>
+
+                            <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}> 
+                              <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
+                              <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceadult).toFixed(2))}</Text>
                             </View>
+
                             {customerData.child !== 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('child') || 'Child'} x {customerData.child}</Text>
-                                <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.pricechild)}</Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
+                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricechild).toFixed(2))}</Text>
                               </View>
                             )}
+
                             {customerData.infant !== 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('infant') || 'infant'} x {customerData.infant}</Text>
-                                <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceinfant)}</Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
+                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceinfant).toFixed(2))}</Text>
                               </View>
                             )}
-                            {customerData.pickupReturnId != 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('pickUp') || 'Pick up'}</Text>
-                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricepickupdepart)}</Text>
+
+                            {customerData.pickupDepartId && (
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
+                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricepickupdepart).toFixed(2))}</Text>
                               </View>
                             )}
-                            {customerData.dropoffReturnId != 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('dropOff') || 'Drop off'}</Text>
-                                <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricedropoffdepart)}</Text>
+
+                            {customerData.dropoffDepartId && (
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
+                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
                               </View>
                             )}
-                            {all.totalReturn.save != 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('discount') || 'Discount'}</Text>
-                                <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
+
+                            {all.totalDepart.save != 0 && (
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                                <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.discount).toFixed(2))}</Text>
                               </View>
                             )}
-                            {all.totalReturn.promotionprice != 0 && (
-                              <View style={styles.rowpromo}>
-                                <Text>{t('promotionCode') || 'Promotion Code'}</Text>
-                                <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
+
+                            {all.totalDepart.promotionprice != 0 && (
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                                <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.promotionprice).toFixed(2))}</Text>
                               </View>
                             )}
-                            <View style={styles.rowpromo}>
-                              <Text>{t('ticketFare') || 'Ticket fare'}</Text>
-                              <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
+
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                              <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.showtotal).toFixed(2))}</Text>
                             </View>
-                            <View style={styles.divider} />
+
+                            <View style={tripStyles.divider} />
                           </View>
                         ))
-                        ) : (
-                          <View>
-                            <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>
-                              {t('loadingReturnTimetable') || 'Loading return timetable information...'}
-                            </Text>
-                          </View>
-                        )}
-                      </>
-                    )}
-                    <View style={styles.rowpromo}>
-                      <Text>{t('subtotal') || 'Subtotal'} </Text>
-                      <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
-                    </View>
-                    <View style={styles.divider} />
-                    <View style={styles.rowpromo}>
-                      <Text style={{ color: '#FD501E' }}>{t('total') || 'total'} </Text>
-                      <Text style={{ color: '#FD501E' }}>{customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
+                      ) : (
+                        <View>
+                          <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingTimetable') || 'Loading timetable information...'}</Text>
+                        </View>
+                      )}
+
+                      {customerData.roud === 2 && (
+                        <>
+                          {timetableReturn && timetableReturn.length > 0 && timetableReturn.map((item, idx) => (
+                            <View key={idx}>
+                                <Text style={tripStyles.sectionHeading}>{t('return') || 'Return'}</Text>
+                                <Text style={tripStyles.routeText}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
+                              </View>
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
+                              </View>
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
+                              </View>
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('returnDate') || 'Return Date'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{formatDate(customerData.returndate)}</Text>
+                              </View>
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                                <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                              </View>
+
+                              <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}> 
+                                <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
+                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceadult).toFixed(2))}</Text>
+                              </View>
+
+                              {customerData.child !== 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
+                                  <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricechild).toFixed(2))}</Text>
+                                </View>
+                              )}
+
+                              {customerData.infant !== 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
+                                  <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceinfant).toFixed(2))}</Text>
+                                </View>
+                              )}
+
+                              {customerData.pickupReturnId != 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
+                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricepickupdepart).toFixed(2))}</Text>
+                                </View>
+                              )}
+
+                              {customerData.dropoffReturnId != 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
+                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
+                                </View>
+                              )}
+
+                              {all.totalReturn.save != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                                    <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.discount).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                              {all.totalReturn.promotionprice != 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                                  <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.promotionprice).toFixed(2))}</Text>
+                                </View>
+                              )}
+
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                                <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.showtotal).toFixed(2))}</Text>
+                              </View>
+
+                              <View style={tripStyles.divider} />
+                            </View>
+                          ))}
+
+                          {(!timetableReturn || timetableReturn.length === 0) && (
+                            <View>
+                              <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingReturnTimetable') || 'Loading return timetable information...'}</Text>
+                            </View>
+                          )}
+                        </>
+                      )}
+
+                      <View style={tripStyles.totalRow}>
+                        <Text style={tripStyles.totalLabel}>{t('subtotal') || 'Subtotal'}</Text>
+                        <Text style={tripStyles.premiumValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.total).toFixed(2))}</Text>
+                      </View>
+
+                      <View style={tripStyles.divider} />
+
+                      <View style={tripStyles.totalRow}>
+                        <Text style={[tripStyles.totalLabel, { color: '#FD501E' }]}>{t('total') || 'Total'}</Text>
+                        <Text style={tripStyles.totalValueBig}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalbooking).toFixed(2))}</Text>
+                      </View>
                     </View>
                   </View>
                 </View>
               ))}
 
               <View style={styles.promo}>
-                <Text style={styles.promoLabel}>{t('promotionCode') || 'Promotion Code'}</Text>
+                <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
 
                 <View style={styles.inputWrapper}>
                   <TextInput

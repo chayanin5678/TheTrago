@@ -54,7 +54,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 0,
     position: 'relative',
-    marginTop: Platform.OS === 'android' ? -20 : -50,
+    marginTop: Platform.OS === 'android' ? -40 : -50,
     height: 56,
   },
   headerContent: {
@@ -108,7 +108,7 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   scrollViewWithMargin: {
-    marginTop: 140,
+    marginTop: 40,
   },
   contentContainer: {
     padding: 20,

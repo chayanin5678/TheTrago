@@ -34,6 +34,7 @@ const BankVerificationScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
   const [selectedBank, setSelectedBank] = useState(t('selectBankName') || 'Select Bank Name');
@@ -746,10 +747,11 @@ const BankVerificationScreen = ({ navigation }) => {
       <Animated.View
         renderToHardwareTextureAndroid
         shouldRasterizeIOS
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top  : insets.top }]}>
+          <View style={[styles.safeAreaHeader, { paddingTop: insets.top }]}>
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -771,8 +773,12 @@ const BankVerificationScreen = ({ navigation }) => {
         </LinearGradient>
       </Animated.View>
 
-      <ScrollView style={[styles.scrollViewPremium, styles.scrollViewWithMargin]} showsVerticalScrollIndicator={false} bounces>
-        <View style={styles.contentContainer}>
+      <ScrollView
+        style={[styles.scrollViewPremium, { marginTop: 0 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: headerHeight }]}
+        showsVerticalScrollIndicator={false}
+        bounces
+      >
 
           {/* Form Card */}
           <Animated.View
@@ -960,7 +966,6 @@ const BankVerificationScreen = ({ navigation }) => {
               {t('verificationRequiredInfo') || '• Bank verification is required for secure transactions\n• Your information will be verified within 1-3 business days\n• Ensure all details match your bank account exactly\n• Supported document types: Bank book, Bank statement'}
             </Text>
           </Animated.View>
-        </View>
       </ScrollView>
 
       {/* Bank Selection Modal */}

@@ -51,7 +51,7 @@ const AddCardScreen = ({ navigation, route }) => {
     <View style={{ flex: 1 }}>
       {/* Ultra Gradient Background */}
       <LinearGradient
-        colors={['#001233', '#002A5C', '#003A7C', '#FD501E']}
+        colors={['#002A5C', '#2563EB']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1.5 }}
         style={{ flex: 1 }}

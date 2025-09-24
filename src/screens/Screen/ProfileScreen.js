@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Modal, FlatList,
   KeyboardAvoidingView, Animated, Easing, Dimensions,
-  Alert, Platform, InteractionManager
+  Alert, Platform, InteractionManager, StatusBar
 } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,6 +41,9 @@ const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPassportVerified, setIsPassportVerified] = useState(false);
   const [isBankVerified, setIsBankVerified] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  const defaultPleaseSelect = t('pleaseSelect') || 'Please Select';
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -270,8 +273,6 @@ const ProfileScreen = ({ navigation }) => {
   const toggleCountryModal = () => setIsCountryModalVisible(v => !v);
 
   const handleSelectTele = (item) => {
-  const defaultPleaseSelect = t('pleaseSelect') || 'Please Select';
-
     const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect
       ? defaultPleaseSelect : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
     setSelectedTele(selectedValue);
@@ -308,11 +309,17 @@ const ProfileScreen = ({ navigation }) => {
         if (data && Array.isArray(data.data)) {
           setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }, ...data.data]);
         } else {
-          setTelePhone([]);
+          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }]);
         }
       })
-      .catch(() => {});
+      .catch(() => { setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }]); });
   }, []);
+
+  // Initialize default displayed values if not set
+  useEffect(() => {
+    if (!selectedTele) setSelectedTele(defaultPleaseSelect);
+    if (!selectedCountry) setSelectedCountry(defaultPleaseSelect);
+  }, [defaultPleaseSelect]);
 
   const handleSave = async () => {
     try {
@@ -416,7 +423,8 @@ const ProfileScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={[styles.containerPremium, { paddingTop: insets.top + (Platform.OS === 'ios' ? 0 : 0) }]}>
+  <View style={[styles.containerPremium, { paddingTop: Math.max(insets.top - 30, 0) }]}> 
+      <StatusBar hidden={true} />
 
       {/* Particles */}
       <View style={styles.particlesContainer} pointerEvents="none">
@@ -433,10 +441,11 @@ const ProfileScreen = ({ navigation }) => {
       <Animated.View
         renderToHardwareTextureAndroid
         shouldRasterizeIOS
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
         <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top + 20 : insets.top }]}>
+          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top + 20 : Math.max(insets.top - 36, 0) }]}> 
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -458,7 +467,12 @@ const ProfileScreen = ({ navigation }) => {
       </Animated.View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView style={[styles.scrollViewPremium, styles.scrollViewWithMargin]} showsVerticalScrollIndicator={false} bounces>
+        <ScrollView
+          style={[styles.scrollViewPremium, { marginTop: 0 }]}
+          contentContainerStyle={{ paddingTop: headerHeight }}
+          showsVerticalScrollIndicator={false}
+          bounces
+        >
           <View style={styles.contentContainer}>
             {/* Progress */}
             <Animated.View
@@ -697,8 +711,8 @@ const ProfileScreen = ({ navigation }) => {
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectTele(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>
-                      {item.sys_countries_nameeng === 'Please Select'
-                        ? t('pleaseSelect')
+                      {item.sys_countries_nameeng === defaultPleaseSelect
+                        ? defaultPleaseSelect
                         : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`}
                     </Text>
                   </TouchableOpacity>
@@ -735,7 +749,7 @@ const ProfileScreen = ({ navigation }) => {
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectCountry(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>
-                      {item.sys_countries_nameeng === 'Please Select' ? t('pleaseSelect') : `${item.sys_countries_nameeng}`}
+                      {item.sys_countries_nameeng === defaultPleaseSelect ? defaultPleaseSelect : `${item.sys_countries_nameeng}`}
                     </Text>
                   </TouchableOpacity>
                 )}

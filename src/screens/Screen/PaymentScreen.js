@@ -18,6 +18,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import headStyles from '../../styles/CSS/StartingPointScreenStyles';
 import styles from '../../styles/CSS/PaymentScreenStyles';
+import tripStyles from '../../styles/CSS/TripDetailStyles';
 import NetInfo from '@react-native-community/netinfo';
 
 
@@ -967,7 +968,7 @@ useEffect(() => {
     AsyncStorage.setItem('savedCards', JSON.stringify(savedCards));
   }, [savedCards]);
 
-  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 0;
 
 
   return (
@@ -996,13 +997,13 @@ useEffect(() => {
                     <View style={styles.skeletonLine} />
                     <View style={styles.skeletonLineSmall} />
                   </View>
-                </View>
-              ))}
-              <View style={styles.skeletonAddCardBtn} />
-            </View>
-          </View>
-          <View style={styles.skeletonCard}>
-            <View style={styles.skeletonLine} />
+                  </View>
+                ))}
+              </View>
+
+
+
+
             <View style={styles.skeletonLine} />
             <View style={styles.skeletonLineSmall} />
             <View style={styles.skeletonLineSmall} />
@@ -1015,7 +1016,7 @@ useEffect(() => {
         <View style={{ flex: 1 }}>
           {/* Premium Gradient Background */}
           <LinearGradient
-            colors={['#001233', '#002A5C', '#FD501E']}
+            colors={['#002A5C', '#2563EB']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1.2 }}
             style={{ flex: 1 }}
@@ -1028,7 +1029,7 @@ useEffect(() => {
                 {
                   width: '100%',
                   marginLeft: '0%',
-                  paddingTop: insets.top + EXTRA_TOP_GUTTER,
+                  paddingTop: insets.top,
                   borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
                   borderBottomRightRadius: getResponsiveSize(40, 35, 30),
                   paddingBottom: getResponsiveSize(8, 6, 5),
@@ -1099,11 +1100,19 @@ useEffect(() => {
                 style={{ flex: 1 }}
                 contentInsetAdjustmentBehavior="automatic"
               >
+                    {/* Step Component */}
+                <View style={{
+                  alignItems: 'center',
+                  marginTop: 0,
+                  marginBottom: hp('2%'),
+                }}>
+                  <Step logoUri={3} />
+                </View>
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginTop: hp('1%'),
+                  marginTop: 0,
                   marginHorizontal: wp('6%'),
                   marginBottom: hp('2%'),
                   paddingHorizontal: wp('2%'),
@@ -1114,6 +1123,7 @@ useEffect(() => {
                   borderWidth: 1,
                   borderColor: 'rgba(255,255,255,0.2)',
                 }}>
+                  
                   <View style={{ flex: 1 }}>
                     <Text style={[
                       headStyles.headerTitle,
@@ -1141,14 +1151,7 @@ useEffect(() => {
                   </View>
                 </View>
 
-                {/* Step Component */}
-                <View style={{
-                  alignItems: 'center',
-                  marginTop: hp('1%'),
-                  marginBottom: hp('2%'),
-                }}>
-                  <Step logoUri={3} />
-                </View>
+            
 
                 {/* Content Container */}
                 <View style={styles.contentContainer}>
@@ -1345,298 +1348,222 @@ useEffect(() => {
 
                 {Array.isArray(priceDepart) && priceDepart.map((all, index) => (
                   <View key={index}>
-                    <View style={styles.card}>
-                      <Text style={styles.title}>{t('bookingSummary') || 'Booking Summary'}</Text>
-                      <View style={styles.divider} />
-                      {timetableDepart.map((item, index) => (
+            <View style={tripStyles.premiumWrapper}>
+              <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
+                <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+              </View>
+              <View style={tripStyles.premiumContent}>
+          {timetableDepart.map((item, index) => (
                         <View key={index}>
-                          <Text style={{ fontWeight: 'bold' }}>{t('depart') || 'Depart'}</Text>
-                          <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                          <Text style={tripStyles.sectionHeading}>{t('depart') || 'Depart'}</Text>
+                          <Text style={tripStyles.routeText}>
                             {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
                             <AntDesign name="arrow-right" size={14} color="#FD501E" />
                             {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                           </Text>
-                          <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                            <Text style={{ color: '#666666' }}>
-                              {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai}
-                            </Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                            <Text style={tripStyles.premiumValue}>{selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai}</Text>
                           </View>
-                          <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                            <Text style={{ color: '#666666' }}>
-                              {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai}
-                            </Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                            <Text style={tripStyles.premiumValue}>{selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai}</Text>
                           </View>
-                          <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
-                            <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                            <Text style={tripStyles.premiumValue}>{item.md_boattype_nameeng}</Text>
                           </View>
-                          <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>{t('departureDate') || 'Departure Date'}</Text>
-                            <Text style={{ color: '#666666' }}> {formatDate(customerData.departdate)}</Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('departureDate') || 'Departure Date'}</Text>
+                            <Text style={tripStyles.premiumValue}>{formatDate(customerData.departdate)}</Text>
                           </View>
-                          <View style={styles.row}>
-                            <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
-                            <Text style={{ color: '#666666' }}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                            <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                           </View>
-                          <View style={[styles.row, { marginTop: 5 }]}>
+                          <View style={[tripStyles.rowpromo, { marginTop: 5 }]}>
                             <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                             <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceadult)}</Text>
                           </View>
                           {customerData.child !== 0 && (
-                            <View style={styles.row}>
+                            <View style={tripStyles.rowpromo}>
                               <Text>{t('child') || 'Child'} x {customerData.child}</Text>
                               <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.pricechild)}</Text>
                             </View>
                           )}
                           {customerData.infant !== 0 && (
-                            <View style={styles.row}>
+                            <View style={tripStyles.rowpromo}>
                               <Text>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                               <Text>{customerData.symbol} {formatNumberWithComma(all.totalDepart.priceinfant)}</Text>
                             </View>
                           )}
                           {customerData.pickupDepartId && (
-                            <View style={styles.rowpromo}>
-                              <Text>{t('pickup') || 'Pick up'}</Text>
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('pickup') || 'Pick up'}</Text>
                               <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricepickupdepart)}</Text>
                             </View>
                           )}
                           {customerData.dropoffDepartId && (
-                            <View style={styles.rowpromo}>
-                              <Text>{t('dropoff') || 'Drop off'}</Text>
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('dropoff') || 'Drop off'}</Text>
                               <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalDepart.pricedropoffdepart)}</Text>
                             </View>
                           )}
                           {all.totalDepart.save != 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text>{t('discount') || 'Discount'}</Text>
-                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                              <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.discount)}</Text>
                             </View>
                           )}
                           {all.totalDepart.credit != 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text>{t('credit') || 'Credit'}</Text>
-                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.credit)}</Text>
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('credit') || 'Credit'}</Text>
+                              <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.credit)}</Text>
                             </View>
                           )}
                           {all.totalDepart.promotionprice != 0 && (
-                            <View style={styles.rowpromo}>
-                              <Text>{t('promotionCode') || 'Promotion Code'}</Text>
-                              <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
+                            <View style={tripStyles.rowpromo}>
+                              <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                              <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalDepart.promotionprice)}</Text>
                             </View>
                           )}
-                          <View style={styles.rowpromo}>
-                            <Text>{t('ticketFare') || 'Ticket fare'}</Text>
-                            <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
+                          <View style={tripStyles.rowpromo}>
+                            <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                            <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(all.totalDepart.showtotal)}</Text>
                           </View>
-                          <View style={styles.divider} />
+                          <View style={tripStyles.divider} />
                         </View>
                       ))}
                       {customerData.roud === 2 && (
                         <>
                           {timetableReturn.map((item, index) => (
                             <View key={index}>
-                              <Text style={{ fontWeight: 'bold' }}>{t('return') || 'Return'}</Text>
-                              <Text style={{ marginTop: 5, color: '#FD501E' }}>
+                              <Text style={tripStyles.sectionHeading}>{t('return') || 'Return'}</Text>
+                              <Text style={tripStyles.routeText}>
                                 {selectedLanguage === 'en' ? item.startingpoint_nameeng : item.startingpoint_namethai}
                                 <AntDesign name="arrow-right" size={14} color="#FD501E" />
                                 {selectedLanguage === 'en' ? item.endpoint_nameeng : item.endpoint_namethai}
                               </Text>
-                              <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>{t('company') || 'Company'} </Text>
-                                <Text style={{ color: '#666666' }}>
-                                  {selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai}
-                                </Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                                <Text style={tripStyles.premiumValue}>{selectedLanguage === 'en' ? item.md_company_nameeng : item.md_company_namethai}</Text>
                               </View>
-                              <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>{t('seat') || 'Seat'}</Text>
-                                <Text style={{ color: '#666666' }}>
-                                  {selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai}
-                                </Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                                <Text style={tripStyles.premiumValue}>{selectedLanguage === 'en' ? item.md_seat_nameeng : item.md_seat_namethai}</Text>
                               </View>
-                              <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>{t('boat') || 'Boat'} </Text>
-                                <Text style={{ color: '#666666' }}>{item.md_boattype_nameeng}</Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                                <Text style={tripStyles.premiumValue}>{item.md_boattype_nameeng}</Text>
                               </View>
-                              <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>{t('departureDate') || 'Departure Date'}</Text>
-                                <Text style={{ color: '#666666' }}> {formatDate(customerData.returndate)}</Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('departureDate') || 'Departure Date'}</Text>
+                                <Text style={tripStyles.premiumValue}>{formatDate(customerData.returndate)}</Text>
                               </View>
-                              <View style={styles.row}>
-                                <Text style={{ color: '#666666' }}>{t('departureTime') || 'Departure Time'} : </Text>
-                                <Text style={{ color: '#666666' }}>
-                                  {formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}
-                                </Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                                <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
                               </View>
 
-                              <View style={[styles.rowpromo, { marginTop: 5 }]}>
+                              <View style={[tripStyles.rowpromo, { marginTop: 5 }]}>
                                 <Text>{t('adult') || 'Adult'} x {customerData.adult}</Text>
                                 <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceadult)}</Text>
                               </View>
                               {customerData.child !== 0 && (
-                                <View style={styles.rowpromo}>
+                                <View style={tripStyles.rowpromo}>
                                   <Text>{t('child') || 'Child'} x {customerData.child}</Text>
                                   <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.pricechild)}</Text>
                                 </View>
                               )}
                               {customerData.infant !== 0 && (
-                                <View style={styles.rowpromo}>
+                                <View style={tripStyles.rowpromo}>
                                   <Text>{t('infant') || 'Infant'} x {customerData.infant}</Text>
                                   <Text>{customerData.symbol} {formatNumberWithComma(all.totalReturn.priceinfant)}</Text>
                                 </View>
                               )}
                               {customerData.pickupReturnId != 0 && (
-                                <View style={styles.rowpromo}>
+                                <View style={tripStyles.rowpromo}>
                                   <Text>{t('pickup') || 'Pick up'}</Text>
                                   <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricepickupdepart)}</Text>
                                 </View>
                               )}
                               {customerData.dropoffReturnId != 0 && (
-                                <View style={styles.rowpromo}>
+                                <View style={tripStyles.rowpromo}>
                                   <Text>{t('dropoff') || 'Drop off'}</Text>
                                   <Text style={{ color: 'green' }}>+ {customerData.symbol} {formatNumberWithComma(all.totalReturn.pricedropoffdepart)}</Text>
                                 </View>
                               )}
                               {all.totalReturn.save != 0 && (
-                                <View style={styles.rowpromo}>
-                                  <Text>{t('discount') || 'Discount'}</Text>
-                                  <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                                  <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.discount)}</Text>
                                 </View>
                               )}
                               {all.totalReturn.credit != 0 && (
-                                <View style={styles.rowpromo}>
-                                  <Text>{t('credit') || 'Credit'}</Text>
-                                  <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.credit)}</Text>
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('credit') || 'Credit'}</Text>
+                                  <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.credit)}</Text>
                                 </View>
                               )}
 
                               {all.totalReturn.promotionprice != 0 && (
-                                <View style={styles.rowpromo}>
-                                  <Text>{t('promotionCode') || 'Promotion Code'}</Text>
-                                  <Text style={styles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                                  <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(all.totalReturn.promotionprice)}</Text>
                                 </View>
                               )}
-                              <View style={styles.rowpromo}>
-                                <Text>{t('ticketFare') || 'Ticket fare'}</Text>
-                                <Text style={{ fontWeight: 'bold' }}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
+                              <View style={tripStyles.rowpromo}>
+                                <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                                <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(all.totalReturn.showtotal)}</Text>
                               </View>
-                              <View style={styles.divider} />
+                              <View style={tripStyles.divider} />
                             </View>
                           ))}
                         </>
                       )}
 
-                      <View style={styles.row}>
-                        <Text>{t('subtotal') || 'Subtotal'} </Text>
-                        <Text>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
+                      <View style={tripStyles.rowpromo}>
+                        <Text style={tripStyles.premiumLabel}>{t('subtotal') || 'Subtotal'}</Text>
+                        <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(all.total)}</Text>
                       </View>
-                      <View style={styles.divider} />
+                      <View style={tripStyles.divider} />
 
-                      {/* Points Usage Section */}
-                      <View style={{
-                        backgroundColor: 'rgba(255, 214, 0, 0.05)',
-                        borderRadius: wp('3%'),
-                        padding: wp('3%'),
-                        marginVertical: hp('1%'),
-                        borderWidth: 1,
-                        borderColor: 'rgba(255, 214, 0, 0.2)',
-                      }}>
-                        <TouchableOpacity
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: usePoints ? hp('1%') : 0,
-                          }}
-                          onPress={handlePointsToggle}
-                        >
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <MaterialIcons
-                              name="stars"
-                              size={wp('5%')}
-                              color="#FFD600"
-                              style={{ marginRight: wp('2%') }}
-                            />
-                            <Text style={{
-                              fontWeight: '600',
-                              color: '#1E293B',
-                              fontSize: wp('3.8%')
-                            }}>
-                              {t('usePoints') || 'ใช้คะแนน'}
-                            </Text>
-                            <Text style={{
-                              color: '#6B7280',
-                              fontSize: wp('3.2%'),
-                              marginLeft: wp('2%')
-                            }}>
-                              ({userPoints} {t('pointsAvailable') || 'คะแนนที่มี'})
-                            </Text>
-                            {userPoints === 0 && (
-                              <TouchableOpacity
-                                onPress={fetchUserPoints}
-                                style={{
-                                  marginLeft: wp('2%'),
-                                  padding: wp('1%'),
-                                }}
-                              >
-                                <Text style={{
-                                  color: '#3B82F6',
-                                  fontSize: wp('3%'),
-                                  textDecorationLine: 'underline'
-                                }}>
-                                  {t('refresh') || 'รีเฟรช'}
-                                </Text>
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                          <View style={{
-                            width: wp('5%'),
-                            height: wp('5%'),
-                            borderRadius: wp('2.5%'),
-                            borderWidth: 2,
-                            borderColor: usePoints ? '#FFD600' : '#D1D5DB',
-                            backgroundColor: usePoints ? '#FFD600' : 'transparent',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}>
-                            {usePoints && (
-                              <MaterialIcons name="check" size={wp('3%')} color="#1E293B" />
-                            )}
-                          </View>
-                        </TouchableOpacity>
+                      {/* Points Usage Section (inside premium card) */}
+                      <TouchableOpacity onPress={handlePointsToggle} style={[tripStyles.rowpromo, { alignItems: 'center', marginVertical: hp('1%') }]}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <MaterialIcons name="stars" size={wp('5%')} color="#FFD600" style={{ marginRight: wp('2%') }} />
+                          <Text style={{ fontWeight: '700', color: '#1E293B', fontSize: wp('3.8%') }}>{t('usePoints') || 'ใช้คะแนน'}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3.2%'), marginLeft: wp('2%') }}>({userPoints} {t('pointsAvailable') || 'คะแนนที่มี'})</Text>
+                        </View>
+                        <View style={{ width: wp('5%'), height: wp('5%'), borderRadius: wp('2.5%'), borderWidth: 2, borderColor: usePoints ? '#FFD600' : '#D1D5DB', backgroundColor: usePoints ? '#FFD600' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                          {usePoints && <MaterialIcons name="check" size={wp('3%')} color="#1E293B" />}
+                        </View>
+                      </TouchableOpacity>
 
-                        {usePoints && (
-                          <View style={styles.row}>
-                            <Text style={{ color: '#6B7280' }}>
-                              {t('pointsUsed') || 'คะแนนที่ใช้'}: {pointsToUse} {t('points') || 'คะแนน'}
-                            </Text>
-                            <Text style={styles.redText}>
-                              - {customerData.symbol} {formatNumberWithComma(pointsDiscount.toFixed(2))}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
+                      {usePoints && (
+                        <View style={tripStyles.rowpromo}>
+                          <Text style={{ color: '#6B7280' }}>{t('pointsUsed') || 'คะแนนที่ใช้'}: {pointsToUse} {t('points') || 'คะแนน'}</Text>
+                          <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(pointsDiscount.toFixed(2))}</Text>
+                        </View>
+                      )}
 
-                      <View style={styles.row}>
-                        <Text>{t('paymentFee') || 'Payment Fee'} </Text>
+                      <View style={tripStyles.rowpromo}>
+                        <Text style={tripStyles.premiumLabel}>{t('paymentFee') || 'Payment Fee'}</Text>
                         <Text style={styles.greenText}>+ {customerData.symbol} {formatNumberWithComma(all.paymentfee)}</Text>
-
                       </View>
-                      <View style={styles.divider} />
+                      <View style={tripStyles.divider} />
 
 
-
-                      <View style={styles.row}>
-                        <Text>{t('total') || 'Total'} </Text>
-                        <Text> {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
+                      <View style={tripStyles.totalRow}>
+                        <Text style={tripStyles.totalLabel}>{t('total') || 'Total'}</Text>
+                        <Text style={tripStyles.totalValueBig}>{customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                       </View>
 
                       {/* Points to Earn Section */}
                       {pointsToEarn > 0 && (
                         <>
-                          <View style={styles.divider} />
-                          <View style={styles.row}>
+                          <View style={tripStyles.divider} />
+                          <View style={tripStyles.totalRow}>
                             <Text style={{
                               color: '#10B981',
                               fontSize: wp('3.8%'),
@@ -1654,7 +1581,7 @@ useEffect(() => {
                           </View>
                         </>
                       )}
-                    </View>
+                      </View>
                     <TouchableOpacity
                       style={[styles.buttonContainer]} // Use an array if you want to combine styles
                       onPress={() => {
@@ -1673,6 +1600,7 @@ useEffect(() => {
                       <Text style={styles.BackButtonText}>{t('payment') || 'Payment'} {customerData.symbol} {formatNumberWithComma(all.totalbooking)}</Text>
                     </TouchableOpacity>
                   </View>
+                </View>
                 ))}
 
 
