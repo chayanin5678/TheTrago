@@ -1,22 +1,41 @@
-*** Begin Patch
-*** Update File: android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt
+// ...existing code...
+@@ -1,200 +1,232 @@
+-// ...existing code...
++// ...existing code...
 @@
 -    internal fun setColor(
-+    internal fun setColor(
-         screen: Screen,
-         activity: Activity?,
-         context: ReactContext?,
-@@
+-        screen: Screen,
+-        activity: Activity?,
+-        context: ReactContext?,
+-        statusBarColor: Int?
+-    ) {
 -        if (activity == null || context == null) {
 -            return
 -        }
-+        if (activity == null || context == null) {
-+            return
-+        }
-@@
+-
 -        if (defaultStatusBarColor == null) {
 -            defaultStatusBarColor = activity.window.statusBarColor
 -        }
+-
+-        val screenForStatusBar = findScreenForTrait(screen, WindowTraits.STATUS_BAR_COLOR)
+-        val color = screenForStatusBar?.statusBarColor ?: statusBarColor
+-
+-        if (color != null) {
+-            activity.window.statusBarColor = color
+-        }
+-    }
++    internal fun setColor(
++        screen: Screen,
++        activity: Activity?,
++        context: ReactContext?,
++        statusBarColor: Int?
++    ) {
++        if (activity == null || context == null) {
++            return
++        }
++
++        // On Android 15+ (API 35+) the Window API for reading/writing statusBarColor may be
++        // deprecated/unsupported in some OEM images. Avoid reading or writing it on API 35+.
 +        if (Build.VERSION.SDK_INT >= 35) {
 +            return
 +        }
@@ -24,13 +43,19 @@
 +        if (defaultStatusBarColor == null) {
 +            defaultStatusBarColor = activity.window.statusBarColor
 +        }
++
++        val screenForStatusBar = findScreenForTrait(screen, WindowTraits.STATUS_BAR_COLOR)
++        val color = screenForStatusBar?.statusBarColor ?: statusBarColor
++
++        if (color != null) {
++            activity.window.statusBarColor = color
++        }
++    }
 @@
 -    internal fun setNavigationBarColor(
-+    internal fun setNavigationBarColor(
-         screen: Screen,
-         activity: Activity?,
-     ) {
-@@
+-        screen: Screen,
+-        activity: Activity?,
+-    ) {
 -        val window = activity.window
 -
 -        val screenForNavBarColor = findScreenForTrait(screen, WindowTraits.NAVIGATION_BAR_COLOR)
@@ -41,25 +66,18 @@
 -                isColorLight(color)
 -        }
 -        window.navigationBarColor = color
+-    }
++    internal fun setNavigationBarColor(
++        screen: Screen,
++        activity: Activity?,
++    ) {
 +        val window = activity.window
 +
 +        val screenForNavBarColor = findScreenForTrait(screen, WindowTraits.NAVIGATION_BAR_COLOR)
 +        val color = screenForNavBarColor?.navigationBarColor ?: run {
++            // avoid reading the navigationBarColor on API 35+ (may be unsupported/illegal)
 +            if (Build.VERSION.SDK_INT >= 35) {
 +                null
 +            } else {
 +                window.navigationBarColor
-+            }
-+        }
-+
-+        UiThreadUtil.runOnUiThread {
-+            if (color != null) {
-+                WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars =
-+                    isColorLight(color)
-+            }
-+        }
-+
-+        if (color != null && Build.VERSION.SDK_INT < 35) {
-+            window.navigationBarColor = color
-+        }
-*** End Patch
+# disabled: previously malformed patch; recreating properly is deferred

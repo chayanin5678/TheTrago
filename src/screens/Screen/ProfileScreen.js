@@ -1,8 +1,20 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, Modal, FlatList,
-  KeyboardAvoidingView, Animated, Easing, Dimensions,
-  Alert, Platform, InteractionManager, StatusBar
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  FlatList,
+  KeyboardAvoidingView,
+  Animated,
+  Easing,
+  Dimensions,
+  Alert,
+  Platform,
+  InteractionManager,
+  StatusBar,
 } from 'react-native';
 import { Entypo, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +37,7 @@ const ProfileScreen = ({ navigation }) => {
   const [Lastname, setLastname] = useState('');
   const [tel, setTel] = useState('');
   const [email, setEmail] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchQueryCountry, setSearchQueryCountry] = useState('');
   const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
@@ -41,7 +54,10 @@ const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPassportVerified, setIsPassportVerified] = useState(false);
   const [isBankVerified, setIsBankVerified] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Use a conservative default so content isn't overlapped before header measures
+  const DEFAULT_HEADER_HEIGHT = Platform.OS === 'android' ? 160 : 140;
+  const [headerHeight, setHeaderHeight] = useState(DEFAULT_HEADER_HEIGHT);
+  const [particlesVisible, setParticlesVisible] = useState(false);
 
   const defaultPleaseSelect = t('pleaseSelect') || 'Please Select';
 
@@ -53,31 +69,41 @@ const ProfileScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // === Smooth Animations (Contact-style) ===
-  const fadeAnim   = useRef(new Animated.Value(0)).current;
-  const scaleAnim  = useRef(new Animated.Value(0.98)).current;
-  const headerAnim = useRef(new Animated.Value(-100)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.98)).current; // entrance scale
+  const headerAnim = useRef(new Animated.Value(-100)).current; // entrance translateY
 
-  // Clocks
-  const particleClock = useRef(new Animated.Value(0)).current;
-  const pulseClock    = useRef(new Animated.Value(0)).current;
-  const rotateAnim    = useRef(new Animated.Value(0)).current;
+  // Master animation clock (reduce JS work by using one clock)
+  const masterClock = useRef(new Animated.Value(0)).current;
 
   // Cards
   const cardAnims = useRef(
     Array.from({ length: 3 }, () => ({
-      opacity:    new Animated.Value(0),
+      opacity: new Animated.Value(0),
       translateY: new Animated.Value(24),
-      scale:      new Animated.Value(0.98),
+      scale: new Animated.Value(0.98),
     }))
   ).current;
 
-  // Particles driven by one clock
-  const PARTICLE_COUNT = 4;
+  // Particles (disabled on Android to avoid JS-thread spikes)
+  const PARTICLE_COUNT = Platform.OS === 'android' ? 0 : 3;
+
+  // Derived animations from masterClock
+  const spin = masterClock.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const pulsePhase = Animated.modulo(Animated.multiply(masterClock, 16.6667), 1); // ≈ 30s/1.8s
+  const pulseScale = pulsePhase.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1.05, 1],
+  });
+
   const particles = useMemo(() => {
     return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-      const phase = i / PARTICLE_COUNT;
-      const t = Animated.modulo(Animated.add(particleClock, phase), 1);
-
+      const phase = i / Math.max(PARTICLE_COUNT, 1);
+      const t = Animated.modulo(Animated.add(masterClock, phase), 1);
       const x = t.interpolate({
         inputRange: [0, 0.5, 1],
         outputRange: [-40 + i * 8, 40 - i * 8, -40 + i * 8],
@@ -86,7 +112,6 @@ const ProfileScreen = ({ navigation }) => {
       const y = t.interpolate({
         inputRange: [0, 1],
         outputRange: [screenHeight * 0.8 + i * 30, -80],
-        extrapolate: 'clamp',
       });
       const opacity = t.interpolate({
         inputRange: [0, 0.5, 1],
@@ -98,47 +123,66 @@ const ProfileScreen = ({ navigation }) => {
       });
       return { x, y, opacity, scale };
     });
-  }, [particleClock]);
+  }, [masterClock]);
 
-  const pulseScale = pulseClock.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] });
-  const spin = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
+  // Entrance and start master clock
   useEffect(() => {
     InteractionManager.runAfterInteractions(() => {
-      // Entrance: ชะลอ header ให้ไม่ลงมาเร็ว
       Animated.parallel([
-        Animated.timing(fadeAnim,   { toValue: 1, duration: 700,  easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(headerAnim, { toValue: 0, duration: 1200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.spring(scaleAnim,  { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
-      ]).start();
-
-      // clocks
-      Animated.loop(
-        Animated.timing(particleClock, { toValue: 1, duration: 16000, easing: Easing.linear, useNativeDriver: true })
-      ).start();
-
-      Animated.loop(
+        Animated.timing(headerAnim, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
         Animated.sequence([
-          Animated.timing(pulseClock, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(pulseClock, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ])
-      ).start();
+          Animated.delay(80),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.delay(30),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            tension: 80,
+            friction: 12,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        setParticlesVisible(PARTICLE_COUNT > 0);
 
-      Animated.loop(
-        Animated.timing(rotateAnim, { toValue: 1, duration: 20000, easing: Easing.linear, useNativeDriver: true })
-      ).start();
+        // master clock loop (single source of truth for particles/pulse/spin)
+        Animated.loop(
+          Animated.timing(masterClock, {
+            toValue: 1,
+            duration: 30000,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          })
+        ).start();
 
-      // Cards: stagger นุ่มขึ้น
-      Animated.stagger(
-        180,
-        cardAnims.map(a =>
-          Animated.parallel([
-            Animated.timing(a.opacity,    { toValue: 1, duration: 520, useNativeDriver: true }),
-            Animated.timing(a.translateY, { toValue: 0, duration: 720, easing: Easing.out(Easing.back(1.25)), useNativeDriver: true }),
-            Animated.spring(a.scale,      { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
-          ])
-        )
-      ).start();
+        // Stagger cards
+        Animated.stagger(
+          120,
+          cardAnims.map((a) =>
+            Animated.parallel([
+              Animated.timing(a.opacity, { toValue: 1, duration: 550, useNativeDriver: true }),
+              Animated.timing(a.translateY, {
+                toValue: 0,
+                duration: 700,
+                easing: Easing.out(Easing.back(1.2)),
+                useNativeDriver: true,
+              }),
+              Animated.spring(a.scale, { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
+            ])
+          )
+        ).start();
+      });
     });
   }, []);
 
@@ -155,87 +199,116 @@ const ProfileScreen = ({ navigation }) => {
 
   // ===== data fetching =====
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       const storedToken = await SecureStore.getItemAsync('userToken');
       try {
         const response = await fetch(`${ipAddress}/profile`, {
           method: 'GET',
-          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+            'Content-Type': 'application/json',
+          },
         });
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
-        if (data && Array.isArray(data.data)) {
-          setFirstname(data.data[0].md_member_fname);
-          setLastname(data.data[0].md_member_lname);
-          setTel(data.data[0].md_member_phone);
-          setEmail(data.data[0].md_member_email);
+        if (!cancelled && data && Array.isArray(data.data)) {
+          const row = data.data[0] || {};
+          setFirstname(row.md_member_fname || '');
+          setLastname(row.md_member_lname || '');
+          setTel(row.md_member_phone || '');
+          setEmail(row.md_member_email || '');
 
-          if (data.data[0].md_member_code) {
-            getCountryByCode(data.data[0].md_member_code);
-            setCountrycode(data.data[0].md_member_code);
-          } else setSelectedTele(t('pleaseSelect'));
+          if (row.md_member_code) {
+            getCountryByCode(row.md_member_code);
+            setCountrycode(row.md_member_code);
+          } else {
+            setSelectedTele(t('pleaseSelect'));
+          }
 
-          if (data.data[0].md_member_nationality) {
-            getCountryByid(data.data[0].md_member_nationality);
-            setCountryId(data.data[0].md_member_nationality);
-          } else setSelectedCountry(t('pleaseSelect'));
+          if (row.md_member_nationality) {
+            getCountryByid(row.md_member_nationality);
+            setCountryId(row.md_member_nationality);
+          } else {
+            setSelectedCountry(t('pleaseSelect'));
+          }
 
-          if (data.data[0].md_member_birthday) setBirthdate(data.data[0].md_member_birthday);
+          if (row.md_member_birthday) setBirthdate(row.md_member_birthday);
           else setBirthdate(t('selectBirthday'));
 
-          updateCustomerData ({
-            Firstname : data.data[0].md_member_fname,
-            Lastname : data.data[0].md_member_lname,
-            tel : data.data[0].md_member_phone,
-            email : data.data[0].md_member_email,
-            birthdate : data.data[0].md_member_birthday,
-            country : data.data[0].md_member_nationality ,
-            selectcoountrycode : data.data[0].md_member_code
+          updateCustomerData({
+            Firstname: row.md_member_fname,
+            Lastname: row.md_member_lname,
+            tel: row.md_member_phone,
+            email: row.md_member_email,
+            birthdate: row.md_member_birthday,
+            country: row.md_member_nationality,
+            selectcoountrycode: row.md_member_code,
           });
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
+
     fetchData();
     checkPassportStatus();
     checkBankStatus();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    const unsub = navigation.addListener('focus', () => { checkBankStatus(); });
+    const unsub = navigation.addListener('focus', () => {
+      checkBankStatus();
+    });
     return unsub;
   }, [navigation]);
 
   const getCountryByCode = async (code) => {
     try {
       const response = await fetch(`${ipAddress}/membercountry`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countrycode: code }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ countrycode: code }),
       });
       const json = await response.json();
       if (response.ok) {
-        setSelectedTele(`(+${json.data[0].sys_countries_telephone}) ${json.data[0].sys_countries_nameeng}`);
-        setCountrycode(json.data[0].sys_countries_telephone);
+        const telText = json?.data?.[0]?.sys_countries_telephone ?? '';
+        const name = json?.data?.[0]?.sys_countries_nameeng ?? '';
+        setSelectedTele(name === defaultPleaseSelect ? defaultPleaseSelect : `(+${telText}) ${name}`);
+        setCountrycode(telText);
         return json.data;
       } else return null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   };
 
   const getCountryByid = async (id) => {
     try {
       const response = await fetch(`${ipAddress}/membercountryname`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryid: id }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ countryid: id }),
       });
       const json = await response.json();
       if (response.ok) {
-        setSelectedCountry(`${json.data[0].sys_countries_nameeng}`);
-        setCountryId(json.data[0].sys_countries_id);
+        const name = json?.data?.[0]?.sys_countries_nameeng ?? '';
+        const cid = json?.data?.[0]?.sys_countries_id ?? '';
+        setSelectedCountry(`${name}`);
+        setCountryId(cid);
         return json.data;
       } else return null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   };
 
   const checkPassportStatus = async () => {
@@ -243,14 +316,20 @@ const ProfileScreen = ({ navigation }) => {
       const storedToken = await SecureStore.getItemAsync('userToken');
       if (!storedToken) return;
       const response = await fetch(`${ipAddress}/passport-info`, {
-        method: 'GET', headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+          'Content-Type': 'application/json',
+        },
       });
       const json = await response.json();
       if (response.ok && json.status === 'success') {
-        const { has_passport, has_document } = json.data;
-        setIsPassportVerified(has_passport && has_document);
+        const { has_passport, has_document } = json.data || {};
+        setIsPassportVerified(!!(has_passport && has_document));
       } else setIsPassportVerified(false);
-    } catch { setIsPassportVerified(false); }
+    } catch {
+      setIsPassportVerified(false);
+    }
   };
 
   const checkBankStatus = async () => {
@@ -258,47 +337,66 @@ const ProfileScreen = ({ navigation }) => {
       const token = await SecureStore.getItemAsync('userToken');
       if (!token) return;
       const response = await fetch(`${ipAddress}/bankbook-info`, {
-        method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
       if (!response.ok) return;
       const json = await response.json();
       if (json.status === 'success' && json.data) {
         const { has_bank_id, has_account_name, has_account_number, has_document } = json.data;
-        setIsBankVerified(has_bank_id && has_account_name && has_account_number && has_document);
+        setIsBankVerified(!!(has_bank_id && has_account_name && has_account_number && has_document));
       } else setIsBankVerified(false);
-    } catch { setIsBankVerified(false); }
+    } catch {
+      setIsBankVerified(false);
+    }
   };
 
-  const toggleTeleModal = () => setIsTeleModalVisible(v => !v);
-  const toggleCountryModal = () => setIsCountryModalVisible(v => !v);
+  const toggleTeleModal = useCallback(() => setIsTeleModalVisible((v) => !v), []);
+  const toggleCountryModal = useCallback(() => setIsCountryModalVisible((v) => !v), []);
 
-  const handleSelectTele = (item) => {
-    const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect
-      ? defaultPleaseSelect : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
-    setSelectedTele(selectedValue);
-    setCountryName(item.sys_countries_nameeng);
-    setCountrycode(item.sys_countries_telephone);
-    setErrors(prev => ({ ...prev, selectedTele: false }));
-    toggleTeleModal();
-  };
+  const handleSelectTele = useCallback(
+    (item) => {
+      const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect
+        ? defaultPleaseSelect
+        : `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`;
+      setSelectedTele(selectedValue);
+      setCountryName(item.sys_countries_nameeng);
+      setCountrycode(item.sys_countries_telephone);
+      setErrors((prev) => ({ ...prev, selectedTele: false }));
+      toggleTeleModal();
+    },
+    [defaultPleaseSelect, toggleTeleModal]
+  );
 
-  const handleSelectCountry = (item) => {
-  const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect ? defaultPleaseSelect : `${item.sys_countries_nameeng}`;
-    setSelectedCountry(selectedValue);
-    setCountryId(item.sys_countries_id);
-    setErrors(prev => ({ ...prev, selectedCountry: false }));
-    toggleCountryModal();
-  };
+  const handleSelectCountry = useCallback(
+    (item) => {
+      const selectedValue = item.sys_countries_nameeng === defaultPleaseSelect
+        ? defaultPleaseSelect
+        : `${item.sys_countries_nameeng}`;
+      setSelectedCountry(selectedValue);
+      setCountryId(item.sys_countries_id);
+      setErrors((prev) => ({ ...prev, selectedCountry: false }));
+      toggleCountryModal();
+    },
+    [defaultPleaseSelect, toggleCountryModal]
+  );
 
   const filteredTelePhones = useMemo(() => {
-    return telePhone.filter(item =>
-      `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`.toLowerCase().includes(searchQuery.toLowerCase())
+    return telePhone.filter((item) =>
+      `(+${item.sys_countries_telephone}) ${item.sys_countries_nameeng}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
     );
   }, [telePhone, searchQuery]);
 
   const filteredCountry = useMemo(() => {
-    return telePhone.filter(item =>
-      `${item.sys_countries_nameeng}`.toLowerCase().includes(searchQueryCountry.toLowerCase())
+    return telePhone.filter((item) =>
+      (item.sys_countries_nameeng || '')
+        .toLowerCase()
+        .includes(searchQueryCountry.toLowerCase())
     );
   }, [telePhone, searchQueryCountry]);
 
@@ -307,12 +405,21 @@ const ProfileScreen = ({ navigation }) => {
       .then((r) => r.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }, ...data.data]);
+          setTelePhone([
+            { sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' },
+            ...data.data,
+          ]);
         } else {
-          setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }]);
+          setTelePhone([
+            { sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' },
+          ]);
         }
       })
-      .catch(() => { setTelePhone([{ sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' }]); });
+      .catch(() => {
+        setTelePhone([
+          { sys_countries_telephone: '', sys_countries_nameeng: defaultPleaseSelect, sys_countries_code: '' },
+        ]);
+      });
   }, []);
 
   // Initialize default displayed values if not set
@@ -324,83 +431,142 @@ const ProfileScreen = ({ navigation }) => {
   const handleSave = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      if (!token) { alert(t('userTokenNotFound')); return; }
-
+      if (!token) {
+        alert(t('userTokenNotFound'));
+        return;
+      }
       const response = await fetch(`${ipAddress}/update-profile`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          fname: Firstname, lname: Lastname, phone: tel, code: countrycode, birthday: birthdate, nationality: countryId,
+          fname: Firstname,
+          lname: Lastname,
+          phone: tel,
+          code: countrycode,
+          birthday: birthdate,
+          nationality: countryId,
         }),
       });
       const json = await response.json();
-
       if (json.status === 'success') {
-        alert("✅ " + t('profileUpdatedSuccess'));
+        alert('✅ ' + t('profileUpdatedSuccess'));
         updateCustomerData({
-          Firstname, Lastname, tel,
-          selectcoountrycode: `(+${countrycode}) ${countryName}` || t('pleaseSelect'),
-          birthdate, country: countryName || t('pleaseSelect'),
+          Firstname,
+          Lastname,
+          tel,
+          selectcoountrycode: countryName ? `(+${countrycode}) ${countryName}` : t('pleaseSelect'),
+          birthdate,
+          country: countryName || t('pleaseSelect'),
         });
       } else {
-        alert("❌ " + t('updateFailed') + ": " + json.message);
+        alert('❌ ' + t('updateFailed') + ': ' + json.message);
       }
     } catch (error) {
-      console.error("handleSave error:", error);
-      alert("⚠️ " + t('errorOccurred'));
+      console.error('handleSave error:', error);
+      alert('⚠️ ' + t('errorOccurred'));
     }
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) { alert(t('fillAllPasswordFields')); return; }
-    if (newPassword !== confirmPassword) { alert(t('passwordMismatch')); return; }
-    if (newPassword.length < 6) { alert(t('passwordTooShort')); return; }
-
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert(t('fillAllPasswordFields'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert(t('passwordMismatch'));
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert(t('passwordTooShort'));
+      return;
+    }
     try {
       const token = await SecureStore.getItemAsync('userToken');
-      if (!token) { alert(t('userTokenNotFound')); return; }
-
+      if (!token) {
+        alert(t('userTokenNotFound'));
+        return;
+      }
       const response = await fetch(`${ipAddress}/change-password`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-
       const json = await response.json();
       if (json.status === 'success') {
         alert(t('passwordChangedSuccess'));
-        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-        setShowCurrentPassword(false); setShowNewPassword(false); setShowConfirmPassword(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
       } else {
-        alert("❌ " + json.message);
+        alert('❌ ' + json.message);
       }
     } catch (error) {
-      console.error("handleChangePassword error:", error);
+      console.error('handleChangePassword error:', error);
       alert(t('passwordChangeError'));
     }
   };
 
   const isEmailVerified = !!customerData.email;
-  const isProfileVerified =
-    customerData.Firstname && customerData.Lastname && customerData.tel &&
-    customerData.email && customerData.birthdate && customerData.country && customerData.selectcoountrycode;
-
+  const isProfileVerified = !!(
+    customerData.Firstname &&
+    customerData.Lastname &&
+    customerData.tel &&
+    customerData.email &&
+    customerData.birthdate &&
+    customerData.country &&
+    customerData.selectcoountrycode
+  );
   const isIdVerified = isPassportVerified;
   const verifiedCount = [isEmailVerified, isProfileVerified, isIdVerified, isBankVerified].filter(Boolean).length;
-  const progressPercent = (verifiedCount / 4) * 100;
+
+  // Progress bar animation (scaleX + translateX to keep left-anchored)
+  const progressScale = useRef(new Animated.Value(0)).current; // 0..1
+  const progressHalfWidth = useRef(new Animated.Value(0)).current; // measured once
+  const progressTranslateX = Animated.multiply(Animated.subtract(progressScale, 1), progressHalfWidth);
+
+  useEffect(() => {
+    const next = verifiedCount / 4; // 0..1
+    Animated.timing(progressScale, {
+      toValue: next,
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [verifiedCount]);
 
   if (isLoading) {
     return (
       <View style={styles.containerPremium}>
-        <View style={styles.particlesContainer} pointerEvents="none">
-          {particles.map((p, i) => (
-            <Animated.View key={i} style={[styles.floatingParticle, { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity }]} />
-          ))}
-        </View>
-
+        {particlesVisible && (
+          <View style={styles.particlesContainer} pointerEvents="none">
+            {particles.map((p, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.floatingParticle,
+                  { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity },
+                ]}
+              />
+            ))}
+          </View>
+        )}
         <View style={styles.headerContainer}>
-          <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-            <View style={styles.safeAreaHeader}>
+          <LinearGradient
+            colors={['#FD501E', '#FF6B40', '#FD501E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View className={styles.safeAreaHeader}>
               <View style={styles.headerTopRow}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                   <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -416,26 +582,30 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </LinearGradient>
         </View>
-
-        {/* skeleton content ของคุณ */}
+        {/* skeleton content */}
       </View>
     );
   }
 
   return (
-  <View style={[styles.containerPremium, { paddingTop: Math.max(insets.top - 30, 0) }]}> 
+    <View style={[styles.containerPremium, { paddingTop: Math.max(insets.top - 30, 0) }]}>
       <StatusBar hidden={true} />
 
       {/* Particles */}
-      <View style={styles.particlesContainer} pointerEvents="none">
-        {particles.map((p, i) => (
-          <Animated.View
-            key={i}
-            pointerEvents="none"
-            style={[styles.floatingParticle, { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity }]}
-          />
-        ))}
-      </View>
+      {particlesVisible && (
+        <View style={styles.particlesContainer} pointerEvents="none">
+          {particles.map((p, i) => (
+            <Animated.View
+              key={i}
+              pointerEvents="none"
+              style={[
+                styles.floatingParticle,
+                { transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }], opacity: p.opacity },
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
       {/* Header */}
       <Animated.View
@@ -444,8 +614,18 @@ const ProfileScreen = ({ navigation }) => {
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
       >
-        <LinearGradient colors={['#FD501E', '#FF6B40', '#FD501E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <View style={[styles.safeAreaHeader, { paddingTop: Platform.OS === 'ios' ? insets.top + 20 : Math.max(insets.top - 36, 0) }]}> 
+        <LinearGradient
+          colors={['#FD501E', '#FF6B40', '#FD501E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View
+            style={[
+              styles.safeAreaHeader,
+              { paddingTop: Platform.OS === 'ios' ? insets.top + 20 : Math.max(insets.top - 36, 0) },
+            ]}
+          >
             <View style={styles.headerTopRow}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -454,8 +634,7 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.headerContent}>
               <Text style={styles.headerTitle}>{t('profileSettings')}</Text>
               <Text style={styles.headerSubtitle}>{t('completePremiumProfile')}</Text>
-
-              <Animated.View style={[styles.floatingDecor,  { transform: [{ rotate: spin }] }]}>
+              <Animated.View style={[styles.floatingDecor, { transform: [{ rotate: spin }] }]}>
                 <MaterialCommunityIcons name="account-star" size={20} color="rgba(255,255,255,0.3)" />
               </Animated.View>
               <Animated.View style={[styles.floatingDecor2, { transform: [{ rotate: spin }] }]}>
@@ -466,10 +645,11 @@ const ProfileScreen = ({ navigation }) => {
         </LinearGradient>
       </Animated.View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? "padding" : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           style={[styles.scrollViewPremium, { marginTop: 0 }]}
-          contentContainerStyle={{ paddingTop: headerHeight }}
+          // ensure paddingTop is at least the default to prevent header overlap while measuring
+          contentContainerStyle={{ paddingTop: Math.max(headerHeight, DEFAULT_HEADER_HEIGHT) }}
           showsVerticalScrollIndicator={false}
           bounces
         >
@@ -480,7 +660,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.progressCardPremium,
-                { opacity: cardAnims[0].opacity, transform: [{ translateY: cardAnims[0].translateY }, { scale: cardAnims[0].scale }] }
+                { opacity: cardAnims[0].opacity, transform: [{ translateY: cardAnims[0].translateY }, { scale: cardAnims[0].scale }] },
               ]}
             >
               <LinearGradient colors={['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.05)']} style={styles.progressGradient}>
@@ -488,24 +668,37 @@ const ProfileScreen = ({ navigation }) => {
                   <MaterialCommunityIcons name="account-check" size={24} color="#FD501E" />
                   <Text style={styles.titlePremium}>{t('completeYourProfile')}</Text>
                 </View>
-                <View style={styles.progressBarBackgroundPremium}>
-                  <Animated.View style={[styles.progressBarFillPremium, { width: `${progressPercent}%`, transform: [{ scale: pulseScale }] }]} />
+                <View
+                  style={styles.progressBarBackgroundPremium}
+                  onLayout={(e) => {
+                    const w = e.nativeEvent.layout.width;
+                    progressHalfWidth.setValue(w / 2);
+                  }}
+                >
+                  <Animated.View
+                    style={[
+                      styles.progressBarFillPremium,
+                      { transform: [{ translateX: progressTranslateX }, { scaleX: progressScale }, { scale: pulseScale }] },
+                    ]}
+                  />
                 </View>
                 <Text style={styles.infoTextPremium}>{t('getBestBooking')}</Text>
-
                 <View style={styles.verificationListPremium}>
                   {[
                     { label: t('verifiedEmail'), verified: !!customerData.email },
                     { label: t('verifiedProfile'), verified: isProfileVerified },
                     { label: t('verifiedId'), verified: isIdVerified, nav: 'IDCardCameraScreen' },
-                    { label: t('verifiedBankAccount'), verified: isBankVerified, nav: 'BankVerificationScreen' }
+                    { label: t('verifiedBankAccount'), verified: isBankVerified, nav: 'BankVerificationScreen' },
                   ].map((item, index) => (
                     <TouchableOpacity
                       key={index}
                       style={styles.verificationItem}
                       onPress={() => {
                         if ((item.nav === 'IDCardCameraScreen' || item.nav === 'BankVerificationScreen') && !isProfileVerified) {
-                          Alert.alert(t('pleaseUpdateProfile'), item.nav === 'IDCardCameraScreen' ? t('profileNotComplete') : t('profileIncompleteBank'));
+                          Alert.alert(
+                            t('pleaseUpdateProfile'),
+                            item.nav === 'IDCardCameraScreen' ? t('profileNotComplete') : t('profileIncompleteBank')
+                          );
                           return;
                         }
                         item.nav && navigation.navigate(item.nav);
@@ -513,7 +706,7 @@ const ProfileScreen = ({ navigation }) => {
                       activeOpacity={item.nav ? 0.7 : 1}
                     >
                       <View style={[styles.verificationIcon, item.verified ? styles.verifiedIcon : styles.unverifiedIcon]}>
-                        <MaterialIcons name={item.verified ? "check" : "close"} size={16} color={item.verified ? "#22C55E" : "#EF4444"} />
+                        <MaterialIcons name={item.verified ? 'check' : 'close'} size={16} color={item.verified ? '#22C55E' : '#EF4444'} />
                       </View>
                       <Text style={item.verified ? styles.verifiedPremium : styles.unverifiedPremium}>{item.label}</Text>
                       {item.nav && <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />}
@@ -529,7 +722,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }, { scale: cardAnims[1].scale }] }
+                { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }, { scale: cardAnims[1].scale }] },
               ]}
             >
               <View style={styles.sectionHeaderPremium}>
@@ -540,17 +733,33 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.inputRowPremium}>
                 <View style={styles.inputWrapperPremium}>
                   <Text style={styles.inputLabelPremium}>{t('firstName')}</Text>
-                  <TextInput style={styles.inputPremium} placeholder={t('enterFirstName')} value={Firstname} onChangeText={setFirstname} placeholderTextColor="#9CA3AF" />
+                  <TextInput
+                    style={styles.inputPremium}
+                    placeholder={t('enterFirstName')}
+                    value={Firstname}
+                    onChangeText={setFirstname}
+                    placeholderTextColor="#9CA3AF"
+                  />
                 </View>
                 <View style={styles.inputWrapperPremium}>
                   <Text style={styles.inputLabelPremium}>{t('lastName')}</Text>
-                  <TextInput style={styles.inputPremium} placeholder={t('enterLastName')} value={Lastname} onChangeText={setLastname} placeholderTextColor="#9CA3AF" />
+                  <TextInput
+                    style={styles.inputPremium}
+                    placeholder={t('enterLastName')}
+                    value={Lastname}
+                    onChangeText={setLastname}
+                    placeholderTextColor="#9CA3AF"
+                  />
                 </View>
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('countryCode')}</Text>
-                <TouchableOpacity style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]} onPress={toggleTeleModal} activeOpacity={0.8}>
+                <TouchableOpacity
+                  style={[styles.buttonPremium, errors.selectedTele && styles.errorInputPremium]}
+                  onPress={toggleTeleModal}
+                  activeOpacity={0.8}
+                >
                   <Text style={styles.buttonTextPremium}>{selectedTele}</Text>
                   <MaterialIcons name="expand-more" size={20} color="#FD501E" />
                 </TouchableOpacity>
@@ -558,25 +767,35 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('phoneNumber')}</Text>
-                <TextInput 
-                  style={styles.inputPremium} 
-                  placeholder={t('enterPhoneNumber')} 
-                  value={tel} 
-                  onChangeText={setTel} 
-                  keyboardType="numeric" 
+                <TextInput
+                  style={styles.inputPremium}
+                  placeholder={t('enterPhoneNumber')}
+                  value={tel}
+                  onChangeText={setTel}
+                  keyboardType="numeric"
                   returnKeyType="done"
-                  placeholderTextColor="#9CA3AF" 
+                  placeholderTextColor="#9CA3AF"
                 />
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('emailAddress')}</Text>
-                <TextInput style={[styles.inputPremium, styles.disabledPremium]} placeholder={t('emailAddress')} value={email} editable={false} placeholderTextColor="#9CA3AF" />
+                <TextInput
+                  style={[styles.inputPremium, styles.disabledPremium]}
+                  placeholder={t('emailAddress')}
+                  value={email}
+                  editable={false}
+                  placeholderTextColor="#9CA3AF"
+                />
               </View>
 
               <View style={styles.inputWrapperPremium}>
                 <Text style={styles.inputLabelPremium}>{t('nationality')}</Text>
-                <TouchableOpacity style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]} onPress={toggleCountryModal} activeOpacity={0.8}>
+                <TouchableOpacity
+                  style={[styles.buttonPremium, errors.selectedCountry && styles.errorInputPremium]}
+                  onPress={toggleCountryModal}
+                  activeOpacity={0.8}
+                >
                   <Text style={styles.buttonTextPremium}>{selectedCountry}</Text>
                   <MaterialIcons name="expand-more" size={20} color="#FD501E" />
                 </TouchableOpacity>
@@ -615,7 +834,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                { opacity: cardAnims[2].opacity, transform: [{ translateY: cardAnims[2].translateY }, { scale: cardAnims[2].scale }] }
+                { opacity: cardAnims[2].opacity, transform: [{ translateY: cardAnims[2].translateY }, { scale: cardAnims[2].scale }] },
               ]}
             >
               <View style={styles.sectionHeaderPremium}>
@@ -634,8 +853,8 @@ const ProfileScreen = ({ navigation }) => {
                     onChangeText={setCurrentPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity onPress={() => setShowCurrentPassword(p => !p)} style={styles.eyeButtonPremium}>
-                    <Entypo name={showCurrentPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                  <TouchableOpacity onPress={() => setShowCurrentPassword((p) => !p)} style={styles.eyeButtonPremium}>
+                    <Entypo name={showCurrentPassword ? 'eye' : 'eye-with-line'} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -651,8 +870,8 @@ const ProfileScreen = ({ navigation }) => {
                     onChangeText={setNewPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity onPress={() => setShowNewPassword(p => !p)} style={styles.eyeButtonPremium}>
-                    <Entypo name={showNewPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                  <TouchableOpacity onPress={() => setShowNewPassword((p) => !p)} style={styles.eyeButtonPremium}>
+                    <Entypo name={showNewPassword ? 'eye' : 'eye-with-line'} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -668,8 +887,8 @@ const ProfileScreen = ({ navigation }) => {
                     onChangeText={setConfirmPassword}
                     placeholderTextColor="#9CA3AF"
                   />
-                  <TouchableOpacity onPress={() => setShowConfirmPassword(p => !p)} style={styles.eyeButtonPremium}>
-                    <Entypo name={showConfirmPassword ? "eye" : "eye-with-line"} size={20} color="#9CA3AF" />
+                    <TouchableOpacity onPress={() => setShowConfirmPassword((p) => !p)} style={styles.eyeButtonPremium}>
+                    <Entypo name={showConfirmPassword ? 'eye' : 'eye-with-line'} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -689,25 +908,34 @@ const ProfileScreen = ({ navigation }) => {
       <Modal visible={isTeleModalVisible} transparent animationType="fade" onRequestClose={toggleTeleModal}>
         <View style={styles.modalOverlayPremium}>
           <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
-            <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']} style={styles.modalGradient}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
+              style={styles.modalGradient}
+            >
               <View style={styles.modalHeaderPremium}>
                 <Text style={styles.modalTitlePremium}>{t('selectCountryCode')}</Text>
                 <TouchableOpacity onPress={toggleTeleModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
+
               <TextInput
                 placeholder={t('searchCountry')}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
-                autoComplete="off" autoCorrect={false} autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                autoCapitalize="none"
               />
+
               <FlatList
                 data={filteredTelePhones}
                 keyExtractor={(_, i) => `tel-${i}`}
-                removeClippedSubviews
+                initialNumToRender={12}
+                windowSize={7}
+                removeClippedSubviews={Platform.OS === 'android'}
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectTele(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>
@@ -727,25 +955,34 @@ const ProfileScreen = ({ navigation }) => {
       <Modal visible={isCountryModalVisible} transparent animationType="fade" onRequestClose={toggleCountryModal}>
         <View style={styles.modalOverlayPremium}>
           <Animated.View style={[styles.modalContentPremium, { transform: [{ scale: scaleAnim }] }]}>
-            <LinearGradient colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']} style={styles.modalGradient}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)']}
+              style={styles.modalGradient}
+            >
               <View style={styles.modalHeaderPremium}>
                 <Text style={styles.modalTitlePremium}>{t('selectNationality')}</Text>
                 <TouchableOpacity onPress={toggleCountryModal} style={styles.closeButtonPremium}>
                   <MaterialIcons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
               </View>
+
               <TextInput
                 placeholder={t('searchCountry')}
                 value={searchQueryCountry}
                 onChangeText={setSearchQueryCountry}
                 style={styles.searchInputPremium}
                 placeholderTextColor="#9CA3AF"
-                autoComplete="off" autoCorrect={false} autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                autoCapitalize="none"
               />
+
               <FlatList
                 data={filteredCountry}
                 keyExtractor={(_, i) => `ct-${i}`}
-                removeClippedSubviews
+                initialNumToRender={12}
+                windowSize={7}
+                removeClippedSubviews={Platform.OS === 'android'}
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.optionItemPremium} onPress={() => handleSelectCountry(item)} activeOpacity={0.7}>
                     <Text style={styles.optionTextPremium}>

@@ -47,7 +47,13 @@
         <data android:scheme="exp+thetrago"/>
       </intent-filter>
     </activity>
-    <activity android:name="com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity" android:exported="false" tools:node="merge" tools:ignore="MissingClass"/>
+    <activity
+      android:name="com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity"
+      android:exported="false"
+      tools:node="replace"
+      tools:replace="android:screenOrientation"
+      android:screenOrientation="unspecified"
+      tools:ignore="MissingClass" />
     <!-- Facebook activities removed because Facebook SDK is not included in this build.
          If you add the Facebook Android SDK, restore these entries. -->
   </application>

@@ -7,8 +7,8 @@ import LogoTheTrago from "./../../components/component/Logo";
 import Step from "../../components/component/Step";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
-import { MaterialIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
@@ -101,6 +101,8 @@ const PaymentScreen = ({ navigation, route }) => {
 
   // Debug logs เพื่อตรวจสอบ infinite loop
   console.log('🔍 PaymentScreen rendered');
+  // Debug: show current booking code from customer context on each render
+  console.log('🔎 customerData.md_booking_code (render):', customerData.md_booking_code);
 
   useEffect(() => {
     console.log('🔍 Payment fee useEffect triggered', selectedOption);
@@ -968,7 +970,7 @@ useEffect(() => {
     AsyncStorage.setItem('savedCards', JSON.stringify(savedCards));
   }, [savedCards]);
 
-  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 0;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 50 : 50;
 
 
   return (
@@ -1029,7 +1031,7 @@ useEffect(() => {
                 {
                   width: '100%',
                   marginLeft: '0%',
-                  paddingTop: insets.top,
+                  paddingTop: insets.top + EXTRA_TOP_GUTTER,
                   borderBottomLeftRadius: getResponsiveSize(40, 35, 30),
                   borderBottomRightRadius: getResponsiveSize(40, 35, 30),
                   paddingBottom: getResponsiveSize(8, 6, 5),
@@ -1202,8 +1204,8 @@ useEffect(() => {
                                     <Text style={styles.savedCardNumber}>{'**** **** **** ' + card.cardNumber.slice(-4)}</Text>
                                     <Text style={styles.savedCardName}>{card.cardName}  |  {card.expiry}</Text>
                                   </View>
-                                  {selectedCardId === card.id && (
-                                    <AntDesign name="checkcircle" size={22} color="#FD501E" style={{ marginLeft: 8 }} />
+                                    {selectedCardId === card.id && (
+                                    <FontAwesome name="check-circle" size={22} color="#FD501E" style={{ marginLeft: 8 }} />
                                   )}
                                   <TouchableOpacity
                                     onPress={() => handleRemoveCard(card.id)}

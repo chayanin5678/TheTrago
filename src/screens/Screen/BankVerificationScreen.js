@@ -34,7 +34,9 @@ const BankVerificationScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Prevent header overlap before measurement by using a conservative default
+  const DEFAULT_HEADER_HEIGHT = Platform.OS === 'android' ? 160 : 160;
+  const [headerHeight, setHeaderHeight] = useState(DEFAULT_HEADER_HEIGHT);
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
   const [selectedBank, setSelectedBank] = useState(t('selectBankName') || 'Select Bank Name');
@@ -775,7 +777,8 @@ const BankVerificationScreen = ({ navigation }) => {
 
       <ScrollView
         style={[styles.scrollViewPremium, { marginTop: 0 }]}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: headerHeight }]}
+        // ensure paddingTop is at least the default to prevent header overlap while measuring
+        contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(headerHeight, DEFAULT_HEADER_HEIGHT) }]}
         showsVerticalScrollIndicator={false}
         bounces
       >
