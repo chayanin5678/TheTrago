@@ -704,6 +704,7 @@ const CustomerInfo = ({ navigation }) => {
       }
       setShowAllErrors(false);
       navigation.navigate('PaymentScreen');
+        // navigation.navigate('ResultScreen', { success: true });
     } else {
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {

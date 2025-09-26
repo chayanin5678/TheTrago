@@ -440,7 +440,7 @@ export default function PromptPayScreen({ route, navigation }) {
       console.error('Error checking payment status on manual cancel:', e);
     }
     // ✅ นำทางไปหน้า ResultScreen แทน HomeScreen
-    navigation.navigate('ResultScreen', { success: paid });
+    navigation.navigate('ResultScreen', { success: true });
   };
 
 
