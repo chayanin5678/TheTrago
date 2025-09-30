@@ -1,0 +1,6 @@
+This patch was disabled because it failed to parse with patch-package.
+
+Original content was preserved outside the repository during the fix session.
+
+To re-enable a corrected patch, create a valid unified diff file at:
+  patches/react-native-screens+4.16.0.patch

@@ -1,0 +1,7 @@
+This patch was intentionally disabled by an automated fix because the original file failed to parse with patch-package.
+
+Location of original content (for manual recovery):
+  - patches/react-native-screens+4.16.0.patch.README.txt
+
+To re-enable, create a valid unified diff at:
+  patches/react-native-screens+4.16.0.patch

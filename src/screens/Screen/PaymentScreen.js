@@ -531,14 +531,29 @@ const PaymentScreen = ({ navigation, route }) => {
   if (!tokenData.success) throw new Error(tokenData.error || "Token API error");
   if (!tokenData.token) throw new Error("Payment token missing from token API response");
 
-      // ✅ 2. ทำการชำระเงิน
+      // ✅ 2. สร้าง Booking ก่อนจะเรียก /charge เพื่อให้มี booking code แล้วส่งไปกับการชำระเงิน
+      const bookingResult = await createBooking();
+      if (!bookingResult || !bookingResult.success) {
+        throw new Error("Failed to create booking before payment");
+      }
+      // บันทึก booking code ไว้ใน context ก่อนชำระเงิน
+      updateCustomerData({
+        md_booking_code: bookingResult.bookingCode,
+        ...(bookingResult.bookingCodeReturn ? { md_booking_code_return: bookingResult.bookingCodeReturn } : {}),
+      });
+
+      // สร้าง return URI ให้ส่งแค่ booking main (bookingCode) เป็น path segment: /redirect/<bookingCode>
+      const bookingMain = bookingResult?.bookingCode || '';
+      const returnUri = bookingMain ? `${ipAddress}/redirect/${bookingMain}` : `${ipAddress}/redirect`;
+      console.log('📤 returnUri:', returnUri, 'bookingMain:', bookingMain);
+
       const paymentResponse = await fetch(`${ipAddress}/charge`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true", },
         body: JSON.stringify({
           amount: totalPaymentNumber, // ส่งยอดรวมจริงเป็น number
           token: tokenData.token,
-          return_uri: `${ipAddress}/redirect`,
+          return_uri: returnUri,
           usePoints: usePoints,
           pointsUsed: pointsToUse,
           pointsDiscount: pointsDiscount,
@@ -566,31 +581,17 @@ const PaymentScreen = ({ navigation, route }) => {
         // total: customerData.total, // ไม่ต้องอัปเดต total
       });
 
-      // ✅ สร้าง Booking และรับ booking code จาก API response
-      const bookingResult = await createBooking();
-
-      if (bookingResult.success) {
-        console.log("✅ Booking created with code:", bookingResult.bookingCode);
-        updateCustomerData({
-          md_booking_code: bookingResult.bookingCode,
-          md_booking_groupcode: bookingResult.bookingCodeReturn,
-        });
-
-        if (paymentResult.authorize_uri) {
-          console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
-          try {
-            await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
-          } catch (linkErr) {
-            console.error('❌ Failed to open authorize URI:', linkErr);
-            Alert.alert(t('warning') || 'Warning', t('cannotOpenLink') || 'ไม่สามารถเปิดลิงก์การชำระเงินได้');
-          }
-        } else {
-          throw new Error("No authorize URI found.");
+      // หลังจากเรียก /charge แล้ว ให้ redirect ไปยัง authorize URI (ถ้ามี)
+      if (paymentResult.authorize_uri) {
+        console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
+        try {
+          await Linking.openURL(paymentResult.authorize_uri); // 👉 เปิดหน้า OTP หรือธนาคาร
+        } catch (linkErr) {
+          console.error('❌ Failed to open authorize URI:', linkErr);
+          Alert.alert(t('warning') || 'Warning', t('cannotOpenLink') || 'ไม่สามารถเปิดลิงก์การชำระเงินได้');
         }
-
-
       } else {
-        throw new Error("Failed to create booking");
+        throw new Error("No authorize URI found.");
       }
       setIsLoading(false);
       console.log("✅ Loading stopped...");
@@ -728,20 +729,6 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
 
-  const updatestatus = async (bookingCode) => {
-    try {
-      console.log("📌 Creating Booking with:", bookingCode);
-      await axios.post(`${ipAddress}/statuspayment`, {
-        md_booking_code: bookingCode,
-
-      });
-
-      console.log("✅ Booking update status successfully");
-    } catch (error) {
-      console.error("❌ Error submitting booking:", error);
-    }
-  };
-
 
 
 
@@ -772,21 +759,21 @@ useEffect(() => {
         //       await updatestatus(code);
         //     }
 
-        //     // อัปเดตคะแนน
-        //     const pointsToDeduct = usePoints ? pointsToUse : 0;
-        //     const pointsToAdd = pointsToEarn || 0;
-        //     if (pointsToDeduct > 0 || pointsToAdd > 0) {
-        //       await updateUserPoints(pointsToDeduct, pointsToAdd);
-        //       console.log(`✅ Points updated: -${pointsToDeduct} +${pointsToAdd}`);
-        //     }
-        //   } catch (err) {
-        //     console.error("❌ Error managing points/booking:", err);
-        //     Alert.alert(
-        //       t('pointsWarning') || "Points Warning",
-        //       t('pointsErrorMessage') ||
-        //         "Payment successful but there was an issue with points/booking management. Please contact support if needed."
-        //     );
-        //   }
+            // อัปเดตคะแนน
+            const pointsToDeduct = usePoints ? pointsToUse : 0;
+            const pointsToAdd = pointsToEarn || 0;
+            if (pointsToDeduct > 0 || pointsToAdd > 0) {
+              await updateUserPoints(pointsToDeduct, pointsToAdd);
+              console.log(`✅ Points updated: -${pointsToDeduct} +${pointsToAdd}`);
+            }
+          // } catch (err) {
+          //   console.error("❌ Error managing points/booking:", err);
+          //   Alert.alert(
+          //     t('pointsWarning') || "Points Warning",
+          //     t('pointsErrorMessage') ||
+          //       "Payment successful but there was an issue with points/booking management. Please contact support if needed."
+          //   );
+          // }
 
         //   // ส่งอีเมลตั๋วผ่าน endpoint สำหรับทุก booking code (depart + return)
         //   try {

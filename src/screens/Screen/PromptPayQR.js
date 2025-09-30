@@ -182,22 +182,7 @@ export default function PromptPayScreen({ route, navigation }) {
             const bookingCodeToUse = customerData.md_booking_code;
             const bookingCodeReturnToUse = customerData.md_booking_code_return;
 
-            if (!bookingCodeToUse) {
-              console.warn("⚠️ No booking code found - PromptPay payment will be handled by PromptPayQR screen");
-              // สำหรับ PromptPay ที่ยังไม่มี booking code ให้ไปหน้า success ได้เลย
-              // เพราะการสร้าง booking จะทำในหน้า PromptPayQR
-            } else {
-              console.log("✅ Using booking code from payment:", bookingCodeToUse);
-
-              // ✅ อัปเดตสถานะ booking ด้วย booking code ที่มีอยู่ (สำหรับ Credit Card)
-              await updatestatus(bookingCodeToUse);
-              console.log("✅ Booking status updated with code:", bookingCodeToUse);
-            }
-
-            if (bookingCodeReturnToUse) {
-              await updatestatus(bookingCodeReturnToUse);
-            }
-            console.log("✅ Booking status updated with return code:", bookingCodeReturnToUse);
+    
 
             // ✅ อัปเดตคะแนนทันทีเมื่อ check-charge success
             try {
@@ -216,21 +201,7 @@ export default function PromptPayScreen({ route, navigation }) {
               );
             }
 
-            // ✅ อัปเดตสถานะการชำระเงิน (ไม่อัปเดตคะแนนใน updatestatus แล้ว)
-            // ส่งอีเมลตั๋วผ่าน endpoint สำหรับ booking code ที่มีอยู่
-            try {
-              const sendCodes = [customerData.md_booking_code, customerData.md_booking_code_return].filter(Boolean);
-              for (const code of sendCodes) {
-                try {
-                  await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
-                  console.log('✅ PromptPay: Sent ticket email for code:', code);
-                } catch (err) {
-                  console.error('❌ PromptPay: Failed to send ticket for code:', code, err);
-                }
-              }
-            } catch (err) {
-              console.error('❌ PromptPay: Error while sending ticket emails:', err);
-            }
+ 
             navigation.navigate("ResultScreen", { success: true });
             if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
           }
@@ -374,22 +345,6 @@ export default function PromptPayScreen({ route, navigation }) {
 
 
 
-  const updatestatus = async (bookingCode) => {
-    try {
-      console.log("📌 Updating booking status with:", bookingCode);
-
-      // ✅ อัปเดตสถานะการชำระเงินเท่านั้น (คะแนนอัปเดตใน check-charge แล้ว)
-      await axios.post(`${ipAddress}/statuspayment`, {
-        md_booking_code: bookingCode,
-      });
-
-      console.log("✅ Booking status updated successfully");
-
-    } catch (error) {
-      console.error("❌ Error updating booking status:", error);
-    }
-  };
-
 
   const handlePress = async () => {
     if (intervalId) {
@@ -421,19 +376,15 @@ export default function PromptPayScreen({ route, navigation }) {
         const bookingCodeFromCreateBooking = actualBookingCode;
         await updatestatus(bookingCodeFromCreateBooking);
 
-        // ส่งอีเมลตั๋วผ่าน endpoint สำหรับ booking code ที่สร้างขึ้น
+        // ส่งอีเมลตั๋ว: ปิดการส่งอีเมลแบบ manual ตามคำขอ (disabled)
         try {
           const sendCodes = [bookingCodeFromCreateBooking, customerData.md_booking_code_return].filter(Boolean);
           for (const code of sendCodes) {
-            try {
-              await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
-              console.log('✅ PromptPay manual: Sent ticket email for code:', code);
-            } catch (err) {
-              console.error('❌ PromptPay manual: Failed to send ticket for code:', code, err);
-            }
+            // previously: await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
+            console.log('ℹ️ Ticket email sending disabled (manual) for code:', code);
           }
         } catch (err) {
-          console.error('❌ PromptPay manual: Error while sending ticket emails:', err);
+          console.warn('⚠️ Ticket email manual loop skipped due to disabled sending', err);
         }
       }
     } catch (e) {
