@@ -355,7 +355,7 @@ const CustomerInfo = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [setError] = useState('');
   const [hasToken, setHasToken] = useState(false);
-  const [refundOption, setRefundOption] = useState('70'); // '100' | '70' | '50'
+  const [refundOption, setRefundOption] = useState('50'); // '100' | '70' | '50'
 
   // Localized refund option labels (use t with fallback)
   const refundOptions = [
@@ -1756,7 +1756,7 @@ const CustomerInfo = ({ navigation }) => {
               ))}
 
               {/* Refund options section */}
-              <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
+              {/* <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
                 <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
                 <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
 
@@ -1793,7 +1793,7 @@ const CustomerInfo = ({ navigation }) => {
                       {t('refundInfo') || 'You will receive a refund of the fare (excluding service charges and fees) if the cancellation is made at least 72 hours before departure. The refund will be credited to your original payment method.'}
                     </Text>
                   </View>
-              </View>
+              </View> */}
 
               <View style={styles.promo}>
                 <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>

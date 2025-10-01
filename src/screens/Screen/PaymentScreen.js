@@ -554,10 +554,9 @@ const PaymentScreen = ({ navigation, route }) => {
           amount: totalPaymentNumber, // ส่งยอดรวมจริงเป็น number
           token: tokenData.token,
           return_uri: returnUri,
-          usePoints: usePoints,
-          pointsUsed: pointsToUse,
-          pointsDiscount: pointsDiscount,
-          userId: customerData.customer_id, // ส่ง customer_id เพื่อหักคะแนน
+          booking: customerData.md_booking_code,
+          randomorder: Math.floor(100000 + Math.random() * 900000), // สุ่มเลข 6 หลัก
+          currency: customerData.currency || 'THB',
         }),
       });
 
@@ -742,82 +741,9 @@ useEffect(() => {
 
     try {
       if (url.includes("payment/success")) {
-        // // ตรวจสถานะชำระเงินจากเซิร์ฟเวอร์
-        // const res = await axios.post(`${ipAddress}/check-charge`, {
-        //   charge_id: customerData.md_booking_paymentid,
-        // });
-        // console.log("LOG Payment Status Response:", JSON.stringify(res.data));
-
-        // if (res.data?.success && res.data?.status === "successful") {
-        //   try {
-        //     // อัปเดตสถานะ booking ถ้ามีโค้ด
-        //     const codes = [
-        //       customerData.md_booking_code,
-        //       customerData.md_booking_code_return,
-        //     ].filter(Boolean);
-        //     for (const code of codes) {
-        //       await updatestatus(code);
-        //     }
-
-            // อัปเดตคะแนน
-            const pointsToDeduct = usePoints ? pointsToUse : 0;
-            const pointsToAdd = pointsToEarn || 0;
-            if (pointsToDeduct > 0 || pointsToAdd > 0) {
-              await updateUserPoints(pointsToDeduct, pointsToAdd);
-              console.log(`✅ Points updated: -${pointsToDeduct} +${pointsToAdd}`);
-            }
-          // } catch (err) {
-          //   console.error("❌ Error managing points/booking:", err);
-          //   Alert.alert(
-          //     t('pointsWarning') || "Points Warning",
-          //     t('pointsErrorMessage') ||
-          //       "Payment successful but there was an issue with points/booking management. Please contact support if needed."
-          //   );
-          // }
-
-        //   // ส่งอีเมลตั๋วผ่าน endpoint สำหรับทุก booking code (depart + return)
-        //   try {
-        //     const sendCodes = [
-        //       customerData.md_booking_code,
-        //       customerData.md_booking_code_return,
-        //     ].filter(Boolean);
-        //     for (const code of sendCodes) {
-        //       try {
-        //         await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
-        //        
-        //       } catch (err) {
-        //       
-        //       }
-        //     }
-        //   } catch (err) {
-        //   
-        //   }
-
-        //   // ไปยังหน้าที่ผู้ใช้ต้องการ: กลับไปหน้า Payment แล้วเปิด PromptPay ถา้ต้องการ
-        //   try {
-        //     // กลับไปหน้า Payment (ถ้ายังอยู่ในสแต็ก ให้ไปแทน)
-        //     navigation.navigate('PaymentScreen');
-
-        //     // ถ้าการชำระเงินเป็น PromptPay (payment type 2) ให้ไปหน้าต่อไป
-        //     // เงื่อนไขยุบเหลือเช็คเฉพาะ `customerData.paymenttype` เพื่อป้องกันการนำทางผิดในกรณี card flow
-        //     if (Number(customerData.paymenttype) === 2) {
-        //       // ส่งพาราม์ให้ PromptPayScreen เหมือนการเรียกปกติ
-        //       navigation.navigate('PromptPayScreen', {
-        //         Paymenttotal: customerData.total,
-        //         selectedOption: customerData.paymenttype || selectedOption,
-        //         usePoints,
-        //         pointsToUse,
-        //         pointsToEarn,
-        //       });
-        //     }
-        //   } catch (navErr) {
-        //     console.error('Navigation error after payment success:', navErr);
-        //     // fallback: ไปหน้า Result
-        //     navigation.navigate('ResultScreen', { success: true });
-        //   }
-        // } else {
+      
           navigation.navigate("ResultScreen", { success: true });
-        // }
+
       } else if (url.includes("payment/failure")) {
         Alert.alert(
           t('paymentFailed'),

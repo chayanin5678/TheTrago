@@ -100,32 +100,31 @@ export default function PromptPayScreen({ route, navigation }) {
         console.log("- paymenttype:", customerData.paymenttype);
         console.log("- paymentfee:", customerData.paymentfee);
 
+        // สร้าง booking ก่อนเรียก create-promptpay
+        const bookingResult = await createBooking();
+
+        if (!bookingResult.success) {
+          throw new Error(bookingResult.message || 'Failed to create booking');
+        }
+
+        console.log("✅ Booking created before PromptPay with code:", bookingResult.bookingCode);
+        updateCustomerData({
+          md_booking_code: bookingResult.bookingCode,
+          md_booking_groupcode: bookingResult.bookingCodeReturn,
+        });
+        setActualBookingCode(bookingResult.bookingCode);
+
+        // เมื่อ booking สำเร็จแล้ว สร้าง promptpay charge
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
           amount: parseFloat(qrpayment),
-          currency: "thb",
+          currency: customerData.currency || "THB",
+          bookingcode: customerData.md_booking_code,
+          randomorder: Math.floor(100000 + Math.random() * 900000),
+
         });
 
         setChargeid(response.data.charge_id);
         setQrUri(response.data.qr_code);
-
-        // ✅ สร้าง booking และได้ booking code จาก API เท่านั้น
-        const bookingResult = await createBooking();
-
-        if (bookingResult.success) {
-          console.log("✅ PromptPay Booking created with code:", bookingResult.bookingCode);
-          updateCustomerData({
-            md_booking_code: bookingResult.bookingCode,
-            md_booking_groupcode: bookingResult.bookingCodeReturn,
-          });
-
-
-          // ✅ ใช้ booking code จาก createBooking API response เท่านั้น
-          const bookingCodeFromAPI = bookingResult.bookingCode;
-          setActualBookingCode(bookingCodeFromAPI); // เก็บไว้ใน state
-
-        } else {
-          throw new Error("Failed to create PromptPay booking");
-        }
 
       } catch (error) {
         console.error("❌ Error in loadAll:", error);
@@ -178,29 +177,6 @@ export default function PromptPayScreen({ route, navigation }) {
           console.log("Payment Status Response:", res.data);
 
           if (res.data.success && res.data.status === "successful") {
-            // ✅ ใช้ booking code ที่ได้จาก createBooking เท่านั้น
-            const bookingCodeToUse = customerData.md_booking_code;
-            const bookingCodeReturnToUse = customerData.md_booking_code_return;
-
-    
-
-            // ✅ อัปเดตคะแนนทันทีเมื่อ check-charge success
-            try {
-              const pointsToDeduct = usePoints ? pointsToUse : 0;
-              const pointsToAdd = pointsToEarn || 0;
-
-              if (pointsToDeduct > 0 || pointsToAdd > 0) {
-                await updateUserPoints(pointsToDeduct, pointsToAdd);
-                console.log(`✅ PromptPay Points updated after check-charge success: -${pointsToDeduct} +${pointsToAdd}`);
-              }
-            } catch (pointsError) {
-              console.error("❌ Error updating points after check-charge:", pointsError);
-              Alert.alert(
-                t('pointsWarning') || "Points Warning",
-                t('pointsErrorMessage') || "Payment successful but there was an issue with points. Please contact support if needed."
-              );
-            }
-
  
             navigation.navigate("ResultScreen", { success: true });
             if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
@@ -350,48 +326,19 @@ export default function PromptPayScreen({ route, navigation }) {
     if (intervalId) {
       clearInterval(intervalId); // หยุด interval ทันทีเมื่อกด Cancel
     }
-    let paid = false;
     try {
       // ตรวจสอบสถานะล่าสุดก่อน
       const res = await axios.post(`${ipAddress}/check-charge`, {
         charge_id: chargeid,
       });
       if (res.data.success && res.data.status === "successful") {
-        paid = true;
-
-        // ✅ อัปเดตคะแนนทันทีเมื่อ check-charge success
-        try {
-          const pointsToDeduct = usePoints ? pointsToUse : 0;
-          const pointsToAdd = pointsToEarn || 0;
-
-          if (pointsToDeduct > 0 || pointsToAdd > 0) {
-            await updateUserPoints(pointsToDeduct, pointsToAdd);
-            console.log(`✅ PromptPay Points updated in handlePress after check-charge success: -${pointsToDeduct} +${pointsToAdd}`);
-          }
-        } catch (pointsError) {
-          console.error("❌ Error updating points in handlePress:", pointsError);
-        }
-
-        // ✅ ใช้ booking code ที่ได้จาก createBooking เท่านั้น
-        const bookingCodeFromCreateBooking = actualBookingCode;
-        await updatestatus(bookingCodeFromCreateBooking);
-
-        // ส่งอีเมลตั๋ว: ปิดการส่งอีเมลแบบ manual ตามคำขอ (disabled)
-        try {
-          const sendCodes = [bookingCodeFromCreateBooking, customerData.md_booking_code_return].filter(Boolean);
-          for (const code of sendCodes) {
-            // previously: await axios.post(`https://thetrago.com/ferry/sendticket/${code}`);
-            console.log('ℹ️ Ticket email sending disabled (manual) for code:', code);
-          }
-        } catch (err) {
-          console.warn('⚠️ Ticket email manual loop skipped due to disabled sending', err);
-        }
+        navigation.navigate('ResultScreen', { success: true });
       }
     } catch (e) {
       console.error('Error checking payment status on manual cancel:', e);
     }
     // ✅ นำทางไปหน้า ResultScreen แทน HomeScreen
-    navigation.navigate('ResultScreen', { success: true });
+    navigation.navigate('ResultScreen', { success: false });
   };
 
 
