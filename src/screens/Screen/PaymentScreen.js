@@ -299,6 +299,16 @@ const PaymentScreen = ({ navigation, route }) => {
     return pointsEarned;
   };
 
+  // Helper: generate n-digit random numeric string (first digit non-zero)
+  const generateRandomDigits = (n) => {
+    if (!n || n <= 0) return '';
+    let s = '' + (Math.floor(Math.random() * 9) + 1); // first digit 1-9
+    for (let i = 1; i < n; i++) {
+      s += Math.floor(Math.random() * 10);
+    }
+    return s;
+  };
+
   // Update points (both deduct and add in single API call)
   const updateUserPoints = async (pointsToDeduct = 0, pointsToAdd = 0) => {
     try {
@@ -554,8 +564,8 @@ const PaymentScreen = ({ navigation, route }) => {
           amount: totalPaymentNumber, // ส่งยอดรวมจริงเป็น number
           token: tokenData.token,
           return_uri: returnUri,
-          booking: customerData.md_booking_code,
-          randomorder: Math.floor(100000 + Math.random() * 900000), // สุ่มเลข 6 หลัก
+          booking: bookingMain,
+          randomorder: generateRandomDigits(16), // สุ่มเลข 16 หลัก
           currency: customerData.currency || 'THB',
         }),
       });

@@ -84,7 +84,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 android {
     ndkVersion rootProject.ext.ndkVersion
 
-    compileSdkVersion 35  // Use SDK 35 to support Java 20 and required libraries
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     java {
         toolchain {
@@ -96,14 +96,31 @@ android {
         jvmTarget = "17"  // Ensure Kotlin uses JVM 17 to match Java version
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     namespace 'com.chayanin5678.TheTrago'
 
     defaultConfig {
-    applicationId 'com.chayanin5678.TheTrago'
-        minSdkVersion 24
-        targetSdkVersion 35  // Use SDK 35
+        applicationId 'com.chayanin5678.TheTrago'
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 54
         versionName "1.5.4"
+        
+        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "false")
+        buildConfigField("boolean", "IS_HERMES_ENABLED", "true")
+        
+        // Add multidex support for apps with 64K+ methods
+        multiDexEnabled true
+        
+        // Increase memory for dex operations
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     signingConfigs {
@@ -124,12 +141,15 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
         }
         release {
             signingConfig signingConfigs.release
-            shrinkResources true
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // Temporarily disable minification to test if ProGuard is causing crash
+            shrinkResources false
+            minifyEnabled false
+            // proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
@@ -150,6 +170,9 @@ dependencies {
     // AndroidX core ktx for WindowCompat and WindowInsetsControllerCompat
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.annotation:annotation:1.1.0'
+    
+    // Add multidex support
+    implementation 'androidx.multidex:multidex:2.0.1'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

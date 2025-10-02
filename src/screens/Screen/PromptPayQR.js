@@ -37,6 +37,18 @@ export default function PromptPayScreen({ route, navigation }) {
   const [intervalId, setIntervalId] = useState(null);
   const [actualBookingCode, setActualBookingCode] = useState(null); // เก็บ booking code ที่สร้างจริง
 
+  // สร้าง random order id แบบตัวเลขความยาว n (ไม่ขึ้นต้นด้วย 0)
+  const generateRandomDigits = (n) => {
+    if (!n || n <= 0) return '';
+    let result = '';
+    // ให้หลักแรกเป็น 1-9
+    result += String(Math.floor(Math.random() * 9) + 1);
+    for (let i = 1; i < n; i++) {
+      result += String(Math.floor(Math.random() * 10));
+    }
+    return result;
+  };
+
   const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 16;
   // Function สำหรับการอัปเดตคะแนน
   const updateUserPoints = async (pointsToDeduct, pointsToAdd) => {
@@ -115,12 +127,12 @@ export default function PromptPayScreen({ route, navigation }) {
         setActualBookingCode(bookingResult.bookingCode);
 
         // เมื่อ booking สำเร็จแล้ว สร้าง promptpay charge
+        // ส่ง booking_code ที่ได้จาก createBooking โดยตรง (หลีกเลี่ยง race กับ customerData)
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
           amount: parseFloat(qrpayment),
           currency: customerData.currency || "THB",
-          bookingcode: customerData.md_booking_code,
-          randomorder: Math.floor(100000 + Math.random() * 900000),
-
+          booking_code: bookingResult.bookingCode,
+          randomorder: generateRandomDigits(16),
         });
 
         setChargeid(response.data.charge_id);

@@ -23,3 +23,79 @@
 # are referenced at runtime in some libraries but not packaged here.
 -dontwarn io.card.payment.**
 -dontwarn org.joda.convert.**
+
+# Expo modules
+-keep class expo.modules.** { *; }
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# React Native
+-keep,allowobfuscation @interface com.facebook.proguard.annotations.DoNotStrip
+-keep,allowobfuscation @interface com.facebook.proguard.annotations.KeepGettersAndSetters
+-keep @com.facebook.proguard.annotations.DoNotStrip class *
+-keepclassmembers class * {
+    @com.facebook.proguard.annotations.DoNotStrip *;
+}
+
+# React Native New Architecture
+-keep class com.facebook.react.fabric.** { *; }
+-keep class com.facebook.react.uimanager.** { *; }
+-keep class com.facebook.react.bridge.** { *; }
+
+# Hermes
+-keep class com.facebook.hermes.** { *; }
+
+# Google Sign-In
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# Apple Authentication (even if unused, prevent R8 from breaking stubs)
+-keep class com.invertase.** { *; }
+-dontwarn com.invertase.**
+
+# Reanimated worklets
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.swmansion.common.** { *; }
+
+# React Native Screens
+-keep class com.swmansion.rnscreens.** { *; }
+
+# React Native Gesture Handler
+-keep class com.swmansion.gesturehandler.** { *; }
+
+# Lottie
+-keep class com.airbnb.lottie.** { *; }
+
+# Network info
+-keep class com.pusherman.networkinfo.** { *; }
+
+# Omise
+-keep class co.omise.** { *; }
+-dontwarn co.omise.**
+
+# WebView
+-keep class com.reactnativecommunity.webview.** { *; }
+
+# AsyncStorage
+-keep class com.reactnativecommunity.asyncstorage.** { *; }
+
+# Picker
+-keep class com.reactnativecommunity.picker.** { *; }
+-keep class com.beefe.picker.** { *; }
+
+# NetInfo
+-keep class com.reactnativecommunity.netinfo.** { *; }
+
+# DateTime Picker
+-keep class com.reactcommunity.rndatetimepicker.** { *; }
+
+# Facebook SDK
+-keep class com.facebook.** { *; }
+-dontwarn com.facebook.**
+
+# Remove logging in release
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}
