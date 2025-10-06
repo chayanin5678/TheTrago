@@ -106,8 +106,8 @@ android {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 54
-        versionName "1.5.4"
+        versionCode 56
+        versionName "1.5.6"
         
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "false")
         buildConfigField("boolean", "IS_HERMES_ENABLED", "true")
@@ -146,13 +146,17 @@ android {
         }
         release {
             signingConfig signingConfigs.release
-            // Temporarily disable minification to test if ProGuard is causing crash
-            shrinkResources false
-            minifyEnabled false
-            // proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            // Enable minification with R8 to reduce APK size
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
+
+    // Note: ABI splits are disabled for App Bundle builds
+    // Google Play will automatically generate optimized APKs for each device configuration
+    // If you need to generate split APKs directly, use assembleRelease instead of bundleRelease
 
     packagingOptions {
         jniLibs {

@@ -99,3 +99,32 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# Keep source file names and line numbers for better crash reports
+-keepattributes SourceFile,LineNumberTable
+
+# Keep crash reporting attributes
+-keepattributes *Annotation*,Signature,Exception
+
+# Repackage classes into a single package to reduce APK size
+-repackageclasses 'o'
+
+# Allow aggressive optimization
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+
+# Keep native methods
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}
+
+# Keep serialization code
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}

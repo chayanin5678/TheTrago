@@ -1540,6 +1540,47 @@ const CustomerInfo = ({ navigation }) => {
                 </>
               )}
 
+                 {/* Refund options section */}
+              <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
+                <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
+                <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
+
+                  {refundOptions.map(opt => (
+                    <TouchableOpacity
+                      key={opt.key}
+                      onPress={() => setRefundOption(opt.key)}
+                      style={{
+                        width: '100%',
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        paddingVertical: hp('2%'),
+                        paddingHorizontal: wp('3%'),
+                        marginTop: wp('3%'),
+                        borderRadius: wp('2%'),
+                        borderWidth: refundOption === opt.key ? 2 : 1,
+                        borderColor: refundOption === opt.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
+                        backgroundColor: '#fff'
+                      }}
+                    >
+                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: refundOption === opt.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
+                        {refundOption === opt.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: '700', color: '#111827' }}>{opt.title}</Text>
+                        <Text style={{ color: '#FD501E', fontWeight: '700', marginTop: hp('0.4%') }}>{opt.subtitle}</Text>
+                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{opt.note}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+
+                  <View style={{ marginTop: hp('2%'), padding: wp('3%'), backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: wp('2%') }}>
+                    <Text style={{ color: '#6B7280', fontSize: wp('3%') }}>
+                      {t('refundInfo') || 'You will receive a refund of the fare (excluding service charges and fees) if the cancellation is made at least 72 hours before departure. The refund will be credited to your original payment method.'}
+                    </Text>
+                  </View>
+              </View>
+
+
               {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => (
                 <View key={index} style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
                   <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
@@ -1755,46 +1796,7 @@ const CustomerInfo = ({ navigation }) => {
                 </View>
               ))}
 
-              {/* Refund options section */}
-              {/* <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
-                <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
-                <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
-
-                  {refundOptions.map(opt => (
-                    <TouchableOpacity
-                      key={opt.key}
-                      onPress={() => setRefundOption(opt.key)}
-                      style={{
-                        width: '100%',
-                        flexDirection: 'row',
-                        alignItems: 'flex-start',
-                        paddingVertical: hp('2%'),
-                        paddingHorizontal: wp('3%'),
-                        marginTop: wp('3%'),
-                        borderRadius: wp('2%'),
-                        borderWidth: refundOption === opt.key ? 2 : 1,
-                        borderColor: refundOption === opt.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
-                        backgroundColor: '#fff'
-                      }}
-                    >
-                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: refundOption === opt.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
-                        {refundOption === opt.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: '700', color: '#111827' }}>{opt.title}</Text>
-                        <Text style={{ color: '#FD501E', fontWeight: '700', marginTop: hp('0.4%') }}>{opt.subtitle}</Text>
-                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{opt.note}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-
-                  <View style={{ marginTop: hp('2%'), padding: wp('3%'), backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: wp('2%') }}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3%') }}>
-                      {t('refundInfo') || 'You will receive a refund of the fare (excluding service charges and fees) if the cancellation is made at least 72 hours before departure. The refund will be credited to your original payment method.'}
-                    </Text>
-                  </View>
-              </View> */}
-
+           
               <View style={styles.promo}>
                 <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
 
