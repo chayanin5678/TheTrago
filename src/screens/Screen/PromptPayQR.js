@@ -281,7 +281,7 @@ export default function PromptPayScreen({ route, navigation }) {
 
         paymentfee: parseInt(customerData.md_booking_payfee || customerData.paymentfee) || 0,
         promotioncode: customerData.md_booking_promocode || '',
-        refund: '',
+        refund: customerData.md_booking_refund || '',
         insurance: '',
 
         credit: parseInt(Number(pointsToEarn || 0).toFixed(2)),

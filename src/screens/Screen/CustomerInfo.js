@@ -352,17 +352,69 @@ const CustomerInfo = ({ navigation }) => {
   const [showAllErrors, setShowAllErrors] = useState(false);
   const [PriceDepart, setPriceDepart] = useState([]);
   const [PriceReturn, setPriceReturn] = useState([]);
+  // Cache refund options so getRefundOptions is computed only once on initial load
+  const [computedRefundOptions, setComputedRefundOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [setError] = useState('');
   const [hasToken, setHasToken] = useState(false);
   const [refundOption, setRefundOption] = useState('50'); // '100' | '70' | '50'
+  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState(null); // 'A' | 'B' | 'C'
+  const [insuranceHolderName1, setInsuranceHolderName1] = useState('');
+  const [insuranceDobDay, setInsuranceDobDay] = useState('');
+  const [insuranceDobMonth, setInsuranceDobMonth] = useState('');
+  const [insuranceDobYear, setInsuranceDobYear] = useState('');
 
-  // Localized refund option labels (use t with fallback)
-  const refundOptions = [
-    { key: '100', title: t('refundOption100_title') || '100% Refund', subtitle: t('refundOption100_subtitle') || 'Refund amount : THB827.52', note: t('refundOption100_note') || 'THB124.13 per person' },
-    { key: '70', title: t('refundOption70_title') || '70% Refund', subtitle: t('refundOption70_subtitle') || 'Refund amount : THB579.26', note: t('refundOption70_note') || 'THB41.38 per person' },
-    { key: '50', title: t('refundOption50_title') || '50% Refund', subtitle: t('refundOption50_subtitle') || 'Refund amount : THB413.76', note: t('refundOption50_note') || 'THB0.00 per person' },
-  ];
+  // Function to get refund options with calculated amounts based on totalbooking
+  const getRefundOptions = (totalbooking, symbol) => {
+    const total = parseFloat(totalbooking) || 0;
+    const totalPassengers = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
+    
+  // Calculate refund amounts for each option
+  const refund100 = total;
+  const refund70 = total * 0.7;
+  const refund50 = total * 0.5;
+
+
+  const passengers = totalPassengers > 0 ? totalPassengers : 1; // avoid division by zero
+  const perPerson100 = (total * 0.15) / passengers;
+  const perPerson70 = (total * 0.05) / passengers;
+  const perPerson50 = 0;
+
+  return [
+      { 
+        key: '100', 
+        title: t('refundOption100_title') || '100% Refund', 
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund100.toFixed(2))}`, 
+        note: `${symbol} ${formatNumberWithComma(perPerson100.toFixed(2))} ${t('perPerson') || 'per person'}` 
+      },
+      { 
+        key: '70', 
+        title: t('refundOption70_title') || '70% Refund', 
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund70.toFixed(2))}`, 
+        note: `${symbol} ${formatNumberWithComma(perPerson70.toFixed(2))} ${t('perPerson') || 'per person'}` 
+      },
+      { 
+        key: '50', 
+        title: t('refundOption50_title') || '50% Refund', 
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund50.toFixed(2))}`, 
+        note: `${symbol} ${formatNumberWithComma(perPerson50.toFixed(2))} ${t('perPerson') || 'per person'}` 
+      },
+    ];
+  };
+
+  // Map refund option keys to the numeric values required by backend
+  // '100' -> 15, '70' -> 5, '50' -> 0
+  const getRefundOptionValue = (key) => {
+    switch (String(key)) {
+      case '100':
+        return 15;
+      case '70':
+        return 5;
+      case '50':
+      default:
+        return 0;
+    }
+  };
 
   // Check if user has token (is logged in)
   const checkToken = async () => {
@@ -531,6 +583,7 @@ const CustomerInfo = ({ navigation }) => {
           dropoffdepart1: customerData.dropoffDepartId,
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: 0,
+           refund: getRefundOptionValue(refundOption),
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -573,6 +626,7 @@ const CustomerInfo = ({ navigation }) => {
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: 0,
           promotioncode: code,
+          refund: getRefundOptionValue(refundOption),
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -688,7 +742,9 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_whatsapp: isWhatsapp,
         md_booking_promocode: code,
         md_booking_promoprice: PriceDepart[0].totalDepart.promotionprice,
-        md_booking_refundOption: refundOption
+        md_booking_refund: getRefundOptionValue(refundOption),
+        md_booking_refundpriceDepart: PriceDepart[0].totalDepart.pricerefund_insert || 0,
+        md_booking_refundpriceReturn: PriceDepart[0].totalReturn.pricerefund_insert || 0,
       });
 
       if (Object.keys(newErrors).length > 0) {
@@ -712,8 +768,8 @@ const CustomerInfo = ({ navigation }) => {
         return;
       }
       setShowAllErrors(false);
-      navigation.navigate('PaymentScreen');
-        // navigation.navigate('ResultScreen', { success: true });
+      // navigation.navigate('PaymentScreen');
+        navigation.navigate('ResultScreen', { success: true });
     } else {
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
@@ -773,7 +829,9 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_whatsapp: isWhatsapp,
         md_booking_promocode: code,
         md_booking_promoprice: PriceDepart[0].totalDepart.promotionprice,
-        md_booking_refundOption: refundOption
+        md_booking_refund: getRefundOptionValue(refundOption),
+        md_booking_refundpriceDepart: PriceDepart[0].totalDepart.pricerefund_insert || 0,
+        md_booking_refundpriceReturn: PriceDepart[0].totalReturn.pricerefund_insert || 0,
       });
       navigation.navigate('PaymentScreen');
     }
@@ -781,10 +839,6 @@ const CustomerInfo = ({ navigation }) => {
 
   const toggleModal = () => setModalVisible(!isModalVisible);
   const toggleTeleModal = () => setIsTeleModalVisible(!isTeleModalVisible);
-
-  function formatNumber(value) {
-    return parseFloat(value).toFixed(2);
-  }
 
   function formatNumberWithComma(value) {
     if (!value) return "0.00";
@@ -794,12 +848,6 @@ const CustomerInfo = ({ navigation }) => {
     });
     return formattedValue;
   }
-
-  const calculateDiscountedPrice = (price) => {
-    if (!price || isNaN(price)) return "N/A";
-    const discountedPrice = price * 0.9;
-    return discountedPrice.toFixed(2);
-  };
 
   // รับค่า EN
   const handleSelectTitle = (value) => {
@@ -905,7 +953,15 @@ const CustomerInfo = ({ navigation }) => {
     };
 
     loadData();
-  }, [customerData.timeTableReturnId]);
+  }, [customerData.timeTableReturnId, refundOption]);
+
+  // Compute refund options once after PriceDepart is populated
+  useEffect(() => {
+    if (computedRefundOptions.length === 0 && Array.isArray(PriceDepart) && PriceDepart.length > 0) {
+      const arr = PriceDepart.map((all) => getRefundOptions(all.totalbooking, customerData.symbol));
+      setComputedRefundOptions(arr);
+    }
+  }, [PriceDepart, computedRefundOptions.length, customerData.symbol]);
 
     const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
@@ -1541,7 +1597,17 @@ const CustomerInfo = ({ navigation }) => {
               )}
 
                  {/* Refund options section */}
-              <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
+                    {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => {
+              // Use cached refund options (computed once on initial load) if available,
+              // otherwise compute on the fly as a fallback.
+              const refundOptions = (Array.isArray(computedRefundOptions) && computedRefundOptions[index])
+                ? computedRefundOptions[index]
+                : getRefundOptions(all.totalbooking, customerData.symbol);
+              
+              return (
+              <View key={index} >
+                {(timetableDepart[0].md_timetable_refundable === 1 || timetableReturn[0].md_timetable_refundable === 1) && (
+              <View  style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
                 <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
                 <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
 
@@ -1580,9 +1646,45 @@ const CustomerInfo = ({ navigation }) => {
                   </View>
               </View>
 
+                )}
+                {/* Insurance / Trip Protection selection block (Plan A/B/C) */}
+                <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', marginTop: hp('2%') }]}> 
+                  <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('TripProtection') || 'Trip Protection'}</Text>
+                  <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('insuranceProvidedBy') || 'รับประกันโดย CHUBB'}</Text>
 
-              {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => (
-                <View key={index} style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
+                  {[
+                    { key: 'A', title: 'Plan A', coverage: 'ความคุ้มครอง THB 500,000 / ท่าน', price: 40 },
+                    { key: 'B', title: 'Plan B', coverage: 'ความคุ้มครอง THB 1,000,000 / ท่าน', price: 60 },
+                    { key: 'C', title: 'Plan C', coverage: 'ความคุ้มครอง THB 1,500,000 / ท่าน', price: 80 },
+                  ].map(plan => (
+                    <TouchableOpacity
+                      key={plan.key}
+                      onPress={() => setSelectedInsurancePlan(plan.key)}
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#fff',
+                        borderRadius: wp('3%'),
+                        padding: wp('3%'),
+                        marginBottom: hp('1.2%'),
+                        borderWidth: selectedInsurancePlan === plan.key ? 2 : 1,
+                        borderColor: selectedInsurancePlan === plan.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selectedInsurancePlan === plan.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
+                        {selectedInsurancePlan === plan.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: '700', color: '#111827' }}>{plan.title}</Text>
+                        <Text style={{ color: '#EF4444', marginTop: hp('0.4%') }}>{plan.coverage}</Text>
+                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{customerData.symbol} {formatNumberWithComma(plan.price.toFixed ? plan.price.toFixed(2) : plan.price)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+           
+                <View style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
                   <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
                     <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
                       <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
@@ -1667,6 +1769,19 @@ const CustomerInfo = ({ navigation }) => {
                               <View style={tripStyles.rowpromo}>
                                 <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
                                 <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.promotionprice).toFixed(2))}</Text>
+                              </View>
+                            )}
+
+                            {all.totalDepart.pricerefund != 0 && (
+                              <View >
+                                <View style={tripStyles.divider} />
+                                <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
+                              <View style={tripStyles.rowpromo}> 
+                                <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricerefund_show).toFixed(2))}</Text>
+                              </View>
+                                <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
+                              <View style={tripStyles.divider} />
                               </View>
                             )}
 
@@ -1763,6 +1878,19 @@ const CustomerInfo = ({ navigation }) => {
                                 </View>
                               )}
 
+                               {all.totalReturn.pricerefund != 0 && (
+                              <View >
+                                <View style={tripStyles.divider} />
+                                <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
+                              <View style={tripStyles.rowpromo}> 
+                                <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricerefund_show).toFixed(2))}</Text>
+                              </View>
+                                <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
+                              <View style={tripStyles.divider} />
+                              </View>
+                            )}
+
                               <View style={tripStyles.rowpromo}>
                                 <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
                                 <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.showtotal).toFixed(2))}</Text>
@@ -1794,7 +1922,9 @@ const CustomerInfo = ({ navigation }) => {
                     </View>
                   </View>
                 </View>
-              ))}
+                </View>
+              );
+            })}
 
            
               <View style={styles.promo}>
