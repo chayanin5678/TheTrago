@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions, Linking, findNodeHandle, UIManager } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoTheTrago from '../../components/component/Logo';
@@ -321,6 +321,49 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
   );
 });
 
+// helper to strip HTML tags and decode common entities
+// This explicitly handles: <br>, <a ...>...</a>, <b>, <small>, <span ...> and other tags
+const stripHtml = (str) => {
+  if (str === null || str === undefined || str === '') return '';
+  try {
+    let s = String(str);
+
+    // convert <br> to newlines first (handle variations)
+    s = s.replace(/<br\s*\/?\s*>/gi, '\n');
+
+    // Convert anchor tags to their inner text (remove <a ...> and </a>)
+    // e.g. <a href="...">text</a> -> text
+    s = s.replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1');
+
+    // Remove any remaining tags (b, small, span with attributes, etc.) but keep inner text
+    s = s.replace(/<\/??[^>]+(>|$)/g, '');
+
+    // Decode common HTML entities
+    const entities = {
+      '&nbsp;': ' ',
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+    };
+    s = s.replace(/&[a-zA-Z0-9#]+?;/g, (entity) => {
+      if (entities[entity]) return entities[entity];
+      // decode numeric entities like &#39; or &#x27;
+      const m = entity.match(/^&#(x?[0-9a-fA-F]+);$/);
+      if (m) {
+        const code = m[1].startsWith('x') ? parseInt(m[1].substr(1), 16) : parseInt(m[1], 10);
+        if (!Number.isNaN(code)) return String.fromCharCode(code);
+      }
+      return entity;
+    });
+
+    return s.trim();
+  } catch (e) {
+    return String(str);
+  }
+};
+
 const CustomerInfo = ({ navigation }) => {
   const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
@@ -358,11 +401,78 @@ const CustomerInfo = ({ navigation }) => {
   const [setError] = useState('');
   const [hasToken, setHasToken] = useState(false);
   const [refundOption, setRefundOption] = useState('50'); // '100' | '70' | '50'
-  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState(null); // 'A' | 'B' | 'C'
-  const [insuranceHolderName1, setInsuranceHolderName1] = useState('');
-  const [insuranceDobDay, setInsuranceDobDay] = useState('');
-  const [insuranceDobMonth, setInsuranceDobMonth] = useState('');
-  const [insuranceDobYear, setInsuranceDobYear] = useState('');
+  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState(null); // selected insurance id
+  // Insurance holders stored per passenger (adult, child, infant).
+  // Each holder: { name: '', day: '', month: '', monthLabel: '', year: '' }
+  const toCount = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  const totalPassengersInitial = toCount(customerData.adult) + toCount(customerData.child) + toCount(customerData.infant) || 1;
+  const [insuranceHolders, setInsuranceHolders] = useState(() => Array.from({ length: totalPassengersInitial }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' })));
+  // Active DOB modal: { visible: boolean, type: 'day'|'month'|'year'|null, index: number|null }
+  const [activeDobModal, setActiveDobModal] = useState({ visible: false, type: null, index: null });
+  // localized month names
+  const monthsEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthsTh = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const [insuranceOptions, setInsuranceOptions] = useState([]);
+  const [insuranceLoading, setInsuranceLoading] = useState(false);
+  // ref to main scroll view so we can scroll to insurance section when a plan is selected
+  const scrollRef = useRef(null);
+  const [insuranceSectionY, setInsuranceSectionY] = useState(0);
+  const [insuranceDetailsY, setInsuranceDetailsY] = useState(null);
+  const insuranceDetailsRef = useRef(null);
+
+  useEffect(() => {
+    const fetchInsurance = async () => {
+      setInsuranceLoading(true);
+      try {
+        const res = await fetch('https://thetrago.com/AppApi/insurance');
+        const json = await res.json();
+        if (json && json.status === 'success' && Array.isArray(json.data)) {
+          setInsuranceOptions(json.data);
+        } else {
+          console.warn('Unexpected insurance API response', json);
+          setInsuranceOptions([]);
+        }
+      } catch (err) {
+        console.warn('Failed to load insurance options', err);
+        setInsuranceOptions([]);
+      } finally {
+        setInsuranceLoading(false);
+      }
+    };
+
+    fetchInsurance();
+  }, []);
+
+  // keep insurance holders array length in sync with passenger counts
+  useEffect(() => {
+    const total = toCount(customerData.adult) + toCount(customerData.child) + toCount(customerData.infant) || 1;
+    setInsuranceHolders((prev) => {
+      if (!prev) return Array.from({ length: total }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' }));
+      if (prev.length === total) return prev;
+      if (prev.length < total) {
+        return prev.concat(Array.from({ length: total - prev.length }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' })));
+      }
+      // prev.length > total -> truncate
+      return prev.slice(0, total);
+    });
+  }, [customerData.adult, customerData.child, customerData.infant]);
+
+  // initialize from persisted md_insurancetype_holders (if exists)
+  useEffect(() => {
+    try {
+      if (customerData.md_insurancetype_holders) {
+        const parsed = JSON.parse(customerData.md_insurancetype_holders);
+        if (Array.isArray(parsed)) {
+          setInsuranceHolders(parsed.map(h => ({ name: h.name || '', day: h.day || '', month: h.month || '', monthLabel: h.monthLabel || h.monthLabel || '', year: h.year || '' })));
+        }
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }, [customerData.md_insurancetype_holders]);
 
   // Function to get refund options with calculated amounts based on totalbooking
   const getRefundOptions = (totalbooking, symbol) => {
@@ -564,6 +674,7 @@ const CustomerInfo = ({ navigation }) => {
   console.log('customerData:', customerData.countrycode);
   console.log('customerData.international:', customerData.international);
 
+ 
   const fetchPrice = async () => {
     try {
       const response = await axios.post(
@@ -605,6 +716,7 @@ const CustomerInfo = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+  
 
   const handlepromo = async () => {
     try {
@@ -1266,6 +1378,7 @@ const CustomerInfo = ({ navigation }) => {
                 paddingBottom: 0,
               }
             ]}
+            ref={scrollRef}
             contentInsetAdjustmentBehavior="automatic"
           >
                {/* Step Component */}
@@ -1358,6 +1471,8 @@ const CustomerInfo = ({ navigation }) => {
                           pagingEnabled
                         />
                       </View>
+
+                      
                     </View>
                   </Modal>
 
@@ -1648,42 +1763,306 @@ const CustomerInfo = ({ navigation }) => {
 
                 )}
                 {/* Insurance / Trip Protection selection block (Plan A/B/C) */}
-                <View style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', marginTop: hp('2%') }]}> 
+                <View
+                  style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', marginTop: hp('2%') }]}
+                  onLayout={(e) => {
+                    const y = e.nativeEvent.layout.y;
+                    setInsuranceSectionY(y);
+                  }}
+                > 
                   <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('TripProtection') || 'Trip Protection'}</Text>
                   <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('insuranceProvidedBy') || 'รับประกันโดย CHUBB'}</Text>
+                
 
-                  {[
-                    { key: 'A', title: 'Plan A', coverage: 'ความคุ้มครอง THB 500,000 / ท่าน', price: 40 },
-                    { key: 'B', title: 'Plan B', coverage: 'ความคุ้มครอง THB 1,000,000 / ท่าน', price: 60 },
-                    { key: 'C', title: 'Plan C', coverage: 'ความคุ้มครอง THB 1,500,000 / ท่าน', price: 80 },
-                  ].map(plan => (
+                  {insuranceLoading ? (
+                    <Text style={{ color: '#6B7280' }}>{t('loading') || 'Loading...'}</Text>
+                  ) : (
+                    (insuranceOptions || []).map((plan, idx) => (
                     <TouchableOpacity
-                      key={plan.key}
-                      onPress={() => setSelectedInsurancePlan(plan.key)}
+                      key={plan.md_insurancetype_id}
+                      onPress={() => {
+                        // Toggle: if already selected, deselect and clear related data; otherwise select and persist
+                        if (selectedInsurancePlan === plan.md_insurancetype_id) {
+                          setSelectedInsurancePlan(null);
+                          // clear persisted insurance fields and holder info
+                          updateCustomerData({
+                            md_insurancetype_id: null,
+                            md_insurancetype_price: null,
+                            md_insurancetype_holder_name1: '',
+                            md_insurancetype_holders: ''
+                          });
+                          // clear local holders array
+                          setInsuranceHolders(Array.from({ length: totalPassengersInitial }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' })));
+                        } else {
+                          setSelectedInsurancePlan(plan.md_insurancetype_id);
+                          // persist selected insurance id to booking data for backend
+                          updateCustomerData({ md_insurancetype_id: plan.md_insurancetype_id, md_insurancetype_price: plan.md_insurancetype_price });
+                          // scroll to insurance details block — measure and scroll
+                          setTimeout(() => {
+                            try {
+                              const scrollNode = scrollRef && scrollRef.current ? findNodeHandle(scrollRef.current) : null;
+                              const detailsNode = insuranceDetailsRef && insuranceDetailsRef.current ? findNodeHandle(insuranceDetailsRef.current) : null;
+                              if (detailsNode && scrollNode && UIManager && UIManager.measureLayout) {
+                                UIManager.measureLayout(
+                                  detailsNode,
+                                  scrollNode,
+                                  (error) => {
+                                    // fallback: use stored y
+                                    const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
+                                    console.warn('[InsuranceScroll] measureLayout error, fallback targetY=', targetY, 'error=', error);
+                                    if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+                                      scrollRef.current.scrollTo({ y: targetY, animated: true });
+                                    }
+                                  },
+                                  (left, top) => {
+                                    const targetY = Math.max(0, top - 20);
+                                    console.warn('[InsuranceScroll] measured left=', left, 'top=', top, '-> targetY=', targetY);
+                                    if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+                                      scrollRef.current.scrollTo({ y: targetY, animated: true });
+                                    }
+                                  }
+                                );
+                              } else {
+                                const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
+                                console.warn('[InsuranceScroll] detailsNode or scrollNode missing, using fallback targetY=', targetY);
+                                if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+                                  scrollRef.current.scrollTo({ y: targetY, animated: true });
+                                }
+                              }
+                            } catch (err) {
+                              console.warn('Failed to scroll to insurance section', err);
+                            }
+                          }, 120);
+                        }
+                      }}
                       style={{
                         width: '100%',
                         backgroundColor: '#fff',
                         borderRadius: wp('3%'),
                         padding: wp('3%'),
                         marginBottom: hp('1.2%'),
-                        borderWidth: selectedInsurancePlan === plan.key ? 2 : 1,
-                        borderColor: selectedInsurancePlan === plan.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
+                        borderWidth: selectedInsurancePlan === plan.md_insurancetype_id ? 2 : 1,
+                        borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : 'rgba(0,0,0,0.06)',
                         flexDirection: 'row',
                         alignItems: 'center'
                       }}
                     >
-                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selectedInsurancePlan === plan.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
-                        {selectedInsurancePlan === plan.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                      {idx === 0 && (
+                        <View style={{ position: 'absolute', left: 10, top: -10, zIndex: 5 }}>
+                          <View style={{ backgroundColor: '#FF7A42', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 }}>
+                            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{selectedLanguage === 'th' ? 'แนะนำ' : 'Recommended'}</Text>
+                          </View>
+                        </View>
+                      )}
+
+                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
+                        {selectedInsurancePlan === plan.md_insurancetype_id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: '700', color: '#111827' }}>{plan.title}</Text>
-                        <Text style={{ color: '#EF4444', marginTop: hp('0.4%') }}>{plan.coverage}</Text>
-                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{customerData.symbol} {formatNumberWithComma(plan.price.toFixed ? plan.price.toFixed(2) : plan.price)}</Text>
+                        <Text style={{ fontWeight: '700', color: '#111827' }}>{selectedLanguage === 'th' ? (stripHtml(plan.md_insurancetype_nameth) || plan.md_insurancetype_no) : (stripHtml(plan.md_insurancetype_nameen) || plan.md_insurancetype_no)}</Text>
+                      
+                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{customerData.symbol} {formatNumberWithComma(plan.md_insurancetype_price?.toFixed ? plan.md_insurancetype_price.toFixed(2) : (plan.md_insurancetype_price ?? 0))}</Text>
                       </View>
                     </TouchableOpacity>
-                  ))}
+                    ))
+                  )}
                 </View>
+                {/* When a plan is selected, show holder inputs and plan details */}
+                {selectedInsurancePlan && (() => {
+                  const plan = (insuranceOptions || []).find(p => p.md_insurancetype_id === selectedInsurancePlan);
+                  if (!plan) return null;
+                  const detailText = selectedLanguage === 'th' ? stripHtml(plan.md_insurancetype_detailth || plan.md_insurancetype_detail) : stripHtml(plan.md_insurancetype_detailen || plan.md_insurancetype_detail);
+                  return (
+                    <View
+                      ref={insuranceDetailsRef}
+                      style={{ marginTop: hp('2%'), backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' }}
+                      onLayout={(e) => {
+                        try {
+                          const y = e.nativeEvent.layout.y;
+                          setInsuranceDetailsY(y);
+                        } catch (err) {
+                          // ignore
+                        }
+                      }}
+                    >
+                          {/* Render one holder input per passenger */}
+                          <View>
+                            {(insuranceHolders || []).map((holder, idx) => {
+                              // determine passenger type label based on ordering (adults, then children, then infants)
+                              const adults = customerData.adult || 0;
+                              const children = customerData.child || 0;
+                              const infants = customerData.infant || 0;
+                              let typeLabel = '';
+                              if (idx < adults) typeLabel = t('adult') || 'Adult';
+                              else if (idx < adults + children) typeLabel = t('child') || 'Child';
+                              else typeLabel = t('infant') || 'Infant';
+
+                              return (
+                                <View key={`ins-holder-${idx}`} style={{ marginBottom: hp('1.2%') }}>
+                                  {/* show insurance holder title for all holders */}
+                                  <Text style={{ fontWeight: '700', fontSize: wp('3.6%'), color: '#111827', marginBottom: hp('0.5%') }}>
+                                    {`${t('insuranceHolderTitle') ? t('insuranceHolderTitle').replace(/\d+/, '') : 'ชื่อผู้จอง'} ${idx + 1}`}
+                                  </Text>
+                                  <TextInput
+                                    placeholder={t('insuranceHolderPlaceholder') || ''}
+                                    value={holder.name}
+                                    onChangeText={(text) => {
+                                      const next = [...insuranceHolders];
+                                      next[idx] = { ...next[idx], name: text };
+                                      setInsuranceHolders(next);
+                                      // persist to customer data as an array (and keep first-holder legacy field)
+                                      updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
+                                    }}
+                                    placeholderTextColor="#374151"
+                                    style={[styles.input, { marginBottom: hp('0.8%') }]}
+                                  />
+
+                                  <Text style={{ fontWeight: '700', fontSize: wp('3.6%'), color: '#111827', marginBottom: hp('1%') }}>{t('dateOfBirth') || 'วันเกิด'}</Text>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: hp('1%'), paddingHorizontal: wp('2%') }}>
+                                    <View style={{ flex: 1, marginRight: wp('2%') }}>
+                                      <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingVertical: hp('1.5%'), paddingHorizontal: wp('3%'), borderWidth: 1, borderColor: '#E5E7EB', borderRadius: wp('3%'), justifyContent: 'space-between' }} onPress={() => setActiveDobModal({ visible: true, type: 'day', index: idx })}>
+                                        <Text style={styles.buttonText}>{holder.day ? holder.day : (t('day') || 'Day')}</Text>
+                                        <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                      </TouchableOpacity>
+                                    </View>
+
+                                    <View style={{ flex: 1, marginRight: wp('2%') }}>
+                                      <TouchableOpacity
+                                        style={{
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          backgroundColor: '#FFFFFF',
+                                          paddingVertical: hp('1.5%'),
+                                          paddingHorizontal: wp('3%'),
+                                          borderWidth: 1,
+                                          borderColor: '#E5E7EB',
+                                          borderRadius: wp('3%'),
+                                          justifyContent: 'space-between',
+                                          minHeight: hp('6%'),
+                                        }}
+                                        onPress={() => setActiveDobModal({ visible: true, type: 'month', index: idx })}>
+                                        <Text numberOfLines={1} ellipsizeMode='tail' style={[styles.buttonText, { flex: 1, fontSize: wp('3.6%'), textAlign: 'center', flexWrap: 'nowrap', flexShrink: 1 }]}> {
+                                          holder.monthLabel || (holder.month ? (selectedLanguage === 'th' ? monthsTh[parseInt(holder.month, 10) - 1] : monthsEn[parseInt(holder.month, 10) - 1]) : (t('month') || 'Month'))
+                                        } </Text>
+                                        <Icon name="chevron-down" size={18} color="#FD501E" style={[styles.icon, { marginLeft: wp('2%') }]} />
+                                      </TouchableOpacity>
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                      <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingVertical: hp('1.5%'), paddingHorizontal: wp('3%'), borderWidth: 1, borderColor: '#E5E7EB', borderRadius: wp('3%'), justifyContent: 'space-between' }} onPress={() => setActiveDobModal({ visible: true, type: 'year', index: idx })}>
+                                        <Text style={styles.buttonText}>{holder.year ? holder.year : (t('year') || 'Year')}</Text>
+                                        <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
+                                      </TouchableOpacity>
+                                    </View>
+                                  </View>
+                                </View>
+                              );
+                            })}
+
+                            {/* Plan details */}
+                            <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.04)', paddingTop: hp('1%'), marginTop: hp('1%') }}>
+                              <Text style={{ color: '#6B7280', fontSize: wp('3%'), lineHeight: 20 }}>{detailText}</Text>
+                            </View>
+                          </View>
+                    </View>
+                  );
+                })()}
            
+                {/* DOB modals for insurance holders */}
+                <Modal visible={activeDobModal.visible && activeDobModal.type === 'day'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('day') || 'Day'}</Text>
+                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <FlatList
+                        data={Array.from({ length: 31 }, (_, i) => String(i + 1))}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity style={styles.optionItem} onPress={() => {
+                            const idx = Number(activeDobModal.index);
+                            if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
+                            const next = [...insuranceHolders];
+                            next[idx] = { ...next[idx], day: item };
+                            setInsuranceHolders(next);
+                            updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
+                            setActiveDobModal({ visible: false, type: null, index: null });
+                          }}>
+                            <Text style={styles.optionText}>{item}</Text>
+                          </TouchableOpacity>
+                        )}
+                        keyExtractor={(item) => item}
+                      />
+                    </View>
+                  </View>
+                </Modal>
+
+                <Modal visible={activeDobModal.visible && activeDobModal.type === 'month'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('month') || 'Month'}</Text>
+                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <FlatList
+                        data={Array.from({ length: 12 }, (_, i) => String(i + 1))}
+                        renderItem={({ item }) => {
+                          const idxM = parseInt(item, 10) - 1;
+                          const label = selectedLanguage === 'th' ? monthsTh[idxM] : monthsEn[idxM];
+                          return (
+                            <TouchableOpacity style={styles.optionItem} onPress={() => {
+                              const sel = Number(activeDobModal.index);
+                              if (!Number.isInteger(sel)) return setActiveDobModal({ visible: false, type: null, index: null });
+                              const next = [...insuranceHolders];
+                              next[sel] = { ...next[sel], month: item, monthLabel: label };
+                              setInsuranceHolders(next);
+                              updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
+                              setActiveDobModal({ visible: false, type: null, index: null });
+                            }}>
+                              <Text style={styles.optionText}>{label}</Text>
+                            </TouchableOpacity>
+                          );
+                        }}
+                        keyExtractor={(item) => item}
+                      />
+                    </View>
+                  </View>
+                </Modal>
+
+                <Modal visible={activeDobModal.visible && activeDobModal.type === 'year'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('year') || 'Year'}</Text>
+                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <FlatList
+                        data={Array.from({ length: 81 }, (_, i) => String(new Date().getFullYear() - i))}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity style={styles.optionItem} onPress={() => {
+                            const idx = Number(activeDobModal.index);
+                            if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
+                            const next = [...insuranceHolders];
+                            next[idx] = { ...next[idx], year: item };
+                            setInsuranceHolders(next);
+                            updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
+                            setActiveDobModal({ visible: false, type: null, index: null });
+                          }}>
+                            <Text style={styles.optionText}>{item}</Text>
+                          </TouchableOpacity>
+                        )}
+                        keyExtractor={(item) => item}
+                      />
+                    </View>
+                  </View>
+                </Modal>
+
                 <View style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
                   <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
                     <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>

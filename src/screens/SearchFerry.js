@@ -3323,7 +3323,7 @@ const SearchFerry = ({ navigation, route }) => {
                                 fontSize: 16,
                                 marginBottom: 12,
                               }}>
-                                Trip Details
+                                {selectedLanguage === 'th' ? 'รายละเอียดทริป' : 'Trip Details'}
                               </Text>
                               <Text style={{
                                 color: '#64748B',
@@ -3331,7 +3331,13 @@ const SearchFerry = ({ navigation, route }) => {
                                 lineHeight: 20,
                                 marginBottom: 16,
                               }}>
-                                {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                                {(() => {
+                                  const td = item.md_timetable_tripdetail && item.md_timetable_tripdetail[0];
+                                  const eng = td?.md_timetabledetail_detaileng1;
+                                  const th = td?.md_timetabledetail_detailthai1;
+                                  const chosen = (selectedLanguage === 'th' ? (th || eng) : (eng || th)) || "Detailed information about this ferry trip.";
+                                  return removeHtmlTags(chosen);
+                                })()}
                               </Text>
                               {item.md_timetable_tripdetail[0]?.md_timetabledetail_picname1 && (
                                 <View style={{
@@ -3363,7 +3369,7 @@ const SearchFerry = ({ navigation, route }) => {
                               fontSize: 16,
                               marginBottom: 12,
                             }}>
-                              Trip Details
+                              {selectedLanguage === 'th' ? 'รายละเอียดทริป' : 'Trip Details'}
                             </Text>
                             <Text style={{
                               color: '#64748B',
@@ -3371,7 +3377,13 @@ const SearchFerry = ({ navigation, route }) => {
                               lineHeight: 20,
                               marginBottom: 16,
                             }}>
-                              {removeHtmlTags(item.md_timetable_tripdetail[0]?.md_timetabledetail_detaileng1 || "Detailed information about this ferry trip.")}
+                              {(() => {
+                                const td = item.md_timetable_tripdetail && item.md_timetable_tripdetail[0];
+                                const eng = td?.md_timetabledetail_detaileng1;
+                                const th = td?.md_timetabledetail_detailthai1;
+                                const chosen = (selectedLanguage === 'th' ? (th || eng) : (eng || th)) || "Detailed information about this ferry trip.";
+                                return removeHtmlTags(chosen);
+                              })()}
                             </Text>
 
                             {/* Ferry Image with Error Handling */}
