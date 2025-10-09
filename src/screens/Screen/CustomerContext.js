@@ -67,7 +67,6 @@ export const CustomerProvider = ({ children }) => {
     md_booking_promoprice: 0, //ส่วนลดโปรโมชั่น
     md_booking_crebyid: '', //รหัสผู้สร้าง
     md_booking_updatebyid: '', //รหัสผู้ปรับปรุง
-    md_booking_refund: '', //คืนเงิน
     md_booking_refundpriceDepart: 0, //ราคาคืนเงิน
     md_booking_refundpriceReturn: 0, //ราคาคืนเงิน
     //------------------------------------------------------------------------------------------------
@@ -172,6 +171,12 @@ export const CustomerProvider = ({ children }) => {
         
       }
     ],
+    insurance:[{
+          md_insurance_name: '',
+          md_insurance_birthday: '',
+    }
+  ],
+    country_insurance: '', 
     symbol: '฿', //สัญลักษณ์เงิน
 
   });

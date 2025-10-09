@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions, Linking, findNodeHandle, UIManager } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions, Linking, findNodeHandle, UIManager, InteractionManager } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoTheTrago from '../../components/component/Logo';
@@ -190,10 +190,10 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       {/* Nationality */}
       <Text style={styles.textHead}>{t('nationality') || 'Nationality'}</Text>
       <TouchableOpacity
-        style={[styles.button, fieldErrors.nationality && styles.errorInput]}
+        style={[styles.button, (showAllErrors && fieldErrors.nationality) && styles.errorInput]}
         onPress={() => setNationalityModalVisible(true)}>
-  <Text style={styles.buttonText}>{selectedNationality === 'Please Select' ? t('pleaseSelect') : selectedNationality}</Text>
-        <Icon name="chevron-down" size={18} color={fieldErrors.nationality ? 'red' : '#FD501E'} style={styles.icon} />
+        <Text style={styles.buttonText}>{selectedNationality === 'Please Select' ? t('pleaseSelect') : selectedNationality}</Text>
+        <Icon name="chevron-down" size={18} color={(showAllErrors && fieldErrors.nationality) ? 'red' : '#FD501E'} style={styles.icon} />
       </TouchableOpacity>
       <Modal visible={isNationalityModalVisible} transparent animationType="fade" onRequestClose={() => setNationalityModalVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -225,7 +225,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
                   setNationalityModalVisible(false);
                   setSearchQuery('');
                 }}>
-                  <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
+                  <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}>
                     {((item.sys_countries_nameeng === 'Please Select') || (item.sys_countries_namethai === 'Please Select'))
                       ? t('pleaseSelect')
                       : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
@@ -299,7 +299,7 @@ const PassengerForm = React.forwardRef(({ type, index, telePhone, showAllErrors 
       {/* Date of Birth */}
       <Text style={styles.textHead}>{t('dateOfBirth') || 'Date of Birth'}</Text>
       <TouchableOpacity
-        style={[styles.button, fieldErrors.birthday && styles.errorInput]}
+        style={[styles.button, (showAllErrors && fieldErrors.birthday) && styles.errorInput]}
         onPress={() => setShowBirthdayPicker(!showBirthdayPicker)}>
         <Text style={styles.buttonText}>
           {birthday ? new Date(birthday).toLocaleDateString('en-GB') : (t('selectDate') || 'Select Date')}
@@ -413,8 +413,8 @@ const CustomerInfo = ({ navigation }) => {
   // Active DOB modal: { visible: boolean, type: 'day'|'month'|'year'|null, index: number|null }
   const [activeDobModal, setActiveDobModal] = useState({ visible: false, type: null, index: null });
   // localized month names
-  const monthsEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const monthsTh = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthsTh = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   const [insuranceOptions, setInsuranceOptions] = useState([]);
   const [insuranceLoading, setInsuranceLoading] = useState(false);
   // ref to main scroll view so we can scroll to insurance section when a plan is selected
@@ -422,6 +422,14 @@ const CustomerInfo = ({ navigation }) => {
   const [insuranceSectionY, setInsuranceSectionY] = useState(0);
   const [insuranceDetailsY, setInsuranceDetailsY] = useState(null);
   const insuranceDetailsRef = useRef(null);
+  const firstHolderRef = useRef(null);
+  const firstHolderInputRef = useRef(null);
+
+  // refs for auto-scrolling to incomplete sections
+  const passengerSectionRef = useRef(null);
+  const contactSectionRef = useRef(null);
+  const refundSectionRef = useRef(null);
+
 
   useEffect(() => {
     const fetchInsurance = async () => {
@@ -460,6 +468,21 @@ const CustomerInfo = ({ navigation }) => {
     });
   }, [customerData.adult, customerData.child, customerData.infant]);
 
+  // Helper function to convert insuranceHolders to API format
+  const convertInsuranceHoldersToAPI = (holders) => {
+    const result = holders.map(h => {
+      const birthday = (h.year && h.month && h.day)
+        ? `${h.year}-${String(h.month).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`
+        : '';
+      return {
+        md_insurance_name: h.name || '',
+        md_insurance_birthday: birthday
+      };
+    });
+    console.log('🔵 [Insurance Array] Converted insurance data:', JSON.stringify(result, null, 2));
+    return result;
+  };
+
   // initialize from persisted md_insurancetype_holders (if exists)
   useEffect(() => {
     try {
@@ -478,36 +501,36 @@ const CustomerInfo = ({ navigation }) => {
   const getRefundOptions = (totalbooking, symbol) => {
     const total = parseFloat(totalbooking) || 0;
     const totalPassengers = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
-    
-  // Calculate refund amounts for each option
-  const refund100 = total;
-  const refund70 = total * 0.7;
-  const refund50 = total * 0.5;
+
+    // Calculate refund amounts for each option
+    const refund100 = total;
+    const refund70 = total * 0.7;
+    const refund50 = total * 0.5;
 
 
-  const passengers = totalPassengers > 0 ? totalPassengers : 1; // avoid division by zero
-  const perPerson100 = (total * 0.15) / passengers;
-  const perPerson70 = (total * 0.05) / passengers;
-  const perPerson50 = 0;
+    const passengers = totalPassengers > 0 ? totalPassengers : 1; // avoid division by zero
+    const perPerson100 = (total * 0.15) / passengers;
+    const perPerson70 = (total * 0.05) / passengers;
+    const perPerson50 = 0;
 
-  return [
-      { 
-        key: '100', 
-        title: t('refundOption100_title') || '100% Refund', 
-        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund100.toFixed(2))}`, 
-        note: `${symbol} ${formatNumberWithComma(perPerson100.toFixed(2))} ${t('perPerson') || 'per person'}` 
+    return [
+      {
+        key: '100',
+        title: t('refundOption100_title') || '100% Refund',
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund100.toFixed(2))}`,
+        note: `${symbol} ${formatNumberWithComma(perPerson100.toFixed(2))} ${t('perPerson') || 'per person'}`
       },
-      { 
-        key: '70', 
-        title: t('refundOption70_title') || '70% Refund', 
-        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund70.toFixed(2))}`, 
-        note: `${symbol} ${formatNumberWithComma(perPerson70.toFixed(2))} ${t('perPerson') || 'per person'}` 
+      {
+        key: '70',
+        title: t('refundOption70_title') || '70% Refund',
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund70.toFixed(2))}`,
+        note: `${symbol} ${formatNumberWithComma(perPerson70.toFixed(2))} ${t('perPerson') || 'per person'}`
       },
-      { 
-        key: '50', 
-        title: t('refundOption50_title') || '50% Refund', 
-        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund50.toFixed(2))}`, 
-        note: `${symbol} ${formatNumberWithComma(perPerson50.toFixed(2))} ${t('perPerson') || 'per person'}` 
+      {
+        key: '50',
+        title: t('refundOption50_title') || '50% Refund',
+        subtitle: `${t('refundAmount') || 'Refund amount'} : ${symbol} ${formatNumberWithComma(refund50.toFixed(2))}`,
+        note: `${symbol} ${formatNumberWithComma(perPerson50.toFixed(2))} ${t('perPerson') || 'per person'}`
       },
     ];
   };
@@ -560,7 +583,7 @@ const CustomerInfo = ({ navigation }) => {
 
   useEffect(() => {
     checkToken(); // Check token on component mount
-    
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -674,7 +697,7 @@ const CustomerInfo = ({ navigation }) => {
   console.log('customerData:', customerData.countrycode);
   console.log('customerData.international:', customerData.international);
 
- 
+
   const fetchPrice = async () => {
     try {
       const response = await axios.post(
@@ -694,7 +717,8 @@ const CustomerInfo = ({ navigation }) => {
           dropoffdepart1: customerData.dropoffDepartId,
           dropoffdepart2: customerData.dropoffReturnId,
           paymentfee: 0,
-           refund: getRefundOptionValue(refundOption),
+          refund: getRefundOptionValue(refundOption),
+          insurance: selectedInsurancePlan,
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -716,7 +740,7 @@ const CustomerInfo = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-  
+
 
   const handlepromo = async () => {
     try {
@@ -739,6 +763,7 @@ const CustomerInfo = ({ navigation }) => {
           paymentfee: 0,
           promotioncode: code,
           refund: getRefundOptionValue(refundOption),
+          insurance: selectedInsurancePlan,
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -797,7 +822,32 @@ const CustomerInfo = ({ navigation }) => {
     };
   };
 
+  // Helper function to scroll to incomplete section
+  const scrollToIncompleteSection = (sectionRef, sectionName = 'section') => {
+    if (sectionRef && sectionRef.current && scrollRef && scrollRef.current) {
+      try {
+        sectionRef.current.measureLayout(
+          scrollRef.current,
+          (x, y) => {
+            const HEADER_OFFSET = insets ? (insets.top + 20) : 60;
+            const targetY = Math.max(0, y - HEADER_OFFSET);
+            console.warn(`[ScrollToIncomplete] Scrolling to ${sectionName}: y=${y}, targetY=${targetY}`);
+            scrollRef.current.scrollTo({ y: targetY, animated: true });
+          },
+          (error) => {
+            console.warn(`[ScrollToIncomplete] Failed to measure ${sectionName}:`, error);
+          }
+        );
+      } catch (err) {
+        console.warn(`[ScrollToIncomplete] Error scrolling to ${sectionName}:`, err);
+      }
+    }
+  };
+
   const handleNext = () => {
+    console.log('🔵 [handleNext] refundOption:', refundOption, '-> value:', getRefundOptionValue(refundOption));
+    console.log('🔵 [handleNext] selectedInsurancePlan:', selectedInsurancePlan);
+
     if (customerData.international == 0) {
       let newErrors = {};
       if (selectedTitle === 'Please Select') newErrors.selectedTitle = true; // ✅ เช็ค EN
@@ -805,7 +855,7 @@ const CustomerInfo = ({ navigation }) => {
       if (!Lastname) newErrors.Lastname = true;
       if (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')) newErrors.selectedTele = true;
       if (!mobileNumber) newErrors.mobileNumber = true;
-      
+
       // Email validation
       if (!email) {
         newErrors.email = true;
@@ -857,43 +907,111 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_refund: getRefundOptionValue(refundOption),
         md_booking_refundpriceDepart: PriceDepart[0].totalDepart.pricerefund_insert || 0,
         md_booking_refundpriceReturn: PriceDepart[0].totalReturn.pricerefund_insert || 0,
+        md_booking_insurance: selectedInsurancePlan || '',
       });
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         setShowAllErrors(true);
+
+        // Determine which section to scroll to based on first error
+        let scrollTarget = null;
+        if (newErrors.selectedTitle || newErrors.Firstname || newErrors.Lastname) {
+          scrollTarget = { ref: passengerSectionRef, name: 'Passenger Details' };
+        } else if (newErrors.selectedTele || newErrors.mobileNumber || newErrors.email) {
+          scrollTarget = { ref: contactSectionRef, name: 'Contact Details' };
+        }
+
         if (newErrors.email) {
           Alert.alert(t('invalidEmail') || 'Invalid Email', t('pleaseEnterValidEmail') || 'Please enter a valid email address.', [
-            { 
-              text: t('ok') || 'OK', 
+            {
+              text: t('ok') || 'OK',
               onPress: () => {
                 console.log('OK Pressed');
-                // Don't clear errors here - let user fix the email first
-              } 
+                if (scrollTarget) {
+                  setTimeout(() => scrollToIncompleteSection(scrollTarget.ref, scrollTarget.name), 300);
+                }
+              }
             }
           ]);
         } else {
           Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredFields') || 'Please fill in all required fields.', [
-            { text: t('ok') || 'OK', onPress: () => console.log('OK Pressed') }
+            {
+              text: t('ok') || 'OK',
+              onPress: () => {
+                console.log('OK Pressed');
+                if (scrollTarget) {
+                  setTimeout(() => scrollToIncompleteSection(scrollTarget.ref, scrollTarget.name), 300);
+                }
+              }
+            }
           ]);
         }
         return;
       }
       setShowAllErrors(false);
-      // navigation.navigate('PaymentScreen');
-        navigation.navigate('ResultScreen', { success: true });
+      // If an insurance plan is selected, require all holder fields to be filled
+      if (selectedInsurancePlan) {
+        const incomplete = (insuranceHolders || []).some(h => {
+          return !h || !h.name || !h.day || !h.month || !h.year;
+        });
+        if (incomplete) {
+          setShowAllErrors(true);
+          Alert.alert(
+            t('incompleteInformation') || 'Incomplete Information',
+            t('pleaseFillInsuranceHolders') || 'Please fill in all insurance holder information before continuing.',
+            [{
+              text: t('ok') || 'OK', onPress: () => {
+                // attempt to scroll to insurance details block to help the user
+                try {
+                  const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
+                  if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+                    scrollRef.current.scrollTo({ y: targetY, animated: true });
+                  }
+                } catch (e) {
+                  // ignore
+                }
+              }
+            }]
+          );
+          return;
+        }
+        // Save insurance data when clicking Next (only if all fields are complete)
+        console.log('🔵 [CustomerInfo - Before Convert] insuranceHolders:', JSON.stringify(insuranceHolders, null, 2));
+        const apiFormat = convertInsuranceHoldersToAPI(insuranceHolders);
+        console.log('🔵 [CustomerInfo - After Convert] apiFormat:', JSON.stringify(apiFormat, null, 2));
+        updateCustomerData({
+          insurance: apiFormat,
+          md_insurancetype_holder_name1: insuranceHolders[0]?.name || ''
+        });
+        console.log('🔵 [CustomerInfo - After Save] customerData.insurance:', JSON.stringify(customerData.insurance, null, 2));
+      }
+      navigation.navigate('PaymentScreen');
+      // navigation.navigate('ResultScreen', { success: true });
     } else {
       const totalPassenger = (customerData.adult || 0) + (customerData.child || 0) + (customerData.infant || 0);
       if (!passengerFormRefs.current || passengerFormRefs.current.length !== totalPassenger) {
         Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredPassengerFields') || 'Please fill in all required passenger fields.', [
-          { text: t('ok') || 'OK', onPress: () => { } }
+          {
+            text: t('ok') || 'OK',
+            onPress: () => {
+              setTimeout(() => scrollToIncompleteSection(passengerSectionRef, 'Passenger Forms'), 300);
+            }
+          }
         ]);
         return;
       }
       let passengerErrors = [];
       let hasPassengerError = false;
+      let firstErrorIndex = -1;
       passengerErrors = passengerFormRefs.current.map(ref => ref?.validate?.() || {});
-      hasPassengerError = passengerErrors.some(err => Object.keys(err).length > 0);
+      hasPassengerError = passengerErrors.some((err, idx) => {
+        const hasError = Object.keys(err).length > 0;
+        if (hasError && firstErrorIndex === -1) {
+          firstErrorIndex = idx;
+        }
+        return hasError;
+      });
       passengerFormRefs.current.forEach((formRef, idx) => {
         if (formRef) {
           const data = formRef.getData?.() || {};
@@ -908,7 +1026,20 @@ const CustomerInfo = ({ navigation }) => {
       if (hasPassengerError) {
         setShowAllErrors(true);
         Alert.alert(t('incompleteInformation') || 'Incomplete Information', t('pleaseFillAllRequiredPassengerFields') || 'Please fill in all required passenger fields.', [
-          { text: t('ok') || 'OK', onPress: () => { } }
+          {
+            text: t('ok') || 'OK',
+            onPress: () => {
+              // Scroll to first passenger form with error
+              if (firstErrorIndex >= 0 && passengerFormRefs.current[firstErrorIndex]) {
+                const formRef = passengerFormRefs.current[firstErrorIndex];
+                if (formRef.getRef && formRef.getRef()) {
+                  setTimeout(() => scrollToIncompleteSection(formRef.getRef(), `Passenger ${firstErrorIndex + 1}`), 300);
+                } else {
+                  setTimeout(() => scrollToIncompleteSection(passengerSectionRef, 'Passenger Forms'), 300);
+                }
+              }
+            }
+          }
         ]);
         return;
       }
@@ -944,7 +1075,41 @@ const CustomerInfo = ({ navigation }) => {
         md_booking_refund: getRefundOptionValue(refundOption),
         md_booking_refundpriceDepart: PriceDepart[0].totalDepart.pricerefund_insert || 0,
         md_booking_refundpriceReturn: PriceDepart[0].totalReturn.pricerefund_insert || 0,
+        md_booking_insurance: selectedInsurancePlan || '',
       });
+      // If an insurance plan is selected, require all holder fields to be filled
+      if (selectedInsurancePlan) {
+        const incomplete = (insuranceHolders || []).some(h => {
+          return !h || !h.name || !h.day || !h.month || !h.year;
+        });
+        if (incomplete) {
+          setShowAllErrors(true);
+          Alert.alert(
+            t('incompleteInformation') || 'Incomplete Information',
+            t('pleaseFillInsuranceHolders') || 'Please fill in all insurance holder information before continuing.',
+            [{
+              text: t('ok') || 'OK', onPress: () => {
+                try {
+                  const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
+                  if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+                    scrollRef.current.scrollTo({ y: targetY, animated: true });
+                  }
+                } catch (e) { }
+              }
+            }]
+          );
+          return;
+        }
+        // Save insurance data when clicking Next (only if all fields are complete)
+        console.log('🔵 [CustomerInfo - Before Convert] insuranceHolders:', JSON.stringify(insuranceHolders, null, 2));
+        const apiFormat = convertInsuranceHoldersToAPI(insuranceHolders);
+        console.log('🔵 [CustomerInfo - After Convert] apiFormat:', JSON.stringify(apiFormat, null, 2));
+        updateCustomerData({
+          insurance: apiFormat,
+          md_insurancetype_holder_name1: insuranceHolders[0]?.name || ''
+        });
+        console.log('🔵 [CustomerInfo - After Save] customerData.insurance:', JSON.stringify(customerData.insurance, null, 2));
+      }
       navigation.navigate('PaymentScreen');
     }
   };
@@ -1065,7 +1230,17 @@ const CustomerInfo = ({ navigation }) => {
     };
 
     loadData();
-  }, [customerData.timeTableReturnId, refundOption]);
+  }, [customerData.timeTableReturnId]);
+
+  // Refetch price when refundOption or insurance plan changes
+  useEffect(() => {
+    // Skip on initial mount (when timetable is not loaded yet)
+    if (!isLoading && timetableDepart.length > 0) {
+      console.log('🔵 [useEffect] refundOption changed to:', refundOption, '-> value:', getRefundOptionValue(refundOption));
+      console.log('🔵 [useEffect] selectedInsurancePlan:', selectedInsurancePlan);
+      fetchPrice();
+    }
+  }, [refundOption, selectedInsurancePlan]);
 
   // Compute refund options once after PriceDepart is populated
   useEffect(() => {
@@ -1075,7 +1250,7 @@ const CustomerInfo = ({ navigation }) => {
     }
   }, [PriceDepart, computedRefundOptions.length, customerData.symbol]);
 
-    const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
+  const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
   if (isLoading) {
     return (
@@ -1358,7 +1533,7 @@ const CustomerInfo = ({ navigation }) => {
 
         </LinearGradient>
 
-      
+
 
         <KeyboardAvoidingView
           behavior="padding"
@@ -1381,7 +1556,7 @@ const CustomerInfo = ({ navigation }) => {
             ref={scrollRef}
             contentInsetAdjustmentBehavior="automatic"
           >
-               {/* Step Component */}
+            {/* Step Component */}
             <View style={{
               alignItems: 'center',
               marginTop: hp('1%'),
@@ -1390,64 +1565,76 @@ const CustomerInfo = ({ navigation }) => {
               <Step logoUri={2} />
             </View>
 
-              <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: hp('1%'),
-          marginHorizontal: wp('6%'),
-          marginBottom: hp('2%'),
-          paddingHorizontal: wp('2%'),
-          paddingVertical: hp('1.5%'),
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          borderRadius: wp('4%'),
-          backdropFilter: 'blur(10px)',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.2)',
-        }}>
-          <View style={{ flex: 1 }}>
-            <Text style={[
-              headStyles.headerTitle,
-              {
-                color: '#FFFFFF',
-                fontSize: wp('7%'),
-                fontWeight: '800',
-                letterSpacing: -0.5,
-                textAlign: 'left',
-                marginLeft: 0,
-                lineHeight: wp('8%'),
-                textShadowColor: 'rgba(0,0,0,0.3)',
-                textShadowRadius: 4,
-                textShadowOffset: { width: 1, height: 1 },
-              }
-            ]}>
-              {t('customerInformation') || 'Customer Information'}
-            </Text>
-            <Text style={{
-              color: 'rgba(255,255,255,0.8)',
-              fontSize: wp('3.5%'),
-              fontWeight: '500',
-              marginTop: hp('0.5%'),
-              letterSpacing: 0.3,
-              textShadowColor: 'rgba(0,0,0,0.2)',
-              textShadowRadius: 2,
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: hp('1%'),
+              marginHorizontal: wp('6%'),
+              marginBottom: hp('2%'),
+              paddingHorizontal: wp('2%'),
+              paddingVertical: hp('1.5%'),
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderRadius: wp('4%'),
+              backdropFilter: 'blur(10px)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.2)',
             }}>
-              {t('findYourPerfectJourney') || 'Find your perfect journey'}
-            </Text>
-          </View>
-        </View>
-         
+              <View style={{ flex: 1 }}>
+                <Text style={[
+                  headStyles.headerTitle,
+                  {
+                    color: '#FFFFFF',
+                    fontSize: wp('7%'),
+                    fontWeight: '800',
+                    letterSpacing: -0.5,
+                    textAlign: 'left',
+                    marginLeft: 0,
+                    lineHeight: wp('8%'),
+                    textShadowColor: 'rgba(0,0,0,0.3)',
+                    textShadowRadius: 4,
+                    textShadowOffset: { width: 1, height: 1 },
+                  }
+                ]}>
+                  {t('customerInformation') || 'Customer Information'}
+                </Text>
+                <Text style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: wp('3.5%'),
+                  fontWeight: '500',
+                  marginTop: hp('0.5%'),
+                  letterSpacing: 0.3,
+                  textShadowColor: 'rgba(0,0,0,0.2)',
+                  textShadowRadius: 2,
+                }}>
+                  {t('findYourPerfectJourney') || 'Find your perfect journey'}
+                </Text>
+              </View>
+            </View>
+
             {/* Content Container */}
             <View style={styles.contentContainer}>
               {/* เงื่อนไขแสดงฟอร์มตาม international */}
               {Number(customerData.international) === 0 ? (
-                <View style={styles.promo}>
+                <View
+                  ref={passengerSectionRef}
+                  style={styles.promo}
+                  onLayout={(e) => {
+                    // Measure passenger section position for auto-scroll
+                    try {
+                      const y = e.nativeEvent.layout.y;
+                      console.log('[PassengerSection] Y position:', y);
+                    } catch (err) {
+                      // ignore
+                    }
+                  }}
+                >
                   <Text style={styles.TextInput}>{t('passengerDetails') || 'Passenger Details'}</Text>
 
                   {/* คำนำหน้า */}
                   <Text style={styles.textHead}>{t('title') || 'Title'}</Text>
                   <TouchableOpacity
-                    style={[styles.button, (errors.selectedTitle || (selectedTitle === 'Please Select')) && styles.errorInput]}
+                    style={[styles.button, (showAllErrors && (errors.selectedTitle || (selectedTitle === 'Please Select'))) && styles.errorInput]}
                     onPress={toggleModal}>
                     <Text style={styles.buttonText}>{getTitleLabel(selectedTitle, t)}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1472,7 +1659,7 @@ const CustomerInfo = ({ navigation }) => {
                         />
                       </View>
 
-                      
+
                     </View>
                   </Modal>
 
@@ -1502,10 +1689,22 @@ const CustomerInfo = ({ navigation }) => {
                   />
 
                   {/* รายละเอียดการติดต่อ */}
-                  <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
+                  <View
+                    ref={contactSectionRef}
+                    onLayout={(e) => {
+                      try {
+                        const y = e.nativeEvent.layout.y;
+                        console.log('[ContactSection] Y position:', y);
+                      } catch (err) {
+                        // ignore
+                      }
+                    }}
+                  >
+                    <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
+                  </View>
                   <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
                   <TouchableOpacity
-                    style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
+                    style={[styles.button, (showAllErrors && (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')))) && styles.errorInput]}
                     onPress={toggleTeleModal}>
                     <Text style={styles.buttonText}>{selectedTele === 'Please Select' ? t('pleaseSelect') : selectedTele}</Text>
                     <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1526,7 +1725,7 @@ const CustomerInfo = ({ navigation }) => {
                           data={filteredTelePhones}
                           renderItem={({ item }) => (
                             <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                              <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
+                              <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}>
                                 {(item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')
                                   ? t('pleaseSelect')
                                   : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
@@ -1571,7 +1770,7 @@ const CustomerInfo = ({ navigation }) => {
                     placeholderTextColor="#374151"
                     onChangeText={(text) => {
                       setemail(text);
-                      
+
                       // Real-time email validation
                       if (text && text.length > 0) {
                         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -1630,11 +1829,22 @@ const CustomerInfo = ({ navigation }) => {
                   ))}
 
                   {/* Contact Details Section */}
-                  <View style={styles.promo}>
+                  <View
+                    ref={contactSectionRef}
+                    style={styles.promo}
+                    onLayout={(e) => {
+                      try {
+                        const y = e.nativeEvent.layout.y;
+                        console.log('[ContactSection-International] Y position:', y);
+                      } catch (err) {
+                        // ignore
+                      }
+                    }}
+                  >
                     <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
                     <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
                     <TouchableOpacity
-                      style={[styles.button, (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select'))) && styles.errorInput]}
+                      style={[styles.button, (showAllErrors && (errors.selectedTele || (selectedTele === 'Please Select' || selectedTele === (t('pleaseSelect') || 'Please Select')))) && styles.errorInput]}
                       onPress={toggleTeleModal}>
                       <Text style={styles.buttonText}>{selectedTele === 'Please Select' ? t('pleaseSelect') : selectedTele}</Text>
                       <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
@@ -1654,11 +1864,11 @@ const CustomerInfo = ({ navigation }) => {
                             data={filteredTelePhones}
                             renderItem={({ item }) => (
                               <TouchableOpacity style={styles.optionItem} onPress={() => handleSelectTele(item)}>
-                                <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}> 
-                                    {(item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')
-                                      ? t('pleaseSelect')
-                                      : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
-                                  </Text>
+                                <Text style={[styles.optionText, (item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')]}>
+                                  {(item.sys_countries_nameeng === 'Please Select' || item.sys_countries_namethai === 'Please Select')
+                                    ? t('pleaseSelect')
+                                    : `(+${item.sys_countries_telephone}) ${selectedLanguage === 'th' && item.sys_countries_namethai ? item.sys_countries_namethai : item.sys_countries_nameeng}`}
+                                </Text>
                               </TouchableOpacity>
                             )}
                             keyExtractor={(item, index) => index.toString()}
@@ -1672,8 +1882,8 @@ const CustomerInfo = ({ navigation }) => {
                     </Modal>
                     <TextInput
                       placeholder={t('enterYourMobileNumber') || 'Enter your phone number'}
-                        placeholderTextColor="#374151"
-                        style={[styles.input, contactErrors.mobile && styles.errorInput]}
+                      placeholderTextColor="#374151"
+                      style={[styles.input, (showAllErrors && contactErrors.mobile) && styles.errorInput]}
                       keyboardType="number-pad"
                       returnKeyType="done"
                       value={mobileNumber}
@@ -1695,7 +1905,7 @@ const CustomerInfo = ({ navigation }) => {
                     <TextInput
                       placeholder={t('enterYourEmail') || 'Enter Your Email'}
                       placeholderTextColor="#374151"
-                      style={[styles.input, contactErrors.email && styles.errorInput]}
+                      style={[styles.input, (showAllErrors && contactErrors.email) && styles.errorInput]}
                       keyboardType="email-address"
                       value={email}
                       editable={true}
@@ -1711,180 +1921,195 @@ const CustomerInfo = ({ navigation }) => {
                 </>
               )}
 
-                 {/* Refund options section */}
-                    {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => {
-              // Use cached refund options (computed once on initial load) if available,
-              // otherwise compute on the fly as a fallback.
-              const refundOptions = (Array.isArray(computedRefundOptions) && computedRefundOptions[index])
-                ? computedRefundOptions[index]
-                : getRefundOptions(all.totalbooking, customerData.symbol);
-              
-              return (
-              <View key={index} >
-                {(timetableDepart[0].md_timetable_refundable === 1 || timetableReturn[0].md_timetable_refundable === 1) && (
-              <View  style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}>
-                <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
-                <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
+              {/* Refund options section */}
+              {Array.isArray(PriceDepart) && PriceDepart.map((all, index) => {
+                // Use cached refund options (computed once on initial load) if available,
+                // otherwise compute on the fly as a fallback.
+                const refundOptions = (Array.isArray(computedRefundOptions) && computedRefundOptions[index])
+                  ? computedRefundOptions[index]
+                  : getRefundOptions(all.totalbooking, customerData.symbol);
 
-                  {refundOptions.map(opt => (
-                    <TouchableOpacity
-                      key={opt.key}
-                      onPress={() => setRefundOption(opt.key)}
-                      style={{
-                        width: '100%',
-                        flexDirection: 'row',
-                        alignItems: 'flex-start',
-                        paddingVertical: hp('2%'),
-                        paddingHorizontal: wp('3%'),
-                        marginTop: wp('3%'),
-                        borderRadius: wp('2%'),
-                        borderWidth: refundOption === opt.key ? 2 : 1,
-                        borderColor: refundOption === opt.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
-                        backgroundColor: '#fff'
-                      }}
-                    >
-                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: refundOption === opt.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
-                        {refundOption === opt.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                return (
+                  <View key={index} >
+                    {(timetableDepart?.[0]?.md_timetable_refundable === 1 || timetableReturn?.[0]?.md_timetable_refundable === 1) && (
+                      <View
+                        ref={refundSectionRef}
+                        style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(253,80,30,0.08)' }]}
+                        onLayout={(e) => {
+                          try {
+                            const y = e.nativeEvent.layout.y;
+                            console.log('[RefundSection] Y position:', y);
+                          } catch (err) {
+                            // ignore
+                          }
+                        }}
+                      >
+                        <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('addCancelForAnyReason') || 'Add Cancel for Any Reason'}</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('cancelInfo') || 'Cancel at least 72 hours before departure to be eligible for a refund'}</Text>
+
+                        {refundOptions.map(opt => (
+                          <TouchableOpacity
+                            key={opt.key}
+                            onPress={() => setRefundOption(opt.key)}
+                            style={{
+                              width: '100%',
+                              flexDirection: 'row',
+                              alignItems: 'flex-start',
+                              paddingVertical: hp('2%'),
+                              paddingHorizontal: wp('3%'),
+                              marginTop: wp('3%'),
+                              borderRadius: wp('2%'),
+                              borderWidth: refundOption === opt.key ? 2 : 1,
+                              borderColor: refundOption === opt.key ? '#FD501E' : 'rgba(0,0,0,0.06)',
+                              backgroundColor: '#fff'
+                            }}
+                          >
+                            <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: refundOption === opt.key ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
+                              {refundOption === opt.key && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ fontWeight: '700', color: '#111827' }}>{opt.title}</Text>
+                              <Text style={{ color: '#FD501E', fontWeight: '700', marginTop: hp('0.4%') }}>{opt.subtitle}</Text>
+                              <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{opt.note}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+
+                        <View style={{ marginTop: hp('2%'), padding: wp('3%'), backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: wp('2%') }}>
+                          <Text style={{ color: '#6B7280', fontSize: wp('3%') }}>
+                            {t('refundInfo') || 'You will receive a refund of the fare (excluding service charges and fees) if the cancellation is made at least 72 hours before departure. The refund will be credited to your original payment method.'}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: '700', color: '#111827' }}>{opt.title}</Text>
-                        <Text style={{ color: '#FD501E', fontWeight: '700', marginTop: hp('0.4%') }}>{opt.subtitle}</Text>
-                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{opt.note}</Text>
+
+                    )}
+                    {/* Insurance / Trip Protection selection block (Plan A/B/C) */}
+                    {customerData.country_insurance === 217 && (
+                      <View
+                        style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', marginTop: hp('2%') }]}
+                        onLayout={(e) => {
+                          const y = e.nativeEvent.layout.y;
+                          setInsuranceSectionY(y);
+                        }}
+                      >
+                        <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('TripProtection') || 'Trip Protection'}</Text>
+                        <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('insuranceProvidedBy') || 'รับประกันโดย CHUBB'}</Text>
+
+
+                        {insuranceLoading ? (
+                          <Text style={{ color: '#6B7280' }}>{t('loading') || 'Loading...'}</Text>
+                        ) : (
+                          (insuranceOptions || []).map((plan, idx) => (
+                            <TouchableOpacity
+                              key={plan.md_insurancetype_id}
+                              onPress={() => {
+                                // Toggle: if already selected, deselect and clear related data; otherwise select and persist
+                                if (selectedInsurancePlan === plan.md_insurancetype_id) {
+                                  setSelectedInsurancePlan(null);
+                                  // clear persisted insurance fields and holder info
+                                  updateCustomerData({
+                                    md_insurancetype_id: null,
+                                    md_insurancetype_price: null,
+                                    md_insurancetype_holder_name1: '',
+                                    insurance: []
+                                  });
+                                  // clear local holders array
+                                  setInsuranceHolders(Array.from({ length: totalPassengersInitial }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' })));
+                                } else {
+                                  setSelectedInsurancePlan(plan.md_insurancetype_id);
+                                  // persist selected insurance id to booking data for backend
+                                  updateCustomerData({ md_insurancetype_id: plan.md_insurancetype_id, md_insurancetype_price: plan.md_insurancetype_price });
+                                  // scroll to insurance holder inputs block — wait for the holder inputs to render after plan selection
+                                  InteractionManager.runAfterInteractions(() => {
+                                    // Give extra time for the holder inputs block to render and measure its position
+                                    setTimeout(() => {
+                                      try {
+                                        // After selecting a plan, the holder inputs block appears and insuranceDetailsY will be measured
+                                        // Wait a bit more to ensure insuranceDetailsY is updated via onLayout
+                                        setTimeout(() => {
+                                          if (typeof insuranceDetailsY === 'number' && scrollRef && scrollRef.current) {
+                                            // insuranceDetailsY points to the holder inputs block that appears after selecting a plan
+                                            // Reduce header offset to scroll down more (showing more of the holder inputs)
+                                            const HEADER_OFFSET = insets ? (insets.top - 25) : 100;
+                                            const targetY = Math.max(0, insuranceDetailsY - HEADER_OFFSET);
+                                            console.warn('[InsuranceScroll] scrolling to holder inputs: insuranceDetailsY=', insuranceDetailsY, '- HEADER_OFFSET=', HEADER_OFFSET, '-> targetY=', targetY);
+                                            scrollRef.current.scrollTo({ y: targetY, animated: true });
+                                          } else {
+                                            console.warn('[InsuranceScroll] insuranceDetailsY not yet measured, cannot scroll. insuranceDetailsY=', insuranceDetailsY);
+                                          }
+                                        }, 200); // additional delay to let insuranceDetailsY update from onLayout
+                                      } catch (err) {
+                                        console.warn('[InsuranceScroll] Failed to scroll to insurance holder inputs', err);
+                                      }
+                                    }, 300);
+                                  });
+                                }
+                              }}
+                              style={{
+                                width: '100%',
+                                backgroundColor: '#fff',
+                                borderRadius: wp('3%'),
+                                padding: wp('3%'),
+                                marginBottom: hp('1.2%'),
+                                borderWidth: selectedInsurancePlan === plan.md_insurancetype_id ? 2 : 1,
+                                borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : 'rgba(0,0,0,0.06)',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {idx === 0 && (
+                                <View style={{ position: 'absolute', left: 10, top: -10, zIndex: 5 }}>
+                                  <View style={{ backgroundColor: '#FF7A42', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 }}>
+                                    <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{selectedLanguage === 'th' ? 'แนะนำ' : 'Recommended'}</Text>
+                                  </View>
+                                </View>
+                              )}
+
+                              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
+                                {selectedInsurancePlan === plan.md_insurancetype_id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ fontWeight: '700', color: '#111827' }}>{selectedLanguage === 'th' ? (stripHtml(plan.md_insurancetype_nameth) || plan.md_insurancetype_no) : (stripHtml(plan.md_insurancetype_nameen) || plan.md_insurancetype_no)}</Text>
+
+                                <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{customerData.symbol} {formatNumberWithComma(plan.md_insurancetype_price?.toFixed ? plan.md_insurancetype_price.toFixed(2) : (plan.md_insurancetype_price ?? 0))}</Text>
+                              </View>
+                            </TouchableOpacity>
+                          ))
+                        )}
                       </View>
-                    </TouchableOpacity>
-                  ))}
-
-                  <View style={{ marginTop: hp('2%'), padding: wp('3%'), backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: wp('2%') }}>
-                    <Text style={{ color: '#6B7280', fontSize: wp('3%') }}>
-                      {t('refundInfo') || 'You will receive a refund of the fare (excluding service charges and fees) if the cancellation is made at least 72 hours before departure. The refund will be credited to your original payment method.'}
-                    </Text>
-                  </View>
-              </View>
-
-                )}
-                {/* Insurance / Trip Protection selection block (Plan A/B/C) */}
-                <View
-                  style={[styles.promo, { backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', marginTop: hp('2%') }]}
-                  onLayout={(e) => {
-                    const y = e.nativeEvent.layout.y;
-                    setInsuranceSectionY(y);
-                  }}
-                > 
-                  <Text style={{ fontWeight: '700', fontSize: wp('4%'), color: '#1F2937', marginBottom: hp('0.5%') }}>{t('TripProtection') || 'Trip Protection'}</Text>
-                  <Text style={{ color: '#6B7280', fontSize: wp('3%'), marginBottom: hp('1%') }}>{t('insuranceProvidedBy') || 'รับประกันโดย CHUBB'}</Text>
-                
-
-                  {insuranceLoading ? (
-                    <Text style={{ color: '#6B7280' }}>{t('loading') || 'Loading...'}</Text>
-                  ) : (
-                    (insuranceOptions || []).map((plan, idx) => (
-                    <TouchableOpacity
-                      key={plan.md_insurancetype_id}
-                      onPress={() => {
-                        // Toggle: if already selected, deselect and clear related data; otherwise select and persist
-                        if (selectedInsurancePlan === plan.md_insurancetype_id) {
-                          setSelectedInsurancePlan(null);
-                          // clear persisted insurance fields and holder info
-                          updateCustomerData({
-                            md_insurancetype_id: null,
-                            md_insurancetype_price: null,
-                            md_insurancetype_holder_name1: '',
-                            md_insurancetype_holders: ''
-                          });
-                          // clear local holders array
-                          setInsuranceHolders(Array.from({ length: totalPassengersInitial }, () => ({ name: '', day: '', month: '', monthLabel: '', year: '' })));
-                        } else {
-                          setSelectedInsurancePlan(plan.md_insurancetype_id);
-                          // persist selected insurance id to booking data for backend
-                          updateCustomerData({ md_insurancetype_id: plan.md_insurancetype_id, md_insurancetype_price: plan.md_insurancetype_price });
-                          // scroll to insurance details block — measure and scroll
-                          setTimeout(() => {
+                    )}
+                    {/* When a plan is selected, show holder inputs and plan details */}
+                    {selectedInsurancePlan && (() => {
+                      const plan = (insuranceOptions || []).find(p => p.md_insurancetype_id === selectedInsurancePlan);
+                      if (!plan) return null;
+                      const detailText = selectedLanguage === 'th' ? stripHtml(plan.md_insurancetype_detailth || plan.md_insurancetype_detail) : stripHtml(plan.md_insurancetype_detailen || plan.md_insurancetype_detail);
+                      return (
+                        <View
+                          ref={insuranceDetailsRef}
+                          style={{ marginTop: hp('2%'), backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' }}
+                          onLayout={(e) => {
                             try {
-                              const scrollNode = scrollRef && scrollRef.current ? findNodeHandle(scrollRef.current) : null;
-                              const detailsNode = insuranceDetailsRef && insuranceDetailsRef.current ? findNodeHandle(insuranceDetailsRef.current) : null;
-                              if (detailsNode && scrollNode && UIManager && UIManager.measureLayout) {
-                                UIManager.measureLayout(
-                                  detailsNode,
-                                  scrollNode,
-                                  (error) => {
-                                    // fallback: use stored y
-                                    const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
-                                    console.warn('[InsuranceScroll] measureLayout error, fallback targetY=', targetY, 'error=', error);
-                                    if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
-                                      scrollRef.current.scrollTo({ y: targetY, animated: true });
-                                    }
+                              // Use pageY for absolute position from top of ScrollView
+                              if (insuranceDetailsRef.current) {
+                                insuranceDetailsRef.current.measureLayout(
+                                  scrollRef.current,
+                                  (x, y) => {
+                                    console.warn('[InsuranceScroll] insuranceDetailsY measured via measureLayout:', y);
+                                    setInsuranceDetailsY(y);
                                   },
-                                  (left, top) => {
-                                    const targetY = Math.max(0, top - 20);
-                                    console.warn('[InsuranceScroll] measured left=', left, 'top=', top, '-> targetY=', targetY);
-                                    if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
-                                      scrollRef.current.scrollTo({ y: targetY, animated: true });
-                                    }
+                                  () => {
+                                    // Fallback to pageY if measureLayout fails
+                                    const pageY = e.nativeEvent.layout.y;
+                                    console.warn('[InsuranceScroll] insuranceDetailsY fallback to layout.y:', pageY);
+                                    setInsuranceDetailsY(pageY);
                                   }
                                 );
-                              } else {
-                                const targetY = (insuranceDetailsY || insuranceSectionY) - 20;
-                                console.warn('[InsuranceScroll] detailsNode or scrollNode missing, using fallback targetY=', targetY);
-                                if (scrollRef && scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
-                                  scrollRef.current.scrollTo({ y: targetY, animated: true });
-                                }
                               }
                             } catch (err) {
-                              console.warn('Failed to scroll to insurance section', err);
+                              console.warn('[InsuranceScroll] onLayout error:', err);
                             }
-                          }, 120);
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        backgroundColor: '#fff',
-                        borderRadius: wp('3%'),
-                        padding: wp('3%'),
-                        marginBottom: hp('1.2%'),
-                        borderWidth: selectedInsurancePlan === plan.md_insurancetype_id ? 2 : 1,
-                        borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : 'rgba(0,0,0,0.06)',
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                      }}
-                    >
-                      {idx === 0 && (
-                        <View style={{ position: 'absolute', left: 10, top: -10, zIndex: 5 }}>
-                          <View style={{ backgroundColor: '#FF7A42', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 }}>
-                            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{selectedLanguage === 'th' ? 'แนะนำ' : 'Recommended'}</Text>
-                          </View>
-                        </View>
-                      )}
-
-                      <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selectedInsurancePlan === plan.md_insurancetype_id ? '#FD501E' : '#D1D5DB', alignItems: 'center', justifyContent: 'center', marginRight: wp('3%') }}>
-                        {selectedInsurancePlan === plan.md_insurancetype_id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FD501E' }} />}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: '700', color: '#111827' }}>{selectedLanguage === 'th' ? (stripHtml(plan.md_insurancetype_nameth) || plan.md_insurancetype_no) : (stripHtml(plan.md_insurancetype_nameen) || plan.md_insurancetype_no)}</Text>
-                      
-                        <Text style={{ color: '#9CA3AF', marginTop: hp('0.6%') }}>{customerData.symbol} {formatNumberWithComma(plan.md_insurancetype_price?.toFixed ? plan.md_insurancetype_price.toFixed(2) : (plan.md_insurancetype_price ?? 0))}</Text>
-                      </View>
-                    </TouchableOpacity>
-                    ))
-                  )}
-                </View>
-                {/* When a plan is selected, show holder inputs and plan details */}
-                {selectedInsurancePlan && (() => {
-                  const plan = (insuranceOptions || []).find(p => p.md_insurancetype_id === selectedInsurancePlan);
-                  if (!plan) return null;
-                  const detailText = selectedLanguage === 'th' ? stripHtml(plan.md_insurancetype_detailth || plan.md_insurancetype_detail) : stripHtml(plan.md_insurancetype_detailen || plan.md_insurancetype_detail);
-                  return (
-                    <View
-                      ref={insuranceDetailsRef}
-                      style={{ marginTop: hp('2%'), backgroundColor: '#fff', borderRadius: wp('3%'), padding: wp('4%'), borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' }}
-                      onLayout={(e) => {
-                        try {
-                          const y = e.nativeEvent.layout.y;
-                          setInsuranceDetailsY(y);
-                        } catch (err) {
-                          // ignore
-                        }
-                      }}
-                    >
+                          }}
+                        >
                           {/* Render one holder input per passenger */}
                           <View>
                             {(insuranceHolders || []).map((holder, idx) => {
@@ -1898,29 +2123,44 @@ const CustomerInfo = ({ navigation }) => {
                               else typeLabel = t('infant') || 'Infant';
 
                               return (
-                                <View key={`ins-holder-${idx}`} style={{ marginBottom: hp('1.2%') }}>
+                                <View key={`ins-holder-${idx}`} ref={idx === 0 ? firstHolderRef : null} style={{ marginBottom: hp('1.2%') }}>
                                   {/* show insurance holder title for all holders */}
                                   <Text style={{ fontWeight: '700', fontSize: wp('3.6%'), color: '#111827', marginBottom: hp('0.5%') }}>
                                     {`${t('insuranceHolderTitle') ? t('insuranceHolderTitle').replace(/\d+/, '') : 'ชื่อผู้จอง'} ${idx + 1}`}
                                   </Text>
                                   <TextInput
                                     placeholder={t('insuranceHolderPlaceholder') || ''}
+                                    ref={idx === 0 ? firstHolderInputRef : null}
                                     value={holder.name}
                                     onChangeText={(text) => {
                                       const next = [...insuranceHolders];
                                       next[idx] = { ...next[idx], name: text };
                                       setInsuranceHolders(next);
-                                      // persist to customer data as an array (and keep first-holder legacy field)
-                                      updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
                                     }}
                                     placeholderTextColor="#374151"
-                                    style={[styles.input, { marginBottom: hp('0.8%') }]}
+                                    style={[
+                                      styles.input,
+                                      { marginBottom: hp('0.8%') },
+                                      showAllErrors && !holder.name && styles.errorInput
+                                    ]}
                                   />
 
                                   <Text style={{ fontWeight: '700', fontSize: wp('3.6%'), color: '#111827', marginBottom: hp('1%') }}>{t('dateOfBirth') || 'วันเกิด'}</Text>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: hp('1%'), paddingHorizontal: wp('2%') }}>
                                     <View style={{ flex: 1, marginRight: wp('2%') }}>
-                                      <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingVertical: hp('1.5%'), paddingHorizontal: wp('3%'), borderWidth: 1, borderColor: '#E5E7EB', borderRadius: wp('3%'), justifyContent: 'space-between' }} onPress={() => setActiveDobModal({ visible: true, type: 'day', index: idx })}>
+                                      <TouchableOpacity
+                                        style={{
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          backgroundColor: '#FFFFFF',
+                                          paddingVertical: hp('1.5%'),
+                                          paddingHorizontal: wp('3%'),
+                                          borderWidth: 1,
+                                          borderColor: (showAllErrors && !holder.day) ? '#EF4444' : '#E5E7EB',
+                                          borderRadius: wp('3%'),
+                                          justifyContent: 'space-between'
+                                        }}
+                                        onPress={() => setActiveDobModal({ visible: true, type: 'day', index: idx })}>
                                         <Text style={styles.buttonText}>{holder.day ? holder.day : (t('day') || 'Day')}</Text>
                                         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                                       </TouchableOpacity>
@@ -1935,7 +2175,7 @@ const CustomerInfo = ({ navigation }) => {
                                           paddingVertical: hp('1.5%'),
                                           paddingHorizontal: wp('3%'),
                                           borderWidth: 1,
-                                          borderColor: '#E5E7EB',
+                                          borderColor: (showAllErrors && !holder.month) ? '#EF4444' : '#E5E7EB',
                                           borderRadius: wp('3%'),
                                           justifyContent: 'space-between',
                                           minHeight: hp('6%'),
@@ -1949,7 +2189,19 @@ const CustomerInfo = ({ navigation }) => {
                                     </View>
 
                                     <View style={{ flex: 1 }}>
-                                      <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingVertical: hp('1.5%'), paddingHorizontal: wp('3%'), borderWidth: 1, borderColor: '#E5E7EB', borderRadius: wp('3%'), justifyContent: 'space-between' }} onPress={() => setActiveDobModal({ visible: true, type: 'year', index: idx })}>
+                                      <TouchableOpacity
+                                        style={{
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          backgroundColor: '#FFFFFF',
+                                          paddingVertical: hp('1.5%'),
+                                          paddingHorizontal: wp('3%'),
+                                          borderWidth: 1,
+                                          borderColor: (showAllErrors && !holder.year) ? '#EF4444' : '#E5E7EB',
+                                          borderRadius: wp('3%'),
+                                          justifyContent: 'space-between'
+                                        }}
+                                        onPress={() => setActiveDobModal({ visible: true, type: 'year', index: idx })}>
                                         <Text style={styles.buttonText}>{holder.year ? holder.year : (t('year') || 'Year')}</Text>
                                         <Icon name="chevron-down" size={18} color="#FD501E" style={styles.icon} />
                                       </TouchableOpacity>
@@ -1964,348 +2216,364 @@ const CustomerInfo = ({ navigation }) => {
                               <Text style={{ color: '#6B7280', fontSize: wp('3%'), lineHeight: 20 }}>{detailText}</Text>
                             </View>
                           </View>
-                    </View>
-                  );
-                })()}
-           
-                {/* DOB modals for insurance holders */}
-                <Modal visible={activeDobModal.visible && activeDobModal.type === 'day'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
-                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('day') || 'Day'}</Text>
-                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
-                        </TouchableOpacity>
-                      </View>
-                      <FlatList
-                        data={Array.from({ length: 31 }, (_, i) => String(i + 1))}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity style={styles.optionItem} onPress={() => {
-                            const idx = Number(activeDobModal.index);
-                            if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
-                            const next = [...insuranceHolders];
-                            next[idx] = { ...next[idx], day: item };
-                            setInsuranceHolders(next);
-                            updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
-                            setActiveDobModal({ visible: false, type: null, index: null });
-                          }}>
-                            <Text style={styles.optionText}>{item}</Text>
-                          </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item}
-                      />
-                    </View>
-                  </View>
-                </Modal>
-
-                <Modal visible={activeDobModal.visible && activeDobModal.type === 'month'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
-                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('month') || 'Month'}</Text>
-                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
-                        </TouchableOpacity>
-                      </View>
-                      <FlatList
-                        data={Array.from({ length: 12 }, (_, i) => String(i + 1))}
-                        renderItem={({ item }) => {
-                          const idxM = parseInt(item, 10) - 1;
-                          const label = selectedLanguage === 'th' ? monthsTh[idxM] : monthsEn[idxM];
-                          return (
-                            <TouchableOpacity style={styles.optionItem} onPress={() => {
-                              const sel = Number(activeDobModal.index);
-                              if (!Number.isInteger(sel)) return setActiveDobModal({ visible: false, type: null, index: null });
-                              const next = [...insuranceHolders];
-                              next[sel] = { ...next[sel], month: item, monthLabel: label };
-                              setInsuranceHolders(next);
-                              updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
-                              setActiveDobModal({ visible: false, type: null, index: null });
-                            }}>
-                              <Text style={styles.optionText}>{label}</Text>
-                            </TouchableOpacity>
-                          );
-                        }}
-                        keyExtractor={(item) => item}
-                      />
-                    </View>
-                  </View>
-                </Modal>
-
-                <Modal visible={activeDobModal.visible && activeDobModal.type === 'year'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
-                        <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('year') || 'Year'}</Text>
-                        <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
-                          <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
-                        </TouchableOpacity>
-                      </View>
-                      <FlatList
-                        data={Array.from({ length: 81 }, (_, i) => String(new Date().getFullYear() - i))}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity style={styles.optionItem} onPress={() => {
-                            const idx = Number(activeDobModal.index);
-                            if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
-                            const next = [...insuranceHolders];
-                            next[idx] = { ...next[idx], year: item };
-                            setInsuranceHolders(next);
-                            updateCustomerData({ md_insurancetype_holders: JSON.stringify(next), md_insurancetype_holder_name1: next[0]?.name || '' });
-                            setActiveDobModal({ visible: false, type: null, index: null });
-                          }}>
-                            <Text style={styles.optionText}>{item}</Text>
-                          </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item}
-                      />
-                    </View>
-                  </View>
-                </Modal>
-
-                <View style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
-                  <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
-                    <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
-                      <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
-                    </View>
-
-                    <View style={tripStyles.premiumContent}>
-                      {timetableDepart && timetableDepart.length > 0 ? (
-                        timetableDepart.map((item, idx) => (
-                          <View key={idx}>
-                            <Text style={tripStyles.sectionHeading}>{t('depart') || 'Depart'}</Text>
-
-                            <Text style={tripStyles.routeText}>
-                              {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}
-                            </Text>
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
-                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
-                            </View>
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
-                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
-                            </View>
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
-                              <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
-                            </View>
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('departureDate') || 'Departure Date'}</Text>
-                              <Text style={tripStyles.premiumValue}>{formatDate(customerData.departdate)}</Text>
-                            </View>
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
-                              <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                            </View>
-
-                            <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}> 
-                              <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
-                              <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceadult).toFixed(2))}</Text>
-                            </View>
-
-                            {customerData.child !== 0 && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
-                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricechild).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {customerData.infant !== 0 && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
-                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceinfant).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {customerData.pickupDepartId && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
-                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricepickupdepart).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {customerData.dropoffDepartId && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
-                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {all.totalDepart.save != 0 && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
-                                <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.discount).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {all.totalDepart.promotionprice != 0 && (
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
-                                <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.promotionprice).toFixed(2))}</Text>
-                              </View>
-                            )}
-
-                            {all.totalDepart.pricerefund != 0 && (
-                              <View >
-                                <View style={tripStyles.divider} />
-                                <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
-                              <View style={tripStyles.rowpromo}> 
-                                <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
-                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricerefund_show).toFixed(2))}</Text>
-                              </View>
-                                <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
-                              <View style={tripStyles.divider} />
-                              </View>
-                            )}
-
-                            <View style={tripStyles.rowpromo}>
-                              <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
-                              <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.showtotal).toFixed(2))}</Text>
-                            </View>
-
-                            <View style={tripStyles.divider} />
-                          </View>
-                        ))
-                      ) : (
-                        <View>
-                          <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingTimetable') || 'Loading timetable information...'}</Text>
                         </View>
-                      )}
+                      );
+                    })()}
 
-                      {customerData.roud === 2 && (
-                        <>
-                          {timetableReturn && timetableReturn.length > 0 && timetableReturn.map((item, idx) => (
-                            <View key={idx}>
-                                <Text style={tripStyles.sectionHeading}>{t('return') || 'Return'}</Text>
-                                <Text style={tripStyles.routeText}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
+                    {/* DOB modals for insurance holders */}
+                    <Modal visible={activeDobModal.visible && activeDobModal.type === 'day'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                      <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                            <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('day') || 'Day'}</Text>
+                            <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                              <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <FlatList
+                            data={Array.from({ length: 31 }, (_, i) => String(i + 1))}
+                            renderItem={({ item }) => (
+                              <TouchableOpacity style={styles.optionItem} onPress={() => {
+                                const idx = Number(activeDobModal.index);
+                                if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
+                                const next = [...insuranceHolders];
+                                next[idx] = { ...next[idx], day: item };
+                                setInsuranceHolders(next);
+                                setActiveDobModal({ visible: false, type: null, index: null });
+                              }}>
+                                <Text style={styles.optionText}>{item}</Text>
+                              </TouchableOpacity>
+                            )}
+                            keyExtractor={(item) => item}
+                          />
+                        </View>
+                      </View>
+                    </Modal>
 
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
-                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
-                              </View>
+                    <Modal visible={activeDobModal.visible && activeDobModal.type === 'month'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                      <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                            <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('month') || 'Month'}</Text>
+                            <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                              <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <FlatList
+                            data={Array.from({ length: 12 }, (_, i) => String(i + 1))}
+                            renderItem={({ item }) => {
+                              const idxM = parseInt(item, 10) - 1;
+                              const label = selectedLanguage === 'th' ? monthsTh[idxM] : monthsEn[idxM];
+                              return (
+                                <TouchableOpacity style={styles.optionItem} onPress={() => {
+                                  const sel = Number(activeDobModal.index);
+                                  if (!Number.isInteger(sel)) return setActiveDobModal({ visible: false, type: null, index: null });
+                                  const next = [...insuranceHolders];
+                                  next[sel] = { ...next[sel], month: item, monthLabel: label };
+                                  setInsuranceHolders(next);
+                                  setActiveDobModal({ visible: false, type: null, index: null });
+                                }}>
+                                  <Text style={styles.optionText}>{label}</Text>
+                                </TouchableOpacity>
+                              );
+                            }}
+                            keyExtractor={(item) => item}
+                          />
+                        </View>
+                      </View>
+                    </Modal>
 
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
-                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
-                              </View>
+                    <Modal visible={activeDobModal.visible && activeDobModal.type === 'year'} transparent animationType="fade" onRequestClose={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                      <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: hp('1%'), borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.04)', marginBottom: hp('1%') }}>
+                            <Text style={{ fontWeight: '700', fontSize: wp('4%') }}>{t('year') || 'Year'}</Text>
+                            <TouchableOpacity onPress={() => setActiveDobModal({ visible: false, type: null, index: null })}>
+                              <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('close') || 'Close'}</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <FlatList
+                            data={Array.from({ length: 81 }, (_, i) => String(new Date().getFullYear() - i))}
+                            renderItem={({ item }) => (
+                              <TouchableOpacity style={styles.optionItem} onPress={() => {
+                                const idx = Number(activeDobModal.index);
+                                if (!Number.isInteger(idx)) return setActiveDobModal({ visible: false, type: null, index: null });
+                                const next = [...insuranceHolders];
+                                next[idx] = { ...next[idx], year: item };
+                                setInsuranceHolders(next);
+                                setActiveDobModal({ visible: false, type: null, index: null });
+                              }}>
+                                <Text style={styles.optionText}>{item}</Text>
+                              </TouchableOpacity>
+                            )}
+                            keyExtractor={(item) => item}
+                          />
+                        </View>
+                      </View>
+                    </Modal>
 
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
-                                <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
-                              </View>
+                    <View style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
+                      <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}>
+                        <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
+                          <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+                        </View>
 
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('returnDate') || 'Return Date'}</Text>
-                                  <Text style={tripStyles.premiumValue}>{formatDate(customerData.returndate)}</Text>
-                              </View>
+                        <View style={tripStyles.premiumContent}>
+                          {timetableDepart && timetableDepart.length > 0 ? (
+                            timetableDepart.map((item, idx) => (
+                              <View key={idx}>
+                                <Text style={tripStyles.sectionHeading}>{t('depart') || 'Depart'}</Text>
 
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
-                                <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
-                              </View>
+                                <Text style={tripStyles.routeText}>
+                                  {selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}
+                                </Text>
 
-                              <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}> 
-                                <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
-                                <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceadult).toFixed(2))}</Text>
-                              </View>
-
-                              {customerData.child !== 0 && (
                                 <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
-                                  <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricechild).toFixed(2))}</Text>
+                                  <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
                                 </View>
-                              )}
 
-                              {customerData.infant !== 0 && (
                                 <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
-                                  <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceinfant).toFixed(2))}</Text>
+                                  <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
                                 </View>
-                              )}
 
-                              {customerData.pickupReturnId != 0 && (
                                 <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
-                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricepickupdepart).toFixed(2))}</Text>
+                                  <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
                                 </View>
-                              )}
 
-                              {customerData.dropoffReturnId != 0 && (
                                 <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
-                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
+                                  <Text style={tripStyles.premiumLabel}>{t('departureDate') || 'Departure Date'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{formatDate(customerData.departdate)}</Text>
                                 </View>
-                              )}
 
-                              {all.totalReturn.save != 0 && (
+                                <View style={tripStyles.rowpromo}>
+                                  <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                                  <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                                </View>
+
+                                <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}>
+                                  <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
+                                  <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceadult).toFixed(2))}</Text>
+                                </View>
+
+                                {customerData.child !== 0 && (
                                   <View style={tripStyles.rowpromo}>
-                                    <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
-                                    <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.discount).toFixed(2))}</Text>
+                                    <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
+                                    <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricechild).toFixed(2))}</Text>
                                   </View>
                                 )}
 
-                              {all.totalReturn.promotionprice != 0 && (
+                                {customerData.infant !== 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
+                                    <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceinfant).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                                {customerData.pickupDepartId && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricepickupdepart).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                                {customerData.dropoffDepartId && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricedropoffdepart).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                                {all.totalDepart.save != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                                    <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.discount).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                                {all.totalDepart.promotionprice != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                                    <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.promotionprice).toFixed(2))}</Text>
+                                  </View>
+                                )}
+
+                                {(all.totalDepart.pricerefund != 0 || all.totalDepart.priceinsurance != 0) && (
+                                  <View >
+                                    <View style={tripStyles.divider} />
+                                    <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
+                                    {all.totalDepart.pricerefund != 0 && (
+                                      <View style={tripStyles.rowpromo}>
+                                        <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                        <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricerefund_show).toFixed(2))}</Text>
+                                      </View>
+                                    )}
+                                    {all.totalDepart.priceinsurance != 0 && (
+                                      <View style={tripStyles.rowpromo}>
+                                        <Text style={tripStyles.premiumLabel}>{t('TravelInsurance') || 'Travel insurance'}</Text>
+                                        <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceinsurance_show).toFixed(2))}</Text>
+                                      </View>
+                                    )}
+
+                                    <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
+                                    <View style={tripStyles.divider} />
+                                  </View>
+                                )}
+
+
                                 <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
-                                  <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.promotionprice).toFixed(2))}</Text>
+                                  <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                                  <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.showtotal).toFixed(2))}</Text>
                                 </View>
-                              )}
 
-                               {all.totalReturn.pricerefund != 0 && (
-                              <View >
                                 <View style={tripStyles.divider} />
-                                <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
-                              <View style={tripStyles.rowpromo}> 
-                                <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
-                                <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricerefund_show).toFixed(2))}</Text>
                               </View>
-                                <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
-                              <View style={tripStyles.divider} />
-                              </View>
-                            )}
-
-                              <View style={tripStyles.rowpromo}>
-                                <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
-                                <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.showtotal).toFixed(2))}</Text>
-                              </View>
-
-                              <View style={tripStyles.divider} />
-                            </View>
-                          ))}
-
-                          {(!timetableReturn || timetableReturn.length === 0) && (
+                            ))
+                          ) : (
                             <View>
-                              <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingReturnTimetable') || 'Loading return timetable information...'}</Text>
+                              <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingTimetable') || 'Loading timetable information...'}</Text>
                             </View>
                           )}
-                        </>
-                      )}
 
-                      <View style={tripStyles.totalRow}>
-                        <Text style={tripStyles.totalLabel}>{t('subtotal') || 'Subtotal'}</Text>
-                        <Text style={tripStyles.premiumValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.total).toFixed(2))}</Text>
-                      </View>
+                          {customerData.roud === 2 && (
+                            <>
+                              {timetableReturn && timetableReturn.length > 0 && timetableReturn.map((item, idx) => (
+                                <View key={idx}>
+                                  <Text style={tripStyles.sectionHeading}>{t('return') || 'Return'}</Text>
+                                  <Text style={tripStyles.routeText}>{selectedLanguage === 'th' ? item.startingpoint_namethai : item.startingpoint_nameeng} <AntDesign name="arrow-right" size={14} color="#FD501E" /> {selectedLanguage === 'th' ? item.endpoint_namethai : item.endpoint_nameeng}</Text>
 
-                      <View style={tripStyles.divider} />
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('company') || 'Company'}</Text>
+                                    <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_company_namethai : item.md_company_nameeng) || 'Loading...'}</Text>
+                                  </View>
 
-                      <View style={tripStyles.totalRow}>
-                        <Text style={[tripStyles.totalLabel, { color: '#FD501E' }]}>{t('total') || 'Total'}</Text>
-                        <Text style={tripStyles.totalValueBig}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalbooking).toFixed(2))}</Text>
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('seat') || 'Seat'}</Text>
+                                    <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_seat_namethai : item.md_seat_nameeng) || 'Loading...'}</Text>
+                                  </View>
+
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('boat') || 'Boat'}</Text>
+                                    <Text style={tripStyles.premiumValue}>{(selectedLanguage === 'th' ? item.md_boattype_namethai : item.md_boattype_nameeng) || 'Loading...'}</Text>
+                                  </View>
+
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('returnDate') || 'Return Date'}</Text>
+                                    <Text style={tripStyles.premiumValue}>{formatDate(customerData.returndate)}</Text>
+                                  </View>
+
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('departureTime') || 'Departure Time'}</Text>
+                                    <Text style={tripStyles.premiumValue}>{formatTime(item.md_timetable_departuretime)} - {formatTime(item.md_timetable_arrivaltime)} | {formatTimeToHoursAndMinutes(item.md_timetable_time)}</Text>
+                                  </View>
+
+                                  <View style={[tripStyles.rowpromo, { marginTop: hp('1%') }]}>
+                                    <Text style={tripStyles.premiumTotalLabel}>{t('adult') || 'Adult'} x {customerData.adult}</Text>
+                                    <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceadult).toFixed(2))}</Text>
+                                  </View>
+
+                                  {customerData.child !== 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumTotalLabel}>{t('child') || 'Child'} x {customerData.child}</Text>
+                                      <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricechild).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {customerData.infant !== 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumTotalLabel}>{t('infant') || 'Infant'} x {customerData.infant}</Text>
+                                      <Text style={tripStyles.premiumTotalValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceinfant).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {customerData.pickupReturnId != 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumLabel}>{t('pickUp') || 'Pick up'}</Text>
+                                      <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricepickupdepart).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {customerData.dropoffReturnId != 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumLabel}>{t('dropOff') || 'Drop off'}</Text>
+                                      <Text style={[tripStyles.premiumValue, { color: 'green' }]}>+ {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricedropoffdepart).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {all.totalReturn.save != 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumLabel}>{t('discount') || 'Discount'}</Text>
+                                      <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.discount).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {all.totalReturn.promotionprice != 0 && (
+                                    <View style={tripStyles.rowpromo}>
+                                      <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
+                                      <Text style={tripStyles.redText}>- {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.promotionprice).toFixed(2))}</Text>
+                                    </View>
+                                  )}
+
+                                  {(all.totalReturn.pricerefund != 0 || all.totalReturn.priceinsurance != 0) && (
+                                    <View >
+                                      <View style={tripStyles.divider} />
+                                      <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
+                                      {all.totalReturn.pricerefund != 0 && (
+                                        <View style={tripStyles.rowpromo}>
+                                          <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                          <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricerefund_show).toFixed(2))}</Text>
+                                        </View>
+                                      )}
+                                      {all.totalReturn.priceinsurance != 0 && (
+                                        <View style={tripStyles.rowpromo}>
+                                          <Text style={tripStyles.premiumLabel}>{t('TravelInsurance') || 'Travel insurance'}</Text>
+                                          <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceinsurance_show).toFixed(2))}</Text>
+                                        </View>
+                                      )}
+
+                                      <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
+                                      <View style={tripStyles.divider} />
+                                    </View>
+                                  )}
+
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('ticketFare') || 'Ticket fare'}</Text>
+                                    <Text style={tripStyles.premiumFare}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.showtotal).toFixed(2))}</Text>
+                                  </View>
+
+                                  <View style={tripStyles.divider} />
+                                </View>
+                              ))}
+
+                              {(!timetableReturn || timetableReturn.length === 0) && (
+                                <View>
+                                  <Text style={{ color: '#6B7280', textAlign: 'center', marginVertical: hp('2%') }}>{t('loadingReturnTimetable') || 'Loading return timetable information...'}</Text>
+                                </View>
+                              )}
+                            </>
+                          )}
+
+                          <View style={tripStyles.totalRow}>
+                            <Text style={tripStyles.totalLabel}>{t('subtotal') || 'Subtotal'}</Text>
+                            <Text style={tripStyles.premiumValue}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.total).toFixed(2))}</Text>
+                          </View>
+
+                          <View style={tripStyles.divider} />
+
+                          <View style={tripStyles.totalRow}>
+                            <Text style={[tripStyles.totalLabel, { color: '#FD501E' }]}>{t('total') || 'Total'}</Text>
+                            <Text style={tripStyles.totalValueBig}>{customerData.symbol} {formatNumberWithComma(parseFloat(all.totalbooking).toFixed(2))}</Text>
+                          </View>
+                        </View>
                       </View>
                     </View>
                   </View>
-                </View>
-                </View>
-              );
-            })}
+                );
+              })}
 
-           
+
               <View style={styles.promo}>
                 <Text style={tripStyles.premiumLabel}>{t('promotionCode') || 'Discount Code'}</Text>
 

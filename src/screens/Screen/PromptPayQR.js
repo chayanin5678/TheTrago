@@ -281,8 +281,8 @@ export default function PromptPayScreen({ route, navigation }) {
 
         paymentfee: parseInt(customerData.md_booking_payfee || customerData.paymentfee) || 0,
         promotioncode: customerData.md_booking_promocode || '',
-        refund: customerData.md_booking_refund || '',
-        insurance: '',
+        refund: customerData.md_booking_refund || 0,
+        insurance: customerData.md_booking_insurance || 0,
 
         credit: parseInt(Number(pointsToEarn || 0).toFixed(2)),
         member: Number(customerData.md_booking_memberid) || 0,
@@ -290,7 +290,7 @@ export default function PromptPayScreen({ route, navigation }) {
         international: Number(customerData.international) || 0,
 
         detailpassenger: customerData.passenger || [],
-        detailinsurance: [],
+        detailinsurance: customerData.insurance || [],
 
         // ส่งรหัสประเทศตรง ๆ (ไม่มีการ norm ทำให้ไม่เกิด ++66)
         txt_countries: customerData.md_booking_country || customerData.country,

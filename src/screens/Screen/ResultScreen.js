@@ -170,6 +170,10 @@ const ResultScreen = ({ navigation, route }) => {
   }
 
   useEffect(() => {
+    // Log insurance data to check if it's being passed correctly
+    console.log('🟢 [ResultScreen] Insurance data:', JSON.stringify(customerData.insurance, null, 2));
+    console.log('🟢 [ResultScreen] All customerData:', JSON.stringify(customerData, null, 2));
+    
     fetchBookings(customerData.md_booking_code);
 
     if(customerData.md_booking_groupcode) {
@@ -191,6 +195,13 @@ const ResultScreen = ({ navigation, route }) => {
     };
 
     checkLoginStatus();
+
+    // Debug: log timeTableDepartId to help trace issues
+    try {
+      console.warn('[ResultScreen] timeTableDepartId =', customerData.timeTableDepartId);
+    } catch (err) {
+      console.warn('[ResultScreen] failed to read timeTableDepartId', err);
+    }
 
     fetch(`${ipAddress}/timetable/${customerData.timeTableDepartId}`)
       .then((response) => {

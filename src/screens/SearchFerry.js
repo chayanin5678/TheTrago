@@ -613,6 +613,14 @@ const SearchFerry = ({ navigation, route }) => {
   // Helper: reliably scroll the main ScrollView to the results anchor.
   const scrollToResults = () => {
     try {
+      // Special case: when no ferries found, scroll to a fixed position to show the "no results" message
+      if (pagedDataDepart && pagedDataDepart.length === 0) {
+        if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+          mainScrollRef.current.scrollTo({ y: 600, animated: true });
+        }
+        return;
+      }
+
       // Prefer measuring the actual first result item for precise alignment
       const preferredRef = firstItemRef.current ? firstItemRef.current : resultsRef.current;
       const target = preferredRef ? findNodeHandle(preferredRef) : null;
@@ -625,13 +633,13 @@ const SearchFerry = ({ navigation, route }) => {
           // onFail
           () => {
             if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-              mainScrollRef.current.scrollTo({ y: 420, animated: true });
+              mainScrollRef.current.scrollTo({ y: 600, animated: true });
             }
           },
           // onSuccess x,y,width,height
           (x, y, width, height) => {
             // Calculate top gutter so the first ticket sits below the header / safe area
-            const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER + 8; // small extra spacing
+            const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER - 250; // Increased offset to scroll further down
             let scrollToY = Math.max(0, y - topGutter);
             // Clamp to content bounds so we don't scroll past the end
             const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
@@ -648,7 +656,7 @@ const SearchFerry = ({ navigation, route }) => {
         const measureRef = preferredRef || resultsRef.current;
         // measure returns pageY (absolute). We need to subtract the scrollView pageY to get relative offset.
         measureRef.measure((x, y, width, height, pageX, pageY) => {
-          const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER + 8;
+          const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER - 250; // Increased offset to scroll further down
           // If we can measure the ScrollView's pageY by measuring its node, use it to compute relative Y
           const scrollNodeHandle = mainScrollRef.current ? findNodeHandle(mainScrollRef.current) : null;
           if (scrollNodeHandle && UIManager && UIManager.measure) {
@@ -663,8 +671,8 @@ const SearchFerry = ({ navigation, route }) => {
               }
             });
           } else {
-            // Fallback: use pageY directly but clamp
-            let relativeY = pageY - topGutter;
+            // Fallback: use pageY directly but clamp  
+            let relativeY = pageY - ((insets?.top || 0) + EXTRA_TOP_GUTTER - 250); // Use same increased offset
             const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
             const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
             const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
@@ -677,7 +685,7 @@ const SearchFerry = ({ navigation, route }) => {
       } else {
         if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
           // Fallback: scroll to reasonable distance
-          mainScrollRef.current.scrollTo({ y: 420, animated: true });
+          mainScrollRef.current.scrollTo({ y: 600, animated: true });
         }
       }
     } catch (e) {
@@ -2819,6 +2827,10 @@ const SearchFerry = ({ navigation, route }) => {
               ))}
             </View>
           )}
+          
+          {/* Invisible anchor so scroll target exists even when there are no results */}
+          <View ref={resultsRef} style={{ width: '100%', height: 1 }} />
+          
           {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
             <View style={{
               flex: 1,
@@ -2871,8 +2883,6 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {!loading && pagedDataDepart && pagedDataReturn && (
             <>
-              {/* Invisible anchor so scroll target exists even when there are no results */}
-              <View ref={resultsRef} style={{ width: '100%', height: 1 }} />
               {tripTypeSearch === t('oneWayTrip') && (
                 <>
                   {pagedDataDepart.map((item, index) => (
@@ -3250,7 +3260,7 @@ const SearchFerry = ({ navigation, route }) => {
                                     infant: infant,
                                     timetableReturn: item.md_timetable_id,
                                     piccompanyDepart: item.md_timetable_companypic,
-                                    pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                    pictimetableDepart: item.md_timetable_tripdetail?.[0]?.md_timetabledetail_picname1,
                                     discount: item.md_timetable_discount,
                                     exchaneRate: item.md_exchange_money,
                                     international: item.md_timetable_international,
@@ -3849,7 +3859,7 @@ const SearchFerry = ({ navigation, route }) => {
                                       child: children,
                                       infant: infant,
                                       piccompanyDepart: item.md_timetable_companypic,
-                                      pictimetableDepart: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                      pictimetableDepart: item.md_timetable_tripdetail?.[0]?.md_timetabledetail_picname1,
                                       discount: item.md_timetable_discount,
                                       exchaneRate: item.md_exchange_money,
                                       international: item.md_timetable_international,
@@ -4399,7 +4409,7 @@ const SearchFerry = ({ navigation, route }) => {
                                       pierStartReturntId: item.md_timetable_pierstartid,
                                       pierEndReturntId: item.md_timetable_pierendid,
                                       piccompanyReturn: item.md_timetable_companypic,
-                                      pictimetableReturn: item.md_timetable_tripdetail[0].md_timetabledetail_picname1,
+                                      pictimetableReturn: item.md_timetable_tripdetail?.[0]?.md_timetabledetail_picname1,
                                       discount: item.md_timetable_discount,
                                       exchaneRate: item.md_exchange_money,
                                       //booking_insert

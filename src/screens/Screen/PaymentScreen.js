@@ -420,7 +420,8 @@ const PaymentScreen = ({ navigation, route }) => {
           promotioncode: customerData.md_booking_promocode,
           credit: usePoints ? parseInt(pointsToUse) : 0, // แปลง boolean เป็น integer
           member: customerData.md_booking_memberid,
-          refund: customerData.md_booking_refund || '', // ส่งค่า refund ที่เลือกไปด้วย
+          refund: customerData.md_booking_refund || 0, // ส่งค่า refund ที่เลือกไปด้วย
+          insurance: customerData.md_booking_insurance || 0, // ส่งค่า insurance ที่เลือกไปด้วย
         },
         {
           headers: {
@@ -690,14 +691,14 @@ const PaymentScreen = ({ navigation, route }) => {
         dropoffdepartdetail2: customerData.HoteldropoffReturn,
         paymentfee: parseInt(customerData.md_booking_payfee) || 0,
         promotioncode: customerData.md_booking_promocode || '',
-        refund: customerData.md_booking_refund || '',
-        insurance: '',
+        refund: customerData.md_booking_refund || 0,
+        insurance: customerData.md_booking_insurance || 0,
         credit: parseInt(Number(pointsToEarn || 0).toFixed(2)), // ให้เป็น number
         member: Number(customerData.md_booking_memberid) || 0,
         paymenttype: Number(selectedOption) || 0,
         international: Number(customerData.international) || 0,
-        detailpassenger: customerData.passenger,    // ให้เป็น array/object ไม่ใช่ JSON string
-        detailinsurance: [],
+        detailpassenger: customerData.passenger || [],    // ให้เป็น array/object ไม่ใช่ JSON string
+        detailinsurance: customerData.insurance || [],
         txt_countries: customerData.md_booking_country,      // เช่น "TH"
         txt_phonecode: String(customerData.md_booking_countrycode || ''), // เช่น "66"
         txt_phone: customerData.md_booking_tel,
@@ -1364,14 +1365,22 @@ const PaymentScreen = ({ navigation, route }) => {
                               </View>
                             )}
 
-                            {all.totalDepart.pricerefund != 0 && (
+                            {(all.totalDepart.pricerefund != 0 || all.totalDepart.priceinsurance != 0) && (
                               <View >
                                 <View style={tripStyles.divider} />
                                 <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
-                                <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
-                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricerefund_show).toFixed(2))}</Text>
-                                </View>
+                                {all.totalDepart.pricerefund != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.pricerefund_show).toFixed(2))}</Text>
+                                  </View>
+                                )}
+                                {all.totalDepart.priceinsurance != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('TravelInsurance') || 'Travel insurance'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalDepart.priceinsurance_show).toFixed(2))}</Text>
+                                  </View>
+                                )}
                                 <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
                                 <View style={tripStyles.divider} />
                               </View>
@@ -1462,14 +1471,22 @@ const PaymentScreen = ({ navigation, route }) => {
                                   </View>
                                 )}
 
-                                 {all.totalReturn.pricerefund != 0 && (
+                             {(all.totalReturn.pricerefund != 0 || all.totalReturn.priceinsurance != 0) && (
                               <View >
                                 <View style={tripStyles.divider} />
                                 <Text style={tripStyles.sectionHeading}>{t('TripProtection') || 'Trip Protection'}</Text>
-                                <View style={tripStyles.rowpromo}>
-                                  <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
-                                  <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricerefund_show).toFixed(2))}</Text>
-                                </View>
+                                {all.totalReturn.pricerefund != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('RefundableBooking') || 'Refundable booking'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.pricerefund_show).toFixed(2))}</Text>
+                                  </View>
+                                )}
+                                {all.totalReturn.priceinsurance != 0 && (
+                                  <View style={tripStyles.rowpromo}>
+                                    <Text style={tripStyles.premiumLabel}>{t('TravelInsurance') || 'Travel insurance'}</Text>
+                                    <Text style={[tripStyles.premiumValue, { color: 'green' }]}> + {customerData.symbol} {formatNumberWithComma(parseFloat(all.totalReturn.priceinsurance_show).toFixed(2))}</Text>
+                                  </View>
+                                )}
                                 <Text style={tripStyles.premiumLabel}>{t('refundCoverageNote') || 'Refundability and coverage depend on the plan selected'}</Text>
                                 <View style={tripStyles.divider} />
                               </View>

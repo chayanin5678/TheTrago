@@ -8,10 +8,12 @@ import axios from 'axios';
 import ipAddress from '../config/ipconfig';
 import styles from '../styles/CSS/StartingPointScreenStyles';
 import { useLanguage } from './Screen/LanguageContext';
+import { useCustomer } from './Screen/CustomerContext';
 
 const StartingPointScreen = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const { updateCustomerData } = useCustomer();
   const headerPaddingTop = Math.max(insets.top - 20, 0);
   const [provinces, setProvinces] = useState([]);
   const [filteredProvinces, setFilteredProvinces] = useState([]);
@@ -71,6 +73,12 @@ const StartingPointScreen = ({ navigation, route }) => {
         name: selectedPoint[locationNameField],
         countryId: selectedPoint.md_location_countriesid,
       });
+    }
+    // Persist the country id of the selected location into customer context
+    try {
+      updateCustomerData({ country_insurance: selectedPoint.md_location_countriesid });
+    } catch (err) {
+      // ignore if context not available
     }
     if (navigation.canGoBack()) navigation.goBack();
   };
