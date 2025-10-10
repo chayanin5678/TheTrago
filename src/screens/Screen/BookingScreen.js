@@ -14,6 +14,7 @@ import {
   Animated,
   ActivityIndicator,
   Image,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -638,6 +639,56 @@ const BookingScreen = () => {
     }
   };
 
+  const handlePrintTicket = (booking) => {
+    const ticketUrl = `https://thetrago.com/ferry/print/${booking.md_booking_code}`;
+    
+    Alert.alert(
+      selectedLanguage === 'th' ? 'พิมพ์ตั๋ว' : 'Print Ticket',
+      selectedLanguage === 'th' 
+        ? `ต้องการเปิดตั๋วสำหรับการจอง ${booking.md_booking_code} หรือไม่?` 
+        : `Do you want to open ticket for booking ${booking.md_booking_code}?`,
+      [
+        {
+          text: selectedLanguage === 'th' ? 'ยกเลิก' : 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: selectedLanguage === 'th' ? 'เปิดตั๋ว' : 'Open Ticket',
+          onPress: async () => {
+            try {
+              const canOpen = await Linking.canOpenURL(ticketUrl);
+              
+              if (canOpen) {
+                await Linking.openURL(ticketUrl);
+                console.log('✅ Successfully opened ticket URL:', ticketUrl);
+              } else {
+                Alert.alert(
+                  selectedLanguage === 'th' ? 'ไม่สามารถเปิดได้' : 'Cannot Open',
+                  selectedLanguage === 'th' 
+                    ? 'ไม่สามารถเปิด URL ได้ กรุณาลองใหม่อีกครั้ง' 
+                    : 'Unable to open URL. Please try again.'
+                );
+              }
+            } catch (error) {
+              console.error('❌ Error opening ticket URL:', error);
+              Alert.alert(
+                selectedLanguage === 'th' ? 'เกิดข้อผิดพลาด' : 'Error',
+                selectedLanguage === 'th' 
+                  ? 'ไม่สามารถเปิดตั๋วได้ กรุณาลองใหม่อีกครั้ง' 
+                  : 'Unable to open ticket. Please try again.'
+              );
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleEditTicket = (booking) => {
+    // Navigate to EditBookingScreen
+    navigation.navigate('EditBookingScreen', { booking });
+  };
+
   const LoadingSpinner = () => {
     const spin = spinValue.interpolate({
       inputRange: [0, 1],
@@ -959,6 +1010,49 @@ const BookingScreen = () => {
             </Text>
           </View>
         </View>
+
+        {/* Action Buttons - Show for all upcoming bookings */}
+        {activeTab === 'upcoming' && (
+          <View style={styles.actionButtonsContainer}>
+            {/* Edit Ticket Button */}
+            <TouchableOpacity 
+              style={styles.editTicketButton}
+              onPress={() => handleEditTicket(booking)}
+              activeOpacity={0.7}
+            >
+              <LinearGradient
+                colors={['#3B82F6', '#2563EB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.actionButtonGradient}
+              >
+                <MaterialCommunityIcons name="pencil" size={20} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>
+                  {selectedLanguage === 'th' ? 'แก้ไขตั๋ว' : 'Edit Ticket'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Print Ticket Button */}
+            <TouchableOpacity 
+              style={styles.printTicketButton}
+              onPress={() => handlePrintTicket(booking)}
+              activeOpacity={0.7}
+            >
+              <LinearGradient
+                colors={['#FD501E', '#FF6B35']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.actionButtonGradient}
+              >
+                <MaterialCommunityIcons name="printer" size={20} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>
+                  {selectedLanguage === 'th' ? 'พิมพ์ตั๋ว' : 'Print Ticket'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   };

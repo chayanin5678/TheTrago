@@ -437,6 +437,46 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: wp('4.5%'),
   },
+  // Mobile Banking Styles
+  bankOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: wp('2%'),
+    padding: wp('3.5%'),
+    marginBottom: hp('1%'),
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  selectedBankOption: {
+    borderColor: '#FD501E',
+    borderWidth: 2,
+    backgroundColor: 'rgba(253, 80, 30, 0.05)',
+  },
+  bankRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: wp('3%'),
+  },
+  bankRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FD501E',
+  },
+  bankLabel: {
+    fontSize: wp('3.8%'),
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  selectedBankLabel: {
+    color: '#FD501E',
+  },
 });
 
 export default styles;

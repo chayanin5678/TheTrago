@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator, UIManager, findNodeHandle } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator, UIManager, findNodeHandle, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -3240,6 +3240,19 @@ const SearchFerry = ({ navigation, route }) => {
                                   minWidth: Platform.OS === 'android' ? 110 : 120,
                                 }}
                                 onPress={() => {
+                                  // ตรวจสอบจำนวนผู้โดยสารขั้นต่ำ
+                                  const minimumPassengers = item.md_timetable_minimum || 0;
+                                  if (adults < minimumPassengers) {
+                                    Alert.alert(
+                                      selectedLanguage === 'th' ? 'แจ้งเตือน' : 'Notice',
+                                      selectedLanguage === 'th' 
+                                        ? `กรุณาเลือกผู้ใหญ่อย่างน้อย ${minimumPassengers} คน`
+                                        : `Please select at least ${minimumPassengers} adult(s)`,
+                                      [{ text: selectedLanguage === 'th' ? 'ตรวจสอบ' : 'OK' }]
+                                    );
+                                    return;
+                                  }
+                                  
                                   updateCustomerData({
                                     roud: 1,
                                     day: day,
@@ -4401,6 +4414,19 @@ const SearchFerry = ({ navigation, route }) => {
                                     borderColor: 'rgba(184, 134, 11, 0.2)',
                                   }}
                                   onPress={() => {
+                                    // ตรวจสอบจำนวนผู้โดยสารขั้นต่ำ
+                                    const minimumPassengers = item.md_timetable_minimum || 0;
+                                    if (adults < minimumPassengers) {
+                                      Alert.alert(
+                                        selectedLanguage === 'th' ? 'แจ้งเตือน' : 'Notice',
+                                        selectedLanguage === 'th' 
+                                          ? `กรุณาเลือกผู้ใหญ่อย่างน้อย ${minimumPassengers} คน`
+                                          : `Please select at least ${minimumPassengers} adult(s)`,
+                                        [{ text: selectedLanguage === 'th' ? 'ตรวจสอบ' : 'OK' }]
+                                      );
+                                      return;
+                                    }
+                                    
                                     setIsroudstatus(true);
                                     updateCustomerData({
                                       returndate: calendarEndDate,

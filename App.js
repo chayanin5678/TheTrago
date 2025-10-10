@@ -53,6 +53,7 @@ import TermsScreen from './src/screens/Screen/TermsScreen';
 import PrivacyPolicyScreen from './src/screens/Screen/PrivacyPolicyScreen';
 import ContactScreen from './src/screens/Screen/ContactScreen';
 import BookingScreen from './src/screens/Screen/BookingScreen';
+import EditBookingScreen from './src/screens/Screen/EditBookingScreen';
 import DeleteProfileScreen from './src/screens/Screen/DeleteProfileScreen';
 import AffiliateScreen from './src/screens/Screen/AffiliateScreen';
 import TheTragoWebViewScreen from './src/screens/Screen/TheTragoWebViewScreen';
@@ -100,6 +101,7 @@ const AppNavigator = () => (
 const BookingNavigator = () => (
   <Stack.Navigator initialRouteName="BookingScreenMain">
     <Stack.Screen name="BookingScreenMain" component={BookingScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="EditBookingScreen" component={EditBookingScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
     <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
