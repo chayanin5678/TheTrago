@@ -57,6 +57,11 @@ module.exports = {
         locationAlwaysAndWhenInUsePermission: "Allow TheTrago to use your location to find nearby ferry terminals.",
         locationAlwaysPermission: "Allow TheTrago to use your location to find nearby ferry terminals.",
         locationWhenInUsePermission: "Allow TheTrago to use your location to find nearby ferry terminals."
+      }],
+      ["expo-notifications", {
+        icon: "./assets/icon.png",
+        color: "#FD501E",
+        sounds: ["./assets/notification-sound.wav"]
       }]
     ],
 

@@ -19,6 +19,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { navigationRef } from './src/config/navigationRef';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './src/screens/Screen/LanguageContext';
+import NotificationService from './src/services/NotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // Import หน้าต่างๆ
 import StartingPointScreen from './src/screens/StartingPointScreen';
 import EndPointScreen from './src/screens/EndPointScreen';
@@ -351,6 +353,9 @@ export default function App() {
         // Prevent the splash screen from auto-hiding
         await SplashScreen.preventAutoHideAsync();
 
+        // ตั้งค่า notification system
+        setupNotifications();
+
         // Load fonts with better error handling
         try {
           await Font.loadAsync({
@@ -417,6 +422,48 @@ export default function App() {
 
     initializeApp();
   }, []);
+
+  // ตั้งค่าระบบ notification
+  const setupNotifications = async () => {
+    try {
+      // ขอสิทธิ์และลงทะเบียน push token (เก็บไว้ local อย่างเดียว)
+      const token = await NotificationService.registerForPushNotificationsAsync();
+      
+      if (token) {
+        console.log('✅ Push notification token registered:', token);
+        // หมายเหตุ: token จะถูกเก็บไว้ใน AsyncStorage อัตโนมัติ
+        // ไม่บันทึกไปยัง backend ตามที่ร้องขอ
+      }
+
+      // ตั้งค่า notification listeners
+      NotificationService.setupNotificationListeners(
+        // เมื่อได้รับ notification ขณะเปิดแอป
+        (notification) => {
+          console.log('📩 Received notification:', notification);
+          const { type, booking_code } = notification.request.content.data || {};
+          
+          // สามารถทำอะไรต่อได้ เช่น refresh data, แสดง alert
+        },
+        // เมื่อผู้ใช้กด notification
+        (response) => {
+          console.log('👆 Notification tapped:', response);
+          const { type, booking_code } = response.notification.request.content.data || {};
+          
+          if (type === 'booking_update' && booking_code) {
+            // Navigate to booking detail
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('Booking', {
+                screen: 'EditBookingScreen',
+                params: { bookingCode: booking_code }
+              });
+            }
+          }
+        }
+      );
+    } catch (error) {
+      console.error('❌ Error setting up notifications:', error);
+    }
+  };
 
   // App is ready when fonts are loaded and splash animation is complete
   const isReady = fontLoaded && !showSplash;

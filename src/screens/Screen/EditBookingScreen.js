@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,22 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from './LanguageContext';
+import { useCustomer } from './CustomerContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ipAddress from '../../config/ipconfig';
+import NotificationService from '../../services/NotificationService';
 
 const EditBookingScreen = () => {
   const { selectedLanguage } = useLanguage();
+  const { customerData } = useCustomer();
   const navigation = useNavigation();
   const route = useRoute();
   const { booking } = route.params || {};
@@ -43,16 +48,44 @@ const EditBookingScreen = () => {
   const [departureDate, setDepartureDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
   const [selectedTime, setSelectedTime] = useState('');
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [note, setNote] = useState('');
   const [adultCount, setAdultCount] = useState(1);
   const [childCount, setChildCount] = useState(0);
   const [infantCount, setInfantCount] = useState(0);
+  
+  // User info states
+  const [userName, setUserName] = useState('');
+  const [userImage, setUserImage] = useState('');
+  
+  // Edit history states
+  const [editHistory, setEditHistory] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  
+  // Notification states
+  const [hasNewUpdate, setHasNewUpdate] = useState(false);
+  const [lastCheckTimestamp, setLastCheckTimestamp] = useState(null);
+  const pollingInterval = useRef(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (booking) {
       loadBookingData();
+      loadEditHistory();
+      
+      // ปิดระบบ polling อัตโนมัติ (ไม่ตรวจสอบทุก 10 วินาที)
+      // หากต้องการเปิดใช้งาน ให้ uncomment บรรทัดด้านล่าง
+      // startPollingForUpdates();
     }
+
+    // Cleanup เมื่อออกจากหน้า
+    return () => {
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+      }
+    };
   }, [booking]);
 
   // Load available times after location IDs are set
@@ -105,6 +138,167 @@ const EditBookingScreen = () => {
     setAdultCount(booking.md_booking_adult || 1);
     setChildCount(booking.md_booking_child || 0);
     setInfantCount(booking.md_booking_infant || 0);
+    
+    // Load user info
+    setUserName(booking.md_member_name || booking.md_booking_name || 'User');
+    setUserImage(booking.md_member_image || booking.md_member_picname || '');
+  };
+
+  const loadEditHistory = async (silent = false) => {
+    try {
+      if (!silent) {
+        setIsLoadingHistory(true);
+      }
+      
+      const bookingCode = booking?.md_booking_code;
+      if (!bookingCode) {
+        console.log('No booking code available');
+        return;
+      }
+
+      console.log('=== LOADING EDIT HISTORY ===');
+      console.log('Booking Code:', bookingCode);
+      console.log('API URL:', `https://thetrago.com/AppApi/booking-edit-history/${bookingCode}`);
+
+      const response = await fetch(`https://thetrago.com/AppApi/booking-edit-history/${bookingCode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Response Status:', response.status);
+      const responseText = await response.text();
+      console.log('Response Text:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed Data:', data);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        return;
+      }
+
+      if (response.ok && data.status === 'success' && data.data) {
+        // ตรวจสอบว่ามีการอัปเดตใหม่หรือไม่
+        checkForNewUpdates(data.data);
+        
+        setEditHistory(data.data);
+        console.log('✅ Edit history loaded:', data.data.length, 'items');
+      } else {
+        console.log('❌ Failed to load history:', data.message);
+      }
+    } catch (error) {
+      console.error('❌ Error loading edit history:', error);
+    } finally {
+      if (!silent) {
+        setIsLoadingHistory(false);
+      }
+      console.log('=== EDIT HISTORY LOADING END ===');
+    }
+  };
+
+  // ตรวจสอบการอัปเดตใหม่จาก admin
+  const checkForNewUpdates = (newHistory) => {
+    if (!newHistory || newHistory.length === 0) return;
+
+    // ดึง admin response ล่าสุด (approve/reject)
+    const latestAdminResponse = newHistory.find(
+      item => item.action === 'approve' || item.action === 'reject'
+    );
+
+    if (!latestAdminResponse) return;
+
+    // ถ้ายังไม่เคยเช็คเลย ให้บันทึก timestamp ล่าสุด
+    if (!lastCheckTimestamp) {
+      setLastCheckTimestamp(latestAdminResponse.created_at);
+      return;
+    }
+
+    // ตรวจสอบว่ามีการตอบกลับใหม่หรือไม่
+    const latestTimestamp = new Date(latestAdminResponse.created_at).getTime();
+    const lastChecked = new Date(lastCheckTimestamp).getTime();
+
+    if (latestTimestamp > lastChecked) {
+      // มีการอัปเดตใหม่!
+      setHasNewUpdate(true);
+      setLastCheckTimestamp(latestAdminResponse.created_at);
+      
+      // เริ่ม animation กระพริบ
+      startPulseAnimation();
+
+      // แสดง notification
+      const isApproved = latestAdminResponse.action === 'approve';
+      showUpdateNotification(isApproved, latestAdminResponse.note);
+    }
+  };
+
+  // เริ่มระบบ polling เพื่อตรวจสอบการอัปเดต
+  const startPollingForUpdates = () => {
+    // เช็คทันทีครั้งแรก
+    loadEditHistory(true);
+
+    // ตั้ง interval ให้เช็คทุก 10 วินาที
+    pollingInterval.current = setInterval(() => {
+      loadEditHistory(true); // silent mode ไม่แสดง loading
+    }, 10000); // 10 seconds
+  };
+
+  // Animation กระพริบสำหรับแจ้งเตือน
+  const startPulseAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  // แสดงการแจ้งเตือนเมื่อ admin ตอบกลับ
+  const showUpdateNotification = (isApproved, adminNote) => {
+    const title = isApproved
+      ? (selectedLanguage === 'th' ? '✅ คำขอได้รับการอนุมัติ' : '✅ Request Approved')
+      : (selectedLanguage === 'th' ? '❌ คำขอถูกปฏิเสธ' : '❌ Request Rejected');
+
+    const message = adminNote || (isApproved
+      ? (selectedLanguage === 'th' ? 'Admin อนุมัติคำขอแก้ไขการจองของคุณแล้ว' : 'Admin has approved your booking change request')
+      : (selectedLanguage === 'th' ? 'Admin ปฏิเสธคำขอแก้ไขการจองของคุณ' : 'Admin has rejected your booking change request')
+    );
+
+    Alert.alert(
+      title,
+      message,
+      [
+        {
+          text: selectedLanguage === 'th' ? 'ดูรายละเอียด' : 'View Details',
+          onPress: () => {
+            setHasNewUpdate(false);
+            // Scroll to chat section หรือทำอะไรที่ต้องการ
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+
+    // ส่ง local notification ถ้า app อยู่ใน background
+    NotificationService.scheduleLocalNotification(
+      title,
+      message,
+      {
+        type: 'booking_update',
+        booking_code: booking?.md_booking_code,
+        action: isApproved ? 'approved' : 'rejected',
+      }
+    );
   };
 
   const loadAvailableTimes = async () => {
@@ -234,17 +428,49 @@ const EditBookingScreen = () => {
   };
 
   const handleUpdateBooking = async () => {
-    // Validation
+    // Validation - ตรวจสอบวันที่
+    if (!departureDate) {
+      Alert.alert(
+        selectedLanguage === 'th' ? 'ข้อมูลไม่ครบ' : 'Incomplete Data',
+        selectedLanguage === 'th' 
+          ? 'กรุณาเลือกวันที่เดินทาง' 
+          : 'Please select departure date',
+        [{ text: selectedLanguage === 'th' ? 'ตกลง' : 'OK' }]
+      );
+      return;
+    }
+
+    // Validation - ตรวจสอบเวลา
+    if (!selectedTime || selectedTime.trim() === '') {
+      Alert.alert(
+        selectedLanguage === 'th' ? 'ข้อมูลไม่ครบ' : 'Incomplete Data',
+        selectedLanguage === 'th' 
+          ? 'กรุณาเลือกเวลาเดินทาง' 
+          : 'Please select departure time',
+        [{ text: selectedLanguage === 'th' ? 'ตกลง' : 'OK' }]
+      );
+      return;
+    }
+
+    // Validation - ตรวจสอบจำนวนผู้โดยสาร
     if (adultCount === 0 && childCount === 0) {
       Alert.alert(
         selectedLanguage === 'th' ? 'ข้อมูลไม่ครบ' : 'Incomplete Data',
         selectedLanguage === 'th' 
           ? 'กรุณาระบุจำนวนผู้โดยสารอย่างน้อย 1 คน' 
-          : 'Please specify at least 1 passenger'
+          : 'Please specify at least 1 passenger',
+        [{ text: selectedLanguage === 'th' ? 'ตกลง' : 'OK' }]
       );
       return;
     }
 
+    // Show note modal
+    setShowNoteModal(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    setShowNoteModal(false);
+    
     Alert.alert(
       selectedLanguage === 'th' ? 'ยืนยันการแก้ไข' : 'Confirm Update',
       selectedLanguage === 'th' 
@@ -266,50 +492,152 @@ const EditBookingScreen = () => {
   const saveChanges = async () => {
     setIsSaving(true);
     try {
+      // Validate booking data
+      if (!booking || !booking.md_booking_code) {
+        throw new Error('Booking information is missing');
+      }
+
+      if (!departureDate) {
+        throw new Error('Departure date is missing');
+      }
+
+      if (!selectedTime || selectedTime.trim() === '') {
+        throw new Error('Departure time is missing');
+      }
+
+      // Prepare before_data (original booking data)
+      const beforeData = {
+        departdate: booking.md_booking_departdate,
+        departtime: booking.md_timetable_departuretime,
+      };
+
+      // Prepare after_data (updated booking data)
+      const afterData = {
+        departdate: departureDate.toISOString().split('T')[0],
+        departtime: selectedTime.split(' → ')[0].trim(), // Extract only departure time
+      };
+
+      // Get member ID from CustomerContext (primary source) or booking data (fallback)
+      let memberId = customerData?.md_booking_memberid || booking.md_booking_memberid || booking.md_member_id;
+      
+      // Last resort: try AsyncStorage
+      if (!memberId) {
+        try {
+          const storedMemberId = await AsyncStorage.getItem('userId');
+          if (storedMemberId) {
+            memberId = storedMemberId;
+          }
+        } catch (error) {
+          console.log('Could not get member ID from storage:', error);
+        }
+      }
+
+      console.log('=== SAVE CHANGES ===');
+      console.log('Customer Data Member ID:', customerData?.md_booking_memberid);
+      console.log('Booking Member ID:', booking.md_booking_memberid);
+      console.log('Selected Member ID:', memberId);
+      console.log('Before Data:', beforeData);
+      console.log('After Data:', afterData);
+      console.log('Booking Code:', booking.md_booking_code);
+      console.log('Note:', note);
+      console.log('API Endpoint:', `${ipAddress}/update-booking`);
+      console.log('===================');
+
+      const requestBody = {
+        booking_code: booking.md_booking_code,
+        member_id: memberId || null,
+        action: 'request',
+        note: note || 'ขอเปลี่ยนแปลงข้อมูลการจอง',
+        before_data: JSON.stringify(beforeData),
+        after_data: JSON.stringify(afterData),
+        actor_id: memberId || null,
+      };
+
+      console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+
       // API call to update booking
-      const response = await fetch(`${ipAddress}/update-booking`, {
+      const apiUrl = `${ipAddress}/update-booking`;
+      console.log('Calling API:', apiUrl);
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          booking_code: booking.md_booking_code,
-          departure_date: departureDate.toISOString(),
-          selected_time: selectedTime,
-          adult_count: adultCount,
-          child_count: childCount,
-          infant_count: infantCount,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      console.log('Response Status:', response.status);
+      console.log('Response OK:', response.ok);
+      
+      const responseText = await response.text();
+      console.log('Response Text:', responseText);
 
-      if (response.ok && data.status === 'success') {
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed Response:', JSON.stringify(data, null, 2));
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError);
+        console.log('Raw Response:', responseText);
+        throw new Error('Invalid JSON response from server: ' + responseText.substring(0, 100));
+      }
+
+      // Check for success
+      if (data.status === 'success') {
+        console.log('✅ Update successful');
+        
+        // Reload edit history to show the new request
+        await loadEditHistory();
+        
         Alert.alert(
           selectedLanguage === 'th' ? 'สำเร็จ' : 'Success',
           selectedLanguage === 'th' 
-            ? 'แก้ไขการจองสำเร็จ' 
-            : 'Booking updated successfully',
+            ? 'ส่งคำขอแก้ไขการจองสำเร็จ\nรอ Admin อนุมัติ' 
+            : 'Booking update request sent successfully.\nWaiting for admin approval.',
           [
             {
               text: 'OK',
-              onPress: () => navigation.goBack()
+              onPress: () => {
+                // Clear note
+                setNote('');
+                // Don't go back, stay to see the updated history
+              }
             }
           ]
         );
       } else {
-        throw new Error(data.message || 'Update failed');
+        // Handle error from API
+        const errorMessage = data.message || data.error || 'Unknown error occurred';
+        console.log('❌ Update failed:', errorMessage);
+        console.log('Full error response:', JSON.stringify(data, null, 2));
+        
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Error updating booking:', error);
+      console.error('❌ ERROR in saveChanges:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      // Show user-friendly error message
+      let errorMessage = selectedLanguage === 'th' 
+        ? 'ไม่สามารถส่งคำขอแก้ไขได้ กรุณาลองใหม่อีกครั้ง' 
+        : 'Unable to send update request. Please try again.';
+
+      // Add specific error details if available
+      if (error.message) {
+        errorMessage += '\n\n' + (selectedLanguage === 'th' ? 'รายละเอียด: ' : 'Details: ') + error.message;
+      }
+      
       Alert.alert(
         selectedLanguage === 'th' ? 'เกิดข้อผิดพลาด' : 'Error',
-        selectedLanguage === 'th' 
-          ? 'ไม่สามารถแก้ไขการจองได้ กรุณาลองใหม่อีกครั้ง' 
-          : 'Unable to update booking. Please try again.'
+        errorMessage,
+        [{ text: 'OK' }]
       );
     } finally {
       setIsSaving(false);
+      console.log('=== SAVE CHANGES END ===');
     }
   };
 
@@ -348,7 +676,14 @@ const EditBookingScreen = () => {
         <Text style={styles.headerTitle}>
           {selectedLanguage === 'th' ? 'แก้ไขการจอง' : 'Edit Booking'}
         </Text>
-        <View style={styles.backButton} />
+        {hasNewUpdate ? (
+          <Animated.View style={[styles.notificationBadge, { transform: [{ scale: pulseAnim }] }]}>
+            <MaterialCommunityIcons name="bell-ring" size={20} color="#FFFFFF" />
+            <View style={styles.badgeDot} />
+          </Animated.View>
+        ) : (
+          <View style={styles.backButton} />
+        )}
       </View>
 
       <ScrollView 
@@ -621,6 +956,239 @@ const EditBookingScreen = () => {
           </View>
         </View>
 
+        {/* Chat-style Log Section */}
+        <View style={styles.debugSection}>
+          <Text style={styles.debugTitle}>ประวัติคำขอและหมายเหตุ</Text>
+          
+          <ScrollView style={styles.chatContainer} showsVerticalScrollIndicator={false}>
+            {isLoadingHistory ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FD501E" />
+                <Text style={styles.loadingText}>
+                  {selectedLanguage === 'th' ? 'กำลังโหลดประวัติ...' : 'Loading history...'}
+                </Text>
+              </View>
+            ) : editHistory.length > 0 ? (
+              editHistory.map((item, index) => {
+                const isRequest = item.action === 'request';
+                const isApprove = item.action === 'approve';
+                const isReject = item.action === 'reject';
+                
+                // Parse before_data and after_data
+                let beforeData = null;
+                let afterData = null;
+                try {
+                  if (item.before_data) beforeData = JSON.parse(item.before_data);
+                  if (item.after_data) afterData = JSON.parse(item.after_data);
+                } catch (e) {
+                  console.error('Error parsing data:', e);
+                }
+
+                return (
+                  <View key={item.id || index}>
+                    {isRequest ? (
+                      // User Request (Right side)
+                      <View style={styles.chatMessageRight}>
+                        <View style={styles.chatBubbleRight}>
+                          <View style={styles.chatHeader}>
+                            <View style={styles.chatIconSmall}>
+                              {userImage ? (
+                                <Image 
+                                  source={{ uri: `https://thetrago.com/Api/uploads/member/${userImage}` }}
+                                  style={styles.chatIconImage}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <MaterialCommunityIcons name="account-circle" size={20} color="#6B7280" />
+                              )}
+                            </View>
+                            <Text style={styles.chatUsername}>{userName}</Text>
+                            <View style={styles.chatBadgeRequest}>
+                              <Text style={styles.chatBadgeText}>request</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.chatTextRight}>{item.note || 'ขอเปลี่ยนวันและเวลา'}</Text>
+                          {beforeData && afterData ? (
+                            <View style={styles.chatDataBox}>
+                              <View style={styles.dataCompareRow}>
+                                <View style={styles.dataColumn}>
+                                  <Text style={styles.dataColumnTitle}>{'เดิม (Before)'}</Text>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="calendar" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{beforeData.departdate}</Text>
+                                  </View>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="clock-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{beforeData.departtime}</Text>
+                                  </View>
+                                </View>
+                                <View style={styles.dataColumn}>
+                                  <Text style={styles.dataColumnTitle}>{'ใหม่ (After)'}</Text>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="calendar" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{afterData.departdate}</Text>
+                                  </View>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="clock-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{afterData.departtime}</Text>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                          ) : null}
+                          <Text style={styles.chatTimeRight}>{item.created_at}</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      // Admin Response (Left side)
+                      <View style={styles.chatMessageLeft}>
+                        <View style={styles.chatBubbleLeft}>
+                          <View style={styles.chatHeader}>
+                            <View style={styles.chatIconSmall}>
+                              <MaterialCommunityIcons name="shield-account" size={20} color="#3B82F6" />
+                            </View>
+                            <Text style={styles.chatUsername}>Admin</Text>
+                            <View style={isApprove ? styles.chatBadgeApprove : styles.chatBadgeReject}>
+                              <Text style={styles.chatBadgeText}>{item.action}</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.chatText}>
+                            {isApprove 
+                              ? (selectedLanguage === 'th' ? 'อนุมัติแล้ว' : 'Approved')
+                              : (selectedLanguage === 'th' ? 'ปฏิเสธ' : 'Rejected')}
+                          </Text>
+                          {item.note ? <Text style={styles.chatText}>{item.note}</Text> : null}
+                          {beforeData && afterData ? (
+                            <View style={styles.chatDataBox}>
+                              <View style={styles.dataCompareRow}>
+                                <View style={styles.dataColumn}>
+                                  <Text style={styles.dataColumnTitle}>{'เดิม (Before)'}</Text>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="calendar" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{beforeData.departdate}</Text>
+                                  </View>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="clock-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{beforeData.departtime}</Text>
+                                  </View>
+                                </View>
+                                <View style={styles.dataColumn}>
+                                  <Text style={styles.dataColumnTitle}>{'ใหม่ (After)'}</Text>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="calendar" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{afterData.departdate}</Text>
+                                  </View>
+                                  <View style={styles.dataItem}>
+                                    <MaterialCommunityIcons name="clock-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.dataItemText}>{afterData.departtime}</Text>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                          ) : null}
+                          <Text style={styles.chatTime}>{item.updated_at || item.created_at}</Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.emptyStateContainer}>
+                <MaterialCommunityIcons name="message-text-outline" size={48} color="#9CA3AF" />
+                <Text style={styles.emptyStateText}>
+                  {selectedLanguage === 'th' ? 'ยังไม่มีประวัติการแก้ไข' : 'No edit history'}
+                </Text>
+              </View>
+            )}
+
+            {/* Current Request - Will be sent (Right) */}
+            {(selectedTime && selectedTime !== `${booking?.md_timetable_departuretime} → ${booking?.md_timetable_arrivaltime}${booking?.md_timetable_time ? ` (${booking?.md_timetable_time})` : ''}`) && (
+              <View style={styles.chatMessageRight}>
+                <View style={styles.chatBubbleRight}>
+                  <View style={styles.chatHeader}>
+                    <View style={styles.chatIconSmall}>
+                      {userImage ? (
+                        <Image 
+                          source={{ uri: `https://thetrago.com/Api/uploads/member/${userImage}` }}
+                          style={styles.chatIconImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <MaterialCommunityIcons name="account-circle" size={20} color="#6B7280" />
+                      )}
+                    </View>
+                    <Text style={styles.chatUsername}>{userName}</Text>
+                    <View style={styles.chatBadgePending}>
+                      <Text style={styles.chatBadgeText}>pending</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.chatTextRight}>{note || 'ขอเปลี่ยนวันและเวลา'}</Text>
+                  <View style={styles.chatDataBox}>
+                    <Text style={styles.chatDataLabel}>Before:</Text>
+                    <Text style={styles.chatDataText}>
+                      {`{"departdate":"${booking?.md_booking_departdate}","departtime":"${booking?.md_timetable_departuretime}"}`}
+                    </Text>
+                    <Text style={styles.chatDataLabel}>After:</Text>
+                    <Text style={styles.chatDataText}>
+                      {`{"departdate":"${departureDate.toISOString().split('T')[0]}","departtime":"${selectedTime ? selectedTime.split(' → ')[0] : '-'}"}`}
+                    </Text>
+                  </View>
+                  <Text style={styles.chatTimeRight}>รอส่ง...</Text>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+
+        {/* Note Modal */}
+        <Modal
+          visible={showNoteModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowNoteModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContentCenter}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {selectedLanguage === 'th' ? 'หมายเหตุ' : 'Note'}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setShowNoteModal(false)}
+                >
+                  <MaterialCommunityIcons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.noteInputContainer}>
+                <TextInput
+                  style={styles.noteInput}
+                  placeholder={selectedLanguage === 'th' ? 'กรอกหมายเหตุ (ถ้ามี)' : 'Enter note (optional)'}
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={4}
+                  value={note}
+                  onChangeText={setNote}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={styles.modalConfirmButton}
+                  onPress={handleConfirmUpdate}
+                >
+                  <Text style={styles.modalConfirmText}>
+                    {selectedLanguage === 'th' ? 'ยืนยัน' : 'Confirm'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           {/* Back Button */}
@@ -686,6 +1254,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
+  notificationBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FD501E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
   content: {
     flex: 1,
   },
@@ -731,6 +1323,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    width: '100%',
   },
   inputText: {
     fontSize: 16,
@@ -967,6 +1560,193 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+  debugSection: {
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  debugTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    padding: 16,
+    backgroundColor: '#F9FAFB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  chatContainer: {
+    padding: 16,
+    maxHeight: 400,
+  },
+  chatMessageLeft: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: 16,
+  },
+  chatMessageRight: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 16,
+  },
+  chatBubbleLeft: {
+    backgroundColor: '#DBEAFE',
+    borderRadius: 12,
+    borderTopLeftRadius: 4,
+    padding: 12,
+    maxWidth: '75%',
+  },
+  chatBubbleRight: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    borderTopRightRadius: 4,
+    padding: 12,
+    maxWidth: '85%',
+  },
+  chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  chatIconSmall: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  chatIconImage: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  chatUsername: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginRight: 8,
+    flex: 1,
+  },
+  chatUsernameLeft: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginLeft: 8,
+  },
+  chatBadgeRequest: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  chatBadgeApprove: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  chatBadgePending: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  chatBadgeReject: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  chatBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  chatText: {
+    fontSize: 14,
+    color: '#1F2937',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  chatTextRight: {
+    fontSize: 14,
+    color: '#1F2937',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  chatDataBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  dataCompareRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  dataColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
+  dataColumnTitle: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  dataItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 4,
+  },
+  dataItemText: {
+    fontSize: 11,
+    color: '#1F2937',
+    fontWeight: '500',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  dataArrow: {
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  chatDataLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  chatDataText: {
+    fontSize: 11,
+    color: '#374151',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginBottom: 8,
+  },
+  chatTime: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    textAlign: 'left',
+  },
+  chatTimeRight: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    textAlign: 'right',
+  },
   modalCancelButton: {
     flex: 1,
     paddingVertical: 14,
@@ -994,6 +1774,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  noteInputContainer: {
+    padding: 20,
+  },
+  noteInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 16,
+    fontSize: 16,
+    color: '#1F2937',
+    minHeight: 120,
   },
 });
 
