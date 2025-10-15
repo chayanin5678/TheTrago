@@ -506,16 +506,37 @@ const EditBookingScreen = () => {
       }
 
       // Prepare before_data (original booking data)
+      const originalDate = booking.md_booking_departdate;
+      const originalTime = booking.md_timetable_departuretime;
+      
       const beforeData = {
-        departdate: booking.md_booking_departdate,
-        departtime: booking.md_timetable_departuretime,
+        departdate: originalDate,
+        departtime: originalTime,
       };
 
       // Prepare after_data (updated booking data)
+      const newDate = departureDate.toISOString().split('T')[0];
+      const newTime = selectedTime.split(' → ')[0].trim(); // Extract only departure time
+      
       const afterData = {
-        departdate: departureDate.toISOString().split('T')[0],
-        departtime: selectedTime.split(' → ')[0].trim(), // Extract only departure time
+        departdate: newDate,
+        departtime: newTime,
       };
+
+      // Prepare changes_payload (JSON diff format ที่ API ใหม่รองรับ)
+      const changesPayload = {};
+      if (originalDate !== newDate) {
+        changesPayload.md_booking_departdate = {
+          from: originalDate,
+          to: newDate
+        };
+      }
+      if (originalTime !== newTime) {
+        changesPayload.md_booking_departtime = {
+          from: originalTime,
+          to: newTime
+        };
+      }
 
       // Get member ID from CustomerContext (primary source) or booking data (fallback)
       let memberId = customerData?.md_booking_memberid || booking.md_booking_memberid || booking.md_member_id;
@@ -538,24 +559,28 @@ const EditBookingScreen = () => {
       console.log('Selected Member ID:', memberId);
       console.log('Before Data:', beforeData);
       console.log('After Data:', afterData);
+      console.log('Changes Payload:', changesPayload);
       console.log('Booking Code:', booking.md_booking_code);
-      console.log('Note:', note);
-      console.log('API Endpoint:', `${ipAddress}/update-booking`);
+      console.log('Edit Note:', note);
+      console.log('API Endpoint:', `${ipAddress}/AppApi/update-booking`);
       console.log('===================');
 
+      // Request body รองรับทั้ง format เก่าและใหม่
       const requestBody = {
         booking_code: booking.md_booking_code,
         member_id: memberId || null,
         action: 'request',
-        note: note || 'ขอเปลี่ยนแปลงข้อมูลการจอง',
+        edit_note: note || 'ขอเปลี่ยนแปลงข้อมูลการจอง', // ใช้ edit_note แทน note
+        note: note || 'ขอเปลี่ยนแปลงข้อมูลการจอง', // เก็บ note ไว้เพื่อ backward compatibility
         before_data: JSON.stringify(beforeData),
         after_data: JSON.stringify(afterData),
+        changes_payload: JSON.stringify(changesPayload), // เพิ่ม changes_payload
         actor_id: memberId || null,
       };
 
       console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
-      // API call to update booking
+      // API call to update booking (ใช้ endpoint ใหม่)
       const apiUrl = `${ipAddress}/update-booking`;
       console.log('Calling API:', apiUrl);
 

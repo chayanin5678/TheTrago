@@ -123,6 +123,7 @@ const SearchFerry = ({ navigation, route }) => {
   const firstItemRef = useRef(null);
   const scrollContainerHeightRef = useRef(0);
   const scrollContentHeightRef = useRef(0);
+  const currentScrollOffset = useRef(0); // เก็บ scroll offset ปัจจุบัน
 
 
   const day = calendarStartDate?.substring(8, 10) || "";
@@ -547,10 +548,7 @@ const SearchFerry = ({ navigation, route }) => {
         setDepartTrips(response.data.data.departtrip);
         setReturnTrips(response.data.data.returntrip);
 
-        // After setting trips, attempt to scroll to the results anchor (always call)
-        setTimeout(() => {
-          scrollToResults();
-        }, 250);
+        // ✅ ไม่ต้อง scroll ที่นี่ เพราะ useEffect จะจัดการให้
         // console.log('🚢 Depart Trips Count:', response.data.data.departtrip?.length || 0);
         // console.log('🔄 Return Trips Count:', response.data.data.returntrip?.length || 0);
 
@@ -578,8 +576,7 @@ const SearchFerry = ({ navigation, route }) => {
       } else {
         // console.log('❌ API returned unsuccessful status:', response.data);
         setError('ไม่สามารถโหลดข้อมูลได้');
-        // Ensure UI scrolls to the results area even if API returned no data
-        setTimeout(() => scrollToResults(), 200);
+        // ✅ useEffect จะจัดการ scroll ให้
       }
     } catch (err) {
       // console.log('🚨 API Error caught:', err);
@@ -603,8 +600,7 @@ const SearchFerry = ({ navigation, route }) => {
       setDepartTrips([]);
       setReturnTrips([]);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
-      // On error, also scroll to the results anchor so user sees the message
-      setTimeout(() => scrollToResults(), 200);
+      // ✅ useEffect จะจัดการ scroll ให้
     } finally {
       setLoading(false);
     }
@@ -613,94 +609,103 @@ const SearchFerry = ({ navigation, route }) => {
   // Helper: reliably scroll the main ScrollView to the results anchor.
   const scrollToResults = () => {
     try {
-      // Special case: when no ferries found, scroll to a fixed position to show the "no results" message
-      if (pagedDataDepart && pagedDataDepart.length === 0) {
-        if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-          mainScrollRef.current.scrollTo({ y: 600, animated: true });
+      // ใช้ setTimeout เพื่อให้ layout เสร็จสมบูรณ์ก่อน
+      setTimeout(() => {
+        // ตรวจสอบว่ามี ref หรือไม่
+        const targetRef = firstItemRef.current || resultsRef.current;
+        
+        if (!targetRef || !mainScrollRef.current) {
+          console.log('⚠️ Refs not available yet');
+          return;
         }
-        return;
-      }
 
-      // Prefer measuring the actual first result item for precise alignment
-      const preferredRef = firstItemRef.current ? firstItemRef.current : resultsRef.current;
-      const target = preferredRef ? findNodeHandle(preferredRef) : null;
-      const scrollNode = mainScrollRef.current ? findNodeHandle(mainScrollRef.current) : null;
-
-      if (target && scrollNode && UIManager && UIManager.measureLayout) {
-        UIManager.measureLayout(
-          target,
-          scrollNode,
-          // onFail
-          () => {
-            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-              mainScrollRef.current.scrollTo({ y: 600, animated: true });
+        // วิธีที่แม่นยำสูงสุด: ใช้ measureInWindow + scroll offset ที่ track ไว้
+        targetRef.measureInWindow((x, y, width, height) => {
+          // ตรวจสอบว่าได้ค่ามาหรือไม่
+          if (y === undefined || y === null || isNaN(y)) {
+            console.log('⚠️ measureInWindow failed, using fallback');
+            // Fallback: ใช้ measureLayout
+            const targetNode = findNodeHandle(targetRef);
+            const scrollNode = findNodeHandle(mainScrollRef.current);
+            
+            if (targetNode && scrollNode && UIManager && UIManager.measureLayout) {
+              UIManager.measureLayout(
+                targetNode,
+                scrollNode,
+                () => console.log('❌ measureLayout failed'),
+                (relX, relY, relWidth, relHeight) => {
+                  if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+                    const desiredTopOffset = 10;
+                    mainScrollRef.current.scrollTo({
+                      y: Math.max(0, relY - desiredTopOffset),
+                      animated: true
+                    });
+                    console.log('✅ Scrolled using measureLayout:', relY - desiredTopOffset);
+                  }
+                }
+              );
             }
-          },
-          // onSuccess x,y,width,height
-          (x, y, width, height) => {
-            // Calculate top gutter so the first ticket sits below the header / safe area
-            const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER - 250; // Increased offset to scroll further down
-            let scrollToY = Math.max(0, y - topGutter);
-            // Clamp to content bounds so we don't scroll past the end
-            const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
-            // Add a bottom buffer so we don't align the first item flush with the absolute bottom
-            const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
-            const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
-            if (scrollToY > effectiveMax) scrollToY = effectiveMax;
-            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-              mainScrollRef.current.scrollTo({ y: scrollToY, animated: true });
-            }
+            return;
           }
-        );
-      } else if (resultsRef.current && resultsRef.current.measure) {
-        const measureRef = preferredRef || resultsRef.current;
-        // measure returns pageY (absolute). We need to subtract the scrollView pageY to get relative offset.
-        measureRef.measure((x, y, width, height, pageX, pageY) => {
-          const topGutter = (insets?.top || 0) + EXTRA_TOP_GUTTER - 250; // Increased offset to scroll further down
-          // If we can measure the ScrollView's pageY by measuring its node, use it to compute relative Y
-          const scrollNodeHandle = mainScrollRef.current ? findNodeHandle(mainScrollRef.current) : null;
-          if (scrollNodeHandle && UIManager && UIManager.measure) {
-            UIManager.measure(scrollNodeHandle, (sx, sy, sw, sh, spx, spy) => {
-              let relativeY = pageY - (spy || 0) - topGutter;
-              const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
-              const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
-              const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
-              if (relativeY > effectiveMax) relativeY = effectiveMax;
-              if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-                mainScrollRef.current.scrollTo({ y: Math.max(0, relativeY), animated: true });
-              }
+
+          if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
+            // 🎯 วิธีที่แม่นยำที่สุด: คำนวณจาก absolute position
+            // y = ตำแหน่งบนหน้าจอปัจจุบัน (จาก viewport top)
+            // currentScrollOffset = scroll position ปัจจุบัน
+            // targetAbsolutePosition = y + currentScrollOffset
+            
+            const desiredTopOffset = getResponsiveSize(
+              hp('15%'),  // Phone: เว้นจากบน 15%
+              hp('18%'),  // Tablet: เว้นจากบน 18%
+              hp('20%')   // Large Tablet: เว้นจากบน 20%
+            );
+            const currentScroll = currentScrollOffset.current || 0;
+            
+            // คำนวณตำแหน่งจริงของ target ใน content
+            const targetAbsoluteY = y + currentScroll;
+            
+            // คำนวณว่าต้อง scroll ไปที่ไหนเพื่อให้ target อยู่ห่างจากบน desiredTopOffset
+            const scrollToY = Math.max(0, targetAbsoluteY - desiredTopOffset);
+            
+            // ใช้ scrollTo แบบมี animation เพื่อความ smooth
+            mainScrollRef.current.scrollTo({
+              y: scrollToY,
+              animated: true // เปิด animation เพื่อความ smooth
             });
-          } else {
-            // Fallback: use pageY directly but clamp  
-            let relativeY = pageY - ((insets?.top || 0) + EXTRA_TOP_GUTTER - 250); // Use same increased offset
-            const maxScrollY = Math.max(0, scrollContentHeightRef.current - (scrollContainerHeightRef.current || 0));
-            const bottomBuffer = Math.min(120, Math.floor((scrollContainerHeightRef.current || 320) / 3));
-            const effectiveMax = Math.max(0, maxScrollY - bottomBuffer);
-            if (relativeY > effectiveMax) relativeY = effectiveMax;
-            if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-              mainScrollRef.current.scrollTo({ y: Math.max(0, relativeY), animated: true });
-            }
+            
+            console.log('🎯 SMOOTH PRECISE SCROLL:', {
+              '1.viewportY': y,
+              '2.currentScroll': currentScroll,
+              '3.absoluteY': targetAbsoluteY,
+              '4.desiredOffset': desiredTopOffset,
+              '5.finalScrollY': scrollToY,
+              calculation: `${targetAbsoluteY} - ${desiredTopOffset} = ${scrollToY}`
+            });
           }
         });
-      } else {
-        if (mainScrollRef.current && mainScrollRef.current.scrollTo) {
-          // Fallback: scroll to reasonable distance
-          mainScrollRef.current.scrollTo({ y: 600, animated: true });
-        }
-      }
+      }, 150); // ลด delay เหลือ 150ms สำหรับการวัดตำแหน่ง
+      
     } catch (e) {
-      // ignore measurement errors
+      console.log('❌ Scroll measurement error:', e);
     }
   };
 
   // If a search was performed and loading finished, ensure we scroll to results (covers no-results case)
+  // Scroll เมื่อค้นหาเสร็จ (ไม่ว่าจะมีผลลัพธ์หรือไม่)
   useEffect(() => {
     if (!loading && didSearch) {
-      // small delay to allow rendering
+      // รอให้ render เสร็จสมบูรณ์ก่อน scroll
       const t = setTimeout(() => {
+        console.log('📊 Search complete, scrolling...', {
+          depart: departTrips.length,
+          return: returnTrips.length,
+          loading: loading,
+          hasResults: (departTrips.length > 0 || returnTrips.length > 0)
+        });
         scrollToResults();
+        // Reset didSearch flag
         setDidSearch(false);
-      }, 220);
+      }, 250); // ลด delay เหลือ 250ms เพื่อ response เร็วขึ้น
       return () => clearTimeout(t);
     }
   }, [loading, didSearch]);
@@ -1287,17 +1292,21 @@ const SearchFerry = ({ navigation, route }) => {
               maxWidth: isTablet ? 1200 : '100%',
               alignSelf: 'center',
               width: '100%',
-              flexGrow: 1,
             }
           ]}
           showsVerticalScrollIndicator={false}
-            style={{ flex: 1 }}
-            ref={mainScrollRef}
-            onLayout={(e) => {
-              scrollContainerHeightRef.current = e.nativeEvent.layout.height;
-            }}
-            onContentSizeChange={(w, h) => {
-              scrollContentHeightRef.current = h;
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            // เก็บ scroll offset ปัจจุบันเพื่อความแม่นยำ
+            currentScrollOffset.current = event.nativeEvent.contentOffset.y;
+          }}
+          style={{ flex: 1 }}
+          ref={mainScrollRef}
+          onLayout={(e) => {
+            scrollContainerHeightRef.current = e.nativeEvent.layout.height;
+          }}
+          onContentSizeChange={(w, h) => {
+            scrollContentHeightRef.current = h;
             }}
         >
            <View style={{
@@ -2833,14 +2842,13 @@ const SearchFerry = ({ navigation, route }) => {
           
           {!loading && pagedDataDepart && pagedDataDepart.length === 0 && (
             <View style={{
-              flex: 1,
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: 360,
+              minHeight: getResponsiveSize(260, 300, 340),
               width: '100%',
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: 24,
-              padding: 32,
+              borderRadius: getResponsiveSize(16, 20, 24),
+              padding: getResponsiveSize(20, 24, 28),
               shadowColor: '#FD501E',
               shadowOpacity: 0.1,
               shadowRadius: 20,
@@ -2848,22 +2856,22 @@ const SearchFerry = ({ navigation, route }) => {
               elevation: 8,
               borderWidth: 1,
               borderColor: 'rgba(253, 80, 30, 0.08)',
-              marginVertical: 20
+              marginVertical: getResponsiveSize(12, 16, 20)
             }}>
               <LottieView
                 source={require('../../assets/animations/ferry-animation.json')}
                 autoPlay
                 loop
                 style={{
-                  width: 240,
-                  height: 240,
+                  width: getResponsiveSize(140, 160, 180),
+                  height: getResponsiveSize(140, 160, 180),
                 }}
               />
               <Text style={{
-                marginTop: 32,
+                marginTop: getResponsiveSize(16, 20, 24),
                 color: '#1E293B',
                 fontWeight: '800',
-                fontSize: 22,
+                fontSize: getResponsiveSize(18, 20, 22),
                 letterSpacing: -0.3,
                 textAlign: 'center'
               }}>
@@ -2873,7 +2881,7 @@ const SearchFerry = ({ navigation, route }) => {
                 marginTop: 8,
                 color: '#64748B',
                 fontWeight: '500',
-                fontSize: 16,
+                fontSize: getResponsiveSize(14, 15, 16),
                 letterSpacing: 0.2,
                 textAlign: 'center'
               }}>
@@ -4624,41 +4632,40 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {/* Enhanced Ultra Premium Pagination - Depart Trip */}
           {
-            tripTypeSearchResult === t('departTrip') && filteredDepartData != null && departTrips.length > 0 && (
-              <View ref={resultsRef} style={{
+            (tripTypeSearchResult === t('departTrip') || tripTypeSearch === TRIP_TYPES.ONE_WAY) && filteredDepartData != null && filteredDepartData.length > itemsPerPage && (
+              <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',
-                marginVertical: hp('3.5%'),
-                paddingHorizontal: wp('5%'),
-                marginBottom: Platform.OS === 'android' ? hp('12%') : hp('10%'), // เพิ่ม margin bottom เพื่อไม่ให้ bottom bar บัง
+                marginVertical: getResponsiveSize(hp('2.5%'), hp('3%'), hp('3.5%')),
+                paddingHorizontal: getResponsiveSize(wp('3%'), wp('4%'), wp('5%')),
+                marginBottom: getResponsiveSize(hp('10%'), hp('11%'), hp('12%')),
               }}>
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: 'rgba(255,255,255,0.95)',
-                  borderRadius: wp('8%'),
-                  paddingVertical: hp('1.5%'),
-                  paddingHorizontal: wp('6%'),
+                  borderRadius: getResponsiveSize(wp('6%'), wp('5%'), wp('4%')),
+                  paddingVertical: getResponsiveSize(hp('1.2%'), hp('1.3%'), hp('1.5%')),
+                  paddingHorizontal: getResponsiveSize(wp('4%'), wp('5%'), wp('6%')),
                   shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
+                  shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('3%'), wp('3.5%'), wp('4%')),
                   shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
                   elevation: Platform.OS === 'android' ? 0 : 15,
-                  minWidth: wp('50%'),
+                  minWidth: getResponsiveSize(wp('40%'), wp('45%'), wp('50%')),
                   borderWidth: 1,
                   borderColor: 'rgba(253, 80, 30, 0.08)',
-                  // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }}>
                   {/* Previous Button */}
                   <TouchableOpacity
                     onPress={goToPreviousPageDepart}
                     disabled={currentPageDepart === 1}
                     style={{
-                      width: wp('12%'),
-                      height: wp('12%'),
-                      borderRadius: wp('6%'),
+                      width: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      height: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      borderRadius: getResponsiveSize(wp('5%'), wp('5.5%'), wp('6%')),
                       backgroundColor: currentPageDepart === 1 ? 'rgba(148, 163, 184, 0.2)' : '#FD501E',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -4715,9 +4722,9 @@ const SearchFerry = ({ navigation, route }) => {
                     onPress={goToNextPageDepart}
                     disabled={currentPageDepart * itemsPerPage >= filteredDepartData.length}
                     style={{
-                      width: wp('12%'),
-                      height: wp('12%'),
-                      borderRadius: wp('6%'),
+                      width: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      height: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      borderRadius: getResponsiveSize(wp('5%'), wp('5.5%'), wp('6%')),
                       backgroundColor: (currentPageDepart * itemsPerPage >= filteredDepartData.length) ? 'rgba(148, 163, 184, 0.2)' : '#FD501E',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -4760,41 +4767,40 @@ const SearchFerry = ({ navigation, route }) => {
 
           {/* Enhanced Ultra Premium Pagination - Return Trip */}
           {
-            tripTypeSearchResult === t('returnTrip') && filteredReturnData != null && returnTrips.length > 0 && (
+            tripTypeSearchResult === t('returnTrip') && filteredReturnData != null && filteredReturnData.length > itemsPerPage && (
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',
-                marginVertical: hp('3.5%'),
-                paddingHorizontal: wp('5%'),
-                marginBottom: Platform.OS === 'android' ? hp('12%') : hp('10%'), // เพิ่ม margin bottom เพื่อไม่ให้ bottom bar บัง
+                marginVertical: getResponsiveSize(hp('2.5%'), hp('3%'), hp('3.5%')),
+                paddingHorizontal: getResponsiveSize(wp('3%'), wp('4%'), wp('5%')),
+                marginBottom: getResponsiveSize(hp('10%'), hp('11%'), hp('12%')),
               }}>
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: 'rgba(255,255,255,0.95)',
-                  borderRadius: wp('8%'),
-                  paddingVertical: hp('1.5%'),
-                  paddingHorizontal: wp('6%'),
+                  borderRadius: getResponsiveSize(wp('6%'), wp('5%'), wp('4%')),
+                  paddingVertical: getResponsiveSize(hp('1.2%'), hp('1.3%'), hp('1.5%')),
+                  paddingHorizontal: getResponsiveSize(wp('4%'), wp('5%'), wp('6%')),
                   shadowColor: Platform.OS === 'android' ? 'transparent' : '#001233',
                   shadowOpacity: Platform.OS === 'android' ? 0 : 0.12,
-                  shadowRadius: Platform.OS === 'android' ? 0 : wp('4%'),
+                  shadowRadius: Platform.OS === 'android' ? 0 : getResponsiveSize(wp('3%'), wp('3.5%'), wp('4%')),
                   shadowOffset: Platform.OS === 'android' ? { width: 0, height: 0 } : { width: 0, height: hp('0.5%') },
                   elevation: Platform.OS === 'android' ? 0 : 15,
-                  minWidth: wp('50%'),
+                  minWidth: getResponsiveSize(wp('40%'), wp('45%'), wp('50%')),
                   borderWidth: 1,
                   borderColor: 'rgba(255, 214, 0, 0.12)',
-                  // backdropFilter: 'blur(20px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
                 }}>
                   {/* Previous Button */}
                   <TouchableOpacity
                     onPress={goToPreviousPageReturn}
                     disabled={currentPageReturn === 1}
                     style={{
-                      width: wp('12%'),
-                      height: wp('12%'),
-                      borderRadius: wp('6%'),
+                      width: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      height: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      borderRadius: getResponsiveSize(wp('5%'), wp('5.5%'), wp('6%')),
                       backgroundColor: currentPageReturn === 1 ? 'rgba(148, 163, 184, 0.2)' : '#FFD600',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -4851,9 +4857,9 @@ const SearchFerry = ({ navigation, route }) => {
                     onPress={goToNextPageReturn}
                     disabled={currentPageReturn * itemsPerPage >= filteredReturnData.length}
                     style={{
-                      width: wp('12%'),
-                      height: wp('12%'),
-                      borderRadius: wp('6%'),
+                      width: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      height: getResponsiveSize(wp('10%'), wp('11%'), wp('12%')),
+                      borderRadius: getResponsiveSize(wp('5%'), wp('5.5%'), wp('6%')),
                       backgroundColor: (currentPageReturn * itemsPerPage >= filteredReturnData.length) ? 'rgba(148, 163, 184, 0.2)' : '#FFD600',
                       alignItems: 'center',
                       justifyContent: 'center',
