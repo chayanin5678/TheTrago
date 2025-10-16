@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator, UIManager, findNodeHandle, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Animated, Easing, Dimensions, ActivityIndicator, UIManager, findNodeHandle, Alert, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,115 @@ const getResponsiveSize = (phone, tablet, largeTablet) => {
   return phone;
 };
 
+// Custom Draggable Slider Component
+const CustomSlider = ({ min = 0, max = 100, value = 0, onValueChange, step = 1 }) => {
+  const [sliderWidth, setSliderWidth] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Ensure value is valid
+  const safeValue = isNaN(value) || value === null || value === undefined ? min : value;
+  const clampedValue = Math.max(min, Math.min(max, safeValue));
+  const position = sliderWidth > 0 ? ((clampedValue - min) / (max - min)) * sliderWidth : 0;
+
+  const handleTouch = (evt) => {
+    if (sliderWidth <= 0) return;
+    
+    const touch = evt.nativeEvent;
+    const touchX = touch.locationX || touch.pageX;
+    
+    // Calculate new value based on touch position
+    const ratio = Math.max(0, Math.min(1, touchX / sliderWidth));
+    const newValue = min + ratio * (max - min);
+    
+    // Round to nearest step
+    const steppedValue = Math.round(newValue / step) * step;
+    const finalValue = Math.max(min, Math.min(max, steppedValue));
+    
+    onValueChange(finalValue);
+  };
+
+  return (
+    <View style={{ width: '100%', paddingVertical: 10 }}>
+      <View
+        onLayout={(e) => setSliderWidth(e.nativeEvent.layout.width)}
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={handleTouch}
+        onResponderMove={handleTouch}
+        onResponderRelease={() => setIsDragging(false)}
+        style={{
+          height: 40,
+          justifyContent: 'center',
+          paddingVertical: 18,
+        }}
+      >
+        <View
+          style={{
+            height: 4,
+            backgroundColor: '#E2E8F0',
+            borderRadius: 2,
+            position: 'relative',
+          }}
+        >
+          <View
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: 4,
+              width: Math.max(0, position),
+              backgroundColor: '#FD501E',
+              borderRadius: 2,
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              left: Math.max(0, position - 10),
+              top: -8,
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: '#FD501E',
+              borderWidth: 3,
+              borderColor: '#FFFFFF',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}
+          />
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+        <TouchableOpacity
+          onPress={() => onValueChange(Math.max(min, clampedValue - step * 5))}
+          style={{ 
+            padding: 8,
+            backgroundColor: '#F8FAFC',
+            borderRadius: 6,
+            minWidth: 36,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#FD501E', fontSize: 20, fontWeight: 'bold' }}>−</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => onValueChange(Math.min(max, clampedValue + step * 5))}
+          style={{ 
+            padding: 8,
+            backgroundColor: '#F8FAFC',
+            borderRadius: 6,
+            minWidth: 36,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#FD501E', fontSize: 20, fontWeight: 'bold' }}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 
 const SearchFerry = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -41,6 +150,12 @@ const SearchFerry = ({ navigation, route }) => {
   const TRIP_TYPES = {
     ONE_WAY: t('oneWayTrip'),
     ROUND_TRIP: t('roundTrip')
+  };
+  
+  // Constants for result tabs (ใช้สำหรับ tab ในผลการค้นหา)
+  const RESULT_TABS = {
+    DEPART: t('departTrip'),
+    RETURN: t('returnTrip')
   };
 
   const [tripType, setTripType] = useState(TRIP_TYPES.ONE_WAY);
@@ -63,7 +178,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [startingPoint, setStartingPoint] = useState({ id: customerData.startingPointId, name: customerData.startingpoint_name, countryId: customerData.countrycode });
   const [endPoint, setEndPoint] = useState({ id: customerData.endPointId, name: customerData.endpoint_name });
 
-  const [tripTypeSearchResult, settripTypeSearchResult] = useState(TRIP_TYPES.ONE_WAY);
+  const [tripTypeSearchResult, settripTypeSearchResult] = useState(RESULT_TABS.DEPART);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infant, setInfant] = useState(0);
@@ -82,7 +197,7 @@ const SearchFerry = ({ navigation, route }) => {
   const [returnDate, setReturnDate] = useState(detaReturn);
 
   const [loading, setLoading] = useState(true);
-  const [didSearch, setDidSearch] = useState(false);
+  const [didSearch, setDidSearch] = useState(true);
 
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -109,6 +224,20 @@ const SearchFerry = ({ navigation, route }) => {
   const [discount, setDiscount] = useState(0);
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
 
+  // Advanced Filter States
+  const [priceRangeDepart, setPriceRangeDepart] = useState([0, 5000]);
+  const [priceRangeReturn, setPriceRangeReturn] = useState([0, 5000]);
+  const [departureTimeRangeDepart, setDepartureTimeRangeDepart] = useState([0, 24]);
+  const [departureTimeRangeReturn, setDepartureTimeRangeReturn] = useState([0, 24]);
+  const [arrivalTimeRangeDepart, setArrivalTimeRangeDepart] = useState([0, 24]);
+  const [arrivalTimeRangeReturn, setArrivalTimeRangeReturn] = useState([0, 24]);
+  const [selectedPiersDepart, setSelectedPiersDepart] = useState([]);
+  const [selectedPiersReturn, setSelectedPiersReturn] = useState([]);
+  const [availablePiersDepart, setAvailablePiersDepart] = useState([]);
+  const [availablePiersReturn, setAvailablePiersReturn] = useState([]);
+  const [allPiersSelectedDepart, setAllPiersSelectedDepart] = useState(true);
+  const [allPiersSelectedReturn, setAllPiersSelectedReturn] = useState(true);
+
   const [departTrips, setDepartTrips] = useState([]);
   const [returnTrips, setReturnTrips] = useState([]);
   const [error, setError] = useState(null);
@@ -116,6 +245,9 @@ const SearchFerry = ({ navigation, route }) => {
   const [selectedSysmbol, setSelectedSysmbol] = useState('฿');
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [currencyList, setCurrencyList] = useState([]);
+  
+  // AbortController สำหรับ cancel API request เก่าเมื่อเปลี่ยน currency เร็ว
+  const abortControllerRef = useRef(null);
 
   // Refs for scrolling to results
   const mainScrollRef = useRef(null);
@@ -303,6 +435,28 @@ const SearchFerry = ({ navigation, route }) => {
       });
   }, []);
 
+  // เรียก fetchFerryRoute ใหม่เมื่อเปลี่ยน currency (ยกเว้นครั้งแรกที่โหลดหน้า)
+  const isFirstCurrencyRender = useRef(true);
+  useEffect(() => {
+    if (isFirstCurrencyRender.current) {
+      isFirstCurrencyRender.current = false;
+      return;
+    }
+    
+    // เรียก search ใหม่ทันทีเมื่อเปลี่ยน currency ถ้ามีข้อมูลที่จำเป็นครบ
+    // ลบเงื่อนไข didSearch เพื่อให้ทำงาน 100% ทุกครั้งที่เปลี่ยน currency
+    if (startingPoint.id && endPoint.id && calendarStartDate) {
+      fetchFerryRoute();
+    }
+    
+    // Cleanup: cancel request เมื่อ unmount หรือเปลี่ยน currency ใหม่
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [selectedCurrency]);
+
 
 
 
@@ -483,6 +637,14 @@ const SearchFerry = ({ navigation, route }) => {
 
   const fetchFerryRoute = async () => {
     try {
+      // Cancel previous request ถ้ามี (ป้องกันปัญหาเปลี่ยน currency เร็วเกินไป)
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // สร้าง AbortController ใหม่สำหรับ request นี้
+      abortControllerRef.current = new AbortController();
+      
       // Mark that a search was initiated and begin loading state
       setDidSearch(true);
       setLoading(true);
@@ -534,6 +696,7 @@ const SearchFerry = ({ navigation, route }) => {
           headers: {
             'Content-Type': 'application/json',
           },
+          signal: abortControllerRef.current.signal, // เพิ่ม signal เพื่อให้ cancel ได้
         }
       );
 
@@ -560,9 +723,10 @@ const SearchFerry = ({ navigation, route }) => {
         // ลบรายการซ้ำ
         const uniqueCompanyNames = [...new Set(companyNames)].filter(name => name); // กรองเอาเฉพาะค่าที่ไม่ใช่ null/undefined
 
-        // console.log('🏢 Available Company Names:', uniqueCompanyNames);
+        // console.log('🏢 Available Company Names (Depart):', uniqueCompanyNames);
         setAvailableCompaniesDepart(uniqueCompanyNames);
         setSelectedCompaniesDepart(uniqueCompanyNames); // เลือกทุก company
+        setAllSelectedDepart(true); // set all selected to true
 
         // สร้างรายการบริษัทสำหรับ return trips ด้วย
         const returnCompanyNames = response.data.data.returntrip?.map(trip => {
@@ -570,8 +734,52 @@ const SearchFerry = ({ navigation, route }) => {
         }) || [];
 
         const uniqueReturnCompanyNames = [...new Set(returnCompanyNames)].filter(name => name);
+        // console.log('🏢 Available Company Names (Return):', uniqueReturnCompanyNames);
         setAvailableCompaniesReturn(uniqueReturnCompanyNames);
         setSelectedCompaniesReturn(uniqueReturnCompanyNames);
+        setAllSelectedReturn(true); // set all selected to true
+
+        // สร้างรายการท่าเรือสำหรับ filter
+        const pierNames = response.data.data.departtrip?.map(trip => {
+          return trip.md_timetable_pierstart; // แก้เป็น field ที่ถูกต้อง
+        }) || [];
+
+        const uniquePierNames = [...new Set(pierNames)].filter(name => name);
+        // console.log('⚓ Available Piers (Depart):', uniquePierNames);
+        setAvailablePiersDepart(uniquePierNames);
+        setSelectedPiersDepart(uniquePierNames);
+        setAllPiersSelectedDepart(true); // set all piers selected to true
+
+        const returnPierNames = response.data.data.returntrip?.map(trip => {
+          return trip.md_timetable_pierstart; // แก้เป็น field ที่ถูกต้อง
+        }) || [];
+
+        const uniqueReturnPierNames = [...new Set(returnPierNames)].filter(name => name);
+        // console.log('⚓ Available Piers (Return):', uniqueReturnPierNames);
+        setAvailablePiersReturn(uniqueReturnPierNames);
+        setSelectedPiersReturn(uniqueReturnPierNames);
+        setAllPiersSelectedReturn(true); // set all piers selected to true
+
+        // คำนวณ price range
+        const departPrices = response.data.data.departtrip?.map(trip => {
+          return parseFloat((parseFloat(trip.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(trip.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2));
+        }) || [];
+
+        if (departPrices.length > 0) {
+          const minPrice = Math.floor(Math.min(...departPrices));
+          const maxPrice = Math.ceil(Math.max(...departPrices));
+          setPriceRangeDepart([minPrice, maxPrice]);
+        }
+
+        const returnPrices = response.data.data.returntrip?.map(trip => {
+          return parseFloat((parseFloat(trip.md_timetable_priceadult.replace(/,/g, "")) - parseFloat(trip.md_timetable_discount_adult.replace(/,/g, ""))).toFixed(2));
+        }) || [];
+
+        if (returnPrices.length > 0) {
+          const minPrice = Math.floor(Math.min(...returnPrices));
+          const maxPrice = Math.ceil(Math.max(...returnPrices));
+          setPriceRangeReturn([minPrice, maxPrice]);
+        }
 
       } else {
         // console.log('❌ API returned unsuccessful status:', response.data);
@@ -579,6 +787,12 @@ const SearchFerry = ({ navigation, route }) => {
         // ✅ useEffect จะจัดการ scroll ให้
       }
     } catch (err) {
+      // ถ้า request ถูก cancel ไม่ต้องทำอะไร (ปกติเมื่อเปลี่ยน currency เร็ว)
+      if (axios.isCancel(err) || err.name === 'CanceledError') {
+        // console.log('🔄 Request was cancelled');
+        return;
+      }
+      
       // console.log('🚨 API Error caught:', err);
       // console.log('🚨 Error message:', err.message);
       // console.log('🚨 Error response:', err.response?.data);
@@ -811,39 +1025,228 @@ const SearchFerry = ({ navigation, route }) => {
     setAllSelectedReturn(!allSelectedReturn);
   };
 
-  // Filter ใช้ข้อมูลจาก API Getroute (departTrips/returnTrips) แต่ตั๋วแสดงจาก timetableDepart/Return
-  const filteredDepartData = departTrips.filter(item => {
-    // ถ้าเลือกทั้งหมด ให้แสดงข้อมูลทั้งหมด
-    if (allSelectedDepart) {
-      return true;
-    }
+  // Toggle Pier Functions
+  const togglePierDepart = (pierName) => {
+    const updated = selectedPiersDepart.includes(pierName)
+      ? selectedPiersDepart.filter(name => name !== pierName)
+      : [...selectedPiersDepart, pierName];
 
+    setSelectedPiersDepart(updated);
+    setAllPiersSelectedDepart(updated.length === availablePiersDepart.length);
+  };
+
+  const togglePierReturn = (pierName) => {
+    const updated = selectedPiersReturn.includes(pierName)
+      ? selectedPiersReturn.filter(name => name !== pierName)
+      : [...selectedPiersReturn, pierName];
+
+    setSelectedPiersReturn(updated);
+    setAllPiersSelectedReturn(updated.length === availablePiersReturn.length);
+  };
+
+  const toggleSelectAllPiersDepart = () => {
+    if (allPiersSelectedDepart) {
+      setSelectedPiersDepart([]);
+    } else {
+      setSelectedPiersDepart(availablePiersDepart);
+    }
+    setAllPiersSelectedDepart(!allPiersSelectedDepart);
+  };
+
+  const toggleSelectAllPiersReturn = () => {
+    if (allPiersSelectedReturn) {
+      setSelectedPiersReturn([]);
+    } else {
+      setSelectedPiersReturn(availablePiersReturn);
+    }
+    setAllPiersSelectedReturn(!allPiersSelectedReturn);
+  };
+
+  // Helper function to convert time string to decimal hours
+  const timeToDecimal = (timeString) => {
+    if (!timeString) return 0;
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours + (minutes / 60);
+  };
+
+  // Filter ใช้ข้อมูลจาก API Getroute (departTrips/returnTrips) แต่ตั๋วแสดงจาก timetableDepart/Return
+  const filteredDepartData = departTrips.filter((item, index) => {
     // ใช้ md_timetable_companyname เท่านั้น
     const companyName = item.md_timetable_companyname;
+    const pierName = item.md_timetable_pierstart;
 
-    // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
-    return selectedCompaniesDepart.includes(companyName);
+    // Debug first item
+    if (index === 0) {
+      console.log('🔍 First Item Debug:', {
+        companyName,
+        pierName,
+        allSelectedDepart,
+        selectedCompaniesDepart,
+        selectedCompaniesLength: selectedCompaniesDepart.length,
+        allPiersSelectedDepart,
+        selectedPiersDepart,
+        selectedPiersLength: selectedPiersDepart.length
+      });
+    }
+
+    // Filter by company
+    // ถ้าไม่ได้เลือก "ทั้งหมด" และมีการเลือกบริษัท ให้แสดงเฉพาะที่เลือก
+    // ถ้าไม่ได้เลือกเลย (length = 0) ไม่แสดงอะไรเลย
+    if (!allSelectedDepart) {
+      if (selectedCompaniesDepart.length === 0) {
+        // ไม่มีการเลือกเลย = ไม่แสดงอะไร
+        console.log('🚫 No companies selected - filtering out all');
+        return false;
+      }
+      if (!selectedCompaniesDepart.includes(companyName)) {
+        // เลือกแล้วแต่ไม่ตรงกับรายการนี้
+        console.log('🚫 Filtered out by company:', { companyName, selectedCompanies: selectedCompaniesDepart });
+        return false;
+      }
+    }
+
+    // Filter by price range
+    try {
+      const priceAdult = parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) || 0;
+      const discount = parseFloat(item.md_timetable_discount_adult.replace(/,/g, "")) || 0;
+      const price = priceAdult - discount;
+      
+      // Only filter if price range is modified (not at max)
+      if (price < priceRangeDepart[0] || price > priceRangeDepart[1]) {
+        return false;
+      }
+    } catch (error) {
+      console.log('Price filter error:', error);
+    }
+
+    // Filter by departure time
+    try {
+      const departTime = timeToDecimal(item.md_timetable_departuretime);
+      // Only filter if time range is modified (not 0-24)
+      if (departureTimeRangeDepart[0] > 0 || departureTimeRangeDepart[1] < 24) {
+        if (departTime < departureTimeRangeDepart[0] || departTime > departureTimeRangeDepart[1]) {
+          return false;
+        }
+      }
+    } catch (error) {
+      console.log('Departure time filter error:', error);
+    }
+
+    // Filter by arrival time
+    try {
+      const arrivalTime = timeToDecimal(item.md_timetable_arrivaltime);
+      // Only filter if time range is modified (not 0-24)
+      if (arrivalTimeRangeDepart[0] > 0 || arrivalTimeRangeDepart[1] < 24) {
+        if (arrivalTime < arrivalTimeRangeDepart[0] || arrivalTime > arrivalTimeRangeDepart[1]) {
+          return false;
+        }
+      }
+    } catch (error) {
+      console.log('Arrival time filter error:', error);
+    }
+
+    // Filter by pier
+    // ถ้าไม่ได้เลือก "ทั้งหมด" และมีการเลือกท่าเรือ ให้แสดงเฉพาะที่เลือก
+    // ถ้าไม่ได้เลือกเลย (length = 0) ไม่แสดงอะไรเลย
+    if (!allPiersSelectedDepart) {
+      if (selectedPiersDepart.length === 0) {
+        // ไม่มีการเลือกเลย = ไม่แสดงอะไร
+        console.log('🚫 No piers selected - filtering out all');
+        return false;
+      }
+      if (!selectedPiersDepart.includes(pierName)) {
+        // เลือกแล้วแต่ไม่ตรงกับรายการนี้
+        console.log('🚫 Filtered out by pier:', { pierName, selectedPiers: selectedPiersDepart });
+        return false;
+      }
+    }
+
+    // If we reach here, the item passes all filters
+    if (index === 0) {
+      console.log('✅ First item passed all filters');
+    }
+
+    return true;
   });
 
   const filteredReturnData = returnTrips.filter(item => {
-    // ถ้าเลือกทั้งหมด ให้แสดงข้อมูลทั้งหมด
-    if (allSelectedReturn) {
-      return true;
-    }
-
     // ใช้ md_timetable_companyname เท่านั้น
     const companyName = item.md_timetable_companyname;
+    const pierName = item.md_timetable_pierstart;
 
-    // ตรวจสอบว่าชื่อบริษัทอยู่ในรายการที่เลือกหรือไม่
-    return selectedCompaniesReturn.includes(companyName);
+    // Filter by company
+    if (!allSelectedReturn) {
+      if (selectedCompaniesReturn.length === 0) {
+        return false;
+      }
+      if (!selectedCompaniesReturn.includes(companyName)) {
+        return false;
+      }
+    }
+
+    // Filter by price range
+    try {
+      const priceAdult = parseFloat(item.md_timetable_priceadult.replace(/,/g, "")) || 0;
+      const discount = parseFloat(item.md_timetable_discount_adult.replace(/,/g, "")) || 0;
+      const price = priceAdult - discount;
+      
+      // Only filter if price range is modified (not at max)
+      if (price < priceRangeReturn[0] || price > priceRangeReturn[1]) {
+        return false;
+      }
+    } catch (error) {
+      console.log('Price filter error:', error);
+    }
+
+    // Filter by departure time
+    try {
+      const departTime = timeToDecimal(item.md_timetable_departuretime);
+      // Only filter if time range is modified (not 0-24)
+      if (departureTimeRangeReturn[0] > 0 || departureTimeRangeReturn[1] < 24) {
+        if (departTime < departureTimeRangeReturn[0] || departTime > departureTimeRangeReturn[1]) {
+          return false;
+        }
+      }
+    } catch (error) {
+      console.log('Departure time filter error:', error);
+    }
+
+    // Filter by arrival time
+    try {
+      const arrivalTime = timeToDecimal(item.md_timetable_arrivaltime);
+      // Only filter if time range is modified (not 0-24)
+      if (arrivalTimeRangeReturn[0] > 0 || arrivalTimeRangeReturn[1] < 24) {
+        if (arrivalTime < arrivalTimeRangeReturn[0] || arrivalTime > arrivalTimeRangeReturn[1]) {
+          return false;
+        }
+      }
+    } catch (error) {
+      console.log('Arrival time filter error:', error);
+    }
+
+    // Filter by pier
+    if (!allPiersSelectedReturn) {
+      if (selectedPiersReturn.length === 0) {
+        return false;
+      }
+      if (!selectedPiersReturn.includes(pierName)) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   // Debug: ตรวจสอบการ filter
   console.log('🔍 Debug Filter Info:');
   console.log('  - departTrips length:', departTrips.length);
+  console.log('  - availableCompaniesDepart:', availableCompaniesDepart);
+  console.log('  - availablePiersDepart:', availablePiersDepart);
   console.log('  - selectedCompaniesDepart:', selectedCompaniesDepart);
+  console.log('  - selectedPiersDepart:', selectedPiersDepart);
   console.log('  - filteredDepartData length:', filteredDepartData.length);
   console.log('  - allSelectedDepart:', allSelectedDepart);
+  console.log('  - allPiersSelectedDepart:', allPiersSelectedDepart);
 
   // ต้องอยู่หลังจาก filter
   const pagedDataDepart = filteredDepartData.slice(
@@ -1051,6 +1454,8 @@ const SearchFerry = ({ navigation, route }) => {
                           setSelectedCurrency(currency.md_currency_code);
                           setSelectedSysmbol(currency.md_currency_symbol);
                           setCurrencyModalVisible(false);
+                          // ทำการ search ใหม่เมื่อเปลี่ยน currency
+                          fetchFerryRoute();
                         }}
                         style={{
                           paddingVertical: 14,
@@ -1085,7 +1490,7 @@ const SearchFerry = ({ navigation, route }) => {
         </LinearGradient>
         {/* Enhanced Ultra Premium Title and Filters Section */}
        
-        <Modal visible={tripTypeSearchResult === t('departTrip') ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
+        <Modal visible={tripTypeSearchResult === RESULT_TABS.DEPART ? isFilterModalVisibleDepart : isFilterModalVisibleReturn} animationType="slide" transparent={true}>
           <View style={{
             flex: 1,
             backgroundColor: 'rgba(0,18,51,0.7)',
@@ -1097,18 +1502,19 @@ const SearchFerry = ({ navigation, route }) => {
               backgroundColor: 'rgba(255,255,255,0.98)',
               width: '100%',
               maxWidth: wp('92%'),
+              height: hp('85%'),
               borderRadius: wp('6%'),
-              padding: wp('6%'),
-              /* shadow/elevation removed */
               borderWidth: 1,
               borderColor: 'rgba(0, 18, 51, 0.08)',
-              // backdropFilter: 'blur(25px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             }}>
+              {/* Header */}
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: hp('3%')
+                paddingHorizontal: wp('6%'),
+                paddingTop: hp('2%'),
+                paddingBottom: hp('1%'),
               }}>
                 <Text style={{
                   fontWeight: '800',
@@ -1116,15 +1522,14 @@ const SearchFerry = ({ navigation, route }) => {
                   color: '#1E293B',
                   letterSpacing: -0.3
                 }}>
-                  {t('ferryOperators')}
+                  {t('advanceFilters')}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+                  onPress={() => tripTypeSearchResult === RESULT_TABS.DEPART ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
                   style={{
                     backgroundColor: 'rgba(248,250,252,0.8)',
                     padding: wp('2.5%'),
                     borderRadius: wp('4%'),
-                    /* shadow/elevation removed */
                   }}
                   activeOpacity={0.7}
                 >
@@ -1132,145 +1537,336 @@ const SearchFerry = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Enhanced Select All / Clear All Button */}
-              <TouchableOpacity
-                onPress={tripTypeSearchResult === t('departTrip') ? toggleSelectAllDepart : toggleSelectAllReturn}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: hp('2%'),
-                  padding: wp('4%'),
-                  backgroundColor: 'rgba(248,250,252,0.6)',
-                  borderRadius: wp('4%'),
-                  borderWidth: 1,
-                  borderColor: 'rgba(253, 80, 30, 0.08)',
-                  /* shadow/elevation removed */
-                }}
-                activeOpacity={0.8}
-              >
-                <Icon
-                  name={tripTypeSearchResult === t('departTrip') ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
-                  size={wp('6%')}
-                  color="#FD501E"
-                  style={{ marginRight: wp('3%') }}
-                />
-                <Text style={{
-                  fontSize: wp('4%'),
-                  fontWeight: '600',
-                  color: '#1E293B',
-                  letterSpacing: 0.2
-                }}>
-                  {t('selectAllOperators')}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Enhanced Ultra Premium Company List with ScrollView */}
               <ScrollView
-                style={{ maxHeight: hp('40%'), marginBottom: hp('2.5%') }}
                 showsVerticalScrollIndicator={true}
                 nestedScrollEnabled={true}
+                contentContainerStyle={{ 
+                  paddingHorizontal: wp('6%'),
+                  paddingBottom: hp('2%'),
+                }}
+                style={{ flex: 1 }}
               >
-                {tripTypeSearchResult === t('departTrip')
-                  ? availableCompaniesDepart.map((company, index) => (
-                    <TouchableOpacity
-                      key={company}
-                      onPress={() => toggleCompanyDepart(company)}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: hp('1.5%'),
-                        padding: wp('4%'),
-                        backgroundColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
-                        borderRadius: wp('4%'),
-                        borderWidth: 1,
-                        borderColor: selectedCompaniesDepart.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                        /* shadow/elevation removed */
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Icon
-                        name={selectedCompaniesDepart.includes(company) ? 'checkbox' : 'square-outline'}
-                        size={wp('5.5%')}
-                        color="#FD501E"
-                        style={{ marginRight: wp('3.5%') }}
-                      />
-                      <Text style={{
-                        fontSize: wp('3.8%'),
-                        fontWeight: selectedCompaniesDepart.includes(company) ? '600' : '500',
-                        color: selectedCompaniesDepart.includes(company) ? '#FD501E' : '#1E293B',
-                        letterSpacing: 0.2,
-                        flex: 1
-                      }}>
-                        {company}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                  : availableCompaniesReturn.map((company, index) => (
-                    <TouchableOpacity
-                      key={company}
-                      onPress={() => toggleCompanyReturn(company)}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: hp('1.5%'),
-                        padding: wp('4%'),
-                        backgroundColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
-                        borderRadius: wp('4%'),
-                        borderWidth: 1,
-                        borderColor: selectedCompaniesReturn.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
-                        /* shadow/elevation removed */
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Icon
-                        name={selectedCompaniesReturn.includes(company) ? 'checkbox' : 'square-outline'}
-                        size={wp('5.5%')}
-                        color="#FD501E"
-                        style={{ marginRight: wp('3.5%') }}
-                      />
-                      <Text style={{
-                        fontSize: wp('3.8%'),
-                        fontWeight: selectedCompaniesReturn.includes(company) ? '600' : '500',
-                        color: selectedCompaniesReturn.includes(company) ? '#FD501E' : '#1E293B',
-                        letterSpacing: 0.2,
-                        flex: 1
-                      }}>
-                        {company}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                }
+                {/* Price Range Filter */}
+                <View style={{ marginBottom: hp('3%') }}>
+                  <Text style={{
+                    fontSize: wp('4.2%'),
+                    fontWeight: '700',
+                    color: '#1E293B',
+                    marginBottom: hp('1.5%')
+                  }}>
+                    {t('priceRange')} ({selectedCurrency})
+                  </Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: hp('1%')
+                  }}>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {selectedSysmbol} {tripTypeSearchResult === RESULT_TABS.DEPART ? priceRangeDepart[0].toLocaleString() : priceRangeReturn[0].toLocaleString()}
+                    </Text>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {selectedSysmbol} {tripTypeSearchResult === RESULT_TABS.DEPART ? priceRangeDepart[1].toLocaleString() : priceRangeReturn[1].toLocaleString()}
+                    </Text>
+                  </View>
+                  <CustomSlider
+                    min={0}
+                    max={5000}
+                    step={100}
+                    value={tripTypeSearchResult === RESULT_TABS.DEPART ? priceRangeDepart[1] : priceRangeReturn[1]}
+                    onValueChange={(value) => {
+                      if (tripTypeSearchResult === RESULT_TABS.DEPART) {
+                        setPriceRangeDepart([priceRangeDepart[0], Math.round(value)]);
+                      } else {
+                        setPriceRangeReturn([priceRangeReturn[0], Math.round(value)]);
+                      }
+                    }}
+                  />
+                </View>
+
+                {/* Time Filters */}
+                <View style={{ marginBottom: hp('3%') }}>
+                  <Text style={{
+                    fontSize: wp('4.2%'),
+                    fontWeight: '700',
+                    color: '#1E293B',
+                    marginBottom: hp('1.5%')
+                  }}>
+                    {t('time')}
+                  </Text>
+
+                  {/* Departure Time */}
+                  <Text style={{
+                    fontSize: wp('3.8%'),
+                    fontWeight: '600',
+                    color: '#475569',
+                    marginBottom: hp('1%')
+                  }}>
+                    {t('departureTime')}
+                  </Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: hp('1%')
+                  }}>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {String(Math.floor(tripTypeSearchResult === RESULT_TABS.DEPART ? departureTimeRangeDepart[0] : departureTimeRangeReturn[0])).padStart(2, '0')}:00
+                    </Text>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {String(Math.floor(tripTypeSearchResult === RESULT_TABS.DEPART ? departureTimeRangeDepart[1] : departureTimeRangeReturn[1])).padStart(2, '0')}:00
+                    </Text>
+                  </View>
+                  <CustomSlider
+                    min={0}
+                    max={24}
+                    step={1}
+                    value={tripTypeSearchResult === RESULT_TABS.DEPART ? departureTimeRangeDepart[1] : departureTimeRangeReturn[1]}
+                    onValueChange={(value) => {
+                      if (tripTypeSearchResult === RESULT_TABS.DEPART) {
+                        setDepartureTimeRangeDepart([departureTimeRangeDepart[0], value]);
+                      } else {
+                        setDepartureTimeRangeReturn([departureTimeRangeReturn[0], value]);
+                      }
+                    }}
+                  />
+
+                  {/* Arrival Time */}
+                  <Text style={{
+                    fontSize: wp('3.8%'),
+                    fontWeight: '600',
+                    color: '#475569',
+                    marginTop: hp('2%'),
+                    marginBottom: hp('1%')
+                  }}>
+                    {t('arrivalTime')}
+                  </Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: hp('1%')
+                  }}>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {String(Math.floor(tripTypeSearchResult === RESULT_TABS.DEPART ? arrivalTimeRangeDepart[0] : arrivalTimeRangeReturn[0])).padStart(2, '0')}:00
+                    </Text>
+                    <Text style={{ fontSize: wp('3.5%'), color: '#64748B' }}>
+                      {String(Math.floor(tripTypeSearchResult === RESULT_TABS.DEPART ? arrivalTimeRangeDepart[1] : arrivalTimeRangeReturn[1])).padStart(2, '0')}:00
+                    </Text>
+                  </View>
+                  <CustomSlider
+                    min={0}
+                    max={24}
+                    step={1}
+                    value={tripTypeSearchResult === RESULT_TABS.DEPART ? arrivalTimeRangeDepart[1] : arrivalTimeRangeReturn[1]}
+                    onValueChange={(value) => {
+                      if (tripTypeSearchResult === RESULT_TABS.DEPART) {
+                        setArrivalTimeRangeDepart([arrivalTimeRangeDepart[0], value]);
+                      } else {
+                        setArrivalTimeRangeReturn([arrivalTimeRangeReturn[0], value]);
+                      }
+                    }}
+                  />
+                </View>
+
+                {/* Operator Filter */}
+                <View style={{ marginBottom: hp('3%') }}>
+                  <Text style={{
+                    fontSize: wp('4.2%'),
+                    fontWeight: '700',
+                    color: '#1E293B',
+                    marginBottom: hp('1.5%')
+                  }}>
+                    {t('operator')}
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={tripTypeSearchResult === RESULT_TABS.DEPART ? toggleSelectAllDepart : toggleSelectAllReturn}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: hp('1.5%'),
+                      padding: wp('3.5%'),
+                      backgroundColor: 'rgba(248,250,252,0.6)',
+                      borderRadius: wp('3%'),
+                      borderWidth: 1,
+                      borderColor: 'rgba(253, 80, 30, 0.08)',
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Icon
+                      name={tripTypeSearchResult === RESULT_TABS.DEPART ? allSelectedDepart ? 'checkbox' : 'square-outline' : allSelectedReturn ? 'checkbox' : 'square-outline'}
+                      size={wp('5.5%')}
+                      color="#FD501E"
+                      style={{ marginRight: wp('2.5%') }}
+                    />
+                    <Text style={{
+                      fontSize: wp('3.8%'),
+                      fontWeight: '600',
+                      color: '#1E293B',
+                    }}>
+                      {t('all')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {(() => {
+                    // ใช้ RESULT_TABS.DEPART เพื่อให้ตรงกับ tripTypeSearchResult
+                    const isDepartTab = tripTypeSearchResult === RESULT_TABS.DEPART;
+                    const companies = isDepartTab ? availableCompaniesDepart : availableCompaniesReturn;
+                    const selectedCompanies = isDepartTab ? selectedCompaniesDepart : selectedCompaniesReturn;
+                    const toggleFunction = isDepartTab ? toggleCompanyDepart : toggleCompanyReturn;
+                    console.log('🎨 Rendering Operator Filter:', { tripType: tripTypeSearchResult, isDepartTab, companies });
+                    return companies.map((company, index) => (
+                      <TouchableOpacity
+                        key={company}
+                        onPress={() => toggleFunction(company)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: hp('1.2%'),
+                          padding: wp('3.5%'),
+                          backgroundColor: selectedCompanies.includes(company) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
+                          borderRadius: wp('3%'),
+                          borderWidth: 1,
+                          borderColor: selectedCompanies.includes(company) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon
+                          name={selectedCompanies.includes(company) ? 'checkbox' : 'square-outline'}
+                          size={wp('5%')}
+                          color="#FD501E"
+                          style={{ marginRight: wp('2.5%') }}
+                        />
+                        <Image
+                          source={{ uri: 'https://via.placeholder.com/20' }}
+                          style={{ width: 20, height: 20, marginRight: wp('2.5%') }}
+                        />
+                        <Text style={{
+                          fontSize: wp('3.5%'),
+                          fontWeight: selectedCompanies.includes(company) ? '600' : '500',
+                          color: selectedCompanies.includes(company) ? '#FD501E' : '#1E293B',
+                          flex: 1
+                        }}>
+                          {company}
+                        </Text>
+                      </TouchableOpacity>
+                    ));
+                  })()}
+                </View>
+
+                {/* Pier Filter */}
+                <View style={{ marginBottom: hp('2%') }}>
+                  <Text style={{
+                    fontSize: wp('4.2%'),
+                    fontWeight: '700',
+                    color: '#1E293B',
+                    marginBottom: hp('1.5%')
+                  }}>
+                    {t('pier')}
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={tripTypeSearchResult === RESULT_TABS.DEPART ? toggleSelectAllPiersDepart : toggleSelectAllPiersReturn}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: hp('1.5%'),
+                      padding: wp('3.5%'),
+                      backgroundColor: 'rgba(248,250,252,0.6)',
+                      borderRadius: wp('3%'),
+                      borderWidth: 1,
+                      borderColor: 'rgba(253, 80, 30, 0.08)',
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Icon
+                      name={tripTypeSearchResult === RESULT_TABS.DEPART ? allPiersSelectedDepart ? 'checkbox' : 'square-outline' : allPiersSelectedReturn ? 'checkbox' : 'square-outline'}
+                      size={wp('5.5%')}
+                      color="#FD501E"
+                      style={{ marginRight: wp('2.5%') }}
+                    />
+                    <Text style={{
+                      fontSize: wp('3.8%'),
+                      fontWeight: '600',
+                      color: '#1E293B',
+                    }}>
+                      {t('all')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {(() => {
+                    // ใช้ RESULT_TABS.DEPART เพื่อให้ตรงกับ tripTypeSearchResult
+                    const isDepartTab = tripTypeSearchResult === RESULT_TABS.DEPART;
+                    const piers = isDepartTab ? availablePiersDepart : availablePiersReturn;
+                    const selectedPiers = isDepartTab ? selectedPiersDepart : selectedPiersReturn;
+                    const toggleFunction = isDepartTab ? togglePierDepart : togglePierReturn;
+                    console.log('🎨 Rendering Pier Filter:', { tripType: tripTypeSearchResult, isDepartTab, piers });
+                    return piers.map((pier, index) => (
+                      <TouchableOpacity
+                        key={pier}
+                        onPress={() => toggleFunction(pier)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: hp('1.2%'),
+                          padding: wp('3.5%'),
+                          backgroundColor: selectedPiers.includes(pier) ? 'rgba(253, 80, 30, 0.08)' : 'rgba(248,250,252,0.4)',
+                          borderRadius: wp('3%'),
+                          borderWidth: 1,
+                          borderColor: selectedPiers.includes(pier) ? 'rgba(253, 80, 30, 0.15)' : 'rgba(148, 163, 184, 0.08)',
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon
+                          name={selectedPiers.includes(pier) ? 'checkbox' : 'square-outline'}
+                          size={wp('5%')}
+                          color="#FD501E"
+                          style={{ marginRight: wp('2.5%') }}
+                        />
+                        <Text style={{
+                          fontSize: wp('3.5%'),
+                          fontWeight: selectedPiers.includes(pier) ? '600' : '500',
+                          color: selectedPiers.includes(pier) ? '#FD501E' : '#1E293B',
+                          flex: 1
+                        }}>
+                          {pier}
+                        </Text>
+                      </TouchableOpacity>
+                    ));
+                  })()}
+                </View>
               </ScrollView>
 
-              {/* Enhanced Ultra Premium Apply Button */}
-              <TouchableOpacity
-                onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
-                style={{
-                  backgroundColor: '#FD501E',
-                  padding: hp('2.2%'),
-                  borderRadius: wp('5%'),
-                  alignItems: 'center',
-                  /* shadow/elevation removed */
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.25)',
-                  // Premium gradient effect
-                  background: 'linear-gradient(135deg, #FD501E 0%, #E8461A 100%)',
-                }}
-                activeOpacity={0.85}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialIcons name="check" size={wp('5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
-                  <Text style={{
-                    color: '#FFFFFF',
-                    fontWeight: '800',
-                    fontSize: wp('4.2%'),
-                    letterSpacing: 0.5,
-                    /* textShadow removed */
-                  }}>
-                    {t('applyFilters')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              {/* Apply Button */}
+              <View style={{
+                paddingHorizontal: wp('6%'),
+                paddingVertical: hp('2%'),
+                borderTopWidth: 1,
+                borderTopColor: 'rgba(0, 18, 51, 0.06)',
+              }}>
+                <TouchableOpacity
+                  onPress={() => tripTypeSearchResult === RESULT_TABS.DEPART ? setIsFilterModalVisibleDepart(false) : setIsFilterModalVisibleReturn(false)}
+                  style={{
+                    backgroundColor: '#FD501E',
+                    padding: hp('2%'),
+                    borderRadius: wp('4%'),
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.25)',
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialIcons name="check" size={wp('5%')} color="#FFFFFF" style={{ marginRight: wp('2%') }} />
+                    <Text style={{
+                      color: '#FFFFFF',
+                      fontWeight: '800',
+                      fontSize: wp('4%'),
+                      letterSpacing: 0.5,
+                    }}>
+                      {t('applyFilters') || 'Apply Filters'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -1359,7 +1955,7 @@ const SearchFerry = ({ navigation, route }) => {
               borderColor: 'rgba(255, 255, 255, 0.3)',
               // backdropFilter: 'blur(15px)', // web-only; use <BlurView> from 'expo-blur' if blur is required
             }}
-            onPress={() => tripTypeSearchResult === t('departTrip') ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
+            onPress={() => tripTypeSearchResult === RESULT_TABS.DEPART ? setIsFilterModalVisibleDepart(true) : setIsFilterModalVisibleReturn(true)}
             activeOpacity={0.8}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1463,7 +2059,7 @@ const SearchFerry = ({ navigation, route }) => {
                 ]}
                 onPress={() => {
                   setTripType(t('returnTrip'));
-                  settripTypeSearchResult(t('departTrip')); // Auto focus on Depart Trip when selecting round trip
+                  settripTypeSearchResult(RESULT_TABS.DEPART); // Auto focus on Depart Trip when selecting round trip
                   updateCustomerData({
                     roud: 2
                   })
@@ -3486,14 +4082,14 @@ const SearchFerry = ({ navigation, route }) => {
                     <TouchableOpacity
                       style={[
                         styles.tripTypeOneWayButton,
-                        tripTypeSearchResult === t('departTrip') && styles.activeButton,
+                        tripTypeSearchResult === RESULT_TABS.DEPART && styles.activeButton,
                       ]}
-                      onPress={() => settripTypeSearchResult(t('departTrip'))}
+                      onPress={() => settripTypeSearchResult(RESULT_TABS.DEPART)}
                     >
                       <Text
                         style={[
                           styles.tripTypeText,
-                          tripTypeSearchResult === t('departTrip') && styles.activeText,
+                          tripTypeSearchResult === RESULT_TABS.DEPART && styles.activeText,
                         ]}
                       >
                         {t('departTrip')}
@@ -3502,21 +4098,21 @@ const SearchFerry = ({ navigation, route }) => {
                     <TouchableOpacity
                       style={[
                         styles.tripTypeRoundButton,
-                        tripTypeSearchResult === t('returnTrip') && styles.activeButton,
+                        tripTypeSearchResult === RESULT_TABS.RETURN && styles.activeButton,
                       ]}
-                      onPress={() => settripTypeSearchResult(t('returnTrip'))}
+                      onPress={() => settripTypeSearchResult(RESULT_TABS.RETURN)}
                     >
                       <Text
                         style={[
                           styles.tripTypeText,
-                          tripTypeSearchResult === t('returnTrip') && styles.activeText,
+                          tripTypeSearchResult === RESULT_TABS.RETURN && styles.activeText,
                         ]}
                       >
                         {t('returnTrip')}
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  {tripTypeSearchResult === t('departTrip') && (<>
+                  {tripTypeSearchResult === RESULT_TABS.DEPART && (<>
 
                     {pagedDataDepart.map((item, index) => (
                       <TouchableOpacity
@@ -4068,7 +4664,7 @@ const SearchFerry = ({ navigation, route }) => {
                     ))}
 
                   </>)}
-                  {tripTypeSearchResult === t('returnTrip') && (<>
+                  {tripTypeSearchResult === RESULT_TABS.RETURN && (<>
                     {pagedDataReturn.map((item, index) => (
                       <TouchableOpacity
                         key={index}
@@ -4632,7 +5228,7 @@ const SearchFerry = ({ navigation, route }) => {
           )}
           {/* Enhanced Ultra Premium Pagination - Depart Trip */}
           {
-            (tripTypeSearchResult === t('departTrip') || tripTypeSearch === TRIP_TYPES.ONE_WAY) && filteredDepartData != null && filteredDepartData.length > itemsPerPage && (
+            (tripTypeSearchResult === RESULT_TABS.DEPART || tripTypeSearch === TRIP_TYPES.ONE_WAY) && filteredDepartData != null && filteredDepartData.length > itemsPerPage && (
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -4767,7 +5363,7 @@ const SearchFerry = ({ navigation, route }) => {
 
           {/* Enhanced Ultra Premium Pagination - Return Trip */}
           {
-            tripTypeSearchResult === t('returnTrip') && filteredReturnData != null && filteredReturnData.length > itemsPerPage && (
+            tripTypeSearchResult === RESULT_TABS.RETURN && filteredReturnData != null && filteredReturnData.length > itemsPerPage && (
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',

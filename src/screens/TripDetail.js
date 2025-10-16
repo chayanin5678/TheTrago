@@ -955,7 +955,9 @@ const TripDetail = ({ navigation, route }) => {
   };
 
 
-  const handleNext = (item) => {
+
+
+  const handleNext = async (item) => {
     let newErrors = {};
 
     // --- เดิม ---
@@ -1003,6 +1005,59 @@ const TripDetail = ({ navigation, route }) => {
       // ต้องกรอก Flight No ถ้าส่งที่สนามบิน (เที่ยวกลับ)
       if (airPortDropoffReturn === 1 && !String(flightNoDropoffReturn || '').trim()) {
         newErrors.flightNoDropoffReturn = true;
+      }
+    }
+
+    // ตรวจสอบเลขไฟต์บินก่อนดำเนินการต่อ
+    const flightsToValidate = [];
+    
+    if (flightNoPickupDepart && flightNoPickupDepart.trim() !== '') {
+      flightsToValidate.push({ value: flightNoPickupDepart, type: 'pickupDepart', label: t('pickupDepartFlight') || 'Pickup Depart Flight' });
+    }
+    
+    if (flightNoDropoffDepart && flightNoDropoffDepart.trim() !== '') {
+      flightsToValidate.push({ value: flightNoDropoffDepart, type: 'dropoffDepart', label: t('dropoffDepartFlight') || 'Dropoff Depart Flight' });
+    }
+    
+    if (flightNoPickupReturn && flightNoPickupReturn.trim() !== '') {
+      flightsToValidate.push({ value: flightNoPickupReturn, type: 'pickupReturn', label: t('pickupReturnFlight') || 'Pickup Return Flight' });
+    }
+    
+    if (flightNoDropoffReturn && flightNoDropoffReturn.trim() !== '') {
+      flightsToValidate.push({ value: flightNoDropoffReturn, type: 'dropoffReturn', label: t('dropoffReturnFlight') || 'Dropoff Return Flight' });
+    }
+
+    // ตรวจสอบไฟต์บินทั้งหมด
+    if (flightsToValidate.length > 0) {
+      try {
+        const API_KEY = 'c790ad7f96a110eb829ee936adefcdcf';
+        
+        for (const flight of flightsToValidate) {
+          console.log(`🔍 Validating flight: ${flight.value}`);
+          
+          const response = await axios.get(
+            `http://api.aviationstack.com/v1/flights?access_key=${API_KEY}&flight_iata=${flight.value.trim()}`
+          );
+
+          if (!response.data || !response.data.pagination || response.data.pagination.count === 0) {
+            Alert.alert(
+              t('invalidFlight') || 'Invalid Flight',
+              `${flight.label}: ${flight.value} ${t('flightNotFoundPleasCheck') || 'not found. Please check the flight number and try again.'}`,
+              [{ text: t('ok') || 'OK' }]
+            );
+            return; // หยุดการดำเนินการ
+          }
+          
+          console.log(`✅ Flight ${flight.value} is valid`);
+        }
+      } catch (error) {
+        console.error('❌ Error validating flights:', error);
+        Alert.alert(
+          t('error') || 'Error',
+          t('flightValidationError') || 'Unable to validate flight numbers. Please check your internet connection.',
+          [{ text: t('ok') || 'OK' }]
+        );
+        return; // หยุดการดำเนินการ
       }
     }
 
@@ -1803,7 +1858,7 @@ const TripDetail = ({ navigation, route }) => {
                       {item.md_location_airport === 1 && (
                         <>
                           <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
-                            <TextInput
+                          <TextInput
                             style={[styles.inputSolid, errors.flightNoPickupDepart && styles.errorInput]}
                             value={flightNoPickupDepart}
                             onChangeText={(text) => {
@@ -2088,7 +2143,7 @@ const TripDetail = ({ navigation, route }) => {
                               </Modal>
                               {airPortDropoffDepart === 1 && (
                                 <>
-                                  <Text style={styles.inputLabel}>Filght Number</Text>
+                                  <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
                                   <TextInput
                                     style={[styles.inputSolid, errors.flightNoDropoffDepart && styles.errorInput]}
                                     value={flightNoDropoffDepart}
@@ -2305,8 +2360,8 @@ const TripDetail = ({ navigation, route }) => {
 
                         {item.md_location_airport === 1 && (
                           <>
-                            <Text style={styles.inputLabel}>Filght Number</Text>
-                              <TextInput
+                            <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
+                            <TextInput
                               style={[styles.inputSolid, errors.flightNoPickupReturn && styles.errorInput]}
                               value={flightNoPickupReturn}
                               onChangeText={(text) => {
@@ -2438,8 +2493,8 @@ const TripDetail = ({ navigation, route }) => {
                                 {airPortPickupReturn === 1 && (
 
                                   <>
-                                    <Text style={styles.inputLabel}>Filght Number</Text>
-                                      <TextInput
+                                    <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
+                                    <TextInput
                                       style={[styles.inputSolid, errors.flightNoPickupReturn && styles.errorInput]}
                                       value={flightNoPickupReturn}
                                       onChangeText={(text) => {
@@ -2590,7 +2645,7 @@ const TripDetail = ({ navigation, route }) => {
                                 </Modal>
                                 {airPortDropoffReturn === 1 && (
                                   <>
-                                    <Text style={styles.inputLabel}>Filght Number</Text>
+                                    <Text style={styles.inputLabel}>{t('flightNumber') || 'Flight Number'}</Text>
                                     <TextInput
                                       style={[styles.inputSolid, errors.flightNoDropoffReturn && styles.errorInput]}
                                       value={flightNoDropoffReturn}
