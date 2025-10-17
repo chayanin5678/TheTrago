@@ -24,10 +24,12 @@ import CrossPlatformStatusBar from '../components/component/CrossPlatformStatusB
 import SafeAreaDebugger from '../components/component/SafeAreaDebugger';
 import { DesignTokens, CrossPlatformUtils } from '../styles/CSS/CrossPlatformStyles';
 import { useLanguage } from './Screen/LanguageContext';
+import { useTabBarAutoHide } from '../utils/useTabBarAutoHide';
 
 const HomeScreen = ({ navigation, route }) => {
   const { language, t, selectedLanguage, changeLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const placeholders = [
     [
@@ -117,6 +119,8 @@ const HomeScreen = ({ navigation, route }) => {
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
   const [loadedIndexes, setLoadedIndexes] = useState([]);
   const [isLoadingTitle, setIsLoadingTitle] = useState(true);
+  const [ferryOperators, setFerryOperators] = useState([]);
+  const [isLoadingOperators, setIsLoadingOperators] = useState(true);
 
   // Reduced particles count for cleaner look
   const floatingAnims = useRef([...Array(8)].map(() => new Animated.Value(0))).current;
@@ -380,6 +384,28 @@ const HomeScreen = ({ navigation, route }) => {
     };
 
     fetchAttractions();
+  }, []);
+
+  useEffect(() => {
+    const fetchFerryOperators = async () => {
+      setIsLoadingOperators(true);
+      try {
+        const data = await fetchWithRetry(`${ipAddress}/popular-companies`);
+        if (data && data.status === 'success' && Array.isArray(data.data)) {
+          setFerryOperators(data.data);
+        } else {
+          console.warn('API returned invalid ferry operators data format');
+          setFerryOperators([]);
+        }
+      } catch (error) {
+        console.error('Error fetching ferry operators data:', error);
+        setFerryOperators([]);
+      } finally {
+        setIsLoadingOperators(false);
+      }
+    };
+
+    fetchFerryOperators();
   }, []);
 
   useEffect(() => {
@@ -884,7 +910,7 @@ const HomeScreen = ({ navigation, route }) => {
   }, [searchText]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FD501E' }}>
+    <View style={{ flex: 1, backgroundColor: '#FD501E', paddingTop: 40 }}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       <View style={[premiumStyles.container, { flex: 1 }]}>
 
@@ -977,9 +1003,9 @@ const HomeScreen = ({ navigation, route }) => {
         )}
 
         <ScrollView
+          {...tabBarScrollProps}
           contentContainerStyle={[
-   premiumStyles.scrollContainer,
-   { paddingBottom: (premiumStyles?.scrollContainer?.paddingBottom || 0) + insets.bottom }
+   premiumStyles.scrollContainer
  ]}
           showsVerticalScrollIndicator={false}
           bounces={true}
@@ -1396,7 +1422,246 @@ const HomeScreen = ({ navigation, route }) => {
           </View>
 
 
+          {/* Ferry Operator Section */}
+          {isLoadingTitle ? (
+            <View
+              style={{
+                height: hp('4.5%'),
+                width: wp('50%'),
+                borderRadius: wp('6.25%'),
+                marginTop: hp('2%'),
+                marginBottom: hp('1.5%'),
+                marginLeft: 0,
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.98)',
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Animated.View
+                style={{
+                  width: wp('25%'),
+                  height: '100%',
+                  transform: [{ translateX: shimmerAnim }],
+                }}
+              >
+                <LinearGradient
+                  colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Animated.View>
+            </View>
+          ) : (
+            <View style={[premiumStyles.sectionTitleContainer, { marginTop: hp('2%') }]}>
+              <BlurView intensity={40} tint="light" style={premiumStyles.sectionTitleBlur}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
+                  style={premiumStyles.sectionTitleGradient}
+                >
+                  <Text style={premiumStyles.sectionTitle}>
+                    {t('ferryhome') || 'Ferry'} <Text style={premiumStyles.sectionTitleAccent}>{t('operatorhome') || 'Operator'}</Text>
+                  </Text>
+                  <Text style={premiumStyles.sectionSubtitle}>{t('trustedFerryOperators') || 'Trusted Ferry Operators'}</Text>
+                </LinearGradient>
+              </BlurView>
+            </View>
+          )}
 
+          {/* Ferry Operator Logos Horizontal Scroll - 2 Rows */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: wp('2%'),
+              paddingVertical: hp('1%'),
+            }}
+            style={{
+              marginTop: hp('1%'),
+              marginBottom: hp('2%'),
+            }}
+          >
+            <View style={{ flexDirection: 'row' }}>
+              {isLoadingOperators ? (
+                <View style={{ flexDirection: 'column' }}>
+                  {/* First Row Skeleton */}
+                  <View style={{ flexDirection: 'row', marginBottom: hp('1%') }}>
+                    {Array(4).fill(null).map((_, index) => (
+                      <View 
+                        key={`operator-skeleton-top-${index}`}
+                        style={{
+                          width: wp('22%'),
+                          height: wp('22%'),
+                          marginHorizontal: wp('1.5%'),
+                          borderRadius: wp('3%'),
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(255,255,255,0.98)',
+                        }}
+                      >
+                        <Animated.View
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            transform: [{ translateX: shimmerAnim }],
+                          }}
+                        >
+                          <LinearGradient
+                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                            start={[0, 0]}
+                            end={[1, 0]}
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </Animated.View>
+                      </View>
+                    ))}
+                  </View>
+                  {/* Second Row Skeleton */}
+                  <View style={{ flexDirection: 'row' }}>
+                    {Array(4).fill(null).map((_, index) => (
+                      <View 
+                        key={`operator-skeleton-bottom-${index}`}
+                        style={{
+                          width: wp('22%'),
+                          height: wp('22%'),
+                          marginHorizontal: wp('1.5%'),
+                          borderRadius: wp('3%'),
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(255,255,255,0.98)',
+                        }}
+                      >
+                        <Animated.View
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            transform: [{ translateX: shimmerAnim }],
+                          }}
+                        >
+                          <LinearGradient
+                            colors={['#eeeeee00', '#ddddddaa', '#eeeeee00']}
+                            start={[0, 0]}
+                            end={[1, 0]}
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </Animated.View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'column' }}>
+                  {/* First Row */}
+                  <View style={{ flexDirection: 'row', marginBottom: hp('1%') }}>
+                    {ferryOperators.filter((_, index) => index % 2 === 0).map((operator) => (
+                      <TouchableOpacity
+                        key={operator.md_company_id}
+                        style={{
+                          width: wp('22%'),
+                          height: wp('22%'),
+                          marginHorizontal: wp('1.5%'),
+                          borderRadius: wp('3%'),
+                          backgroundColor: 'white',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 4,
+                          elevation: 3,
+                        }}
+                        onPress={() => {
+                          console.log('Selected operator:', operator.md_company_nameeng);
+                          // Navigate to operator detail screen
+                          navigation.navigate('OperatorDetail', { operator });
+                        }}
+                      >
+                        <Image
+                          source={{ uri: operator.md_company_picname }}
+                          style={{
+                            width: '80%',
+                            height: '80%',
+                            resizeMode: 'contain',
+                          }}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* Second Row */}
+                  <View style={{ flexDirection: 'row' }}>
+                    {ferryOperators.filter((_, index) => index % 2 === 1).map((operator) => (
+                      <TouchableOpacity
+                        key={operator.md_company_id}
+                        style={{
+                          width: wp('22%'),
+                          height: wp('22%'),
+                          marginHorizontal: wp('1.5%'),
+                          borderRadius: wp('3%'),
+                          backgroundColor: 'white',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 4,
+                          elevation: 3,
+                        }}
+                        onPress={() => {
+                          console.log('Selected operator:', operator.md_company_nameeng);
+                          // Navigate to operator detail screen
+                          navigation.navigate('OperatorDetail', { operator });
+                        }}
+                      >
+                        <Image
+                          source={{ uri: operator.md_company_picname }}
+                          style={{
+                            width: '80%',
+                            height: '80%',
+                            resizeMode: 'contain',
+                          }}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+
+          {/* View All Operators Button */}
+          {!isLoadingOperators && ferryOperators.length > 0 && (
+            <View style={{ alignItems: 'center', marginTop: hp('1.5%'), marginBottom: hp('2%') }}>
+              <TouchableOpacity
+                onPress={() => {
+                  // Navigate to all operators screen
+                  navigation.navigate('AllOperators');
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#FFFFFF',
+                  paddingHorizontal: wp('6%'),
+                  paddingVertical: hp('1.5%'),
+                  borderRadius: wp('6%'),
+                  borderWidth: 1.5,
+                  borderColor: '#FD501E',
+                  shadowColor: '#FD501E',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 3,
+                }}
+              >
+                <Text style={{
+                  color: '#FD501E',
+                  fontWeight: '600',
+                  fontSize: wp('3.5%'),
+                  marginRight: wp('2%'),
+                }}>
+                  {t('viewAllOperators') || 'View All Operators'}
+                </Text>
+                <MaterialIcons name="arrow-forward" size={wp('4.5%')} color="#FD501E" />
+              </TouchableOpacity>
+            </View>
+          )}
 
 
           {isLoadingTitle ? (
@@ -2238,7 +2503,7 @@ const HomeScreen = ({ navigation, route }) => {
           )}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

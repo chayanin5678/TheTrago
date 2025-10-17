@@ -10,6 +10,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useCustomer } from './CustomerContext';
 import * as SecureStore from 'expo-secure-store';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -368,6 +369,7 @@ const CustomerInfo = ({ navigation }) => {
   const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   // ใช้ options แบบ label/value (value เป็น EN เสมอ)
   const titleOptions = getTitleOptions(t);
@@ -1400,6 +1402,7 @@ const CustomerInfo = ({ navigation }) => {
           </View>
 
           <ScrollView
+            {...tabBarScrollProps}
             contentContainerStyle={{ paddingBottom: hp('12%') }}
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
@@ -1540,6 +1543,7 @@ const CustomerInfo = ({ navigation }) => {
           style={{ flex: 1 }}
         >
           <ScrollView
+            {...tabBarScrollProps}
             contentContainerStyle={[
               styles.container,
               {

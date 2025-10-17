@@ -8,6 +8,7 @@ import axios from "axios";
 import ipAddress from "../../config/ipconfig";
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import moment from "moment-timezone";
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function PromptPayScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { Paymenttotal, selectedOption, usePoints, pointsToUse, pointsToEarn } = route.params;
+  const tabBarScrollProps = useTabBarAutoHide();
 
   // 🔍 Debug route params ที่ได้รับมา
   console.log("🔗 PromptPay Route Params Debug:");
@@ -423,6 +425,7 @@ export default function PromptPayScreen({ route, navigation }) {
         </LinearGradient>
 
         <ScrollView
+          {...tabBarScrollProps}
           contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
           showsVerticalScrollIndicator={false}
           contentInsetAdjustmentBehavior="automatic"

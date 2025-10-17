@@ -26,6 +26,7 @@ import ipAddress from "../../config/ipconfig";
 import { useCustomer } from './CustomerContext.js';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -34,6 +35,7 @@ const AccountScreen = ({ navigation }) => {
   const { selectedLanguage, changeLanguage, t } = useLanguage();
   const { updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -432,6 +434,7 @@ const AccountScreen = ({ navigation }) => {
       </View>
 
       <ScrollView
+        {...tabBarScrollProps}
         contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight }]}
         showsVerticalScrollIndicator={false}
         bounces

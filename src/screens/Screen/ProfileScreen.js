@@ -24,6 +24,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCustomer } from './CustomerContext.js';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import { styles } from '../../styles/CSS/ProfileScreenStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -32,6 +33,7 @@ const ProfileScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [Firstname, setFirstname] = useState('');
   const [Lastname, setLastname] = useState('');
@@ -68,20 +70,18 @@ const ProfileScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // === Smooth Animations (Contact-style) ===
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.98)).current; // entrance scale
-  const headerAnim = useRef(new Animated.Value(-100)).current; // entrance translateY
+  // === Smooth Animations ===
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Start visible
+  const scaleAnim = useRef(new Animated.Value(1)).current; // Start normal scale
+  const headerOpacity = useRef(new Animated.Value(0)).current; // Header fade in
 
   // Master animation clock (reduce JS work by using one clock)
   const masterClock = useRef(new Animated.Value(0)).current;
 
-  // Cards
+  // Cards - Simple opacity only
   const cardAnims = useRef(
     Array.from({ length: 3 }, () => ({
       opacity: new Animated.Value(0),
-      translateY: new Animated.Value(24),
-      scale: new Animated.Value(0.98),
     }))
   ).current;
 
@@ -125,64 +125,41 @@ const ProfileScreen = ({ navigation }) => {
     });
   }, [masterClock]);
 
-  // Entrance and start master clock
+  // Simple entrance - smooth fade in
   useEffect(() => {
     InteractionManager.runAfterInteractions(() => {
-      Animated.parallel([
-        Animated.timing(headerAnim, {
-          toValue: 0,
-          duration: 900,
-          easing: Easing.out(Easing.cubic),
+      setParticlesVisible(PARTICLE_COUNT > 0);
+
+      // Smooth header fade in
+      Animated.timing(headerOpacity, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+
+      // master clock loop for particles only
+      Animated.loop(
+        Animated.timing(masterClock, {
+          toValue: 1,
+          duration: 30000,
+          easing: Easing.linear,
           useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.delay(80),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 700,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.delay(30),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            tension: 80,
-            friction: 12,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start(() => {
-        setParticlesVisible(PARTICLE_COUNT > 0);
+        })
+      ).start();
 
-        // master clock loop (single source of truth for particles/pulse/spin)
-        Animated.loop(
-          Animated.timing(masterClock, {
-            toValue: 1,
-            duration: 30000,
-            easing: Easing.linear,
-            useNativeDriver: true,
+      // Simple fade in for cards
+      Animated.stagger(
+        80,
+        cardAnims.map((a) =>
+          Animated.timing(a.opacity, { 
+            toValue: 1, 
+            duration: 400, 
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true 
           })
-        ).start();
-
-        // Stagger cards
-        Animated.stagger(
-          120,
-          cardAnims.map((a) =>
-            Animated.parallel([
-              Animated.timing(a.opacity, { toValue: 1, duration: 550, useNativeDriver: true }),
-              Animated.timing(a.translateY, {
-                toValue: 0,
-                duration: 700,
-                easing: Easing.out(Easing.back(1.2)),
-                useNativeDriver: true,
-              }),
-              Animated.spring(a.scale, { toValue: 1, tension: 80, friction: 12, useNativeDriver: true }),
-            ])
-          )
-        ).start();
-      });
+        )
+      ).start();
     });
   }, []);
 
@@ -611,8 +588,9 @@ const ProfileScreen = ({ navigation }) => {
       <Animated.View
         renderToHardwareTextureAndroid
         shouldRasterizeIOS
+        needsOffscreenAlphaCompositing={false}
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-        style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: headerAnim }] }]}
+        style={[styles.headerContainer, { opacity: headerOpacity }]}
       >
         <LinearGradient
           colors={['#FD501E', '#FF6B40', '#FD501E']}
@@ -647,6 +625,7 @@ const ProfileScreen = ({ navigation }) => {
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
+          {...tabBarScrollProps}
           style={[styles.scrollViewPremium, { marginTop: 0 }]}
           // ensure paddingTop is at least the default to prevent header overlap while measuring
           contentContainerStyle={{ paddingTop: Math.max(headerHeight, DEFAULT_HEADER_HEIGHT) }}
@@ -660,7 +639,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.progressCardPremium,
-                { opacity: cardAnims[0].opacity, transform: [{ translateY: cardAnims[0].translateY }, { scale: cardAnims[0].scale }] },
+                { opacity: cardAnims[0].opacity },
               ]}
             >
               <LinearGradient colors={['rgba(253, 80, 30, 0.1)', 'rgba(255, 107, 64, 0.05)']} style={styles.progressGradient}>
@@ -722,7 +701,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }, { scale: cardAnims[1].scale }] },
+                { opacity: cardAnims[1].opacity },
               ]}
             >
               <View style={styles.sectionHeaderPremium}>
@@ -834,7 +813,7 @@ const ProfileScreen = ({ navigation }) => {
               shouldRasterizeIOS
               style={[
                 styles.formCardPremium,
-                { opacity: cardAnims[2].opacity, transform: [{ translateY: cardAnims[2].translateY }, { scale: cardAnims[2].scale }] },
+                { opacity: cardAnims[2].opacity },
               ]}
             >
               <View style={styles.sectionHeaderPremium}>

@@ -14,6 +14,7 @@ import axios from 'axios';
 import headStyles from '../styles/CSS/StartingPointScreenStyles';
 import styles from '../styles/CSS/TripDetailStyles';
 import { useLanguage } from './Screen/LanguageContext';
+import { useTabBarAutoHide } from '../utils/useTabBarAutoHide';
 
 const isTablet = screenWidth >= 768;
 const isLargeTablet = screenWidth >= 1024;
@@ -28,6 +29,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const TripDetail = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   // Default translated labels (use these instead of hard-coded English literals)
   const defaultSelectTransportType = t('selectTransportType') || "Select Transport Type";
@@ -1248,6 +1250,7 @@ const TripDetail = ({ navigation, route }) => {
           ]}
         >
           <ScrollView
+            {...tabBarScrollProps}
             contentContainerStyle={[
               {
                 flexGrow: 1,

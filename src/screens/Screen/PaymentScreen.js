@@ -12,6 +12,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import moment from "moment-timezone";
 import * as Linking from "expo-linking";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -43,6 +44,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
   const [expirationDate, setExpirationDate] = useState("");
   const [selectedOption, setSelectedOption] = useState(0);
   const [pickup, setPickup] = useState(false);
@@ -920,7 +922,7 @@ const PaymentScreen = ({ navigation, route }) => {
       )}
       {/* Skeleton Loader */}
       {isSkeletonLoading ? (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView {...tabBarScrollProps} contentContainerStyle={styles.container}>
           <View style={styles.skeletonCard}>
             <View style={styles.skeletonRow}>
               <View style={styles.skeletonCircle} />
@@ -1032,6 +1034,7 @@ const PaymentScreen = ({ navigation, route }) => {
               style={{ flex: 1 }}
             >
               <ScrollView
+                {...tabBarScrollProps}
                 contentContainerStyle={[styles.container, { paddingBottom: hp('12%') }]}
                 showsVerticalScrollIndicator={false}
                 style={{ flex: 1 }}

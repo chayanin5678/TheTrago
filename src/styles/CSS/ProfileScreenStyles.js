@@ -34,6 +34,17 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   headerGradient: {
     paddingTop: 0,

@@ -11,6 +11,7 @@ import { useCustomer } from './Screen/CustomerContext';
 
 import 'moment/locale/th'; // เพิ่ม locale ภาษาไทย
 import { useLanguage } from './Screen/LanguageContext';
+import { useTabBarAutoHide } from '../utils/useTabBarAutoHide';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { Calendar } from 'react-native-calendars';
 import styles from '../styles/CSS/HomeScreenStyles';
@@ -145,6 +146,7 @@ const SearchFerry = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { selectedLanguage, t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   // Trip type constants for consistent comparison
   const TRIP_TYPES = {
@@ -1895,6 +1897,11 @@ const SearchFerry = ({ navigation, route }) => {
           onScroll={(event) => {
             // เก็บ scroll offset ปัจจุบันเพื่อความแม่นยำ
             currentScrollOffset.current = event.nativeEvent.contentOffset.y;
+            
+            // Tab bar auto-hide
+            if (tabBarScrollProps.onScroll) {
+              tabBarScrollProps.onScroll(event);
+            }
           }}
           style={{ flex: 1 }}
           ref={mainScrollRef}

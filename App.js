@@ -21,6 +21,7 @@ import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './src/screens/Screen/LanguageContext';
 import NotificationService from './src/services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Import หน้าต่างๆ
 import StartingPointScreen from './src/screens/StartingPointScreen';
 import EndPointScreen from './src/screens/EndPointScreen';
@@ -61,6 +62,8 @@ import AffiliateScreen from './src/screens/Screen/AffiliateScreen';
 import TheTragoWebViewScreen from './src/screens/Screen/TheTragoWebViewScreen';
 import EarningsScreen from './src/screens/Screen/EarningsScreen';
 import BookingAffiliateScreen from './src/screens/Screen/BookingAffiliateScreen';
+import OperatorDetailScreen from './src/screens/Screen/OperatorDetailScreen';
+import AllOperatorsScreen from './src/screens/Screen/AllOperatorsScreen';
 
 
 const Stack = createStackNavigator();
@@ -95,6 +98,8 @@ const AppNavigator = () => (
     <Stack.Screen name="IDCardCameraScreen" component={IDCardCameraScreen} options={{ headerShown: false }} />
     <Stack.Screen name="BankVerificationScreen" component={BankVerificationScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="OperatorDetail" component={OperatorDetailScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AllOperators" component={AllOperatorsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -173,6 +178,8 @@ const AccountTabNavigator = () => {
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const [activeAnim] = useState(new Animated.Value(0));
+  const translateY = React.useRef(new Animated.Value(0)).current;
+  const lastScrollY = React.useRef(0);
 
   React.useEffect(() => {
     Animated.spring(activeAnim, {
@@ -183,25 +190,71 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
     }).start();
   }, [state.index]);
 
+  // Setup global scroll listener
+  React.useEffect(() => {
+    // Store translateY globally
+    global.tabBarTranslateY = translateY;
+    
+    // Global scroll handler
+    global.handleTabBarScroll = (scrollY) => {
+      const diff = scrollY - lastScrollY.current;
+      const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 80 : 65;
+
+      // Scroll down - hide tab bar
+      if (diff > 5 && scrollY > 50) {
+        Animated.spring(translateY, {
+          toValue: TAB_BAR_HEIGHT,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 10,
+        }).start();
+      }
+      // Scroll up - show tab bar
+      else if (diff < -5) {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 10,
+        }).start();
+      }
+
+      lastScrollY.current = scrollY;
+    };
+
+    return () => {
+      global.tabBarTranslateY = null;
+      global.handleTabBarScroll = null;
+    };
+  }, [translateY]);
+
   return (
-    <View style={{
+    <Animated.View style={{
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      height: 90,
+      height: Platform.OS === 'ios' ? 80 : 65,
       backgroundColor: '#FFFFFF',
-      borderTopWidth: 0.5,
-      borderTopColor: '#E5E7EB',
-      paddingBottom: 25, // Safe area for iPhone
-      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: '#E5E5E5',
+      paddingBottom: Platform.OS === 'ios' ? 20 : 5,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: -1,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 8,
+      transform: [{ translateY }],
     }}>
       <View style={{
         flexDirection: 'row',
-        height: 55,
+        height: '100%',
         alignItems: 'center',
         justifyContent: 'space-around',
-        paddingHorizontal: 20,
+        paddingHorizontal: 0,
       }}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
@@ -226,26 +279,26 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           };
 
           let iconName;
-          let iconColor = isFocused ? '#FD501E' : '#9CA3AF';
-          let textColor = isFocused ? '#FD501E' : '#6B7280';
+          // Simple and clean like Facebook - Orange for active
+          let iconColor = isFocused ? '#FF6B35' : '#65676B';
+          let textColor = isFocused ? '#FF6B35' : '#65676B';
           
-       switch (route.name) {
-  case 'Home':
-    iconName = 'home';
-    break;
-  case 'Booking':
-    iconName = 'calendar';
-    break;
-  case 'Login':
-    iconName = 'person';
-    break;
-  case 'Web': // ✅ เพิ่มแท็บ Web
-    iconName = 'globe-outline';
-    break;
-  default:
-    iconName = 'ellipse';
-}
-
+          switch (route.name) {
+            case 'Home':
+              iconName = isFocused ? 'home' : 'home-outline';
+              break;
+            case 'Booking':
+              iconName = isFocused ? 'calendar' : 'calendar-outline';
+              break;
+            case 'Login':
+              iconName = isFocused ? 'person' : 'person-outline';
+              break;
+            case 'Web':
+              iconName = isFocused ? 'globe' : 'globe-outline';
+              break;
+            default:
+              iconName = 'ellipse';
+          }
 
           return (
             <TouchableOpacity
@@ -253,31 +306,44 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
               onPress={onPress}
+              activeOpacity={0.6}
               style={{
                 flex: 1,
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingVertical: 8,
+                height: '100%',
+                position: 'relative',
               }}
             >
+              {/* Top indicator bar - Simple Facebook style */}
+              {isFocused && (
+                <View style={{
+                  position: 'absolute',
+                  top: -1,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  backgroundColor: '#FF6B35',
+                }} />
+              )}
+              
+              {/* Simple icon and text - Facebook style */}
               <View style={{
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
                 <Icon
                   name={iconName}
-                  size={24}
+                  size={26}
                   color={iconColor}
-                  style={{
-                    marginBottom: 4,
-                  }}
                 />
                 
                 <Text style={{
                   fontSize: 10,
-                  fontWeight: isFocused ? '600' : '500',
+                  fontWeight: '400',
                   color: textColor,
                   textAlign: 'center',
+                  marginTop: 4,
                 }}>
                   {label}
                 </Text>
@@ -286,7 +352,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 };
 const MainNavigator = () => {
@@ -309,6 +375,9 @@ const MainNavigator = () => {
       })}
       screenOptions={{
         headerShown: false,
+        sceneContainerStyle: {
+          paddingBottom: Platform.OS === 'ios' ? 80 : 65,
+        },
       }}
     >
       <Tab.Screen 

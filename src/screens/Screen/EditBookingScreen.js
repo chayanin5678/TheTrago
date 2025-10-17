@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from './LanguageContext';
 import { useCustomer } from './CustomerContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -32,6 +33,7 @@ const EditBookingScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { booking } = route.params || {};
+  const tabBarScrollProps = useTabBarAutoHide();
 
   // States
   const [isLoading, setIsLoading] = useState(false);
@@ -687,7 +689,7 @@ const EditBookingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: 40 }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Header */}
@@ -712,6 +714,7 @@ const EditBookingScreen = () => {
       </View>
 
       <ScrollView 
+        {...tabBarScrollProps}
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -1250,7 +1253,7 @@ const EditBookingScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -23,12 +23,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from './LanguageContext';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import ipAddress from '../../config/ipconfig';
 import styles from '../../styles/CSS/BookingScreenStyles';
 
 const BookingScreen = () => {
   const { t, selectedLanguage } = useLanguage();
   const navigation = useNavigation();
+  const tabBarScrollProps = useTabBarAutoHide();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
@@ -709,6 +711,7 @@ const BookingScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
+          {...tabBarScrollProps}
           contentContainerStyle={styles.loginScrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -1058,7 +1061,7 @@ const BookingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {isCheckingAuth ? (
@@ -1139,6 +1142,7 @@ const BookingScreen = () => {
           </View>
 
           <ScrollView 
+            {...tabBarScrollProps}
             style={styles.contentContainer} 
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -1178,7 +1182,7 @@ const BookingScreen = () => {
           </ScrollView>
         </>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

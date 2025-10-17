@@ -22,6 +22,7 @@ import headStyles from "../../styles/CSS/StartingPointScreenStyles";
 import ipAddress from "../../config/ipconfig";
 import { useCustomer } from "./CustomerContext";
 import { useLanguage } from "./LanguageContext";
+import { useTabBarAutoHide } from "../../utils/useTabBarAutoHide";
 import * as Print from "expo-print";
 import * as SecureStore from "expo-secure-store";
 import { styles } from "../../styles/CSS/ResultScreenStyles";
@@ -31,6 +32,7 @@ const ResultScreen = ({ navigation, route }) => {
   const { selectedLanguage, t } = useLanguage();
   const insets = useSafeAreaInsets();
   const { success } = route.params;
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [orderStatus, setOrderStatus] = useState("Pending");
   const [pdfUri, setPdfUri] = useState(null);
@@ -371,6 +373,7 @@ const ResultScreen = ({ navigation, route }) => {
           </LinearGradient>
 
           <ScrollView
+            {...tabBarScrollProps}
             contentContainerStyle={[styles.container, { paddingBottom: hp("15%") }]}
             showsVerticalScrollIndicator={false}
             contentInsetAdjustmentBehavior="automatic"

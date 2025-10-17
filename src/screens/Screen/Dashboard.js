@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert,
-  Animated, Easing, Dimensions, Platform
+  Animated, Easing, Dimensions, Platform, StatusBar
 } from 'react-native';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from './LanguageContext';
 import { useCustomer } from './CustomerContext';
 import ipAddress from '../../config/ipconfig';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ const Dashboard = ({ navigation }) => {
   const { t } = useLanguage();
   const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
+  const tabBarScrollProps = useTabBarAutoHide();
   const [bookings, setBookings] = useState({ upcoming: 0, cancelled: 0, completed: 0 });
   const [userPoints, setUserPoints] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -234,7 +236,7 @@ const Dashboard = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: 40 }]}>
 
       {/* Header แบบ Contact: ใช้ headerAnim */}
       <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerAnim }] }]}>
@@ -277,7 +279,7 @@ const Dashboard = ({ navigation }) => {
         </LinearGradient>
       </Animated.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} style={styles.scrollView}>
+      <ScrollView {...tabBarScrollProps} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} style={styles.scrollView}>
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           {/* ถ้ายังไม่ได้ล็อกอิน */}
           {!customerData?.md_booking_memberid && (
@@ -506,7 +508,7 @@ const styles = StyleSheet.create({
   floatingParticle: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.4)' },
 
   scrollView: { marginTop: 145 },
-  scrollContent: { paddingBottom: 140 },
+  scrollContent: { paddingBottom: 100 },
 
   sectionContainer: { marginTop: 25, paddingHorizontal: 20 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 5 },
