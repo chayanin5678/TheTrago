@@ -60,18 +60,24 @@ const AllOperatorsScreen = ({ navigation }) => {
   const filteredOperators = operators.filter((operator) => {
     if (!searchQuery) return true;
     
-    const nameEng = operator.md_company_name?.en?.toLowerCase() || '';
-    const nameThai = operator.md_company_name?.th?.toLowerCase() || '';
+    // API returns flat fields: md_company_nameeng and md_company_namethai
+    const nameEng = (operator.md_company_nameeng || '').toLowerCase();
+    const nameThai = (operator.md_company_namethai || '').toLowerCase();
     const query = searchQuery.toLowerCase();
     return nameEng.includes(query) || nameThai.includes(query);
   });
 
   const renderOperatorItem = ({ item }) => {
-    const companyName = selectedLanguage === 'th' 
-      ? (item.md_company_name?.th || item.md_company_name?.en || 'Unknown')
-      : (item.md_company_name?.en || item.md_company_name?.th || 'Unknown');
+    // Use the md_company_name object (with .en and .th) which the API returns.
+    // The API returns md_company_nameeng and md_company_namethai as strings.
+    const companyName = selectedLanguage === 'th'
+      ? (item.md_company_namethai || item.md_company_nameeng || 'Unknown')
+      : (item.md_company_nameeng || item.md_company_namethai || 'Unknown');
 
-    const companyLocation = item.md_company_countries || 'Unknown';
+    // md_company_countries can be an array or a string. Normalize to a readable string.
+    const companyLocation = Array.isArray(item.md_company_countries)
+      ? item.md_company_countries.join(', ')
+      : (item.md_company_countries || 'Unknown');
     
     const companyDescription = selectedLanguage === 'th'
       ? (item.md_company_about?.th || item.md_company_about?.en || '')
@@ -84,8 +90,8 @@ const AllOperatorsScreen = ({ navigation }) => {
           navigation.navigate('OperatorDetail', { 
             operator: {
               md_company_id: item.md_company_id,
-              md_company_nameeng: item.md_company_name?.en,
-              md_company_namethai: item.md_company_name?.th,
+              md_company_nameeng: item.md_company_nameeng,
+              md_company_namethai: item.md_company_namethai,
               md_company_picname: item.md_company_picname,
               md_company_countries: item.md_company_countries,
               md_company_about: item.md_company_about,

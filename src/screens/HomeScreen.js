@@ -392,6 +392,8 @@ const HomeScreen = ({ navigation, route }) => {
       try {
         const data = await fetchWithRetry(`${ipAddress}/popular-companies`);
         if (data && data.status === 'success' && Array.isArray(data.data)) {
+          console.log('fetchFerryOperators: API returned', data.data.length, 'operators');
+          console.log('fetchFerryOperators: first operator:', JSON.stringify(data.data[0], null, 2));
           setFerryOperators(data.data);
         } else {
           console.warn('API returned invalid ferry operators data format');
@@ -889,7 +891,43 @@ const HomeScreen = ({ navigation, route }) => {
       subtitle: `${t('to') || 'To'} ${isThaiInput ? (route.endth || route.endeng) : route.endeng}`
     }));
 
-    const allResults = [...results, ...countryResults, ...routeResults];
+    // Search in top trending places (if available)
+    const trendingResults = toptrending.filter(item =>
+      (item.md_location_nameeng || '').toLowerCase().includes(lowercaseQuery) ||
+      (item.md_location_namethai || '').toLowerCase().includes(lowercaseQuery) ||
+      (item.sys_countries_nameeng || '').toLowerCase().includes(lowercaseQuery) ||
+      (item.sys_countries_namethai || '').toLowerCase().includes(lowercaseQuery)
+    ).map(item => ({
+      id: item.md_location_id || `trending-${item.md_location_nameeng}`,
+      name: isThaiInput ? (item.md_location_namethai || item.md_location_nameeng) : (item.md_location_nameeng || item.md_location_namethai),
+      type: 'trending',
+      subtitle: isThaiInput ? (item.sys_countries_namethai || item.sys_countries_nameeng) : (item.sys_countries_nameeng || item.sys_countries_namethai)
+    }));
+
+    // Search in popular attractions
+    const attractionResults = poppularAttraction.filter(item =>
+      (item.md_tour_name_eng || '').toLowerCase().includes(lowercaseQuery) ||
+      (item.md_tour_name_thai || '').toLowerCase().includes(lowercaseQuery)
+    ).map(item => ({
+      id: item.md_tour_id || `attraction-${item.md_tour_name_eng}`,
+      name: isThaiInput ? (item.md_tour_name_thai || item.md_tour_name_eng) : (item.md_tour_name_eng || item.md_tour_name_thai),
+      type: 'attraction',
+      subtitle: t('attraction') || 'Attraction'
+    }));
+
+    // Search in ferry operators (company names)
+    const operatorResults = ferryOperators.filter(op =>
+      (op.company_name || op.name || '').toLowerCase().includes(lowercaseQuery) ||
+      (op.company_name_thai || '').toLowerCase().includes(lowercaseQuery)
+    ).map(op => ({
+      id: op.id || op.company_id || `operator-${op.company_name}`,
+      name: isThaiInput ? (op.company_name_thai || op.company_name || op.name) : (op.company_name || op.name || op.company_name_thai),
+      type: 'operator',
+      subtitle: t('operator') || 'Operator',
+      raw: op,
+    }));
+
+    const allResults = [...results, ...countryResults, ...routeResults, ...trendingResults, ...attractionResults, ...operatorResults];
 
     // Remove duplicates and limit results
     const uniqueResults = allResults.filter((result, index, self) =>
@@ -1143,33 +1181,101 @@ const HomeScreen = ({ navigation, route }) => {
                         key={index}
                         style={premiumStyles.searchResultItem}
                         onPress={() => {
-                          // Check if it's a country result
+                          // Clear search UI helper
+                          const clearSearch = () => {
+                            setSearchText('');
+                            setShowSearchResults(false);
+                          };
+
                           if (item.type === 'country' && item.id) {
+                            // Country -> go to PopularDestination with country set
                             updateCustomerData({
                               countrycode: item.id,
                               country: item.name,
                             });
-                            setSearchText('');
-                            setShowSearchResults(false);
+                            clearSearch();
                             navigation.navigate('PopularDestination');
+
+                          } else if (item.type === 'route' && item.id) {
+                            // Route -> populate start/end and go to SearchFerry
+                            // Try to find the full route object by id
+                            const found = poppularroute.find(r => r.md_timetable_id === item.id || r.md_location_id === item.id);
+                            if (found) {
+                              updateCustomerData({
+                                startingPointId: found.md_timetable_startid,
+                                startingpoint_name: language === 'th' ? found.start_location_namethai : found.start_location_nameeng,
+                                endPointId: found.md_timetable_endid,
+                                endpoint_name: language === 'th' ? found.end_location_namethai : found.end_location_nameeng,
+                              });
+                            } else {
+                              // Fallback: use item.name as starting point
+                              updateCustomerData({
+                                startingPointId: '0',
+                                startingpoint_name: item.name,
+                                endPointId: '0',
+                                endpoint_name: t('destination'),
+                              });
+                            }
+                            clearSearch();
+                            navigation.navigate('SearchFerry');
+
+                          } else if (item.type === 'trending' && item.id) {
+                            // Trending location -> set customer data & open LocationDetail
+                            updateCustomerData({
+                              startingPointId: item.id,
+                              startingpoint_name: item.name,
+                              countrycode: null,
+                              country: item.subtitle || null,
+                            });
+                            clearSearch();
+                            navigation.navigate('LocationDetail');
+
+                          } else if (item.type === 'attraction' && item.id) {
+                            // Attraction -> try navigate to LocationDetail or fallback to SearchFerry
+                            // If LocationDetail accepts attraction id, pass it; otherwise set customer data and open SearchFerry
+                            clearSearch();
+                            // prefer LocationDetail if available
+                            navigation.navigate('LocationDetail', { attractionId: item.id });
+
+                          } else if (item.type === 'operator' && item.id) {
+                            // Operator -> navigate to operator detail screen with full operator payload when available
+                            clearSearch();
+                            const rawOp = item.raw || {};
+                            const companyIdRaw = rawOp.md_company_id ?? rawOp.id ?? item.id;
+                            const companyId = (companyIdRaw != null && /^\d+$/.test(String(companyIdRaw)))
+                              ? parseInt(String(companyIdRaw), 10)
+                              : companyIdRaw;
+                            const operatorPayload = {
+                              // prefer numeric id when available
+                              md_company_id: companyId,
+                              md_company_nameeng: rawOp.md_company_nameeng || item.name,
+                              md_company_namethai: rawOp.md_company_namethai || item.name,
+                              md_company_picname: rawOp.md_company_picname || rawOp.md_company_pic || undefined,
+                              md_company_countries: rawOp.md_company_countries || item.subtitle || undefined,
+                              md_company_about: rawOp.md_company_about || undefined,
+                              // keep raw for other consumers
+                              raw: rawOp,
+                            };
+                            navigation.navigate('OperatorDetail', { operator: operatorPayload });
+
                           } else {
-                            // For other types, use original logic
+                            // Default fallback: treat like a free-text start location and open SearchFerry
                             updateCustomerData({
                               startingPointId: '0',
-                              startingpoint_name: item.sys_countries_nameeng || item.name,
+                              startingpoint_name: item.name || item.sys_countries_nameeng || item.name,
                               endPointId: '0',
                               endpoint_name: t('destination'),
                             });
-                            setSearchText('');
-                            setShowSearchResults(false);
+                            clearSearch();
                             navigation.navigate('SearchFerry');
                           }
                         }}
                       >
-                        <MaterialIcons name="location-on" size={wp('4%')} color="#FD501E" />
+                        <MaterialIcons name={item.type === 'operator' ? 'business' : 'location-on'} size={wp('4%')} color="#FD501E" />
                         <Text style={premiumStyles.searchResultText}>
                           {item.sys_countries_nameeng || item.name}
                         </Text>
+                        {item.subtitle ? <Text style={premiumStyles.searchResultSubtitle}>{item.subtitle}</Text> : null}
                       </TouchableOpacity>
                     ))}
                     {searchResults.length === 0 && !isSearching && (
@@ -1570,8 +1676,23 @@ const HomeScreen = ({ navigation, route }) => {
                         }}
                         onPress={() => {
                           console.log('Selected operator:', operator.md_company_nameeng);
-                          // Navigate to operator detail screen
-                          navigation.navigate('OperatorDetail', { operator });
+                          console.log('Operator fields:', JSON.stringify(operator, null, 2));
+                          
+                          // Navigate to operator detail screen (pass normalized payload with md_company_id)
+                          const companyIdRaw = operator.md_company_id ?? operator.id;
+                          const companyId = (companyIdRaw != null && /^\d+$/.test(String(companyIdRaw))) ? parseInt(String(companyIdRaw), 10) : companyIdRaw;
+                          
+                          console.log('HomeScreen: companyIdRaw=', companyIdRaw, 'companyId=', companyId);
+                          
+                          navigation.navigate('OperatorDetail', { operator: {
+                            md_company_id: companyId,
+                            md_company_nameeng: operator.md_company_nameeng || operator.md_company_name || operator.md_company_name?.en,
+                            md_company_namethai: operator.md_company_namethai || operator.md_company_name?.th,
+                            md_company_picname: operator.md_company_picname,
+                            md_company_countries: operator.md_company_countries,
+                            md_company_about: operator.md_company_about,
+                            raw: operator,
+                          } });
                         }}
                       >
                         <Image
@@ -1606,8 +1727,18 @@ const HomeScreen = ({ navigation, route }) => {
                         }}
                         onPress={() => {
                           console.log('Selected operator:', operator.md_company_nameeng);
-                          // Navigate to operator detail screen
-                          navigation.navigate('OperatorDetail', { operator });
+                          // Navigate to operator detail screen (pass normalized payload with md_company_id)
+                          const companyIdRaw = operator.md_company_id ?? operator.id;
+                          const companyId = (companyIdRaw != null && /^\d+$/.test(String(companyIdRaw))) ? parseInt(String(companyIdRaw), 10) : companyIdRaw;
+                          navigation.navigate('OperatorDetail', { operator: {
+                            md_company_id: companyId,
+                            md_company_nameeng: operator.md_company_nameeng || operator.md_company_name || operator.md_company_name?.en,
+                            md_company_namethai: operator.md_company_namethai || operator.md_company_name?.th,
+                            md_company_picname: operator.md_company_picname,
+                            md_company_countries: operator.md_company_countries,
+                            md_company_about: operator.md_company_about,
+                            raw: operator,
+                          } });
                         }}
                       >
                         <Image

@@ -1178,6 +1178,12 @@ const HomeScreenPremiumStyles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
+  searchResultSubtitle: {
+    marginLeft: wp('3%'),
+    fontSize: wp('3%'),
+    color: '#777',
+    marginTop: 2,
+  },
   noResultsText: {
     textAlign: 'center',
     fontSize: wp('3.5%'),
