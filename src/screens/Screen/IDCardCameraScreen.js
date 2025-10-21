@@ -223,7 +223,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       setIsProcessing(true);
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [85.6, 54],
         quality: 1,
@@ -258,7 +258,7 @@ const IDCardCameraScreen = ({ navigation }) => {
       setIsProcessing(true);
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [85.6, 54],
         quality: 1,

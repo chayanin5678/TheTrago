@@ -334,6 +334,14 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
+  // Helper to choose country name: prefer Thai when selectedLanguage === 'th', else English
+  const pickCountryName = (countryObj) => {
+    if (!countryObj) return null;
+    const en = countryObj.sys_countries_nameeng || countryObj.nameeng || countryObj.sys_countries_nameeng;
+    const th = countryObj.sys_countries_namethai || countryObj.namethai || countryObj.sys_countries_namethai;
+    return selectedLanguage === 'th' ? (th || en || null) : (en || th || null);
+  };
+
   useEffect(() => {
     const fetchTopTrending = async () => {
       try {
@@ -386,22 +394,55 @@ const HomeScreen = ({ navigation, route }) => {
     fetchAttractions();
   }, []);
 
+  // ---- helper: ทำให้โครงสร้าง operator เป็นรูปเดียวกับที่ OperatorDetail ต้องการ ----
+  const normalizeOperator = (op) => {
+    const idRaw = op?.md_company_id ?? op?.id ?? op?.company_id;
+    const md_company_id = (idRaw != null && /^\d+$/.test(String(idRaw)))
+      ? parseInt(String(idRaw), 10)
+      : idRaw;
+
+    return {
+      md_company_id,
+      md_company_nameeng: op?.md_company_nameeng || op?.company_name || op?.name || '',
+      md_company_namethai: op?.md_company_namethai || op?.company_name_thai || '',
+      md_company_picname: op?.md_company_picname || op?.md_company_pic || op?.logo || '',
+      // เอาชื่อประเทศ eng เป็นหลัก (มีไทยเป็นสำรอง)
+  md_company_countries_en: op?.sys_countries_nameeng || op?.sys_countries_nameeng || '',
+  md_company_countries_th: op?.sys_countries_namethai || op?.sys_countries_namethai || '',
+  // default string (keep english first, will be overridden at navigation time if needed)
+  md_company_countries: op?.sys_countries_nameeng || op?.sys_countries_namethai || '',
+      // ทำให้เป็น object { en, th } เพื่อให้หน้า OperatorDetail ใช้ได้เลย
+      md_company_about: {
+        en: op?.md_company_abouteng || op?.md_company_about?.en || op?.md_company_about || '',
+        th: op?.md_company_aboutthai || op?.md_company_about?.th || '',
+      },
+      raw: op, // เก็บก้อนดิบไว้เผื่อใช้
+    };
+  };
+
+  // ---- แทนที่ useEffect เดิมของ fetchFerryOperators ----
   useEffect(() => {
     const fetchFerryOperators = async () => {
       setIsLoadingOperators(true);
       try {
-        const data = await fetchWithRetry(`${ipAddress}/popular-companies`);
-        if (data && data.status === 'success' && Array.isArray(data.data)) {
-          console.log('fetchFerryOperators: API returned', data.data.length, 'operators');
-          console.log('fetchFerryOperators: first operator:', JSON.stringify(data.data[0], null, 2));
-          setFerryOperators(data.data);
-        } else {
-          console.warn('API returned invalid ferry operators data format');
-          setFerryOperators([]);
-        }
-      } catch (error) {
-        console.error('Error fetching ferry operators data:', error);
-        setFerryOperators([]);
+        // รองรับทั้ง ipAddress เป็น base หรือไม่มี ก็ใช้ domain ตรง ๆ
+        const base = (typeof ipAddress === 'string' && ipAddress.startsWith('http'))
+          ? ipAddress
+          : 'https://thetrago.com/AppApi';
+        const url = `${base}/popular-companies`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+
+        const list = Array.isArray(json?.data) ? json.data : [];
+        const normalized = list.map(normalizeOperator);
+
+        setFerryOperators(normalized);
+        console.log('popular-companies loaded:', normalized.length);
+      } catch (err) {
+        console.error('Error fetching popular companies:', err);
+        setFerryOperators([]); // ไม่ล้มแอพ
       } finally {
         setIsLoadingOperators(false);
       }
@@ -915,16 +956,19 @@ const HomeScreen = ({ navigation, route }) => {
       subtitle: t('attraction') || 'Attraction'
     }));
 
-    // Search in ferry operators (company names)
-    const operatorResults = ferryOperators.filter(op =>
-      (op.company_name || op.name || '').toLowerCase().includes(lowercaseQuery) ||
-      (op.company_name_thai || '').toLowerCase().includes(lowercaseQuery)
-    ).map(op => ({
-      id: op.id || op.company_id || `operator-${op.company_name}`,
-      name: isThaiInput ? (op.company_name_thai || op.company_name || op.name) : (op.company_name || op.name || op.company_name_thai),
+    // Search in ferry operators (company names) - ใช้ก้อน normalize แล้ว
+    const operatorResults = ferryOperators.filter(op => {
+      const en = (op.md_company_nameeng || '').toLowerCase();
+      const th = (op.md_company_namethai || '').toLowerCase();
+      return en.includes(lowercaseQuery) || th.includes(lowercaseQuery);
+    }).map(op => ({
+      id: op.md_company_id,
+      name: isThaiInput
+        ? (op.md_company_namethai || op.md_company_nameeng)
+        : (op.md_company_nameeng || op.md_company_namethai),
       type: 'operator',
-      subtitle: t('operator') || 'Operator',
-      raw: op,
+      subtitle: op.md_company_countries || (t('operator') || 'Operator'),
+      raw: op, // ส่งทั้งก้อน normalize ไปเลย
     }));
 
     const allResults = [...results, ...countryResults, ...routeResults, ...trendingResults, ...attractionResults, ...operatorResults];
@@ -1191,7 +1235,7 @@ const HomeScreen = ({ navigation, route }) => {
                             // Country -> go to PopularDestination with country set
                             updateCustomerData({
                               countrycode: item.id,
-                              country: item.name,
+                              country: item.name || item.sys_countries_nameeng || item.sys_countries_namethai || null,
                             });
                             clearSearch();
                             navigation.navigate('PopularDestination');
@@ -1245,18 +1289,8 @@ const HomeScreen = ({ navigation, route }) => {
                             const companyId = (companyIdRaw != null && /^\d+$/.test(String(companyIdRaw)))
                               ? parseInt(String(companyIdRaw), 10)
                               : companyIdRaw;
-                            const operatorPayload = {
-                              // prefer numeric id when available
-                              md_company_id: companyId,
-                              md_company_nameeng: rawOp.md_company_nameeng || item.name,
-                              md_company_namethai: rawOp.md_company_namethai || item.name,
-                              md_company_picname: rawOp.md_company_picname || rawOp.md_company_pic || undefined,
-                              md_company_countries: rawOp.md_company_countries || item.subtitle || undefined,
-                              md_company_about: rawOp.md_company_about || undefined,
-                              // keep raw for other consumers
-                              raw: rawOp,
-                            };
-                            navigation.navigate('OperatorDetail', { operator: operatorPayload });
+                              // item.raw is already the normalized operator object - pass it directly
+                              navigation.navigate('OperatorDetail', { operator: item.raw });
 
                           } else {
                             // Default fallback: treat like a free-text start location and open SearchFerry
@@ -1684,15 +1718,11 @@ const HomeScreen = ({ navigation, route }) => {
                           
                           console.log('HomeScreen: companyIdRaw=', companyIdRaw, 'companyId=', companyId);
                           
-                          navigation.navigate('OperatorDetail', { operator: {
-                            md_company_id: companyId,
-                            md_company_nameeng: operator.md_company_nameeng || operator.md_company_name || operator.md_company_name?.en,
-                            md_company_namethai: operator.md_company_namethai || operator.md_company_name?.th,
-                            md_company_picname: operator.md_company_picname,
-                            md_company_countries: operator.md_company_countries,
-                            md_company_about: operator.md_company_about,
-                            raw: operator,
-                          } });
+                          // ensure country string matches selected language
+                          operator.md_company_countries = selectedLanguage === 'th'
+                            ? (operator.md_company_countries_th || operator.md_company_countries_en || operator.md_company_countries)
+                            : (operator.md_company_countries_en || operator.md_company_countries_th || operator.md_company_countries);
+                          navigation.navigate('OperatorDetail', { operator });
                         }}
                       >
                         <Image
@@ -1730,15 +1760,11 @@ const HomeScreen = ({ navigation, route }) => {
                           // Navigate to operator detail screen (pass normalized payload with md_company_id)
                           const companyIdRaw = operator.md_company_id ?? operator.id;
                           const companyId = (companyIdRaw != null && /^\d+$/.test(String(companyIdRaw))) ? parseInt(String(companyIdRaw), 10) : companyIdRaw;
-                          navigation.navigate('OperatorDetail', { operator: {
-                            md_company_id: companyId,
-                            md_company_nameeng: operator.md_company_nameeng || operator.md_company_name || operator.md_company_name?.en,
-                            md_company_namethai: operator.md_company_namethai || operator.md_company_name?.th,
-                            md_company_picname: operator.md_company_picname,
-                            md_company_countries: operator.md_company_countries,
-                            md_company_about: operator.md_company_about,
-                            raw: operator,
-                          } });
+                          // ensure country string matches selected language
+                          operator.md_company_countries = selectedLanguage === 'th'
+                            ? (operator.md_company_countries_th || operator.md_company_countries_en || operator.md_company_countries)
+                            : (operator.md_company_countries_en || operator.md_company_countries_th || operator.md_company_countries);
+                          navigation.navigate('OperatorDetail', { operator });
                         }}
                       >
                         <Image

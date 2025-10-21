@@ -218,7 +218,7 @@ const BankVerificationScreen = ({ navigation }) => {
         allowsEditing: true,
         aspect: [3, 2],
         quality: 0.6,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  mediaTypes: ImagePicker.MediaType.Images,
         exif: false,
         allowsMultipleSelection: false,
         cameraType: ImagePicker.CameraType.back,
@@ -256,7 +256,7 @@ const BankVerificationScreen = ({ navigation }) => {
       setIsProcessing(true);
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [3, 2],
         quality: 0.6,

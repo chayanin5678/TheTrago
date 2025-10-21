@@ -67,36 +67,69 @@ const AllOperatorsScreen = ({ navigation }) => {
     return nameEng.includes(query) || nameThai.includes(query);
   });
 
-  const renderOperatorItem = ({ item }) => {
-    // Use the md_company_name object (with .en and .th) which the API returns.
-    // The API returns md_company_nameeng and md_company_namethai as strings.
-    const companyName = selectedLanguage === 'th'
-      ? (item.md_company_namethai || item.md_company_nameeng || 'Unknown')
-      : (item.md_company_nameeng || item.md_company_namethai || 'Unknown');
+  // Normalize operator object into the shape expected by OperatorDetail
+  const normalizeOperator = (op) => {
+    const idRaw = op?.md_company_id ?? op?.id ?? op?.company_id;
+    const md_company_id = (idRaw != null && /^\d+$/.test(String(idRaw))) ? parseInt(String(idRaw), 10) : idRaw;
+    return {
+      md_company_id,
+      md_company_nameeng: op?.md_company_nameeng || op?.company_name || op?.name || '',
+      md_company_namethai: op?.md_company_namethai || op?.company_name_thai || '',
+      md_company_picname: op?.md_company_picname || op?.md_company_pic || op?.logo || '',
+      // Countries may come from multiple fields and may be arrays or strings.
+      md_company_countries_en: (() => {
+        const v = op?.sys_countries_nameeng ?? op?.md_company_countries_en ?? op?.md_company_countries;
+        if (Array.isArray(v)) return v.join(', ');
+        return v ?? '';
+      })(),
+      md_company_countries_th: (() => {
+        const v = op?.sys_countries_namethai ?? op?.md_company_countries_th;
+        if (Array.isArray(v)) return v.join(', ');
+        return v ?? '';
+      })(),
+      md_company_countries: (() => {
+        const v = op?.md_company_countries ?? op?.sys_countries_nameeng ?? op?.sys_countries_namethai;
+        if (Array.isArray(v)) return v.join(', ');
+        return v ?? '';
+      })(),
+      md_company_about: (op?.md_company_about && typeof op.md_company_about === 'object') ? {
+        en: op.md_company_about.en || op.md_company_about.eng || op.md_company_about || '',
+        th: op.md_company_about.th || op.md_company_about.thai || ''
+      } : { en: (op?.md_company_about || ''), th: '' },
+      raw: op,
+    };
+  };
 
-    // md_company_countries can be an array or a string. Normalize to a readable string.
-    const companyLocation = Array.isArray(item.md_company_countries)
-      ? item.md_company_countries.join(', ')
-      : (item.md_company_countries || 'Unknown');
-    
+  const renderOperatorItem = ({ item }) => {
+    const op = normalizeOperator(item);
+    // Company name selected by language
+    const companyName = selectedLanguage === 'th'
+      ? (op.md_company_namethai || op.md_company_nameeng || 'Unknown')
+      : (op.md_company_nameeng || op.md_company_namethai || 'Unknown');
+
+    // Country chosen from normalized fields
+    const companyLocation = (() => {
+      // Prefer dedicated language fields, fallback to generic
+      if (selectedLanguage === 'th') return op.md_company_countries_th || op.md_company_countries_en || op.md_company_countries || 'Unknown';
+      return op.md_company_countries_en || op.md_company_countries_th || op.md_company_countries || 'Unknown';
+    })();
+
     const companyDescription = selectedLanguage === 'th'
-      ? (item.md_company_about?.th || item.md_company_about?.en || '')
-      : (item.md_company_about?.en || item.md_company_about?.th || '');
+      ? (op.md_company_about?.th || op.md_company_about?.en || '')
+      : (op.md_company_about?.en || op.md_company_about?.th || '');
 
     return (
       <TouchableOpacity
         style={styles.operatorCard}
         onPress={() => {
-          navigation.navigate('OperatorDetail', { 
-            operator: {
-              md_company_id: item.md_company_id,
-              md_company_nameeng: item.md_company_nameeng,
-              md_company_namethai: item.md_company_namethai,
-              md_company_picname: item.md_company_picname,
-              md_company_countries: item.md_company_countries,
-              md_company_about: item.md_company_about,
-            }
-          });
+          // navigate with normalized operator object
+          // ensure country string matches selected language
+          // Ensure we send a plain string for country based on language preference.
+          const countryForSend = selectedLanguage === 'th'
+            ? (op.md_company_countries_th || op.md_company_countries_en || op.md_company_countries)
+            : (op.md_company_countries_en || op.md_company_countries_th || op.md_company_countries);
+          op.md_company_countries = countryForSend || '';
+          navigation.navigate('OperatorDetail', { operator: op });
         }}
         activeOpacity={0.7}
       >
