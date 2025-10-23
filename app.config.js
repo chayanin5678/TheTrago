@@ -1,5 +1,5 @@
 const APP_VERSION = "1.0.9";
-const IOS_BUILD_NUMBER = "1";
+const IOS_BUILD_NUMBER = "2";
 
 module.exports = {
   expo: {
@@ -60,8 +60,7 @@ module.exports = {
       }],
       ["expo-notifications", {
         icon: "./assets/icon.png",
-        color: "#FD501E",
-        sounds: ["./assets/notification-sound.wav"]
+        color: "#FD501E"
       }]
     ],
 

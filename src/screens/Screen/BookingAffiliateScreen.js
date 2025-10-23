@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
   // Header
   headerContainer: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 },
   headerGradient: {
-    paddingBottom: 40, paddingHorizontal: 20,
-    borderBottomLeftRadius: 35, borderBottomRightRadius: 35,
+    paddingBottom: 16, paddingHorizontal: 20,
+    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
     /* shadow/elevation removed */ position: 'relative', overflow: 'hidden',
   },
   safeAreaHeader: { paddingTop: Platform.OS === 'android' ? 40 : 0 },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   // Scroll
   scrollContainer: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: hp('10%') },
-  scrollViewWithMargin: { marginTop: 140, flex: 1 },
+  scrollViewWithMargin: { marginTop: 160, flex: 1 },
 
   // Content
   content: { paddingHorizontal: wp('4%'), paddingTop: hp('2%'), paddingBottom: hp('5%'), minHeight: '100%' },

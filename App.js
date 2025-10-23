@@ -55,6 +55,7 @@ import { PromotionProvider } from './src/contexts/PromotionProvider';
 import TermsScreen from './src/screens/Screen/TermsScreen';
 import PrivacyPolicyScreen from './src/screens/Screen/PrivacyPolicyScreen';
 import ContactScreen from './src/screens/Screen/ContactScreen';
+import FAQScreen from './src/screens/Screen/FAQScreen';
 import BookingScreen from './src/screens/Screen/BookingScreen';
 import EditBookingScreen from './src/screens/Screen/EditBookingScreen';
 import DeleteProfileScreen from './src/screens/Screen/DeleteProfileScreen';
@@ -153,6 +154,7 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
           <Stack.Screen name="ContactScreen" component={ContactScreen} />
+          <Stack.Screen name="FAQScreen" component={FAQScreen} />
         </>
       ) : (
         <>
@@ -165,6 +167,7 @@ const AccountTabNavigator = () => {
           <Stack.Screen name="TermsScreen" component={TermsScreen} />
           <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
           <Stack.Screen name="ContactScreen" component={ContactScreen} />
+          <Stack.Screen name="FAQScreen" component={FAQScreen} />
           <Stack.Screen name="DeleteProfile" component={DeleteProfileScreen} />
           <Stack.Screen name="EarningsScreen" component={EarningsScreen} />
           <Stack.Screen name="AffiliateScreen" component={AffiliateScreen} />

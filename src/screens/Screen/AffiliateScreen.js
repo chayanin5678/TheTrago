@@ -523,16 +523,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   scrollContainer: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: hp('10%') },
-  scrollViewWithMargin: { marginTop: 140, flex: 1 },
+  scrollViewWithMargin: { marginTop: 120, flex: 1 },
 
   // header
   headerContainer: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 },
   headerGradient: {
     paddingTop: 0,
-    paddingBottom: 40,
+    paddingBottom: 24,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     shadowColor: '#FD501E',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     color: '#FFFFFF',
     marginBottom: 6,

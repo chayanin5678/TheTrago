@@ -392,6 +392,7 @@ const AccountScreen = ({ navigation }) => {
       { title: t('earnings') || 'Earnings', subtitle: t('earningsSubtitle') || 'Track your earnings and invoices', icon: 'payments', color: '#10B981', nav: 'EarningsScreen' },
       { title: t('bookingAffiliate') || 'Booking Affiliate', subtitle: t('trackBookings') || 'Track affiliate bookings and export report', icon: 'cloud-download', color: '#3B82F6', nav: 'BookingAffiliateScreen' },
     ] : []),
+    { title: t('faq') || 'FAQ', subtitle: t('faqDesc') || 'Frequently asked questions', icon: 'help-outline', color: '#3B82F6', nav: 'FAQScreen' },
     { title: t('deleteAccount') || 'Delete Account', subtitle: t('deleteAccountDesc') || 'Permanently remove account', icon: 'delete-outline', color: '#EF4444', nav: 'DeleteProfile' },
   ];
 

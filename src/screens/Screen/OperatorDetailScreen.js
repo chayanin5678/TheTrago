@@ -16,6 +16,7 @@ import { Alert } from 'react-native';
 import { Modal } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useLanguage } from './LanguageContext';
+import { useCustomer } from './CustomerContext';
 import { normalizeImageUri } from '../../utils/imageUri';
 import ipAddress from '../../config/ipconfig';
 import { TextInput } from 'react-native-gesture-handler';
@@ -24,10 +25,12 @@ import * as SecureStore from 'expo-secure-store';
 const OperatorDetailScreen = ({ route, navigation }) => {
   const { operator } = route.params;
   const { t, selectedLanguage } = useLanguage();
+  const { customerData, updateCustomerData } = useCustomer();
   const [operatorDetail, setOperatorDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timetables, setTimetables] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [currentMemberId, setCurrentMemberId] = useState(null);
   const [newRating, setNewRating] = useState(5);
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewImages, setNewReviewImages] = useState([]);
@@ -39,38 +42,6 @@ const OperatorDetailScreen = ({ route, navigation }) => {
   const scrollViewRef = useRef(null);
   const reviewsLayoutY = useRef(0);
 
-  // ---------- FLAGS (ยังเก็บ util ไว้ แม้ตอนนี้ไม่แสดงธง) ----------
-  const normalizeFlagValue = (flag) => {
-    if (!flag && flag !== 0) return null;
-    let v = String(flag).trim();
-    if (v.charCodeAt(0) === 0xFEFF) v = v.slice(1);
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1).trim();
-    if ((v.startsWith('{') || v.startsWith('[')) && (v.includes('<svg') || v.includes('&lt;svg'))) {
-      try { const p = JSON.parse(v); if (typeof p === 'string') v = p.trim(); } catch {}
-    }
-    if (v.includes('&lt;') || v.includes('&gt;') || v.includes('&amp;')) {
-      v = v.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
-    }
-    const img = v.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (img?.[1]) v = img[1].trim();
-    const href = v.match(/<a[^>]+href=["']([^"']+\.(?:png|jpg|jpeg|svg))["']/i);
-    if (href?.[1]) v = href[1].trim();
-    if (v.startsWith('<') || v.startsWith('<?xml')) {
-      try { return `data:image/svg+xml;utf8,${encodeURIComponent(v)}`; } catch { return null; }
-    }
-    if (/^data:image\/[a-zA-Z+.-]+,/.test(v) || /^https?:\/\//i.test(v)) return v;
-    return null;
-  };
-  const countryNameToEmoji = (name) => {
-    if (!name) return null;
-    const n = String(name).toLowerCase();
-    const map = { thailand:'🇹🇭', thai:'🇹🇭', vietnam:'🇻🇳', 'viet nam':'🇻🇳', cambodia:'🇰🇭', laos:'🇱🇦', myanmar:'🇲🇲', malaysia:'🇲🇾', indonesia:'🇮🇩', philippines:'🇵🇭' };
-    for (const k of Object.keys(map)) if (n === k || n.includes(k)) return map[k];
-    return null;
-  };
-  // ---------------------------------------------------------------
-
-  // use shared normalizeImageUri from utils
 
   useEffect(() => {
     setOperatorDetail(operator);
@@ -132,6 +103,25 @@ const OperatorDetailScreen = ({ route, navigation }) => {
           try { const p = JSON.parse(r.md_review_images); if (Array.isArray(p)) imgs = p; else imgs = [r.md_review_images]; } catch { imgs = r.md_review_images ? [r.md_review_images] : []; }
         }
         const images = (imgs || []).map(u => normalizeImageUri(u) || u).filter(Boolean);
+        // Normalize likes: prefer server-provided likesArray / likesCount / liked when available
+        let likesArray = [];
+        // server may already return likesArray
+        if (Array.isArray(r.likesArray) && r.likesArray.length) likesArray = r.likesArray.map(String);
+        // older fields: likes (array) or md_review_likes (array)
+        else if (Array.isArray(r.likes) && r.likes.length) likesArray = r.likes.map(String);
+        else if (Array.isArray(r.md_review_likes) && r.md_review_likes.length) likesArray = r.md_review_likes.map(String);
+        // singular md_review_like string (e.g. '["1715"]') or json/string
+        else if (typeof r.md_review_like === 'string' && r.md_review_like.trim()) {
+          try { const p = JSON.parse(r.md_review_like); if (Array.isArray(p)) likesArray = p.map(String); else likesArray = [String(r.md_review_like)]; } catch { likesArray = String(r.md_review_like).split(',').map(s=>s.trim()).filter(Boolean); }
+        } else if (typeof r.md_review_likes === 'string' && r.md_review_likes.trim()) {
+          try { const p = JSON.parse(r.md_review_likes); if (Array.isArray(p)) likesArray = p.map(String); else likesArray = String(r.md_review_likes).split(',').map(s=>s.trim()).filter(Boolean); } catch { likesArray = String(r.md_review_likes).split(',').map(s=>s.trim()).filter(Boolean); }
+        } else if (typeof r.likes === 'string' && r.likes.trim()) {
+          try { const p = JSON.parse(r.likes); if (Array.isArray(p)) likesArray = p.map(String); else likesArray = String(r.likes).split(',').map(s=>s.trim()).filter(Boolean); } catch { likesArray = String(r.likes).split(',').map(s=>s.trim()).filter(Boolean); }
+        }
+
+        // If server explicitly reported liked flag, respect it; otherwise compute from likesArray
+        const liked = (typeof r.liked === 'boolean') ? r.liked : (currentMemberId ? likesArray.includes(String(currentMemberId)) : false);
+
         return {
           ...r,
           author: r.md_review_name || r.member_name || r.member_fname || r.author || (r.md_review_memberid ? String(r.md_review_memberid) : null),
@@ -139,6 +129,8 @@ const OperatorDetailScreen = ({ route, navigation }) => {
           text: r.md_review_comment || r.md_review_text || r.md_review || r.md_review_body || r.md_review_note || r.md_review_text || '',
           avatar,
           images,
+          likesArray,
+          liked,
         };
       });
       setReviews(normalized);
@@ -173,6 +165,26 @@ const OperatorDetailScreen = ({ route, navigation }) => {
       return avg !== null ? (Math.round(avg * 10) / 10) : null;
     } catch (e) { return null; }
   }, [reviews, operatorDetail, operator]);
+
+  // Small star component that supports fractional fill (0..1)
+  const FractionalStar = ({ fraction = 1, size = 16, color = '#FFD700' }) => {
+    const f = Math.max(0, Math.min(1, Number(fraction) || 0));
+    // full
+    if (f >= 1) return <Ionicons name="star" size={size} color={color} style={{ marginLeft: 4 }} />;
+    // empty
+    if (f <= 0) return <Ionicons name="star-outline" size={size} color={color} style={{ marginLeft: 4 }} />;
+    // partial: render clipped filled star beneath an outline
+    return (
+      <View style={{ width: size, height: size, marginLeft: 4 }}>
+        {/* clipped filled star */}
+        <View style={{ position: 'absolute', left: 0, top: 0, overflow: 'hidden', width: Math.round(size * f), height: size }} pointerEvents="none">
+          <Ionicons name="star" size={size} color={color} />
+        </View>
+        {/* outline on top so edges remain visible */}
+        <Ionicons name="star-outline" size={size} color={color} style={{ position: 'absolute', left: 0, top: 0 }} />
+      </View>
+    );
+  };
 
   // Prefer the detailed (fetched) operatorDetail values where available, otherwise fall back to the route operator param
   const companyLocation = operatorDetail?.md_company_countries || operator.md_company_countries || t('vietnamLocation');
@@ -326,6 +338,39 @@ const OperatorDetailScreen = ({ route, navigation }) => {
     return () => { mounted = false; if (unsub && typeof unsub === 'function') unsub(); };
   }, [navigation]);
 
+  // load current member id if available (so we can detect liked reviews)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const token = await SecureStore.getItemAsync('userToken');
+        if (!token) return;
+        const resp = await fetch(`${ipAddress}/profile`, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
+        if (!resp.ok) return;
+        const j = await resp.json().catch(() => null);
+        if (j && Array.isArray(j.data) && j.data[0]) {
+          const u = j.data[0];
+          if (mounted) setCurrentMemberId(u.md_member_id || u.id || null);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // If currentMemberId becomes available after reviews were loaded, recompute liked flags
+  useEffect(() => {
+    if (!currentMemberId) return;
+    setReviews(prev => (prev || []).map(r => {
+      try {
+        const likes = Array.isArray(r.likesArray) ? r.likesArray : [];
+        const isLiked = likes.includes(String(currentMemberId));
+        return { ...r, liked: isLiked };
+      } catch (e) { return r; }
+    }));
+  }, [currentMemberId]);
+
   const takePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -357,18 +402,67 @@ const OperatorDetailScreen = ({ route, navigation }) => {
     } catch (e) { /* ignore */ }
   };
 
-  // Toggle like state for a review at given index (local only)
-  const toggleLike = (index) => {
-    setReviews(prev => prev.map((r, i) => {
-      if (i !== index) return r;
-      const currentlyLiked = !!r.liked;
-      const currentLikes = Number(r.likes ?? r.likeCount ?? 0);
-      return {
-        ...r,
-        liked: !currentlyLiked,
-        likes: currentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1,
-      };
-    }));
+  // Toggle like state for a review at given index (optimistic + persist)
+  const toggleLike = async (index) => {
+    try {
+      // Ensure user logged in
+      const token = await SecureStore.getItemAsync('userToken');
+      if (!token) { navigation.navigate('Login'); return; }
+
+      const target = reviews[index];
+      if (!target) return;
+
+      const reviewId = target.md_review_id || target.id || target.review_id || null;
+      const memberId = currentMemberId || null;
+
+      // compute optimistic new likesArray and liked flag
+      const prevLikes = Array.isArray(target.likesArray) ? [...target.likesArray] : [];
+      const isLiked = !!target.liked;
+      let newLikes = [];
+      if (isLiked) {
+        newLikes = prevLikes.filter(x => String(x) !== String(memberId));
+      } else {
+        newLikes = [...prevLikes, String(memberId)];
+      }
+
+      // optimistic UI update
+      setReviews(prev => prev.map((r, i) => {
+        if (i !== index) return r;
+        return { ...r, liked: !isLiked, likesArray: newLikes };
+      }));
+
+      // Attempt to persist to backend. We'll try two paths depending on API support:
+      // - POST `${ipAddress}/review-like` with { review_id, member_id, action: 'add'|'remove' }
+      // - If reviewId missing, fall back to toggling via `${ipAddress}/review/${reviewId}/like`
+      const action = isLiked ? 'remove' : 'add';
+      // Call the canonical API: /AppApi/review-like (expects { action, member_id, review_id })
+      try {
+        const body = { action, member_id: String(memberId), review_id: String(reviewId) };
+        const r = await fetch(`${ipAddress}/review-like`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const j = await (r ? r.json().catch(() => null) : null);
+        if (r && r.ok && j && (j.status === 'success' || j.success)) {
+          // server returned likesArray or likesCount
+          const serverLikes = Array.isArray(j.likesArray) ? j.likesArray.map(String) : (Array.isArray(j.likes) ? j.likes.map(String) : []);
+          const finalLikes = serverLikes.length ? serverLikes : (Array.isArray(j.likesArray) ? j.likesArray.map(String) : []);
+          const newLiked = String(memberId) ? finalLikes.includes(String(memberId)) : false;
+          setReviews(prev => prev.map((it, idx) => (idx === index ? ({ ...it, likesArray: finalLikes, liked: newLiked }) : it)));
+        } else {
+          // revert optimistic update on failure
+          setReviews(prev => prev.map((r, i) => {
+            if (i !== index) return r;
+            return { ...r, liked: isLiked, likesArray: prevLikes };
+          }));
+        }
+      } catch (e) {
+        // network/error -> revert optimistic update
+        setReviews(prev => prev.map((r, i) => {
+          if (i !== index) return r;
+          return { ...r, liked: isLiked, likesArray: prevLikes };
+        }));
+      }
+    } catch (e) {
+      // ignore
+    }
   };
 
   // Submit review handler: fetch current member (like Dashboard/HomeScreen) then include member data
@@ -650,10 +744,13 @@ const OperatorDetailScreen = ({ route, navigation }) => {
             <Text style={styles.operatorNameNew}>{companyName}</Text>
             <View style={styles.companyStarsRow}>
               {(() => {
-                const rounded = companyDisplayRating !== null ? Math.round(companyDisplayRating) : 0;
-                return [1,2,3,4,5].map(s => (
-                  <Ionicons key={`cstar-${s}`} name={s <= rounded ? 'star' : 'star-outline'} size={16} color="#FFD700" style={{ marginLeft: 4 }} />
-                ));
+                const v = companyDisplayRating !== null ? Number(companyDisplayRating) : 0;
+                // show 5 stars, each may be full/partial/empty
+                return [0,1,2,3,4].map(i => {
+                  const starIndex = i + 1;
+                  const remaining = Math.max(0, Math.min(1, v - i)); // 0..1 how much fill for this star
+                  return <FractionalStar key={`cstar-${starIndex}`} fraction={remaining} size={16} color="#FFD700" />;
+                });
               })()}
               <Text style={styles.companyRatingText}>{companyDisplayRating !== null ? String(companyDisplayRating) : (t('noReviews') || (selectedLanguage === 'th' ? 'ยังไม่มีรีวิว' : 'No reviews'))}</Text>
             </View>
@@ -739,7 +836,20 @@ const OperatorDetailScreen = ({ route, navigation }) => {
                           {showGetPrice && (
                             <TouchableOpacity
                               style={styles.getPriceBottom}
-                              onPress={() => navigation.navigate('TripDetail', { timeTableDepartId: item.md_timetable_id })}
+                              onPress={() => {
+                                try {
+                                  // Populate customer search data with this timetable's start/end info
+                                  updateCustomerData({
+                                    startingPointId: item.md_timetable_startid || item.md_timetable_startid || '0',
+                                    startingpoint_name: selectedLanguage === 'th' ? (item.start_locationthai || item.start_location_namethai || item.start_location_nameeng || item.start_location || '') : (item.start_locationeng || item.start_location_nameeng || item.start_locationthai || item.start_location || ''),
+                                    endPointId: item.md_timetable_endid || item.md_timetable_endid || '0',
+                                    endpoint_name: selectedLanguage === 'th' ? (item.end_locationthai || item.end_location_namethai || item.end_location_nameeng || item.end_location || '') : (item.end_locationeng || item.end_location_nameeng || item.end_locationthai || item.end_location || ''),
+                                  });
+                                } catch (e) {
+                                  // ignore errors and still navigate
+                                }
+                                navigation.navigate('SearchFerry');
+                              }}
                               activeOpacity={0.9}
                             >
                               <Text style={styles.getPriceBottomText}>{t('getPrice') || 'getPrice'}</Text>
@@ -889,9 +999,17 @@ const OperatorDetailScreen = ({ route, navigation }) => {
                         <Ionicons key={`rstar-${i}-${s}`} name={s <= (r.rating || r.stars || 0) ? 'star' : 'star-outline'} size={16} color="#FFD700" style={{ marginLeft: 2 }} />
                       ))}
                     </View>
-                    <TouchableOpacity style={styles.likeButton} onPress={() => toggleLike(i)} activeOpacity={0.7}>
+                    <TouchableOpacity
+                      style={styles.likeButton}
+                      onPress={async () => {
+                        const token = await SecureStore.getItemAsync('userToken');
+                        if (!token) { navigation.navigate('Login'); return; }
+                        toggleLike(i);
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <Ionicons name={r.liked ? 'heart' : 'heart-outline'} size={18} color={r.liked ? '#EF4444' : '#9CA3AF'} />
-                      <Text style={styles.likeCountText}>{String(Number(r.likes ?? r.likeCount ?? 0))}</Text>
+                      <Text style={styles.likeCountText}>{String((Array.isArray(r.likesArray) ? r.likesArray.length : (Number(r.likes ?? r.likeCount ?? 0))))}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>

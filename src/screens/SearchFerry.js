@@ -201,6 +201,9 @@ const SearchFerry = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [didSearch, setDidSearch] = useState(true);
 
+  // Guard to ensure auto-search runs only once per mount when prefilled
+  const autoSearchedRef = useRef(false);
+
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [calendarStartDate, setCalendarStartDate] = useState(() => {
@@ -625,6 +628,20 @@ const SearchFerry = ({ navigation, route }) => {
     setDetaReturn(returnDate);
     setTripTypeSearch(tripType);
   }, [departureDate, returnDate, tripType]);
+
+
+  // If the screen mounts with startingPoint/endPoint prefilled, run the search automatically once
+  useEffect(() => {
+    if (autoSearchedRef.current) return;
+    if (startingPoint && startingPoint.id && endPoint && endPoint.id && calendarStartDate) {
+      autoSearchedRef.current = true;
+      // small delay to let the UI settle before starting network request
+      const t = setTimeout(() => {
+        try { fetchFerryRoute(); } catch (e) { /* ignore */ }
+      }, 120);
+      return () => clearTimeout(t);
+    }
+  }, [startingPoint?.id, endPoint?.id, calendarStartDate]);
 
 
 
