@@ -21,6 +21,7 @@ import { normalizeImageUri } from '../../utils/imageUri';
 import ipAddress from '../../config/ipconfig';
 import { TextInput } from 'react-native-gesture-handler';
 import * as SecureStore from 'expo-secure-store';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const OperatorDetailScreen = ({ route, navigation }) => {
   const { operator } = route.params;
@@ -41,6 +42,7 @@ const OperatorDetailScreen = ({ route, navigation }) => {
   const [userTokenState, setUserTokenState] = useState(null);
   const scrollViewRef = useRef(null);
   const reviewsLayoutY = useRef(0);
+  const tabBarScrollProps = useTabBarAutoHide();
 
 
   useEffect(() => {
@@ -730,7 +732,7 @@ const OperatorDetailScreen = ({ route, navigation }) => {
         <Text style={styles.headerTitle} pointerEvents="none">{t('operatorDetail') || 'Operator'}</Text>
       </View>
 
-  <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
+  <ScrollView {...tabBarScrollProps} ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Top */}
         <View style={styles.topCardWrapper}>
           <View style={styles.logoCardNew}>

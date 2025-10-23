@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import ipAddress from '../../config/ipconfig';
@@ -27,6 +28,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 const AffiliateScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [affiliateEnabled, setAffiliateEnabled] = useState(false);
   const [enabling, setEnabling] = useState(false);
@@ -395,6 +397,7 @@ const enableAffiliate = async () => {
 
       {/* Body */}
       <ScrollView
+        {...tabBarScrollProps}
         style={[styles.scrollContainer, styles.scrollViewWithMargin]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

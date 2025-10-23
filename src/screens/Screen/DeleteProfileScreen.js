@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import ipAddress from '../../config/ipconfig';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const DeleteProfileScreen = ({ navigation }) => {
   const { t } = useLanguage();
@@ -50,6 +51,8 @@ const DeleteProfileScreen = ({ navigation }) => {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const handleEmailSupport = () => {
     const email = 'support@thetrago.com';
@@ -255,6 +258,7 @@ const DeleteProfileScreen = ({ navigation }) => {
       </Animated.View>
 
       <ScrollView 
+        {...tabBarScrollProps}
         style={[styles.scrollContainer, styles.scrollViewWithMargin]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

@@ -10,6 +10,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -22,6 +23,7 @@ const TABLE_MIN_WIDTH = 950; // ความกว้างขั้นต่ำ
 const BookingAffiliateScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [summary, setSummary] = useState({
     pending: 0,
@@ -198,6 +200,7 @@ const BookingAffiliateScreen = ({ navigation }) => {
 
       {/* Body */}
       <ScrollView
+        {...tabBarScrollProps}
         style={[styles.scrollContainer, styles.scrollViewWithMargin]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

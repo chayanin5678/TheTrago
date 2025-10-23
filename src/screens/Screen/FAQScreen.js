@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLanguage } from './LanguageContext';
 import axios from 'axios';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const FAQItem = ({ item, expanded, onToggle }) => {
   const { selectedLanguage } = useLanguage();
@@ -52,6 +53,7 @@ const FAQScreen = ({ navigation }) => {
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const tabBarScrollProps = useTabBarAutoHide();
 
   useEffect(() => {
     let mounted = true;
@@ -105,7 +107,7 @@ const FAQScreen = ({ navigation }) => {
         </LinearGradient>
       </View>
 
-      <ScrollView style={[styles.scrollContainer, styles.scrollViewWithMargin]} contentContainerStyle={styles.contentContainer}>
+  <ScrollView {...tabBarScrollProps} style={[styles.scrollContainer, styles.scrollViewWithMargin]} contentContainerStyle={styles.contentContainer}>
         {faqs.map((item, idx) => (
           <FAQItem
             key={item.md_faq_id || idx}
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
   // layout
   container: { flex: 1, backgroundColor: '#fff' },
   scrollContainer: { flex: 1 },
-  contentContainer: { padding: 20, paddingBottom: 60 },
+  contentContainer: { padding: 20, paddingBottom: 120 },
   scrollViewWithMargin: { marginTop: 160, flex: 1 },
 
   // header (copied from AffiliateScreen style)

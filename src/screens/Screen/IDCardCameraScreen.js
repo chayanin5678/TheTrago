@@ -25,12 +25,14 @@ import { useLanguage } from './LanguageContext';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../../config/ipconfig";
 import { styles } from '../../styles/CSS/IDCardCameraScreenStyles';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const IDCardCameraScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
   const { t } = useLanguage();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [photo, setPhoto] = useState(null);
   const [ocrText, setOcrText] = useState('');
@@ -681,7 +683,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         </LinearGradient>
       </Animated.View>
 
-      <ScrollView style={styles.scrollViewPremium} showsVerticalScrollIndicator={false} bounces>
+  <ScrollView {...tabBarScrollProps} style={styles.scrollViewPremium} showsVerticalScrollIndicator={false} bounces>
         <View style={styles.contentContainer}>
 
           {/* Personal Information */}

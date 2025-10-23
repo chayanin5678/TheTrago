@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import ipAddress from '../../config/ipconfig';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const PAGE_SIZE = 10;
 const TABLE_MIN_WIDTH = 820;
@@ -19,6 +20,7 @@ const TABLE_MIN_WIDTH = 820;
 const EarningsScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const tabBarScrollProps = useTabBarAutoHide();
 
   const [summary, setSummary] = useState({
     pendingWithdrawal: 0,
@@ -242,6 +244,7 @@ const EarningsScreen = ({ navigation }) => {
 
       {/* Body */}
       <ScrollView
+        {...tabBarScrollProps}
         style={[styles.scrollContainer, styles.scrollViewWithMargin]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

@@ -21,11 +21,13 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import ipAddress from "../../config/ipconfig";
 import axios from 'axios';
 import { useLanguage } from './LanguageContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ContactScreen({ navigation }) {
   const { t } = useLanguage();
+  const tabBarScrollProps = useTabBarAutoHide();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -330,6 +332,7 @@ export default function ContactScreen({ navigation }) {
       </Animated.View>
 
       <ScrollView 
+        {...tabBarScrollProps}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

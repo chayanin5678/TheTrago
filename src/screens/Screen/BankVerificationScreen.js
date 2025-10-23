@@ -27,12 +27,14 @@ import { Linking } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import ipAddress from "../../config/ipconfig";
 import { styles } from '../../styles/CSS/BankVerificationScreenStyles';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const BankVerificationScreen = ({ navigation }) => {
   const { customerData } = useCustomer();
   const { t } = useLanguage();
+  const tabBarScrollProps = useTabBarAutoHide();
   const insets = useSafeAreaInsets();
   // Prevent header overlap before measurement by using a conservative default
   const DEFAULT_HEADER_HEIGHT = Platform.OS === 'android' ? 160 : 160;
@@ -776,6 +778,7 @@ const BankVerificationScreen = ({ navigation }) => {
       </Animated.View>
 
       <ScrollView
+        {...tabBarScrollProps}
         style={[styles.scrollViewPremium, { marginTop: 0 }]}
         // ensure paddingTop is at least the default to prevent header overlap while measuring
         contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(headerHeight, DEFAULT_HEADER_HEIGHT) }]}
