@@ -26,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import StartingPointScreen from './src/screens/StartingPointScreen';
 import EndPointScreen from './src/screens/EndPointScreen';
 import SearchFerry from './src/screens/SearchFerry';
+import ToursScreen from './src/screens/ToursScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TripDetail from './src/screens/TripDetail';
 import CustomerInfo from './src/screens/Screen/CustomerInfo';
@@ -88,6 +89,7 @@ const AppNavigator = () => (
     <Stack.Screen name="StartingPointScreen" component={StartingPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
+  <Stack.Screen name="ToursScreen" component={ToursScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />

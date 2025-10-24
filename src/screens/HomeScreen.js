@@ -61,7 +61,7 @@ const HomeScreen = ({ navigation, route }) => {
     { id: '3', title: t('trains'), icon: 'train', navigate: '', item: '', available: false },
     { id: '4', title: t('cars'), icon: 'car', navigate: '', item: '', available: false },
     { id: '5', title: t('hotel'), icon: 'bed', navigate: '', item: '', available: false },
-    { id: '6', title: t('tours'), icon: 'map', navigate: '', item: '', available: false },
+  { id: '6', title: t('tours'), icon: 'map', navigate: 'ToursScreen', item: 'new', available: true },
     { id: '7', title: t('attraction'), icon: 'star', navigate: '', item: '', available: false },
     { id: '8', title: t('ticket'), icon: 'ticket', navigate: '', item: '', available: false },
   ];
@@ -116,6 +116,28 @@ const HomeScreen = ({ navigation, route }) => {
   const [toptrending, setToptrending] = useState([]);
   const [attraction, setActtraction] = useState([]);
   const [poppularAttraction, setPoppularAttraction] = useState([]);
+  // Compute "new" attractions for the Home -> Tours section.
+  const newAttractions = React.useMemo(() => {
+    const list = Array.isArray(poppularAttraction) ? [...poppularAttraction] : [];
+
+    // Prefer an explicit flag if provided by API
+    const flagged = list.filter(it => it && (it.md_tour_isnew === 1 || it.md_tour_is_new === 1 || it.is_new === true));
+    if (flagged.length) return flagged;
+
+    // Fallback: use created date within last 30 days when available
+    const withDate = list.filter(it => it && (it.md_tour_createdate || it.created_at || it.md_created_at));
+    if (withDate.length) {
+      const recent = withDate.filter(it => {
+        const dateStr = it.md_tour_createdate || it.created_at || it.md_created_at;
+        const d = new Date(dateStr);
+        return !isNaN(d) && (Date.now() - d.getTime() <= 1000 * 60 * 60 * 24 * 30); // 30 days
+      });
+      if (recent.length) return recent;
+    }
+
+    // Final fallback: sort by id descending (newer ids first)
+    return list.sort((a, b) => (Number(b.md_tour_id || 0) - Number(a.md_tour_id || 0)));
+  }, [poppularAttraction]);
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
   const [loadedIndexes, setLoadedIndexes] = useState([]);
   const [isLoadingTitle, setIsLoadingTitle] = useState(true);
@@ -2385,10 +2407,21 @@ const HomeScreen = ({ navigation, route }) => {
                   colors={['rgba(255,255,255,0.9)', 'rgba(255,250,246,0.85)']}
                   style={premiumStyles.sectionTitleGradient}
                 >
-                  <Text style={premiumStyles.sectionTitle}>
-                    {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
-                  </Text>
-                  <Text style={premiumStyles.sectionSubtitle}>{t('exploreTheBestAttractions')}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View>
+                      <Text style={premiumStyles.sectionTitle}>
+                        {t('attraction')} <Text style={premiumStyles.sectionTitleAccent}>{t('popular')}</Text>
+                      </Text>
+                      <Text style={premiumStyles.sectionSubtitle}>{t('exploreTheBestAttractions')}</Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => navigation.navigate('ToursScreen', { initialFilter: 'new' })}
+                      style={{ padding: 6 }}
+                    >
+                      <Text style={{ color: '#FD501E', fontWeight: '600' }}>{t('viewAll') || 'View all'}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </LinearGradient>
               </BlurView>
             </View>
@@ -2504,7 +2537,7 @@ const HomeScreen = ({ navigation, route }) => {
                   </BlurView>
                 </Animated.View>
               ))
-              : poppularAttraction.slice(0, visibleAttraction).map((item, index) => (
+              : newAttractions.slice(0, visibleAttraction).map((item, index) => (
                 <Animated.View
                   key={item.md_tour_id ? `attraction-${item.md_tour_id}` : `attraction-index-${index}`}
                   style={[premiumStyles.attractionCard, {
