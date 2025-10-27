@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar } from 'react-native-calendars';
 import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
+import { useTabBarAutoHide } from '../utils/useTabBarAutoHide';
 import { useLanguage } from './Screen/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
@@ -26,6 +27,9 @@ const getResponsiveSize = (phone, tablet, largeTablet) => {
 
 const ToursScreen = ({ navigation }) => {
   const [packageText, setPackageText] = useState('');
+  const [tours, setTours] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const searchDebounceRef = useRef(null);
   const [departureDate, setDepartureDate] = useState(null);
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [calendarStartDate, setCalendarStartDate] = useState(() => {
@@ -73,114 +77,294 @@ const ToursScreen = ({ navigation }) => {
     };
   }, []);
 
+  /* dropdown is anchored inside the input container; no external measurement needed */
+
+  // cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
+
+  // close search panel when tapping outside or clearing input
+  useEffect(() => {
+    if (!packageText || packageText.trim().length === 0) {
+      setSearchResults([]);
+    }
+  }, [packageText]);
+
   const insets = useSafeAreaInsets();
   const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 50;
 
-  return (
-     <View style={{ flex: 1 }}>
-        {/* Inner light header with rounded bottom (copy of SearchFerry header) */}
-        <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
-          style={[
-            headStyles.headerBg,
-            {
-              width: '100%',
-              marginLeft: '0%',
-              paddingTop: insets.top + EXTRA_TOP_GUTTER,
-              borderBottomLeftRadius: 56,
-              borderBottomRightRadius: 56,
-              paddingBottom: 8,
-              padding: 10,
-              minHeight: hp('12%'),
-              borderWidth: 1,
-              borderColor: 'rgba(0, 18, 51, 0.08)'
-            }
-          ]}
-        >
-          <View
-            style={[
-              headStyles.headerRow,
-              {
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: getResponsiveSize(0, wp('2%'), wp('5%')),
-                paddingTop: 0,
-                position: 'relative',
-                marginTop: 0,
-                height: getResponsiveSize(56, 50, 45),
-                maxWidth: isTablet ? 1200 : '100%',
-                alignSelf: 'center',
-                width: '100%'
+  // Tab bar auto-hide props (attach to main ScrollView)
+  const tabBarScrollProps = useTabBarAutoHide();
+
+  // compute banner top offset so banner sits slightly lower on the screen; tweak value to move up/down
+  const bannerTop = insets.top + EXTRA_TOP_GUTTER - 60; // moved up a bit
+
+  // Sliding banner setup (wrapper matches content width so banner is enclosed)
+  const [promotions, setPromotions] = useState([]);
+  const [bannerUrls, setBannerUrls] = useState([]);
+  const [bannerImgW, setBannerImgW] = useState(null);
+  const [bannerImgH, setBannerImgH] = useState(null);
+
+  // default local fallbacks (used if network fetch fails)
+  const localBanners = [
+    require('../../assets/banner1.png'),
+    require('../../assets/banner2.png'),
+    require('../../assets/banner3.png')
+  ];
+  const bannerSource = localBanners[0];
+  // banner wrapped in a colored container (make it full screen width)
+  const wrapperWidth = screenWidth; // full device width
+  const wrapperPadding = 8; // show container background around the image
+  const innerWidth = wrapperWidth - wrapperPadding * 2;
+  // determine intrinsic aspect ratio and calculate heights
+  // If we've measured a remote banner, use that; otherwise use local asset intrinsic size
+  let intrinsicW = bannerImgW;
+  let intrinsicH = bannerImgH;
+  if (!intrinsicW || !intrinsicH) {
+    const localSize = Image.resolveAssetSource(bannerSource) || { width: innerWidth, height: hp('30%') };
+    intrinsicW = localSize.width;
+    intrinsicH = localSize.height;
+  }
+  const innerBannerHeight = Math.round((innerWidth * intrinsicH) / intrinsicW);
+  const wrapperHeight = innerBannerHeight + wrapperPadding * 2;
+
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const scrollRef = useRef(null);
+  const [inputWidth, setInputWidth] = useState(null);
+  const inputWrapperRef = useRef(null);
+  const [dropdownPos, setDropdownPos] = useState(null);
+
+  // Fetch promotions from API and prepare banner URLs
+  useEffect(() => {
+    let mounted = true;
+    fetch('https://thetrago.com/AppApi/promotion')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (data && data.status === 'success' && Array.isArray(data.data)) {
+          setPromotions(data.data || []);
+          const urls = (data.data || []).map((item) => `https://www.thetrago.com/Api/uploads/promotion/index/${item.md_promotion_picname}`);
+          setBannerUrls(urls);
+          setBannerIndex(0);
+          // measure first remote image size to compute height
+          if (urls.length > 0) {
+            Image.getSize(urls[0], (w, h) => {
+              if (mounted) {
+                setBannerImgW(w);
+                setBannerImgH(h);
               }
-            ]}
+            }, () => {
+              // ignore errors; we'll fallback to local asset size
+            });
+          }
+        }
+      })
+      .catch(() => {
+        // ignore network errors; keep local banners
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  // Fetch tours list once to enable local search/filtering
+  useEffect(() => {
+    let mounted = true;
+    fetch('https://thetrago.com/AppApi/toursearch')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (data && data.status === 'success' && Array.isArray(data.data)) {
+          setTours(data.data || []);
+        }
+      })
+      .catch(() => {
+        // ignore
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  // results overlay measurement removed — rendering results in-flow below the search card
+
+  useEffect(() => {
+    // auto-advance every 4s by scrolling the ScrollView
+    const id = setInterval(() => {
+      setBannerIndex((prev) => {
+        const sourceArray = bannerUrls && bannerUrls.length > 0 ? bannerUrls : localBanners;
+        const next = (prev + 1) % sourceArray.length;
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ x: next * innerWidth, animated: true });
+        }
+        return next;
+      });
+    }, 4000);
+    return () => clearInterval(id);
+  }, [innerWidth, bannerUrls.length]);
+
+  // no animated sliding - we render one image at a time centered in the container
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {/* Bottom half solid orange */}
+      <View style={{ position: 'absolute', top: screenHeight / 2, left: 0, right: 0, bottom: 0, backgroundColor: '#FF7A3A' }} pointerEvents="none" />
+      {/* Banner inside a colored container (container background follows banner colors) */}
+      <View
+        style={{
+          position: 'absolute',
+          top: bannerTop,
+          left: 0,
+          width: wrapperWidth,
+          height: wrapperHeight,
+          borderRadius: 0,
+          overflow: 'hidden',
+          zIndex: 0,
+        }}
+      >
+  {/* container background: transparent so banner image shows through */}
+  <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }} />
+
+        <View style={{ padding: wrapperPadding, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ width: innerWidth * (bannerUrls.length > 0 ? bannerUrls.length : localBanners.length) }}
+            snapToInterval={innerWidth}
+            decelerationRate="fast"
+            onMomentumScrollEnd={(e) => {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / innerWidth);
+              setBannerIndex(idx);
+            }}
+            onScrollBeginDrag={() => {
+              // user interaction - optionally pause auto-advance by clearing interval; kept simple here
+            }}
           >
-            {/* Back Button - Left (absolute) */}
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={{
-                position: 'absolute',
-                left: getResponsiveSize(16, 20, 30),
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: getResponsiveSize(25, 22, 20),
-                padding: getResponsiveSize(8, 10, 12),
-                zIndex: 2,
-                borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)'
-              }}
-            >
-              <AntDesign name="arrow-left" size={getResponsiveSize(20, 22, 24)} color="#FD501E" />
-            </TouchableOpacity>
-
-            {/* Logo - Center */}
-            <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
-              <LogoTheTrago />
-            </View>
-
-            {/* Currency Button - Right (absolute) */}
-            <TouchableOpacity
-              onPress={() => setCurrencyModalVisible(true)}
-              style={{
-                position: 'absolute',
-                right: getResponsiveSize(16, 20, 30),
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                padding: getResponsiveSize(10, 12, 14),
-                borderRadius: getResponsiveSize(18, 16, 14),
-                flexDirection: 'row',
-                alignItems: 'center',
-                zIndex: 2,
-                borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)',
-                minWidth: getResponsiveSize(70, 80, 90)
-              }}
-            >
-              <Icon
-                name="cash-outline"
-                size={getResponsiveSize(18, 20, 22)}
-                color="#FD501E"
-                style={{ marginRight: getResponsiveSize(8, 10, 12) }}
+            {(bannerUrls.length > 0 ? bannerUrls : localBanners).map((src, i) => (
+              <Image
+                key={i}
+                source={typeof src === 'string' ? { uri: src } : src}
+                style={{ width: innerWidth, height: innerBannerHeight, borderRadius: 12, marginRight: i === (bannerUrls.length > 0 ? bannerUrls.length : localBanners.length) - 1 ? 0 : 0 }}
+                resizeMode="cover"
               />
-              <Text style={{ fontWeight: 'bold', color: '#FD501E', fontSize: getResponsiveSize(14, 16, 18), letterSpacing: 0.5 }}>
-                {selectedCurrency}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-   
+            ))}
+          </ScrollView>
+        </View>
+      </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.card}>
+      {/* Back button over banner */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation && navigation.goBack && navigation.goBack()}
+        style={{
+          position: 'absolute',
+          top: bannerTop + 12,
+          left: 12,
+          zIndex: 6,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: 'rgba(0,0,0,0.06)'
+        }}
+      >
+        <Icon name="arrow-back" size={22} color="#1E293B" />
+      </TouchableOpacity>
+
+      {/* Dots indicator below the wrapped banner */}
+      <View style={{ position: 'absolute', top: bannerTop + wrapperHeight + 8, left: 0, right: 0, alignItems: 'center', zIndex: 3 }} pointerEvents="box-none">
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {(bannerUrls.length > 0 ? bannerUrls : localBanners).map((_, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollTo({ x: i * innerWidth, animated: true });
+                }
+                setBannerIndex(i);
+              }}
+              activeOpacity={0.8}
+              style={{ padding: 4 }}
+            >
+              <View style={{ width: bannerIndex === i ? 12 : 8, height: bannerIndex === i ? 12 : 8, borderRadius: 8, backgroundColor: bannerIndex === i ? '#2563EB' : 'rgba(37,99,235,0.35)', borderWidth: 0 }} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* header removed by user request */}
+
+  <ScrollView {...tabBarScrollProps} contentContainerStyle={styles.container}>
+  <View style={[styles.card, styles.overlayCard]}>
 
           <View style={styles.formRow}>
             <Text style={styles.label}>{t('tourPackage') || 'Tour Package'}</Text>
             <View style={styles.pillInput}>
               <View style={styles.inputIconWrap}><Icon name="search" size={18} color="#FD501E" /></View>
+              <View ref={inputWrapperRef} style={{ position: 'relative', width: '100%' }} onLayout={(e) => setInputWidth(e.nativeEvent.layout.width)}>
               <TextInput
                 placeholder={t('findPlacesPlaceholder') || 'Find places or your next experience'}
                 placeholderTextColor="#64748B"
                 value={packageText}
-                onChangeText={setPackageText}
+                onChangeText={(text) => {
+                  setPackageText(text);
+                  // debounce and filter tours by thai or eng name
+                  if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+                  if (!text || text.trim().length === 0) {
+                    setSearchResults([]);
+                    return;
+                  }
+                  searchDebounceRef.current = setTimeout(() => {
+                    const q = text.trim().toLowerCase();
+                    const results = tours.filter((it) => {
+                      const thai = (it.md_tour_name_thai || '').toString().toLowerCase();
+                      const eng = (it.md_tour_name_eng || '').toString().toLowerCase();
+                      return thai.includes(q) || eng.includes(q);
+                    });
+                    setSearchResults(results.slice(0, 10));
+                  }, 250);
+                }}
                 style={[styles.pillInputText, { color: '#1E293B' }]}
               />
+
+              {/* Dropdown anchored to textinput */}
+              {searchResults.length > 0 && (
+                // render inline dropdown as fallback; we'll render absolute dropdown at root if measured
+                <View style={[styles.dropdownContainer, inputWidth ? { width: inputWidth } : {}]}>
+                  <ScrollView style={{ maxHeight: 260 }} nestedScrollEnabled>
+                    {searchResults.map((item) => (
+                      <TouchableOpacity
+                        key={item.md_tour_id}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          const label = item.md_tour_name_thai || item.md_tour_name_eng || '';
+                          setPackageText(label);
+                          setSearchResults([]);
+                        }}
+                        style={styles.resultRow}
+                      >
+                        <View style={styles.resultLeft}>
+                          <MaterialIcons name="place" size={18} color="#FD501E" />
+                        </View>
+                        <View style={styles.resultBody}>
+                          <Text style={styles.resultTitle} numberOfLines={1} ellipsizeMode="tail">
+                            {item.md_tour_name_thai || item.md_tour_name_eng}
+                            <Text style={styles.resultCountry}> {" — "}{item.md_tour_country || 'ประเทศไทย'}</Text>
+                          </Text>
+                        </View>
+                        {/* Image intentionally removed per request: do not show pictures in results */}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+
+              </View>
             </View>
 
             <Text style={styles.label}>{t('departureDate') || 'Departure'}</Text>
@@ -214,9 +398,9 @@ const ToursScreen = ({ navigation }) => {
           </View>
         </View>
 
-       
+        </ScrollView>
 
-      </ScrollView>
+        {/* results are rendered as dropdown anchored to the text input */}
       {/* Calendar modal copied from SearchFerry (departure date) */}
       <Modal
         visible={showDepartModal}
@@ -494,25 +678,14 @@ const ToursScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 16, paddingBottom: 40, marginTop: 10 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 18,
-    marginTop: 0,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    elevation: 6,
-  },
+  container: { padding: 16, paddingBottom: 40, marginTop: 10, zIndex: 1, backgroundColor: 'transparent' },
+  /* earlier simple card removed; polished `card` appears later in this stylesheet */
   tabsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   tabItem: { flex: 1, alignItems: 'center', paddingVertical: 6 },
   tabText: { color: '#666', fontWeight: '600', marginTop: 4 },
@@ -555,7 +728,7 @@ const styles = StyleSheet.create({
   inputWithIcon: { flex: 1, paddingLeft: 0 },
   inputRowTouchable: { flexDirection: 'row', alignItems: 'center' },
   /* Pill input styles */
-  pillInput: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E6E6E6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 12, backgroundColor: '#fff' },
+  pillInput: { width: '100%', flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E6E6E6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 12, backgroundColor: '#fff', position: 'relative' },
   pillInputTouchable: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E6E6E6', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, marginBottom: 12, backgroundColor: '#fff' },
   pillInputText: { flex: 1, fontSize: 16, color: '#222' },
 
@@ -653,10 +826,57 @@ const styles = StyleSheet.create({
 
   bannerWrap: { borderRadius: 12, overflow: 'hidden', marginBottom: 18 },
   banner: { width: '100%', height: 140, backgroundColor: '#eee' },
+  /* header removed; position content lower so card overlaps banner appropriately */
+  overlayCard: { marginTop: hp('26%') },
 
   heading: { fontSize: 26, fontWeight: '800', marginBottom: 8 },
   headingAccent: { color: '#ff7a3a' },
   description: { color: '#666', fontSize: 15, lineHeight: 22 }
+  ,
+  /* Search results card styles */
+  searchResultsCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)'
+  },
+  resultsHeader: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginBottom: 6, paddingLeft: 4 },
+  resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  resultLeft: { width: 36, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  resultBody: { flex: 1 },
+  resultTitle: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+  resultSubtitle: { fontSize: 13, color: '#64748b', marginTop: 2 },
+  resultCountry: { fontSize: 13, color: '#64748b', fontWeight: '600' },
+  resultThumb: { width: 84, height: 56, borderRadius: 8, marginLeft: 8, backgroundColor: '#f3f4f6' },
+  resultThumbPlaceholder: { width: 84, height: 56, borderRadius: 8, marginLeft: 8, backgroundColor: '#f3f4f6' }
+  ,
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: 8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 6,
+    zIndex: 50,
+    paddingVertical: 4,
+  }
 });
 
 export default ToursScreen;
