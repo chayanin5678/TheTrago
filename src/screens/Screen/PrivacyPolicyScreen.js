@@ -8,8 +8,8 @@ import {
   Animated,
   Dimensions,
   StatusBar,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';

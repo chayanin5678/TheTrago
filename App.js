@@ -29,6 +29,8 @@ import SearchFerry from './src/screens/SearchFerry';
 import ToursScreen from './src/screens/ToursScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TripDetail from './src/screens/TripDetail';
+import TourDetailScreen from './src/screens/TourDetailScreen';
+import SearchResultsScreen from './src/screens/SearchResultsScreen';
 import CustomerInfo from './src/screens/Screen/CustomerInfo';
 import PaymentScreen from './src/screens/Screen/PaymentScreen';
 import ResultScreen from './src/screens/Screen/ResultScreen';
@@ -90,7 +92,9 @@ const AppNavigator = () => (
     <Stack.Screen name="EndPointScreen" component={EndPointScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchFerry" component={SearchFerry} options={{ headerShown: false }} />
   <Stack.Screen name="ToursScreen" component={ToursScreen} options={{ headerShown: false }} />
+  <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
+      <Stack.Screen name="TourDetailNew" component={TourDetailScreen} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />

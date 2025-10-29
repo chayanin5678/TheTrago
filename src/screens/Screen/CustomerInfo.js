@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions, Linking, findNodeHandle, UIManager, InteractionManager } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, TextInput, ImageBackground, Alert, KeyboardAvoidingView, Platform, Animated, Easing, Dimensions, Linking, findNodeHandle, UIManager, InteractionManager } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoTheTrago from '../../components/component/Logo';

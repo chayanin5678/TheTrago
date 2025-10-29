@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, Platform, SafeAreaView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import ipAddress from '../config/ipconfig';

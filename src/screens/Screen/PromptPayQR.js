@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, SafeAreaView, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert, Platform } from "react-native";
+import { View, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert, Platform } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
