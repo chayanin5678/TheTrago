@@ -178,6 +178,22 @@ export const CustomerProvider = ({ children }) => {
   ],
     country_insurance: '', 
     symbol: '฿', //สัญลักษณ์เงิน
+    //-----------------------------------tours-------------------------------------------
+    md_tours_id: '',
+    md_tours_name: '',
+    md_tours_adult: 0,
+    md_tours_child: 0,
+    md_tours_infant: 0,
+    md_tours_departdate: '',
+    md_tours_type: '',
+    //-----------------------------------tours contact-------------------------------------------
+    md_tours_title: '',
+    md_tours_firstname: '',
+    md_tours_lastname: '',
+    md_tours_countrycode: '',
+    md_tours_country: '',
+    md_tours_tel: '',
+    md_tours_email: '',
 
   });
 

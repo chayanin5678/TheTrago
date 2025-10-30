@@ -34,6 +34,7 @@ import SearchResultsScreen from './src/screens/SearchResultsScreen';
 import CustomerInfo from './src/screens/Screen/CustomerInfo';
 import PaymentScreen from './src/screens/Screen/PaymentScreen';
 import ResultScreen from './src/screens/Screen/ResultScreen';
+import TourContactScreen from './src/screens/Screen/TourContactScreen';
 import { CustomerProvider } from './src/screens/Screen/CustomerContext';
 import LinkingConfiguration from './src/screens/Screen/linking';
 import PromptPayScreen from './src/screens/Screen/PromptPayQR';
@@ -95,6 +96,7 @@ const AppNavigator = () => (
   <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
       <Stack.Screen name="TourDetailNew" component={TourDetailScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="TourContact" component={TourContactScreen} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />

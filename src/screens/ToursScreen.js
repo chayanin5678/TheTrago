@@ -19,6 +19,7 @@ import { Calendar } from 'react-native-calendars';
 import moment from 'moment';
 import { useTabBarAutoHide } from '../utils/useTabBarAutoHide';
 import { useLanguage } from './Screen/LanguageContext';
+import { useCustomer } from './Screen/CustomerContext';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -38,7 +39,11 @@ const ToursScreen = ({ navigation }) => {
   const inputAreaRef = useRef(null); // จะชี้ไปที่กล่อง search (pillInput)
   const [dropdownFrame, setDropdownFrame] = useState(null); // {x,y,width,height}
 
-  const [departureDate, setDepartureDate] = useState(null);
+  const [departureDate, setDepartureDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  });
   const [showDepartModal, setShowDepartModal] = useState(false);
   const [calendarStartDate, setCalendarStartDate] = useState(() => {
     const tomorrow = new Date();
@@ -59,6 +64,7 @@ const ToursScreen = ({ navigation }) => {
   const abortControllerRef = useRef(null);
 
   const { t, selectedLanguage } = useLanguage();
+  const { updateCustomerData } = useCustomer();
 
   // ---------------- Banner / promo layout ----------------
   const insets = useSafeAreaInsets();
@@ -590,6 +596,25 @@ const ToursScreen = ({ navigation }) => {
               activeOpacity={0.9}
               style={styles.searchButtonWrapper}
               onPress={() => {
+                // Update customer context with current tour/search selections before navigating
+                try {
+                  updateCustomerData({
+                    md_tours_name: packageText || '',
+                    md_tours_departdate: departureDate
+                      ? moment(departureDate).toISOString()
+                      : calendarStartDate
+                      ? moment(calendarStartDate).toISOString()
+                      : '',
+                    md_tours_adult: adults,
+                    md_tours_child: children,
+                    md_tours_infant: infant,
+                    // md_booking_currency: selectedCurrency,
+                    // symbol: selectedSysmbol,
+                  });
+                } catch (e) {
+                  // safe-guard: if context isn't available, ignore and continue
+                }
+
                 navigation && navigation.navigate
                   ? navigation.navigate('SearchResults', {
                       q: packageText,

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { useLanguage } from './Screen/LanguageContext';
+import { useCustomer } from './Screen/CustomerContext';
 import styles from '../styles/CSS/TripDetailStyles';
 import { AntDesign } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -24,6 +25,7 @@ const pickerWidth = screenWidth - 32; // equals action-sheet width (screen - 32)
 
 const TourDetailScreen = ({ route, navigation }) => {
   const { t, selectedLanguage } = useLanguage();
+  const { customerData } = useCustomer();
   const params = route?.params || {};
   const tourId =
     params.tourId ||
@@ -44,8 +46,26 @@ const TourDetailScreen = ({ route, navigation }) => {
   const fullListRef = useRef(null);
 
   // booking UI state (for the reserve box)
-  const [bookingPassengers, setBookingPassengers] = useState({ adult: 1, child: 0, infant: 0 });
-  const [bookingDate, setBookingDate] = useState(new Date());
+  const [bookingPassengers, setBookingPassengers] = useState(() => {
+    const a = (customerData && (customerData.md_tours_adult ?? customerData.adult)) ?? 1;
+    const c = (customerData && (customerData.md_tours_child ?? customerData.child)) ?? 0;
+    const i = (customerData && (customerData.md_tours_infant ?? customerData.infant)) ?? 0;
+    return { adult: Number(a) || 1, child: Number(c) || 0, infant: Number(i) || 0 };
+  });
+
+  const [bookingDate, setBookingDate] = useState(() => {
+    const dstr =
+      (customerData && (customerData.md_tours_departdate || customerData.md_booking_departdate || customerData.departdate || customerData.departDate)) ||
+      null;
+    if (dstr) {
+      const d = new Date(dstr);
+      if (!isNaN(d.getTime())) return d;
+    }
+    // default to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  });
   const [bookingOption, setBookingOption] = useState('normal'); // 'normal' or 'special'
   const [showDateModal, setShowDateModal] = useState(false);
 
@@ -76,6 +96,24 @@ const TourDetailScreen = ({ route, navigation }) => {
       delete repeatRef.current[key];
     }
   };
+
+  // sync booking state when customerData changes (e.g., navigated from search/tours)
+  useEffect(() => {
+    if (!customerData) return;
+
+    const a = (customerData.md_tours_adult ?? customerData.adult);
+    const c = (customerData.md_tours_child ?? customerData.child);
+    const i = (customerData.md_tours_infant ?? customerData.infant);
+    if (a !== undefined || c !== undefined || i !== undefined) {
+      setBookingPassengers({ adult: Number(a) || 1, child: Number(c) || 0, infant: Number(i) || 0 });
+    }
+
+    const dstr = customerData.md_tours_departdate || customerData.md_booking_departdate || customerData.departdate || customerData.departDate;
+    if (dstr) {
+      const d = new Date(dstr);
+      if (!isNaN(d.getTime())) setBookingDate(d);
+    }
+  }, [customerData]);
 
   const formatBookingDate = (d) => {
     try {
@@ -224,6 +262,7 @@ const TourDetailScreen = ({ route, navigation }) => {
         const body = {
           tourid: tourId,
           lang: selectedLanguage || params.lang || 'th',
+          currency: (customerData && (customerData.currency || customerData.md_booking_currency)) || params.currency || 'THB',
         };
         const res = await axios.post(
           'https://thetrago.com/api_tour/V1/tour/GetDetail',
@@ -497,6 +536,11 @@ const TourDetailScreen = ({ route, navigation }) => {
   }
 
   // ----------------------- RENDER DETAIL -----------------------
+  // derive currency symbol: prefer customer context, then tour/params, finally fallback to THB symbol
+  const currencySymbol =
+    (customerData && (customerData.symbol || customerData.md_currency_symbol)) ||
+    (tour && (tour.currency === 'THB' || tour.currency === 'THB') ? '฿' : '') ||
+    (params && (params.currency === 'THB' ? '฿' : ''));
   const renderDetail = () => {
     if (!detailText) return null;
 
@@ -1594,11 +1638,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 fontSize: 18,
               }}
             >
-              {`${
-                tour.currency === 'THB' || params.currency === 'THB'
-                  ? '฿'
-                  : ''
-              }${adultPriceFormatted}`}
+              {`${currencySymbol || ''}${adultPriceFormatted}`}
             </Text>
           ) : null}
 
@@ -1779,83 +1819,89 @@ const TourDetailScreen = ({ route, navigation }) => {
 
           {/* passenger controls (improved) */}
           <View style={{ marginBottom: 12 }}>
-            {['adult', 'child', 'infant'].map((k) => (
-              <View
-                key={k}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 10,
-                }}
-              >
-                <Text style={{ color: '#374151', flex: 1, textTransform: 'capitalize', fontSize: 15 }}>
-                  {k === 'adult' ? 'ผู้ใหญ่' : k === 'child' ? 'เด็ก' : 'ทารก'}
-                </Text>
+            {['adult', 'child', 'infant'].map((k) => {
+              const value = bookingPassengers[k] || 0;
+              const isMinusDisabled = value <= (k === 'adult' ? 1 : 0);
+              const isPlusDisabled = value >= MAX_PASSENGERS;
 
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: 24,
-                      paddingVertical: 4,
-                      paddingHorizontal: 6,
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={() => changePassenger(k, -1)}
-                      onLongPress={() => startRepeat(k, -1)}
-                      onPressOut={() => stopRepeat(k)}
-                      delayLongPress={300}
+              return (
+                <View
+                  key={k}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ color: '#374151', flex: 1, textTransform: 'capitalize', fontSize: 15 }}>
+                    {k === 'adult' ? 'ผู้ใหญ่' : k === 'child' ? 'เด็ก' : 'ทารก'}
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
+                        flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#fff',
-                        marginHorizontal: 6,
-                        elevation: 0,
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 24,
+                        paddingVertical: 4,
+                        paddingHorizontal: 6,
                       }}
                     >
-                      <AntDesign
-                        name="minus"
-                        size={18}
-                        color={bookingPassengers[k] <= (k === 'adult' ? 1 : 0) ? '#d1d5db' : '#374151'}
-                      />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => changePassenger(k, -1)}
+                        onLongPress={() => startRepeat(k, -1)}
+                        onPressOut={() => stopRepeat(k)}
+                        delayLongPress={300}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isMinusDisabled ? '#FFFFFF' : '#FD501E',
+                          marginHorizontal: 6,
+                          elevation: 0,
+                        }}
+                      >
+                        <AntDesign
+                          name="minus"
+                          size={18}
+                          color={isMinusDisabled ? '#d1d5db' : '#FFFFFF'}
+                        />
+                      </TouchableOpacity>
 
-                    <View style={{ minWidth: 44, alignItems: 'center' }}>
-                      <Text style={{ fontWeight: '800', fontSize: 16 }}>{bookingPassengers[k]}</Text>
+                      <View style={{ minWidth: 44, alignItems: 'center' }}>
+                        <Text style={{ fontWeight: '800', fontSize: 16 }}>{value}</Text>
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={() => changePassenger(k, 1)}
+                        onLongPress={() => startRepeat(k, 1)}
+                        onPressOut={() => stopRepeat(k)}
+                        delayLongPress={300}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isPlusDisabled ? '#FFFFFF' : '#FD501E',
+                          marginHorizontal: 6,
+                        }}
+                      >
+                        <AntDesign
+                          name="plus"
+                          size={18}
+                          color={isPlusDisabled ? '#d1d5db' : '#FFFFFF'}
+                        />
+                      </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                      onPress={() => changePassenger(k, 1)}
-                      onLongPress={() => startRepeat(k, 1)}
-                      onPressOut={() => stopRepeat(k)}
-                      delayLongPress={300}
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#fff',
-                        marginHorizontal: 6,
-                      }}
-                    >
-                      <AntDesign
-                        name="plus"
-                        size={18}
-                        color={bookingPassengers[k] >= MAX_PASSENGERS ? '#d1d5db' : '#374151'}
-                      />
-                    </TouchableOpacity>
                   </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           <View style={{ marginBottom: 12 }}>
@@ -1899,7 +1945,7 @@ const TourDetailScreen = ({ route, navigation }) => {
 
           <TouchableOpacity
             style={{ backgroundColor: '#FF7A3A', paddingVertical: 14, borderRadius: 12 }}
-            onPress={() => navigation.navigate('CustomerInfo', { tour, tourId, price: adultPriceFormatted, passengers: bookingPassengers, date: bookingDate, option: bookingOption })}
+            onPress={() => navigation.navigate('TourContact', { tour, tourId, price: adultPriceFormatted, passengers: bookingPassengers, date: bookingDate ? bookingDate.toISOString() : null, option: bookingOption })}
           >
             <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '800', fontSize: 16 }}>จองเลย</Text>
           </TouchableOpacity>
