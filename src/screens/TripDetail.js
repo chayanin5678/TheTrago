@@ -2758,8 +2758,8 @@ const TripDetail = ({ navigation, route }) => {
                 {Array.isArray(priceDepart) && priceDepart.map((item, index) => (
                   <View key={index} style={{width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15}}>
                     <View style={[styles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}> 
-                      <View style={[styles.premiumHeader, styles.premiumHeaderSimple]}>
-                        <Text style={styles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+                        <View style={[styles.premiumHeader, styles.premiumHeaderSimple]}>
+                        <Text style={styles.premiumTitle}>{t('bookingSummary')}</Text>
                       </View>
 
                       <View style={styles.premiumContent}>

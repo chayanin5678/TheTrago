@@ -1705,7 +1705,7 @@ const CustomerInfo = ({ navigation }) => {
                       }
                     }}
                   >
-                    <Text style={styles.TextInput}>{t('contactDetails') || 'Contact Details'}</Text>
+                    <Text style={styles.TextInput}>{t('contactDetails')}</Text>
                   </View>
                   <Text style={styles.textHead}>{t('phoneNumber') || 'Phone number'}</Text>
                   <TouchableOpacity
@@ -2320,7 +2320,7 @@ const CustomerInfo = ({ navigation }) => {
                     <View style={{ width: '100%', paddingHorizontal: 1, alignSelf: 'center', marginTop: 15 }}>
                       <View style={[tripStyles.premiumWrapper, { width: wp('90%'), alignSelf: 'center' }]}>
                         <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
-                          <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+                          <Text style={tripStyles.premiumTitle}>{t('bookingSummary')}</Text>
                         </View>
 
                         <View style={tripStyles.premiumContent}>

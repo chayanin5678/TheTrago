@@ -1290,7 +1290,7 @@ const PaymentScreen = ({ navigation, route }) => {
                   <View key={index}>
                     <View style={tripStyles.premiumWrapper}>
                       <View style={[tripStyles.premiumHeader, tripStyles.premiumHeaderSimple]}>
-                        <Text style={tripStyles.premiumTitle}>{t('bookingSummary') || 'Booking Summary'}</Text>
+                        <Text style={tripStyles.premiumTitle}>{t('bookingSummary')}</Text>
                       </View>
                       <View style={tripStyles.premiumContent}>
                         {timetableDepart.map((item, index) => (
