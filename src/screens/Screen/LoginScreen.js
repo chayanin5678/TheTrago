@@ -13,6 +13,7 @@ import axios from 'axios';
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
 // Apple Authentication - using expo-apple-authentication
 import * as AppleAuthentication from 'expo-apple-authentication';
 // Social login imports - using expo-auth-session for better compatibility
@@ -74,6 +75,8 @@ export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+  // enable tab bar auto-hide when scrolling on this screen
+  const scrollProps = useTabBarAutoHide();
   const [email, setEmail] = useState(customerData.email || '');
   const [password, setPassword] = useState(customerData.password || '');
   const [showPassword, setShowPassword] = useState(false);
@@ -600,7 +603,7 @@ export default function LoginScreen({ navigation }) {
           </BlurView>
         )}
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView {...scrollProps} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Hero Section */}
           <Animated.View
             style={[

@@ -281,6 +281,9 @@ const TourDetailScreen = ({ route, navigation }) => {
         }
 
         setTour(item || data);
+        
+        // Debug: Log tour data to see available fields
+        console.log('Tour data:', item || data);
 
         const detailField =
           item?.detail ||
@@ -1945,7 +1948,15 @@ const TourDetailScreen = ({ route, navigation }) => {
 
           <TouchableOpacity
             style={{ backgroundColor: '#FF7A3A', paddingVertical: 14, borderRadius: 12 }}
-            onPress={() => navigation.navigate('TourContact', { tour, tourId, price: adultPriceFormatted, passengers: bookingPassengers, date: bookingDate ? bookingDate.toISOString() : null, option: bookingOption })}
+            onPress={() => navigation.navigate('TourContact', { 
+              tour, 
+              tourId, 
+              tourtype: tour?.tourtypeID || tour?.tourtype || tour?.TourType || tour?.type || '',
+              price: adultPriceFormatted, 
+              passengers: bookingPassengers, 
+              date: bookingDate ? bookingDate.toISOString() : null, 
+              option: bookingOption 
+            })}
           >
             <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '800', fontSize: 16 }}>จองเลย</Text>
           </TouchableOpacity>

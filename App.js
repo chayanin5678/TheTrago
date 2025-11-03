@@ -33,6 +33,7 @@ import TourDetailScreen from './src/screens/TourDetailScreen';
 import SearchResultsScreen from './src/screens/SearchResultsScreen';
 import CustomerInfo from './src/screens/Screen/CustomerInfo';
 import PaymentScreen from './src/screens/Screen/PaymentScreen';
+import PaymentTourScreen from './src/screens/Screen/PaymentTourScreen';
 import ResultScreen from './src/screens/Screen/ResultScreen';
 import TourContactScreen from './src/screens/Screen/TourContactScreen';
 import { CustomerProvider } from './src/screens/Screen/CustomerContext';
@@ -99,6 +100,7 @@ const AppNavigator = () => (
     <Stack.Screen name="TourContact" component={TourContactScreen} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+  <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
@@ -124,6 +126,7 @@ const BookingNavigator = () => (
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+  <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />

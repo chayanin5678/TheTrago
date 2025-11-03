@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+// removed gradient for simple CTA
 import moment from 'moment';
 import { AntDesign } from '@expo/vector-icons';
 
@@ -52,6 +52,15 @@ const TourContactScreen = ({ navigation, route }) => {
   const tourPriceParam = params.price || '';
   const passengersParam = params.passengers || {};
   const bookingDateParam = params.date || null;
+  const tourTypeParam = params.tourtype || params.tourType || tourParam?.tourtypeID || tourParam?.tourtype || tourParam?.TourType || tourParam?.type || '';
+
+  // Debug: Log params to see what's being passed
+  console.log('TourContactScreen params:', {
+    tourParam,
+    tourTypeParam,
+    bookingDateParam,
+    fullParams: params
+  });
 
   /** Prefill */
   const [selectedTitle, setSelectedTitle] = useState(customerData.selectedTitle || 'Please Select');
@@ -97,9 +106,15 @@ const TourContactScreen = ({ navigation, route }) => {
   /** Validate */
   const [attempted, setAttempted] = useState(false);
   const errors = {
+    title: attempted && (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please),
     firstname: attempted && (!Firstname || !Firstname.trim()),
+    lastname: attempted && (!Lastname || !Lastname.trim()),
+    country: attempted && (!selectedCountry || selectedCountry === 'Please Select' || selectedCountry === please),
+    telCode: attempted && (!selectedTele || selectedTele === 'Please Select' || selectedTele === please),
     tel: attempted && (!tel || !tel.trim()),
     email: attempted && (!email || !email.trim()),
+    tour: attempted && (!tourParam || (!tourParam.name && !tourParam.NameThai && !tourParam.Title)),
+    date: attempted && !bookingDateParam,
   };
 
   const parseNumber = (v) => {
@@ -238,9 +253,42 @@ const TourContactScreen = ({ navigation, route }) => {
 
   /** Save */
   const handleSave = () => {
+    // show inline validation immediately (don't rely on the render-time `errors` object
+    // because setAttempted is async). Compute validation synchronously here.
     setAttempted(true);
-    if (errors.firstname || errors.tel || errors.email) {
-      Alert.alert(t('warning') || 'Warning', t('pleaseFillRequiredFields') || 'Please fill required fields (name, phone, email)');
+
+    // ตรวจสอบแต่ละช่องว่ากรอกครบหรือไม่
+    const missingTitle = !selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please;
+    const missingFirstname = !Firstname || !Firstname.trim();
+    const missingLastname = !Lastname || !Lastname.trim();
+    const missingCountry = !selectedCountry || selectedCountry === 'Please Select' || selectedCountry === please;
+    const missingTelCode = !selectedTele || selectedTele === 'Please Select' || selectedTele === please;
+    const missingTel = !tel || !tel.trim();
+    const missingEmail = !email || !email.trim();
+    const missingTour = !tourParam || (!tourParam.name && !tourParam.NameThai && !tourParam.Title);
+    const missingDate = !bookingDateParam;
+
+    // สร้างรายการช่องที่ยังไม่กรอก
+    const missingFields = [];
+    if (missingTitle) missingFields.push(t('title') || 'คำนำหน้า');
+    if (missingFirstname) missingFields.push(t('firstName') || 'ชื่อ');
+    if (missingLastname) missingFields.push(t('lastName') || 'นามสกุล');
+    if (missingCountry) missingFields.push(t('country') || 'ประเทศ');
+    if (missingTelCode) missingFields.push(t('countryCode') || 'รหัสประเทศ');
+    if (missingTel) missingFields.push(t('tel') || 'เบอร์โทรศัพท์');
+    if (missingEmail) missingFields.push(t('email') || 'อีเมล');
+    if (missingTour) missingFields.push(t('tourInformation') || 'ข้อมูลทัวร์');
+    if (missingDate) missingFields.push(t('departureDate') || 'วันที่เดินทาง');
+
+    if (missingFields.length > 0) {
+      const fieldsList = missingFields.join('\n• ');
+      const message = `${t('pleaseFillTheseFields') || 'กรุณากรอกข้อมูลในช่องต่อไปนี้'}:\n\n• ${fieldsList}`;
+      
+      Alert.alert(
+        t('warning') || 'แจ้งเตือน',
+        message,
+        [{ text: t('ok') || 'ตกลง' }]
+      );
       return;
     }
 
@@ -260,8 +308,23 @@ const TourContactScreen = ({ navigation, route }) => {
       });
     } catch {}
 
-    Alert.alert('', t('saved') || 'Saved');
-    navigation?.goBack?.();
+    const totalAmount = summary && (summary.subtotal && (summary.subtotal.total || summary.subtotal))
+      ? summary.subtotal.total || summary.subtotal
+      : computeTotal();
+
+    // Directly navigate to tour payment screen after saving (no alert)
+    navigation.navigate('PaymentTour', {
+      tour: tourParam,
+      date: bookingDateParam || params.date || null,
+      adults: Number(passengersParam.adult || 1),
+      children: Number(passengersParam.child || 0),
+      infants: Number(passengersParam.infant || 0),
+      currencySymbol: customerData.symbol || currency || '฿',
+      total: totalAmount,
+      // ส่งข้อมูล unit_price และ subtotal จาก API
+      unitPrice: summary?.unit_price || {},
+      subtotal: summary?.subtotal || {},
+    });
   };
 
   /** UI */
@@ -277,7 +340,11 @@ const TourContactScreen = ({ navigation, route }) => {
         {/* --------- TRAVELER --------- */}
   <SectionCard title={t('travelerDetail')}>
           <Field label={t('title') || 'Title'}>
-            <Select onPress={() => setTitleModalVisible(true)} text={selectedTitle === 'Please Select' ? please : selectedTitle} />
+            <Select 
+              onPress={() => setTitleModalVisible(true)} 
+              text={selectedTitle === 'Please Select' ? please : selectedTitle}
+              error={!!errors.title}
+            />
           </Field>
 
           {/* Title Modal */}
@@ -304,12 +371,17 @@ const TourContactScreen = ({ navigation, route }) => {
               value={Lastname}
               onChangeText={setLastname}
               placeholder={t('lastName') || 'Last Name'}
+              error={!!errors.lastname}
               style={{ flex: 1 }}
             />
           </Row>
 
           <Field label={t('country') || 'Country'}>
-            <Select onPress={() => setCountryModalVisible(true)} text={selectedCountry || please} />
+            <Select 
+              onPress={() => setCountryModalVisible(true)} 
+              text={selectedCountry || please}
+              error={!!errors.country}
+            />
           </Field>
 
           {/* Country Modal */}
@@ -339,6 +411,7 @@ const TourContactScreen = ({ navigation, route }) => {
                 style={{ flex: 0.46, marginRight: 8 }}
                 onPress={() => setPhoneModalVisible(true)}
                 text={selectedTele || please}
+                error={!!errors.telCode}
               />
               <TextField
                 value={tel}
@@ -388,10 +461,31 @@ const TourContactScreen = ({ navigation, route }) => {
         </SectionCard>
 
         {/* --------- SUMMARY --------- */}
-  <SectionCard title={t('bookingSummary')}>
-          <Text style={ui.routeTitle} numberOfLines={2}>
-            {tourParam?.name || tourParam?.NameThai || tourParam?.Title || ''}
-          </Text>
+        <SectionCard title={t('bookingSummary')}>
+          {/* Tour Name */}
+          <View style={ui.summaryTourHeader}>
+            <Text style={ui.summaryTourName} numberOfLines={2}>
+              {tourParam?.name || tourParam?.NameThai || tourParam?.Title || ''}
+            </Text>
+          </View>
+
+          {/* Tour Type Row */}
+          {tourTypeParam && (
+            <View style={ui.summaryItemRow}>
+              <Text style={ui.summaryItemLabel}>{t('tourType') || 'Tourtype'}</Text>
+              <Text style={ui.summaryItemValue}>{tourTypeParam}</Text>
+            </View>
+          )}
+
+          {/* Departure Date Row */}
+          {bookingDateParam && (
+            <View style={ui.summaryItemRow}>
+              <Text style={ui.summaryItemLabel}>{t('departureDate') || 'Departure Date'}</Text>
+              <Text style={ui.summaryItemValue}>{moment(bookingDateParam).format('DD MMM YYYY')}</Text>
+            </View>
+          )}
+
+          <Divider style={{ marginVertical: 12 }} />
 
           {summaryLoading ? (
             <View style={{ paddingVertical: 8 }}>
@@ -401,74 +495,58 @@ const TourContactScreen = ({ navigation, route }) => {
             </View>
           ) : summary ? (
             <>
-              <Row style={{ marginTop: 4 }}>
-                <Text style={ui.meta}>{summary.tourtypeID || summary.tourtype || ''}</Text>
-                <Text style={ui.meta}>
-                  {summary.date
-                    ? moment(summary.date).format('DD MMM YYYY')
-                    : bookingDateParam
-                    ? moment(bookingDateParam).format('DD MMM YYYY')
-                    : ''}
-                </Text>
-              </Row>
-
-              <Divider />
 
               {/* Pax + unit price */}
-              {summary.unit_price &&
+              {summary.subtotal &&
                 summary.pax &&
                 (() => {
                   const seen = new Set();
                   return Object.keys(summary.pax || {}).map((key) => {
                     const labelKey =
-                      key === 'adult' ? (t('adult') || 'Adult') : key === 'child' ? (t('child') || 'Child') : (t('infant') || 'Infant');
+                      key === 'adult' ? (t('adult') || 'ผู้ใหญ่') : key === 'child' ? (t('child') || 'เด็ก') : (t('infant') || 'ทารก');
                     if (seen.has(labelKey)) return null;
                     seen.add(labelKey);
 
                     const count = Number(summary.pax[key] || 0);
                     if (count <= 0) return null;
 
-                    const unit = summary.unit_price[key] || 0;
+                    const unit = summary.subtotal[key] || 0;
                     return (
-                      <Row key={key} style={{ paddingVertical: 6 }}>
-                        <Text style={ui.itemLabel}>{`${labelKey} x${count}`}</Text>
-                        <Text style={ui.itemValue}>{`${currency} ${money(unit, locale)}`}</Text>
-                      </Row>
+                      <View key={key} style={ui.summaryItemRow}>
+                        <Text style={ui.summaryItemLabel}>{`${labelKey} x${count}`}</Text>
+                        <Text style={ui.summaryItemValue}>{`THB ${money(unit, locale)}`}</Text>
+                      </View>
                     );
                   });
                 })()}
 
-              <Divider />
+              <Divider style={{ marginVertical: 12 }} />
 
-              <Row style={{ paddingTop: 8 }}>
-                <Text style={ui.subtotal}>{t('subtotal') || 'Subtotal'}</Text>
-                <Text style={ui.subtotalValue}>
-                  {`${currency} ${money((summary.subtotal && (summary.subtotal.total || summary.subtotal)) || 0, locale)}`}
+       
+              {/* Total Price */}
+              <View style={ui.summaryTotalRow}>
+                <Text style={ui.summaryTotal}>{t('totalPrice') || 'ยอดรวม'}</Text>
+                <Text style={ui.summaryTotalValue}>
+                  {`THB ${money((summary.subtotal && (summary.subtotal.total || summary.subtotal)) || 0, locale)}`}
                 </Text>
-              </Row>
-
-              <Row style={{ paddingTop: 6 }}>
-                <Text style={ui.total}>{t('totalPrice') || 'Total Price'}</Text>
-                <Text style={ui.totalValue}>
-                  {`${currency} ${money((summary.subtotal && (summary.subtotal.total || summary.subtotal)) || 0, locale)}`}
-                </Text>
-              </Row>
+              </View>
             </>
           ) : (
-            <Row style={{ paddingTop: 6 }}>
-              <Text style={ui.total}>{t('totalPrice') || 'Total Price'}</Text>
-              <Text style={ui.totalValue}>
-                {`${currency} ${money(computeTotal(), locale)}`}
-              </Text>
-            </Row>
+            <>
+              {/* Total Price */}
+              <View style={ui.summaryTotalRow}>
+                <Text style={ui.summaryTotal}>{t('totalPrice') || 'ยอดรวม'}</Text>
+                <Text style={ui.summaryTotalValue}>
+                  {`${currency} ${money(computeTotal(), locale)}`}
+                </Text>
+              </View>
+            </>
           )}
         </SectionCard>
 
         {/* Save CTA */}
-        <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={{ marginTop: 12 }}>
-          <LinearGradient colors={[palette.primary, palette.primary2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ui.cta}>
-            <Text style={ui.ctaText}>{t('save') || 'Save'}</Text>
-          </LinearGradient>
+        <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={[ui.cta, { marginTop: 12, backgroundColor: palette.primary }]}>
+          <Text style={ui.ctaText}>{t('next') || 'Next'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -500,8 +578,16 @@ const Row = ({ children, style }) => <View style={[ui.row, style]}>{children}</V
 
 const Divider = () => <View style={ui.divider} />;
 
-const Select = ({ text, onPress, style }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[ui.select, style]}>
+const Select = ({ text, onPress, style, error }) => (
+  <TouchableOpacity 
+    onPress={onPress} 
+    activeOpacity={0.85} 
+    style={[
+      ui.select, 
+      error && { borderColor: palette.danger, backgroundColor: '#FFF5F5' },
+      style
+    ]}
+  >
     <Text style={ui.selectText} numberOfLines={1} ellipsizeMode="tail">
       {text}
     </Text>
@@ -530,7 +616,9 @@ const PickerModal = ({
   searchPlaceholder = 'Search…',
   renderLabel,
   keyExtractor,
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
     <View style={ui.modalOverlay}>
       <View style={ui.modalCard}>
@@ -555,13 +643,18 @@ const PickerModal = ({
           ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: palette.line }} />}
           style={{ maxHeight: '80%' }}
         />
-        <TouchableOpacity onPress={onClose} style={{ marginTop: 10 }}>
-          <Text style={{ textAlign: 'center', color: palette.textDim }}>{'Close'}</Text>
+        <TouchableOpacity 
+          onPress={onClose} 
+          activeOpacity={0.8}
+          style={ui.modalCloseButton}
+        >
+          <Text style={ui.modalCloseText}>{t('close') || 'Close'}</Text>
         </TouchableOpacity>
       </View>
     </View>
   </Modal>
-);
+  );
+};
 
 const SkeletonRow = ({ wide = false }) => (
   <View
@@ -690,6 +783,90 @@ const ui = StyleSheet.create({
     fontWeight: '900',
     fontSize: 18,
   },
+  // ===== NEW SUMMARY STYLES =====
+  summaryTourHeader: {
+    marginBottom: 12,
+  },
+  summaryTourName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: palette.text,
+    lineHeight: 24,
+  },
+  summaryMetaRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  metaChip: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  metaChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: palette.textDim,
+  },
+  pricePerPersonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: palette.textDim,
+    marginTop: 4,
+  },
+  summaryItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  summaryItemLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: palette.text,
+  },
+  summaryItemValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  summarySubtotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  summarySubtotal: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: palette.text,
+  },
+  summarySubtotalValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  summaryTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFF5F2',
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  summaryTotal: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  summaryTotalValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: palette.primary,
+    letterSpacing: 0.5,
+  },
   cta: {
     borderRadius: 14,
     paddingVertical: 14,
@@ -717,6 +894,7 @@ const ui = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 12,
+    paddingBottom: 0,
     maxHeight: '85%',
   },
   optionItem: {
@@ -726,6 +904,21 @@ const ui = StyleSheet.create({
   optionText: {
     color: palette.text,
     fontSize: 15,
+  },
+  modalCloseButton: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: palette.primary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.primary,
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
