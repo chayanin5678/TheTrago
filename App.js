@@ -192,6 +192,7 @@ const AccountTabNavigator = () => {
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const [activeAnim] = useState(new Animated.Value(0));
+  const [isVisible, setIsVisible] = useState(true);
   const translateY = React.useRef(new Animated.Value(0)).current;
   const lastScrollY = React.useRef(0);
 
@@ -204,15 +205,32 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
     }).start();
   }, [state.index]);
 
-  // Setup global scroll listener
+  // Setup global visibility control
   React.useEffect(() => {
+    const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 80 : 65;
+    
+    // Set up global function to control visibility
+    global.setTabBarVisible = (visible) => {
+      setIsVisible(visible);
+      Animated.spring(translateY, {
+        toValue: visible ? 0 : TAB_BAR_HEIGHT,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    };
+    
+    // Initialize global state
+    global.isTabBarVisible = isVisible;
+
     // Store translateY globally
     global.tabBarTranslateY = translateY;
     
     // Global scroll handler
     global.handleTabBarScroll = (scrollY) => {
+      if (!global.isTabBarVisible) return; // Don't handle scroll if manually hidden
+      
       const diff = scrollY - lastScrollY.current;
-      const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 80 : 65;
 
       // Scroll down - hide tab bar
       if (diff > 5 && scrollY > 50) {
@@ -239,8 +257,15 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
     return () => {
       global.tabBarTranslateY = null;
       global.handleTabBarScroll = null;
+      global.setTabBarVisible = null;
+      global.isTabBarVisible = true;
     };
   }, [translateY]);
+  
+  // Update global state when visibility changes
+  React.useEffect(() => {
+    global.isTabBarVisible = isVisible;
+  }, [isVisible]);
 
   return (
     <Animated.View style={{
