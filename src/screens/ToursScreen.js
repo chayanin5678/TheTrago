@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,15 @@ const ToursScreen = ({ navigation }) => {
   // >>> refs สำหรับ dropdown popup
   const inputAreaRef = useRef(null); // จะชี้ไปที่กล่อง search (pillInput)
   const [dropdownFrame, setDropdownFrame] = useState(null); // {x,y,width,height}
+
+  // >>> Selected category tab
+  const [selectedTab, setSelectedTab] = useState('กรุงเทพฯ');
+
+  // >>> Scroll animation for search box
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Animated wrappers for touchables
+  const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
   const [departureDate, setDepartureDate] = useState(() => {
     const tomorrow = new Date();
@@ -177,14 +187,14 @@ const ToursScreen = ({ navigation }) => {
       setBannerIndex((prev) => {
         const arr = bannerUrls.length > 0 ? bannerUrls : localBanners;
         const next = (prev + 1) % arr.length;
-        if (scrollRef.current) {
-          scrollRef.current.scrollTo({ x: next * innerWidth, animated: true });
+        if (scrollRef.current && arr.length > 0) {
+          scrollRef.current.scrollTo({ x: next * screenWidth, animated: true });
         }
         return next;
       });
     }, 4000);
     return () => clearInterval(id);
-  }, [innerWidth, bannerUrls.length]);
+  }, [bannerUrls.length]);
 
   // load all tours for local search
   useEffect(() => {
@@ -225,155 +235,211 @@ const ToursScreen = ({ navigation }) => {
   }, [searchResults]);
 
   // ---------------- Render ----------------
+  const categoryTabs = ['กรุงเทพฯ', 'จีน', 'เชียงใหม่', 'เชียงใส', 'ญี่ปุ่น', 'ฮองกง'];
+  
+  const categoryIcons = [
+    { icon: '🎫', label: 'ตั๋วที่เที่ยว', iconName: 'airplane' },
+    { icon: '🗺️', label: 'ทัวร์', iconName: 'map' },
+    { icon: '🚢', label: 'กิจกรรมล่องเรือ', iconName: 'boat' },
+    { icon: '🏖️', label: 'กิจกรรมกลางแจ้ง', iconName: 'sunny' },
+    { icon: '💆', label: 'สุขภาพและสปา', iconName: 'fitness' },
+    { icon: '⛰️', label: 'ประสบการณ์ทางวัฒนธรรม', iconName: 'navigate' },
+  ];
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      {/* bottom half orange bg */}
-      <View
-        style={{
-          position: 'absolute',
-          top: screenHeight / 2,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: '#FF7A3A',
-        }}
-        pointerEvents="none"
-      />
-
-      {/* banner area */}
-      <View
-        style={{
-          position: 'absolute',
-          top: bannerTop,
-          left: 0,
-          width: wrapperWidth,
-          height: wrapperHeight,
-          overflow: 'hidden',
-          zIndex: 0,
-        }}
-      >
-        <View
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'transparent',
-          }}
-        />
-
-        <View
-          style={{
-            padding: wrapperPadding,
-            width: '100%',
-            height: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
+      {/* Back button - fixed position */}
+      <Animated.View style={[
+        styles.fixedBackButton,
+        {
+          opacity: scrollY.interpolate({
+            inputRange: [0, 50],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+          }),
+        }
+      ]}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => navigation && navigation.goBack && navigation.goBack()}
+          style={styles.backButtonCircle}
         >
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              width:
-                innerWidth *
-                (bannerUrls.length > 0 ? bannerUrls.length : localBanners.length),
-            }}
-            snapToInterval={innerWidth}
-            decelerationRate="fast"
-            onMomentumScrollEnd={(e) => {
-              const idx = Math.round(
-                e.nativeEvent.contentOffset.x / innerWidth
-              );
-              setBannerIndex(idx);
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Restored Animated search container (fixed interpolate types) */}
+      <Animated.View
+        style={[
+          styles.animatedSearchContainer,
+          {
+            backgroundColor: scrollY.interpolate({
+              inputRange: [0, 150],
+              outputRange: ['#FFFFFF', '#FFFFFF'],
+              extrapolate: 'clamp',
+            }),
+            paddingTop: scrollY.interpolate({
+              inputRange: [0, 100],
+              outputRange: [0, Platform.OS === 'android' ? 20 : 40],
+              extrapolate: 'clamp',
+            }),
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [0, 150],
+                  outputRange: [0, -140],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+            width: scrollY.interpolate({
+                inputRange: [0, 150],
+                // Start wider (90% of screen) so it extends more to the left, expand to full width minus small margin
+                outputRange: [screenWidth * 0.8, screenWidth ],
+                extrapolate: 'clamp',
+              }),
+           borderRadius: scrollY.interpolate({
+                inputRange: [0, 150],
+                outputRange: [10, 0],
+                extrapolate: 'clamp',
+              }),
+        }
+      ]}>
+        <View style={styles.searchBoxContainer}>
+          <Animated.View
+            style={{
+              opacity: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [0, 1],
+                extrapolate: 'clamp',
+              }),
             }}
           >
-            {(bannerUrls.length > 0 ? bannerUrls : localBanners).map(
-              (src, i) => (
-                <Image
-                  key={i}
-                  source={typeof src === 'string' ? { uri: src } : src}
-                  style={{
-                    width: innerWidth,
-                    height: innerBannerHeight,
-                    borderRadius: 12,
-                  }}
-                  resizeMode="cover"
-                />
-              )
-            )}
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* back button on banner */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => navigation && navigation.goBack && navigation.goBack()}
-        style={{
-          position: 'absolute',
-          top: bannerTop + 12,
-          left: 12,
-          zIndex: 6,
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          backgroundColor: 'rgba(255,255,255,0.95)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: 'rgba(0,0,0,0.06)',
-        }}
-      >
-        <Ionicons name="arrow-back" size={22} color="#1E293B" />
-      </TouchableOpacity>
-
-      {/* banner dots */}
-      <View
-        style={{
-          position: 'absolute',
-          top: bannerTop + wrapperHeight + 8,
-          left: 0,
-          right: 0,
-          alignItems: 'center',
-          zIndex: 3,
-        }}
-        pointerEvents="box-none"
-      >
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {(bannerUrls.length > 0 ? bannerUrls : localBanners).map((_, i) => (
             <TouchableOpacity
-              key={i}
-              onPress={() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTo({
-                    x: i * innerWidth,
-                    animated: true,
-                  });
-                }
-                setBannerIndex(i);
-              }}
-              activeOpacity={0.8}
-              style={{ padding: 4 }}
+              activeOpacity={0.85}
+              onPress={() => navigation && navigation.goBack && navigation.goBack()}
+              style={styles.searchBackButton}
             >
-              <View
-                style={{
-                  width: bannerIndex === i ? 12 : 8,
-                  height: bannerIndex === i ? 12 : 8,
-                  borderRadius: 8,
-                  backgroundColor:
-                    bannerIndex === i
-                      ? '#2563EB'
-                      : 'rgba(37,99,235,0.35)',
-                }}
-              />
+              <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
-          ))}
+          </Animated.View>
+
+          <Animated.View style={[styles.searchBox, {
+            left: scrollY.interpolate({
+              inputRange: [0, 150],
+              outputRange: [-50, 0],
+              extrapolate: 'clamp',
+            }),
+             marginRight: scrollY.interpolate({  
+             inputRange: [0, 150],
+              outputRange: [-50, 0],
+              extrapolate: 'clamp',
+            }),
+            shadowOpacity: scrollY.interpolate({
+              inputRange: [0, 150],
+              outputRange: [0, 0.1],  
+              extrapolate: 'clamp',
+            }),
+            
+          }]} ref={inputAreaRef}>
+            <TextInput
+              placeholder="กรุงเทพฯ"
+              placeholderTextColor="#999"
+              value={packageText}
+              onChangeText={(text) => {
+                setPackageText(text);
+
+                if (searchDebounceRef.current) {
+                  clearTimeout(searchDebounceRef.current);
+                }
+
+                if (!text || text.trim().length === 0) {
+                  setSearchResults([]);
+                  return;
+                }
+
+                searchDebounceRef.current = setTimeout(() => {
+                  const q = text.trim().toLowerCase();
+                  const results = tours.filter((it) => {
+                    const thai = (it.md_tour_name_thai || '')
+                      .toString()
+                      .toLowerCase();
+                    const eng = (it.md_tour_name_eng || '')
+                      .toString()
+                      .toLowerCase();
+                    return thai.includes(q) || eng.includes(q);
+                  });
+                  setSearchResults(results.slice(0, 10));
+                }, 250);
+              }}
+              style={styles.searchInput}
+            />
+            {packageText ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setPackageText('');
+                  setSearchResults([]);
+                }}
+                style={{ marginLeft: 8 }}
+              >
+                <Ionicons name="close-circle" size={20} color="#999" />
+              </TouchableOpacity>
+            ) : null}
+          </Animated.View>
+
+          <AnimatedTouchableOpacity
+            style={[
+              styles.searchButton, 
+              { width: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [90, 48],
+                extrapolate: 'clamp'
+             
+              }),
+               }
+         ]}
+            onPress={() => {
+              navigation && navigation.navigate
+                ? navigation.navigate('SearchResults', {
+                    q: packageText,
+                    departureDate: departureDate ? moment(departureDate).toISOString() : '',
+                    adults,
+                    children,
+                    infant,
+                    currency: selectedCurrency,
+                  })
+                : null;
+            }}
+          >
+             <Animated.View
+            style={{
+              left: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [0, 23],
+                extrapolate: 'clamp',
+              }),
+            }}
+          >
+            <Ionicons name="search" size={20} color="#FFFFFF" />
+            </Animated.View>
+             <Animated.View
+            style={{
+              opacity: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [1, 0],
+                extrapolate: 'clamp',
+              }),
+            }}
+          >
+            <Text style={[styles.searchButtonText, { marginLeft: 8 }]}>ค้นหา</Text>
+            </Animated.View>
+
+        
+
+          </AnimatedTouchableOpacity>
+             
         </View>
-      </View>
+      </Animated.View>
 
       {/* =========================
           DROPDOWN PORTAL + OVERLAY
@@ -469,182 +535,232 @@ const ToursScreen = ({ navigation }) => {
 
       {/* main scroll content */}
       <ScrollView
-        {...tabBarScrollProps}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          scrollY.setValue(offsetY);
+          
+          // Handle tab bar auto-hide
+          if (tabBarScrollProps.onScroll) {
+            tabBarScrollProps.onScroll(event);
+          }
+        }}
+        scrollEventThrottle={16}
       >
-        {/* search card */}
-        <View style={[styles.card, styles.overlayCard]}>
-          <View style={styles.formRow}>
-            {/* Tour Package input */}
-            <Text style={styles.label}>
-              {t('tourPackage') || 'แพ็กเกจทัวร์'}
-            </Text>
-
-            <View style={styles.searchWrapper}>
-              <View style={styles.pillInput} ref={inputAreaRef}>
-                {/* icon left */}
-                <View style={styles.inputIconWrap}>
-                  <Ionicons name="search" size={18} color="#FD501E" />
-                </View>
-
-                {/* textinput */}
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    placeholder={
-                      t('findPlacesPlaceholder') ||
-                      'Find places or your next experience'
-                    }
-                    placeholderTextColor="#64748B"
-                    value={packageText}
-                    onChangeText={(text) => {
-                      setPackageText(text);
-
-                      if (searchDebounceRef.current) {
-                        clearTimeout(searchDebounceRef.current);
-                      }
-
-                      if (!text || text.trim().length === 0) {
-                        setSearchResults([]);
-                        return;
-                      }
-
-                      searchDebounceRef.current = setTimeout(() => {
-                        const q = text.trim().toLowerCase();
-                        const results = tours.filter((it) => {
-                          const thai = (it.md_tour_name_thai || '')
-                            .toString()
-                            .toLowerCase();
-                          const eng = (it.md_tour_name_eng || '')
-                            .toString()
-                            .toLowerCase();
-                          return (
-                            thai.includes(q) || eng.includes(q)
-                          );
-                        });
-                        setSearchResults(results.slice(0, 10));
-                      }, 250);
-                    }}
-                    style={styles.pillInputText}
-                    multiline={false}
-                    numberOfLines={1}
-                    returnKeyType="done"
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* Departure date */}
-            <Text style={styles.label}>
-              {t('departureDate') || 'วันที่ขาไป'}
-            </Text>
-            <TouchableOpacity
-              style={[styles.pillInputTouchable, styles.inputRowTouchable]}
-              activeOpacity={0.8}
-              onPress={() => setShowDepartModal(true)}
-            >
-              <View style={styles.inputIconWrap}>
-                <MaterialIcons name="event" size={20} color="#FD501E" />
-              </View>
-              <Text
-                style={{
-                  color: departureDate ? '#222' : '#9CA3AF',
-                  flex: 1,
-                }}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {departureDate
-                  ? moment(departureDate)
-                      .locale(selectedLanguage)
-                      .format('DD MMM YYYY')
-                  : calendarStartDate
-                  ? moment(calendarStartDate)
-                      .locale(selectedLanguage)
-                      .format('DD MMM YYYY')
-                  : t('departureDate') || 'Departure'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Passenger */}
-            <Text style={styles.label}>{t('passenger') || 'ผู้โดยสาร'}</Text>
-            <TouchableOpacity
-              style={[styles.pillInputTouchable, styles.inputRowTouchable]}
-              activeOpacity={0.8}
-              onPress={() => setPassengerModalVisible(true)}
-            >
-              <View style={styles.inputIconWrap}>
-                <Ionicons
-                  name="people-outline"
-                  size={20}
-                  color="#FD501E"
+        {/* Background Image Section */}
+        <View style={styles.bannerSection}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const contentOffsetX = event.nativeEvent.contentOffset.x;
+              const currentIndex = Math.round(contentOffsetX / screenWidth);
+              setBannerIndex(currentIndex);
+            }}
+            style={styles.bannerScrollView}
+          >
+            {(bannerUrls.length > 0 ? bannerUrls : localBanners).map((item, index) => (
+              <View key={index} style={{ width: screenWidth }}>
+                <Image
+                  source={typeof item === 'string' ? { uri: item } : item}
+                  style={styles.bannerImage}
+                  resizeMode="contain"
                 />
               </View>
+            ))}
+          </ScrollView>
+          <LinearGradient
+            colors={['transparent', 'transparent', 'transparent', '#FFFFFF', '#FFFFFF']}
+            style={styles.bannerGradient}
+          />
+        </View>
+
+        {/* Category Tabs + Icons: grouped into one content card */}
+        <View style={styles.contentCard}>
+        {/* Category Tabs */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsContainer}
+          contentContainerStyle={styles.tabsContent}
+        >
+          {categoryTabs.map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[
+                styles.tab,
+                selectedTab === tab && styles.tabSelected,
+              ]}
+              onPress={() => setSelectedTab(tab)}
+            >
               <Text
-                style={[styles.passengerText, { flex: 1 }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
+                style={[
+                  styles.tabText,
+                  selectedTab === tab && styles.tabTextSelected,
+                ]}
               >
-                {adults} {t('adult') || 'ผู้ใหญ่'}, {children}{' '}
-                {t('child') || 'เด็ก'}, {infant}{' '}
-                {t('infant') || 'ทารก'}
+                {tab}
               </Text>
             </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-            {/* Search button */}
+  {/* Category Icons Grid */}
+  <View style={styles.categoryGrid}>
+          {categoryIcons.map((item, index) => (
             <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.searchButtonWrapper}
+              key={index}
+              style={styles.categoryItem}
               onPress={() => {
-                // Update customer context with current tour/search selections before navigating
-                try {
-                  updateCustomerData({
-                    md_tours_name: packageText || '',
-                    md_tours_departdate: departureDate
-                      ? moment(departureDate).toISOString()
-                      : calendarStartDate
-                      ? moment(calendarStartDate).toISOString()
-                      : '',
-                    md_tours_adult: adults,
-                    md_tours_child: children,
-                    md_tours_infant: infant,
-                    // md_booking_currency: selectedCurrency,
-                    // symbol: selectedSysmbol,
-                  });
-                } catch (e) {
-                  // safe-guard: if context isn't available, ignore and continue
-                }
-
-                navigation && navigation.navigate
-                  ? navigation.navigate('SearchResults', {
-                      q: packageText,
-                      // pass serializable date (ISO string) to avoid non-serializable navigation params
-                      departureDate: departureDate ? moment(departureDate).toISOString() : '',
-                      adults,
-                      children,
-                      infant,
-                      currency: selectedCurrency,
-                    })
-                  : null;
+                // Navigate to specific category
               }}
             >
-              <LinearGradient
-                colors={['#FD501E', '#FF7A3A']}
-                style={styles.searchButtonGradient}
-              >
-                <Ionicons
-                  name="search"
-                  size={18}
-                  color="#fff"
-                  style={{ marginRight: 10 }}
-                />
-                <Text style={styles.searchText}>
-                  {t('searchButton') || 'ค้นหา'}
-                </Text>
-              </LinearGradient>
+              <View style={styles.categoryIconContainer}>
+                <Ionicons name={item.iconName} size={28} color="#FD501E" />
+              </View>
+              <Text style={styles.categoryLabel} numberOfLines={2}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
-          </View>
+          ))}
         </View>
+
+  {/* Additional Category Rows */}
+  <View style={styles.additionalCategories}>
+          <TouchableOpacity style={styles.categoryRow}>
+              <View style={styles.categoryRowIcon}>
+              <Ionicons name="fitness" size={24} color="#FD501E" />
+            </View>
+            <Text style={styles.categoryRowText}>กิจกรรมกลางแจ้ง</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.categoryRow}>
+            <View style={styles.categoryRowIcon}>
+              <Ionicons name="medkit" size={24} color="#FF1493" />
+            </View>
+            <Text style={styles.categoryRowText}>สุขภาพและสปา</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.categoryRow}>
+            <View style={styles.categoryRowIcon}>
+              <Ionicons name="beer" size={24} color="#FFA500" />
+            </View>
+            <Text style={styles.categoryRowText}>ประสบการณ์ทางวัฒนธรรม</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+  </View>
+  </View>
+
+  {/* Recently Viewed Section */}
+        <View style={styles.promotionsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>ดูล่าสุด</Text>
+          </View>
+          
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.promotionsScroll}
+          >
+            {promotions.slice(0, 3).map((promo, index) => (
+              <TouchableOpacity
+                key={promo.md_promotion_id || index}
+                style={styles.promoCard}
+                onPress={() => {
+                  // Navigate to promotion detail
+                }}
+              >
+                <Image
+                  source={{
+                    uri: `https://www.thetrago.com/Api/uploads/promotion/index/${promo.md_promotion_picname}`,
+                  }}
+                  style={styles.promoImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.promoInfo}>
+                  <View style={styles.promoLocation}>
+                    <Ionicons name="location" size={14} color="#666" />
+                    <Text style={styles.promoLocationText} numberOfLines={1}>
+                      {promo.md_promotion_name || 'โปรโมชั่น'}
+                    </Text>
+                  </View>
+                  <Text style={styles.promoTitle} numberOfLines={2}>
+                    {promo.md_promotion_name || 'แพ็คเกจพิเศษ'}
+                  </Text>
+                  <View style={styles.promoRating}>
+                    <Text style={styles.ratingBadge}>❤️ 8.6</Text>
+                    <Text style={styles.tripBestBadge}>🏆 Trip.Best</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Bottom info section */}
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>ที่เที่ยวกรุงเทพฯสำหรับคนพื้นที่</Text>
+        </View>
+
+        {/* Bottom Navigation Tabs */}
+        <View style={styles.bottomTabs}>
+            <TouchableOpacity style={styles.bottomTab}>
+            <Ionicons name="star" size={24} color="#FD501E" />
+            <Text style={styles.bottomTabText}>ตั๋วเลือกยอดนิยม</Text>
+            <View style={styles.bottomTabIndicator} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomTab}>
+            <Ionicons name="ticket" size={24} color="#666" />
+            <Text style={[styles.bottomTabText, { color: '#666' }]}>สถานที่ท่องเที่ยว</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomTab}>
+            <Ionicons name="planet" size={24} color="#666" />
+            <Text style={[styles.bottomTabText, { color: '#666' }]}>กิจกรรม</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomTab}>
+            <Ionicons name="cash" size={24} color="#666" />
+            <Text style={[styles.bottomTabText, { color: '#666' }]}>สิ่งอำนวยความสะดวก</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Final Promotion Card */}
+        {promotions.length > 0 && (
+          <View style={styles.finalPromoCard}>
+            <TouchableOpacity
+              onPress={() => {
+                // Navigate to promotion detail
+              }}
+            >
+              <Image
+                source={{
+                  uri: `https://www.thetrago.com/Api/uploads/promotion/index/${promotions[0].md_promotion_picname}`,
+                }}
+                style={styles.finalPromoImage}
+                resizeMode="cover"
+              />
+              <View style={styles.heartIcon}>
+                <Ionicons name="heart-outline" size={24} color="#FFF" />
+              </View>
+            </TouchableOpacity>
+            <View style={styles.finalPromoInfo}>
+              <View style={styles.promoTagContainer}>
+                <Text style={styles.promoTag}>ดูล่าสุด</Text>
+              </View>
+              <Text style={styles.finalPromoTitle}>พระบรมมหาราชวัง</Text>
+              <View style={styles.finalPromoRating}>
+                <Text style={styles.finalRatingScore}>❤️ 8.6</Text>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* ---- DATE MODAL ---- */}
@@ -1250,6 +1366,469 @@ const ToursScreen = ({ navigation }) => {
 
 // ---------------- Styles ----------------
 const styles = StyleSheet.create({
+  // Banner section - now in ScrollView
+  bannerSection: {
+    width: '100%',
+    height: hp('35%'),
+    position: 'relative',
+    overflow: 'hidden',
+    marginTop: Platform.OS === 'android' ? -10 : -80,
+  },
+
+  bannerScrollView: {
+    width: '100%',
+    height: '100%',
+  },
+
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  bannerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 120,
+  },
+
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+
+  bannerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    marginTop: 'auto',
+    marginBottom: 20,
+  },
+
+  // Scroll container
+  scrollContainer: {
+    paddingBottom: 80,
+  },
+
+  // Fixed back button - top left
+  fixedBackButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    left: 16,
+    zIndex: 100,
+  },
+
+  backButtonCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Animated search container - starts in middle of banner
+  animatedSearchContainer: {
+    position: 'absolute',
+    top: hp('15%'), // อยู่ตรงกลางของรูปภาพ (banner height = 35%)
+
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    shadowOpacity: 0.1,
+    elevation: 3,
+    alignSelf: 'center',
+  },
+
+  // Search box container
+  searchBoxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+
+  },
+
+  searchBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  searchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+  // shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+   
+  },
+
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 0,
+  },
+
+  searchButton: {
+    width: 90,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FD501E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FD501E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    flexDirection: 'row',
+        overflow: 'hidden',
+  },
+
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Tabs styles
+  tabsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+
+  tabsContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    marginRight: 8,
+  },
+
+  tabSelected: {
+    backgroundColor: '#FFF3ED',
+  },
+
+  tabText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  tabTextSelected: {
+    color: '#FD501E',
+    fontWeight: '600',
+  },
+
+  // Category grid styles
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+  },
+
+  // Content card to group tabs/icons into one section
+  contentCard: {
+    backgroundColor: '#FFFFFF',
+    marginTop: -20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 2,
+  },
+
+  categoryItem: {
+    width: '33.33%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  categoryIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F0F7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+
+  categoryLabel: {
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+
+  // Additional categories
+  additionalCategories: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#FFFFFF',
+  },
+
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+
+  categoryRowIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  categoryRowText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+  },
+
+  // Promotions section
+  promotionsSection: {
+    paddingVertical: 20,
+    backgroundColor: '#FFFFFF',
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  promotionsScroll: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+
+  promoCard: {
+    width: wp('70%'),
+    marginRight: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  promoImage: {
+    width: '100%',
+    height: 180,
+  },
+
+  promoInfo: {
+    padding: 12,
+  },
+
+  promoLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+
+  promoLocationText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+
+  promoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+
+  promoRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  ratingBadge: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF1744',
+  },
+
+  tripBestBadge: {
+    fontSize: 12,
+    color: '#666',
+  },
+
+  // Info section
+  infoSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: '#FFFFFF',
+  },
+
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+
+  // Bottom tabs
+  bottomTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingVertical: 8,
+  },
+
+  bottomTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    position: 'relative',
+  },
+
+  bottomTabText: {
+    fontSize: 11,
+    color: '#FD501E',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
+  bottomTabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 40,
+    height: 3,
+    backgroundColor: '#FD501E',
+    borderRadius: 2,
+  },
+
+  // Final promo card
+  finalPromoCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  finalPromoImage: {
+    width: '100%',
+    height: 220,
+  },
+
+  heartIcon: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  finalPromoInfo: {
+    padding: 16,
+  },
+
+  promoTagContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+
+  promoTag: {
+    fontSize: 12,
+    color: '#666',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+
+  finalPromoTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 8,
+  },
+
+  finalPromoRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  finalRatingScore: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF1744',
+  },
+
   container: {
     padding: 16,
     paddingBottom: 40,
