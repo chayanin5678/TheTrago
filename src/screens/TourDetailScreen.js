@@ -11,13 +11,14 @@ import {
   Modal,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { useLanguage } from './Screen/LanguageContext';
 import { useCustomer } from './Screen/CustomerContext';
-import styles from '../styles/CSS/TripDetailStyles';
+import { useHideBottomTabBar } from '../utils/hideBottomTabBar';
 import { AntDesign } from '@expo/vector-icons';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import styles from '../styles/CSS/TripDetailStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // match iOS action sheet width (buttons have 16pt margin each side)
@@ -25,6 +26,7 @@ const pickerWidth = screenWidth - 32; // equals action-sheet width (screen - 32)
 
 const TourDetailScreen = ({ route, navigation }) => {
   const { t, selectedLanguage } = useLanguage();
+  const insets = useSafeAreaInsets();
   const { customerData } = useCustomer();
   const params = route?.params || {};
   const tourId =
@@ -32,6 +34,9 @@ const TourDetailScreen = ({ route, navigation }) => {
     params.tourid ||
     params.item?.TourID ||
     params.item?.tourid;
+
+  // hide bottom tab bar while on this screen
+  useHideBottomTabBar();
 
   // ----------------------- STATE -----------------------
   const [loading, setLoading] = useState(true);
@@ -68,6 +73,13 @@ const TourDetailScreen = ({ route, navigation }) => {
   });
   const [bookingOption, setBookingOption] = useState('normal'); // 'normal' or 'special'
   const [showDateModal, setShowDateModal] = useState(false);
+
+  // Tab navigation state
+  const [selectedTab, setSelectedTab] = useState(0); // 0: ภาพรวม, 1: รีวิว, 2: หมายเหตุ, 3: ใกล้เคียง
+
+  // Interesting places data (from toursearch API)
+  const [interestingPlaces, setInterestingPlaces] = useState([]);
+  const [interestingLoading, setInterestingLoading] = useState(false);
 
   // repeating long-press refs for passenger controls
   const repeatRef = useRef({});
@@ -372,16 +384,85 @@ const TourDetailScreen = ({ route, navigation }) => {
     fetchDetail();
   }, [tourId, selectedLanguage]);
 
+  // Fetch interesting places from toursearch API (reuse same endpoint as ToursScreen)
+  useEffect(() => {
+    let mounted = true;
+    const fetchInteresting = async () => {
+      setInterestingLoading(true);
+      try {
+        // Prepare request similar to ToursScreen -> GetList
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+        const currencyForReq = (customerData && (customerData.currency || customerData.md_booking_currency)) || params.currency || 'THB';
+        const langForReq = selectedLanguage === 'th' ? 'th' : 'en';
+
+        const body = {
+          lang: langForReq,
+          currency: currencyForReq,
+          country: '',
+          location: '',
+          night: 0,
+          day: 0,
+          adult: 1,
+          child: 0,
+          infant: 0,
+          date: tomorrowStr,
+          popular: 1,
+        };
+
+        const res = await axios.post('https://thetrago.com/api_tour/V1/tour/GetList', body, { headers: { 'Content-Type': 'application/json' } });
+        const data = res?.data || res;
+        let list = [];
+        if (Array.isArray(data)) list = data;
+        else if (Array.isArray(data.data)) list = data.data;
+        else if (Array.isArray(data.result)) list = data.result;
+
+        // remove current tour from suggestions (if matches id)
+        const filtered = (list || []).filter((it) => {
+          const id = it.TourID || it.tourid || it.tourId || it.md_tour_id || it.Id;
+          if (!id) return true;
+          // compare loosely to current tour id
+          return String(id) !== String(tourId);
+        });
+
+        if (mounted) {
+          // shuffle results to provide randomized suggestions (Fisher-Yates)
+          for (let i = filtered.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = filtered[i];
+            filtered[i] = filtered[j];
+            filtered[j] = tmp;
+          }
+          setInterestingPlaces(filtered.slice(0, 6));
+        }
+      } catch (e) {
+        // ignore failure, keep placeholders
+        if (mounted) setInterestingPlaces([]);
+      } finally {
+        if (mounted) setInterestingLoading(false);
+      }
+    };
+
+    fetchInteresting();
+    return () => {
+      mounted = false;
+    };
+  }, [tourId, selectedLanguage]);
+
   // ----------------------- EARLY RETURNS -----------------------
   if (loading) {
     return (
       <SafeAreaView
+        // allow content to extend to the top (remove top safe area)
         style={{
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#fff',
         }}
+        edges={["left", "right"]}
       >
         <ActivityIndicator size="large" color="#FD501E" />
       </SafeAreaView>
@@ -391,12 +472,14 @@ const TourDetailScreen = ({ route, navigation }) => {
   if (!tour) {
     return (
       <SafeAreaView
+        // allow content to extend to the top (remove top safe area)
         style={{
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#fff',
         }}
+        edges={["left", "right"]}
       >
         <Text style={{ color: '#333' }}>
           {t('noData') || 'No tour data available'}
@@ -624,7 +707,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              ชื่อทริป
+              {t('tripName') || 'Trip name'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -669,7 +752,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              ไฮไลท์
+              {t('highlights') || 'Highlights'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -758,7 +841,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              โปรแกรม (Itinerary)
+              {t('itinerary') || 'Itinerary'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -884,7 +967,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              รอบทริป (Trip Session)
+              {t('tripSession') || 'Trip Session'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -1010,7 +1093,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              สิ่งที่ควรนำมา
+              {t('whatToBring') || 'What to bring'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -1099,7 +1182,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              เงื่อนไขผู้เข้าร่วม (Requirements)
+              {t('requirements') || 'Requirements'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -1223,7 +1306,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              ไม่รวมในแพ็คเกจ (Not Included)
+              {t('notIncluded') || 'Not included'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -1347,7 +1430,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                 color: '#0f172a',
               }}
             >
-              นโยบายการยกเลิก (Cancellation Policy)
+              {t('cancellationPolicy') || 'Cancellation Policy'}
             </Text>
 
             {restLines.length > 0 ? (
@@ -1568,30 +1651,73 @@ const TourDetailScreen = ({ route, navigation }) => {
   };
 
   // ----------------------- UI -----------------------
+  // compute header height to offset content when header is overlay
+  const headerHeight = (insets.top || 0) + 64; // 64 = backButton(40) + vertical padding(12*2)
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+  // allow content to extend to the top (remove top safe area)
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={["left", "right"]}>
+      {/* Header with Back Button */}
+      <View style={[styles.topHeaderOverlay, { paddingTop: (insets.top || 0) + 12 }] }>
+        <TouchableOpacity 
+          style={[styles.backButton, { backgroundColor: 'rgba(0,0,0,0.4)' }]}
+          onPress={() => navigation.goBack()}
+        >
+          <AntDesign name="left" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={[styles.topHeaderTitle, { color: '#FFFFFF' }]}>{t('tourDetails') || 'Tour Details'}</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        // reduce top padding so main image moves up under the overlay header
+        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 120 }}
       >
         {/* main image */}
         {firstImage ? (
           <Image
             source={{ uri: firstImage }}
             style={{
-              width: '100%',
-              height: 220,
-              borderRadius: 12,
+              // full-bleed image that fits different screen sizes
+              width: screenWidth,
+              height: Math.round(screenHeight * 0.38),
+              borderRadius: 0,
+              alignSelf: 'center',
+              // extend to screen edges (compensate for ScrollView padding)
+              marginLeft: -16,
+              marginRight: -16,
+              // pull image up under the overlay header (device-aware)
+              marginTop: -(insets.top ? insets.top + 8 : 24),
             }}
             resizeMode="cover"
           />
         ) : null}
 
         {/* title and meta */}
-        <View style={{ marginTop: 16 }}>
+        <View
+          style={{
+            marginTop: -15,
+            // cancel ScrollView horizontal padding so this card spans the full screen
+            marginLeft: -16,
+            marginRight: -16,
+            paddingTop: 30,
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+            borderRadius: 20,
+            overflow: 'hidden',
+            backgroundColor: '#fff',
+            // subtle shadow so rounded card stands out over the image
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
+        >
           <Text
             style={{
               fontSize: 22,
-              fontWeight: '800',
+              fontWeight: '700',
               color: '#0f172a',
             }}
           >
@@ -1637,7 +1763,7 @@ const TourDetailScreen = ({ route, navigation }) => {
               style={{
                 marginTop: 10,
                 color: '#10B981',
-                fontWeight: '800',
+                fontWeight: '700',
                 fontSize: 18,
               }}
             >
@@ -1658,7 +1784,7 @@ const TourDetailScreen = ({ route, navigation }) => {
               </Text>
               <Text
                 style={{
-                  fontWeight: '800',
+                  fontWeight: '700',
                   marginTop: 6,
                   textAlign: 'center',
                 }}
@@ -1673,7 +1799,7 @@ const TourDetailScreen = ({ route, navigation }) => {
               </Text>
               <Text
                 style={{
-                  fontWeight: '800',
+                  fontWeight: '700',
                   marginTop: 6,
                   textAlign: 'center',
                 }}
@@ -1688,7 +1814,7 @@ const TourDetailScreen = ({ route, navigation }) => {
               </Text>
               <Text
                 style={{
-                  fontWeight: '800',
+                  fontWeight: '700',
                   marginTop: 6,
                   textAlign: 'center',
                 }}
@@ -1699,12 +1825,192 @@ const TourDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Horizontal Tab Navigation */}
+        <View style={{ marginTop: 20, marginBottom: 12 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+            {[
+              { id: 0, label: t('overview') || 'ภาพรวม' },
+              { id: 1, label: t('reviews') || 'รีวิว' },
+              { id: 2, label: t('notes') || 'หมายเหตุ' },
+              { id: 3, label: t('nearby') || 'ใกล้เคียง' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => setSelectedTab(tab.id)}
+                style={{
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  marginRight: 12,
+                  borderRadius: 20,
+                  backgroundColor: selectedTab === tab.id ? '#FD501E' : '#f5f5f5',
+                }}
+              >
+                <Text style={{ color: selectedTab === tab.id ? '#fff' : '#666', fontWeight: selectedTab === tab.id ? '700' : '400', fontSize: 14 }}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Tab Content */}
+        {selectedTab === 0 && (
+          <View>
+            {/* Horizontal Category Sections */}
+            {/* ที่เที่ยวน่าสนใจ */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                {t('interestingPlaces') || 'ที่เที่ยวน่าสนใจ'}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+                {interestingLoading ? (
+                  <View style={{ width: 160, height: 120, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color="#FD501E" />
+                  </View>
+                ) : (interestingPlaces && interestingPlaces.length > 0 ? (
+                  interestingPlaces.map((item, idx) => {
+                    const title =
+                      item.md_tour_name_thai ||
+                      item.md_tour_name_eng ||
+                      item.NameThai ||
+                      item.NameEng ||
+                      item.name ||
+                      '';
+
+                    let img = item.Picture || item.PictureUrl || item.tourimage || item.image || null;
+                    // Some endpoints return md_tour_picname (filename) — construct full URL like HomeScreen does
+                    if (!img && item.md_tour_picname) {
+                      img = `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname}`;
+                    }
+                    // fallback to md_tour_pic or md_tour_picname_webp if present
+                    if (!img && item.md_tour_pic) img = item.md_tour_pic;
+                    if (!img && item.md_tour_picname_webp) img = `https://tour.thetrago.com/manageadmin/uploads/tour/index/${item.md_tour_picname_webp}`;
+
+                    const priceVal = (() => {
+                      const p = item.Price || item.price || item.AdultPrice || item.adultprice || item.adult || null;
+                      const n = extractPriceValue(p);
+                      return n;
+                    })();
+
+                    const priceText = priceVal !== null && priceVal !== undefined ? (Number(priceVal).toLocaleString(selectedLanguage === 'th' ? 'th-TH' : 'en-US')) : null;
+
+                    const tourIdItem = item.TourID || item.tourid || item.tourId || item.md_tour_id || item.Id || idx;
+
+                    return (
+                      <TouchableOpacity
+                        key={`place-${tourIdItem}-${idx}`}
+                        style={{ width: 160, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0f0f0' }}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          try { /* navigate to detail of selected suggestion */
+                            navigation && navigation.navigate
+                              ? navigation.navigate('TourDetailNew', { tourId: tourIdItem, item })
+                              : null;
+                          } catch (e) {}
+                        }}
+                      >
+                        {img ? (
+                          <Image source={{ uri: img }} style={{ width: 160, height: 120 }} resizeMode="cover" />
+                        ) : (
+                          <View style={{ width: 160, height: 120, backgroundColor: '#eaeaea', justifyContent: 'center', alignItems: 'center' }}>
+                            <AntDesign name="picture" size={28} color="#cfcfcf" />
+                          </View>
+                        )}
+
+                        <View style={{ padding: 8 }}>
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: '#111' }} numberOfLines={2}>{title}</Text>
+                          {priceText ? (
+                            <Text style={{ fontSize: 12, color: '#4b5563', marginTop: 6 }}>{currencySymbol || '฿'}{priceText}</Text>
+                          ) : (
+                            <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>{t('viewDetails') || 'View details'}</Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  // fallback placeholders
+                  [1, 2, 3].map((item, idx) => (
+                    <View key={`place-ph-${idx}`} style={{ width: 160, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
+                      <View style={{ width: 160, height: 120, backgroundColor: '#e0e0e0' }} />
+                      <View style={{ padding: 8 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
+                          {t('samplePlaceName') || 'ชื่อสถานที่ท่องเที่ยว'}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿500</Text>
+                      </View>
+                    </View>
+                  ))
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* บัตรเข้าชมสถานที่ท่องเที่ยว */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                {t('entranceTickets') || 'บัตรเข้าชมสถานที่ท่องเที่ยว'}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+                {[1, 2, 3].map((item, idx) => (
+                  <View key={`ticket-${idx}`} style={{ width: 160, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
+                    <View style={{ width: 160, height: 120, backgroundColor: '#e0e0e0' }} />
+                    <View style={{ padding: 8 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
+                        {t('sampleTicketName') || 'ชื่อบัตรเข้าชม'}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿300</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* กิจกรรมยอดนิยม */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                {t('popularActivities') || 'กิจกรรมยอดนิยม'}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+                {[1, 2, 3].map((item, idx) => (
+                  <View key={`activity-${idx}`} style={{ width: 160, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
+                    <View style={{ width: 160, height: 120, backgroundColor: '#e0e0e0' }} />
+                    <View style={{ padding: 8 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
+                        {t('sampleActivityName') || 'ชื่อกิจกรรม'}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿1,200</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* ตั๋วสุดคุ้ม */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                {t('bestValueTickets') || 'ตั๋วสุดคุ้ม'}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+                {[1, 2].map((item, idx) => (
+                  <View key={`value-${idx}`} style={{ width: 200, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
+                    <View style={{ width: 200, height: 140, backgroundColor: '#e0e0e0' }} />
+                    <View style={{ padding: 8 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
+                        {t('sampleValueTicket') || 'ชื่อแพ็คเกจ'}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿1,500</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
         {/* Itinerary / Detail */}
         <View style={{ marginTop: 20 }}>
           <Text
             style={{
               fontSize: 18,
-              fontWeight: '800',
+              fontWeight: '700',
               marginBottom: 8,
             }}
           >
@@ -1756,7 +2062,7 @@ const TourDetailScreen = ({ route, navigation }) => {
           <Text
             style={{
               fontSize: 18,
-              fontWeight: '800',
+              fontWeight: '700',
               marginBottom: 8,
             }}
           >
@@ -1764,38 +2070,40 @@ const TourDetailScreen = ({ route, navigation }) => {
           </Text>
 
           {includes && includes.length ? (
-            <FlatList
-              data={includes.map((i) => stripHtml(i))}
-              keyExtractor={(item, i) => `inc-${i}`}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    marginBottom: 8,
-                  }}
-                >
-                  <Text
+            <View>
+              {includes.map((inc, idx) => {
+                const item = stripHtml(inc);
+                return (
+                  <View
+                    key={`inc-${idx}`}
                     style={{
-                      color: '#10B981',
-                      marginRight: 10,
-                      fontSize: 14,
+                      flexDirection: 'row',
+                      alignItems: 'flex-start',
+                      marginBottom: 8,
                     }}
                   >
-                    ✓
-                  </Text>
-                  <Text
-                    style={{
-                      color: '#374151',
-                      flex: 1,
-                      lineHeight: 20,
-                    }}
-                  >
-                    {item}
-                  </Text>
-                </View>
-              )}
-            />
+                    <Text
+                      style={{
+                        color: '#10B981',
+                        marginRight: 10,
+                        fontSize: 14,
+                      }}
+                    >
+                      ✓
+                    </Text>
+                    <Text
+                      style={{
+                        color: '#374151',
+                        flex: 1,
+                        lineHeight: 20,
+                      }}
+                    >
+                      {item}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           ) : (
             <Text style={{ color: '#6b7280' }}>
               {t('noIncludes') ||
@@ -1803,6 +2111,32 @@ const TourDetailScreen = ({ route, navigation }) => {
             </Text>
           )}
         </View>
+          </View>
+        )}
+
+        {selectedTab === 1 && (
+          <View style={{ padding: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>
+              {t('noReviewsYet') || 'ยังไม่มีรีวิว'}
+            </Text>
+          </View>
+        )}
+
+        {selectedTab === 2 && (
+          <View style={{ padding: 16 }}>
+            <Text style={{ color: '#374151', lineHeight: 22 }}>
+              {t('importantNotes') || 'หมายเหตุสำคัญเกี่ยวกับการเดินทาง'}
+            </Text>
+          </View>
+        )}
+
+        {selectedTab === 3 && (
+          <View style={{ padding: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>
+              {t('noNearbyPlaces') || 'ไม่มีสถานที่ใกล้เคียง'}
+            </Text>
+          </View>
+        )}
 
         {/* Reserve box (updated UI) */}
         <View
@@ -1816,7 +2150,7 @@ const TourDetailScreen = ({ route, navigation }) => {
           }}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700' }}>ผู้โดยสาร</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700' }}>{t('passengers') || 'Passengers'}</Text>
             <AntDesign name="user" size={22} color="#FB6B36" />
           </View>
 
@@ -1838,7 +2172,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                   }}
                 >
                   <Text style={{ color: '#374151', flex: 1, textTransform: 'capitalize', fontSize: 15 }}>
-                    {k === 'adult' ? 'ผู้ใหญ่' : k === 'child' ? 'เด็ก' : 'ทารก'}
+                    {k === 'adult' ? (t('adults') || 'Adults') : k === 'child' ? (t('children') || 'Children') : (t('infants') || 'Infants')}
                   </Text>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1876,7 +2210,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                       </TouchableOpacity>
 
                       <View style={{ minWidth: 44, alignItems: 'center' }}>
-                        <Text style={{ fontWeight: '800', fontSize: 16 }}>{value}</Text>
+                        <Text style={{ fontWeight: '700', fontSize: 16 }}>{value}</Text>
                       </View>
 
                       <TouchableOpacity
@@ -1909,7 +2243,7 @@ const TourDetailScreen = ({ route, navigation }) => {
 
           <View style={{ marginBottom: 12 }}>
             <Text style={{ color: '#374151', marginBottom: 6, textAlign: 'center' }}>
-              เลือกวันที่ออกเดินทาง
+              {t('selectDepartureDate') || 'Select departure date'}
             </Text>
 
             <TouchableOpacity
@@ -1935,19 +2269,23 @@ const TourDetailScreen = ({ route, navigation }) => {
               <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                 {bookingOption === 'special' ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FB6B36' }} /> : null}
               </View>
-              <Text style={{ color: '#374151' }}>วันที่มีส่วนลดพิเศษ</Text>
+              <Text style={{ color: bookingOption === 'special' ? '#FB6B36' : '#374151', fontWeight: bookingOption === 'special' ? '700' : '400' }}>
+                {t('specialDiscountDates') || 'Special discount dates'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setBookingOption('normal')} style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                 {bookingOption === 'normal' ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FB6B36' }} /> : null}
               </View>
-              <Text style={{ color: '#374151' }}>วันปกติรับจอง</Text>
+              <Text style={{ color: bookingOption === 'normal' ? '#FB6B36' : '#374151', fontWeight: bookingOption === 'normal' ? '700' : '400' }}>
+                {t('normalBookingDates') || 'Normal booking dates'}
+              </Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={{ backgroundColor: '#FF7A3A', paddingVertical: 14, borderRadius: 12 }}
+            style={{ backgroundColor: '#FD501E', paddingVertical: 14, borderRadius: 12 }}
             onPress={() => navigation.navigate('TourContact', { 
               tour, 
               tourId, 
@@ -1958,7 +2296,7 @@ const TourDetailScreen = ({ route, navigation }) => {
               option: bookingOption 
             })}
           >
-            <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '800', fontSize: 16 }}>จองเลย</Text>
+            <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '700', fontSize: 16 }}>{t('bookNow') || 'Book now'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -1967,7 +2305,7 @@ const TourDetailScreen = ({ route, navigation }) => {
           <View style={{ marginTop: 20 }}>
             <Text
               style={{
-                fontWeight: '800',
+                fontWeight: '700',
                 marginBottom: 8,
               }}
             >

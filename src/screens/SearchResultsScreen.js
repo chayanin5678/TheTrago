@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   FlatList,
   Image,
@@ -11,11 +12,12 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { useLanguage } from './Screen/LanguageContext';
 import { useCustomer } from './Screen/CustomerContext';
 import ipAddress from '../config/ipconfig';
 import moment from 'moment';
+import { useHideBottomTabBar } from '../utils/hideBottomTabBar';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -32,6 +34,12 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [selectedCurrency, setSelectedCurrency] = useState(params.currency || (customerData && customerData.currency) || 'THB');
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState('฿');
+  // Editable search text in header — initialize from navigation params if provided
+  const [searchText, setSearchText] = useState(
+    (params.q || params.location || params.query || params.search || '').toString()
+  );
+  // Hide bottom tab bar while on this screen
+  useHideBottomTabBar();
 
   const fetchResults = async () => {
     setLoading(true);
@@ -40,7 +48,8 @@ const SearchResultsScreen = ({ route, navigation }) => {
         lang: params.lang || (selectedLanguage === 'th' ? 'th' : 'en'),
         currency: selectedCurrency || params.currency || 'THB',
         country: params.country || '',
-        location: params.location || params.q || '',
+        // Always use explicit searchText (can be empty string) to avoid falling back to old params.q
+        location: typeof searchText !== 'undefined' ? searchText : (params.location || params.q || ''),
         night: params.night || 0,
         day: params.day || 0,
         adult: params.adult || params.adults || 1,
@@ -90,11 +99,15 @@ const SearchResultsScreen = ({ route, navigation }) => {
     }
   };
 
-  // Fetch results when selectedCurrency changes (includes initial mount)
+  // Fetch results when selectedCurrency or searchText changes (includes initial mount)
   useEffect(() => {
     fetchResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCurrency]);
+  }, [selectedCurrency, searchText]);
+
+  // Header title: prefer showing the actual search query/location when provided
+  const searchQueryLabel = (searchText || params.q || params.location || params.query || params.search || '').toString();
+  const headerTitle = searchQueryLabel ? searchQueryLabel : (t('search') || 'Search');
 
   // load currency list (same pattern as SearchFerry/ToursScreen)
   useEffect(() => {
@@ -141,7 +154,14 @@ const SearchResultsScreen = ({ route, navigation }) => {
   }, [currencyList, selectedCurrency, customerData]);
 
   const renderItem = ({ item }) => {
-    const title = item.NameThai || item.NameEng || item.md_tour_name_thai || item.md_tour_name_eng || '';
+    const tourId = item.TourID || item.tourid || item.tourId || item.md_tour_id;
+    
+    // Prefer language-specific name: use NameThai when selectedLanguage is 'th', otherwise NameEng.
+    // Keep existing fallbacks for different API shapes.
+    const title = (selectedLanguage === 'th'
+      ? (item.NameThai || item.md_tour_name_thai || item.NameEng || item.md_tour_name_eng)
+      : (item.NameEng || item.md_tour_name_eng || item.NameThai || item.md_tour_name_thai)
+    ) || '';
     const img = item.Picture || item.PictureUrl || item.PictureUrlWebp || null;
     const price = item.Price ? (item.Price.adult || item.Price) : null;
     // Format price: prefer showing the currency symbol (e.g. "$ 123.00") instead of locale currency name like "US$"
@@ -196,9 +216,15 @@ const SearchResultsScreen = ({ route, navigation }) => {
     return (
       <View style={styles.card}>
         {img ? (
-          <Image source={{ uri: img }} style={styles.cardImage} resizeMode="cover" />
+          <Image 
+            source={{ uri: img }} 
+            style={styles.cardImage} 
+            resizeMode="cover"
+          />
         ) : (
-          <View style={[styles.cardImage, { backgroundColor: '#EEE' }]} />
+          <View style={[styles.cardImage, { backgroundColor: '#EEE', justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="image-outline" size={40} color="#999" />
+          </View>
         )}
 
         <View style={styles.cardBody}>
@@ -214,7 +240,6 @@ const SearchResultsScreen = ({ route, navigation }) => {
           ) : null}
 
           <TouchableOpacity style={styles.viewBtn} onPress={() => {
-            const tourId = item.TourID || item.tourid || item.tourId || item.md_tour_id;
             try {
               // update customer context with selected tour id
               updateCustomerData({ md_tours_id: tourId });
@@ -231,7 +256,46 @@ const SearchResultsScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    // keep top safe area but allow content to extend to bottom
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={["top", "left", "right"]}>
+      {/* Header with Back Button + Search Pill + Search Icon */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <AntDesign name="left" size={24} color="#0f172a" />
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
+          <View style={styles.searchPill}>
+
+            <TextInput
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder={t('search') || 'Search'}
+              placeholderTextColor="#999"
+              returnKeyType="search"
+              onSubmitEditing={() => fetchResults()}
+              style={[styles.searchInputHeader, { flex: 1, marginRight: 8, paddingVertical: 0, textAlignVertical: 'center' }]}
+            />
+
+            {searchText ? (
+              <TouchableOpacity onPress={() => { setSearchText(''); }} style={{ marginLeft: 0 }}>
+                <Ionicons name="close-circle" size={20} color="#999" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.searchIconButton}
+          onPress={() => fetchResults()}
+        >
+          <Ionicons name="search" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{(t('toursAvailable') || '{count} Tours Available').replace('{count}', total)}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -297,22 +361,80 @@ const SearchResultsScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 20,
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
   header: { padding: 16, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: '#0f172a', flex: 1 },
   filterBtn: { flexDirection: 'row', alignItems: 'center' },
   filterText: { marginLeft: 8, color: '#FD501E', fontWeight: '700' },
   card: { backgroundColor: '#fff', borderRadius: 12, marginBottom: 18, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' },
-  cardImage: { width: '100%', height: 180 },
+  cardImage: { width: '100%', height: 180, backgroundColor: '#f5f5f5' },
   cardBody: { padding: 12 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   badge: { backgroundColor: '#FF6363', color: '#fff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, fontWeight: '800' },
   durationPill: { backgroundColor: '#fff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
-  durationText: { color: '#111', fontWeight: '700' },
-  title: { marginTop: 12, fontSize: 18, fontWeight: '800', color: '#0f172a' },
-  price: { marginTop: 8, color: '#10B981', fontWeight: '800', fontSize: 16 },
-  priceNote: { fontSize: 12, color: '#64748b', fontWeight: '500' },
-  viewBtn: { marginTop: 12, backgroundColor: '#FF7A3A', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, alignSelf: 'flex-start' },
-  viewBtnText: { color: '#fff', fontWeight: '700' },
+  durationText: { color: '#333', fontSize: 10, fontWeight: '600' },
+  title: { marginTop: 12, fontSize: 14, fontWeight: '600', color: '#333' },
+  price: { marginTop: 8, fontSize: 18, fontWeight: '700', color: '#4FC3C3' },
+  priceNote: { fontSize: 12, color: '#666' },
+  viewBtn: { marginTop: 12, backgroundColor: '#FD501E', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, alignSelf: 'flex-start' },
+  viewBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
+  searchBoxHeader: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  searchInputHeader: {
+    fontSize: 16,
+    color: '#0f172a',
+    padding: 0,
+  },
+  searchPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 28,
+    paddingHorizontal: 12,
+    height: 44,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  searchIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FD501E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 export default SearchResultsScreen;

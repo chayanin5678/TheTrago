@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -41,7 +42,7 @@ const ToursScreen = ({ navigation }) => {
   const [dropdownFrame, setDropdownFrame] = useState(null); // {x,y,width,height}
 
   // >>> Selected category tab
-  const [selectedTab, setSelectedTab] = useState('กรุงเทพฯ');
+  const [selectedTab, setSelectedTab] = useState(0); // Use index instead of label
 
   // >>> Scroll animation for search box
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -85,6 +86,21 @@ const ToursScreen = ({ navigation }) => {
   const [bannerUrls, setBannerUrls] = useState([]);
   const [bannerImgW, setBannerImgW] = useState(null);
   const [bannerImgH, setBannerImgH] = useState(null);
+
+  // Tour cards data from API
+  const [tourCards, setTourCards] = useState([]);
+  const [tourCardsLoading, setTourCardsLoading] = useState(false);
+  const [tourCardsPage, setTourCardsPage] = useState(1);
+  const [tourCardsHasMore, setTourCardsHasMore] = useState(true);
+  const [allTourCards, setAllTourCards] = useState([]); // Keep all loaded tours
+
+  // Location tabs from API
+  const [locationTabs, setLocationTabs] = useState([]);
+  const [locationTabsLoading, setLocationTabsLoading] = useState(true);
+
+  // Animated placeholder
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const placeholderAnim = useRef(new Animated.Value(0)).current;
 
   // local fallback banners
   const localBanners = [
@@ -141,6 +157,29 @@ const ToursScreen = ({ navigation }) => {
 
     return () => {
       controller.abort();
+    };
+  }, []);
+
+  // load location tabs from API
+  useEffect(() => {
+    let mounted = true;
+    setLocationTabsLoading(true);
+    fetch('https://thetrago.com/AppApi/locationtour')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (data && data.status === 'success' && Array.isArray(data.data)) {
+          setLocationTabs(data.data);
+        } else if (Array.isArray(data)) {
+          setLocationTabs(data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setLocationTabsLoading(false);
+      });
+    return () => {
+      mounted = false;
     };
   }, []);
 
@@ -213,6 +252,119 @@ const ToursScreen = ({ navigation }) => {
     };
   }, []);
 
+  // Animated placeholder effect - cycle through tour names
+  useEffect(() => {
+    if (tours.length === 0 || packageText) return; // Only animate when empty and tours loaded
+    
+    const animatePlaceholder = () => {
+      // Start from bottom (translateY: 20)
+      placeholderAnim.setValue(0);
+      
+      Animated.sequence([
+        // Slide up from bottom and fade in
+        Animated.timing(placeholderAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        // Stay visible for a moment
+        Animated.delay(2400),
+        // Slide up and fade out
+        Animated.timing(placeholderAnim, {
+          toValue: 2,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // After animation completes, move to next tour
+        setPlaceholderIndex((prev) => (prev + 1) % Math.min(tours.length, 10));
+      });
+    };
+
+    // Initial animation
+    animatePlaceholder();
+
+    const interval = setInterval(() => {
+      animatePlaceholder();
+    }, 3600); // Total cycle time: 600 + 2400 + 600 = 3600ms
+
+    return () => clearInterval(interval);
+  }, [tours, packageText, placeholderAnim]);
+
+  // load tour cards data from GetList API
+  useEffect(() => {
+    let mounted = true;
+    setTourCardsLoading(true);
+    
+    // Calculate tomorrow's date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    const body = {
+      lang: selectedLanguage === 'th' ? 'th' : 'en',
+      currency: selectedCurrency || 'THB',
+      country: '',
+      location: '',
+      night: 0,
+      day: 0,
+      adult: 1,
+      child: 0,
+      infant: 0,
+      date: tomorrowStr,
+      popular: 1, // Get popular tours
+    };
+
+    fetch('https://thetrago.com/api_tour/V1/tour/GetList', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (!mounted) return;
+        if (json && (json.data || json.result || json.items)) {
+          const list = json.data || json.result || json.items;
+          setAllTourCards(list); // Store all tours
+          setTourCards(list.slice(0, 4)); // Show first 4 tours
+          setTourCardsPage(1);
+          setTourCardsHasMore(list.length > 4);
+        } else if (Array.isArray(json)) {
+          setAllTourCards(json);
+          setTourCards(json.slice(0, 4));
+          setTourCardsPage(1);
+          setTourCardsHasMore(json.length > 4);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setTourCardsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedLanguage, selectedCurrency]);
+
+  // Load more tours when scrolling
+  const loadMoreTours = () => {
+    if (!tourCardsHasMore || tourCardsLoading) return;
+    
+    const nextPage = tourCardsPage + 1;
+    const itemsPerPage = 4;
+    const startIndex = nextPage * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const newTours = allTourCards.slice(startIndex, endIndex);
+    
+    if (newTours.length > 0) {
+      setTourCards(prev => [...prev, ...newTours]);
+      setTourCardsPage(nextPage);
+      setTourCardsHasMore(endIndex < allTourCards.length);
+    } else {
+      setTourCardsHasMore(false);
+    }
+  };
+
   // clear dropdown when text empty
   useEffect(() => {
     if (!packageText || packageText.trim().length === 0) {
@@ -235,15 +387,31 @@ const ToursScreen = ({ navigation }) => {
   }, [searchResults]);
 
   // ---------------- Render ----------------
-  const categoryTabs = ['กรุงเทพฯ', 'จีน', 'เชียงใหม่', 'เชียงใส', 'ญี่ปุ่น', 'ฮองกง'];
+  // Use location tabs from API or fallback to hardcoded
+  const categoryTabs = locationTabs.length > 0 
+    ? locationTabs.map(loc => {
+        if (selectedLanguage === 'th') {
+          return loc.md_location_namethai || loc.md_location_nameeng || loc.name;
+        } else {
+          return loc.md_location_nameeng || loc.md_location_namethai || loc.name;
+        }
+      })
+    : [
+        t('bangkokTab'), 
+        t('chinaTab'), 
+        t('chiangMaiTab'), 
+        t('chiangRaiTab'), 
+        t('japanTab'), 
+        t('hongKongTab')
+      ];
   
   const categoryIcons = [
-    { icon: '🎫', label: 'ตั๋วที่เที่ยว', iconName: 'airplane' },
-    { icon: '🗺️', label: 'ทัวร์', iconName: 'map' },
-    { icon: '🚢', label: 'กิจกรรมล่องเรือ', iconName: 'boat' },
-    { icon: '🏖️', label: 'กิจกรรมกลางแจ้ง', iconName: 'sunny' },
-    { icon: '💆', label: 'สุขภาพและสปา', iconName: 'fitness' },
-    { icon: '⛰️', label: 'ประสบการณ์ทางวัฒนธรรม', iconName: 'navigate' },
+    { icon: '🎫', label: t('attractionTickets'), iconName: 'airplane' },
+    { icon: '🗺️', label: t('toursCategory'), iconName: 'map' },
+    { icon: '🚢', label: t('boatActivities'), iconName: 'boat' },
+    { icon: '🏖️', label: t('outdoorActivities'), iconName: 'sunny' },
+    { icon: '💆', label: t('healthAndSpa'), iconName: 'fitness' },
+    { icon: '⛰️', label: t('culturalExperiences'), iconName: 'navigate' },
   ];
 
   return (
@@ -264,7 +432,7 @@ const ToursScreen = ({ navigation }) => {
           onPress={() => navigation && navigation.goBack && navigation.goBack()}
           style={styles.backButtonCircle}
         >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          <AntDesign name="left" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </Animated.View>
 
@@ -320,7 +488,7 @@ const ToursScreen = ({ navigation }) => {
               onPress={() => navigation && navigation.goBack && navigation.goBack()}
               style={styles.searchBackButton}
             >
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <AntDesign name="left" size={24} color="#333" />
             </TouchableOpacity>
           </Animated.View>
 
@@ -342,38 +510,74 @@ const ToursScreen = ({ navigation }) => {
             }),
             
           }]} ref={inputAreaRef}>
-            <TextInput
-              placeholder="กรุงเทพฯ"
-              placeholderTextColor="#999"
-              value={packageText}
-              onChangeText={(text) => {
-                setPackageText(text);
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              {!packageText && tours.length > 0 && (
+                <Animated.View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    opacity: placeholderAnim.interpolate({
+                      inputRange: [0, 1, 2],
+                      outputRange: [0, 1, 0], // Fade in from bottom, stay visible, fade out to top
+                    }),
+                    transform: [
+                      {
+                        translateY: placeholderAnim.interpolate({
+                          inputRange: [0, 1, 2],
+                          outputRange: [20, 0, -20], // Start from bottom (+20), center (0), end at top (-20)
+                        }),
+                      },
+                    ],
+                  }}
+                  pointerEvents="none"
+                >
+                  <Text
+                    style={{
+                      color: '#999',
+                      fontSize: 16,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {selectedLanguage === 'th'
+                      ? tours[placeholderIndex]?.md_tour_name_thai || t('bangkokTab')
+                      : tours[placeholderIndex]?.md_tour_name_eng || t('bangkokTab')}
+                  </Text>
+                </Animated.View>
+              )}
+              <TextInput
+                placeholder={tours.length === 0 ? t('bangkokTab') : ''}
+                placeholderTextColor="#999"
+                value={packageText}
+                onChangeText={(text) => {
+                  setPackageText(text);
 
-                if (searchDebounceRef.current) {
-                  clearTimeout(searchDebounceRef.current);
-                }
+                  if (searchDebounceRef.current) {
+                    clearTimeout(searchDebounceRef.current);
+                  }
 
-                if (!text || text.trim().length === 0) {
-                  setSearchResults([]);
-                  return;
-                }
+                  if (!text || text.trim().length === 0) {
+                    setSearchResults([]);
+                    return;
+                  }
 
-                searchDebounceRef.current = setTimeout(() => {
-                  const q = text.trim().toLowerCase();
-                  const results = tours.filter((it) => {
-                    const thai = (it.md_tour_name_thai || '')
-                      .toString()
-                      .toLowerCase();
-                    const eng = (it.md_tour_name_eng || '')
-                      .toString()
-                      .toLowerCase();
-                    return thai.includes(q) || eng.includes(q);
-                  });
-                  setSearchResults(results.slice(0, 10));
-                }, 250);
-              }}
-              style={styles.searchInput}
-            />
+                  searchDebounceRef.current = setTimeout(() => {
+                    const q = text.trim().toLowerCase();
+                    const results = tours.filter((it) => {
+                      const thai = (it.md_tour_name_thai || '')
+                        .toString()
+                        .toLowerCase();
+                      const eng = (it.md_tour_name_eng || '')
+                        .toString()
+                        .toLowerCase();
+                      return thai.includes(q) || eng.includes(q);
+                    });
+                    setSearchResults(results.slice(0, 10));
+                  }, 250);
+                }}
+                style={styles.searchInput}
+              />
+            </View>
             {packageText ? (
               <TouchableOpacity
                 onPress={() => {
@@ -431,7 +635,7 @@ const ToursScreen = ({ navigation }) => {
               }),
             }}
           >
-            <Text style={[styles.searchButtonText, { marginLeft: 8 }]}>ค้นหา</Text>
+            <Text style={[styles.searchButtonText, { marginLeft: 8 }]}>{t('searchButton')}</Text>
             </Animated.View>
 
         
@@ -439,6 +643,66 @@ const ToursScreen = ({ navigation }) => {
           </AnimatedTouchableOpacity>
              
         </View>
+
+        {/* Category Tabs */}
+        <Animated.ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.tabsContainer, {
+            borderBottomLeftRadius: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [12, 0],
+                extrapolate: 'clamp',
+              }),
+              borderBottomRightRadius: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [12, 0],
+                extrapolate: 'clamp',
+              }),
+              borderTopWidth: scrollY.interpolate({
+                inputRange: [100, 150],
+                outputRange: [1, 0],
+                extrapolate: 'clamp',
+              }),
+          }]}
+          contentContainerStyle={styles.tabsContent}
+        >
+          {categoryTabs.map((tab, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.tab,
+                selectedTab === index && styles.tabSelected,
+              ]}
+              onPress={() => {
+                setSelectedTab(index);
+                // Navigate to SearchResultsScreen with location query
+                const locationData = locationTabs[index];
+                navigation && navigation.navigate
+                  ? navigation.navigate('SearchResults', {
+                      q: tab,
+                      location: tab,
+                      country: locationData?.md_location_countiesid || '',
+                      departureDate: departureDate ? moment(departureDate).toISOString() : '',
+                      adults,
+                      children,
+                      infant,
+                      currency: selectedCurrency,
+                    })
+                  : null;
+              }}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTab === index && styles.tabTextSelected,
+                ]}
+              >
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </Animated.ScrollView>
       </Animated.View>
 
       {/* =========================
@@ -545,6 +809,15 @@ const ToursScreen = ({ navigation }) => {
           if (tabBarScrollProps.onScroll) {
             tabBarScrollProps.onScroll(event);
           }
+
+          // Check if scrolled to bottom for infinite scroll
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+          const paddingToBottom = 100; // Load more when 100px from bottom
+          const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+          
+          if (isCloseToBottom && tourCardsHasMore && !tourCardsLoading) {
+            loadMoreTours();
+          }
         }}
         scrollEventThrottle={16}
       >
@@ -580,187 +853,213 @@ const ToursScreen = ({ navigation }) => {
 
         {/* Category Tabs + Icons: grouped into one content card */}
         <View style={styles.contentCard}>
-        {/* Category Tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {categoryTabs.map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.tab,
-                selectedTab === tab && styles.tabSelected,
-              ]}
-              onPress={() => setSelectedTab(tab)}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  selectedTab === tab && styles.tabTextSelected,
-                ]}
-              >
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+  {/* Why use The Trago Section */}
+  <View style={styles.whyUseSection}>
+    <Text style={styles.whyUseTitle}>
+      {t('whyUseTheTrago')}{'\n'}
+      <Text style={styles.whyUseTitleOrange}>The Trago?</Text>
+    </Text>
+    <Text style={styles.whyUseSubtitle}>
+      {t('whyUseSubtitle')}
+    </Text>
 
-  {/* Category Icons Grid */}
-  <View style={styles.categoryGrid}>
-          {categoryIcons.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.categoryItem}
-              onPress={() => {
-                // Navigate to specific category
-              }}
-            >
-              <View style={styles.categoryIconContainer}>
-                <Ionicons name={item.iconName} size={28} color="#FD501E" />
-              </View>
-              <Text style={styles.categoryLabel} numberOfLines={2}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+    {/* Features List */}
+    <View style={styles.featuresList}>
+      <View style={styles.featureItem}>
+        <View style={styles.featureIconContainer}>
+          <Ionicons name="shield-checkmark" size={24} color="#FD501E" />
         </View>
+        <View style={styles.featureContent}>
+          <Text style={styles.featureTitle}>{t('insuranceFeature')}</Text>
+          <Text style={styles.featureDescription}>{t('insuranceFeatureDesc')}</Text>
+        </View>
+      </View>
 
-  {/* Additional Category Rows */}
-  <View style={styles.additionalCategories}>
-          <TouchableOpacity style={styles.categoryRow}>
-              <View style={styles.categoryRowIcon}>
-              <Ionicons name="fitness" size={24} color="#FD501E" />
-            </View>
-            <Text style={styles.categoryRowText}>กิจกรรมกลางแจ้ง</Text>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
+      <View style={styles.featureItem}>
+        <View style={styles.featureIconContainer}>
+          <Ionicons name="ticket" size={24} color="#FD501E" />
+        </View>
+        <View style={styles.featureContent}>
+          <Text style={styles.featureTitle}>{t('easyBookingFeature')}</Text>
+          <Text style={styles.featureDescription}>{t('easyBookingFeatureDesc')}</Text>
+        </View>
+      </View>
 
-          <TouchableOpacity style={styles.categoryRow}>
-            <View style={styles.categoryRowIcon}>
-              <Ionicons name="medkit" size={24} color="#FF1493" />
-            </View>
-            <Text style={styles.categoryRowText}>สุขภาพและสปา</Text>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
+      <View style={styles.featureItem}>
+        <View style={styles.featureIconContainer}>
+          <Ionicons name="cash" size={24} color="#FD501E" />
+        </View>
+        <View style={styles.featureContent}>
+          <Text style={styles.featureTitle}>{t('moneyBackFeature')}</Text>
+          <Text style={styles.featureDescription}>{t('moneyBackFeatureDesc')}</Text>
+        </View>
+      </View>
+    </View>
 
-          <TouchableOpacity style={styles.categoryRow}>
-            <View style={styles.categoryRowIcon}>
-              <Ionicons name="beer" size={24} color="#FFA500" />
-            </View>
-            <Text style={styles.categoryRowText}>ประสบการณ์ทางวัฒนธรรม</Text>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
+    {/* Popular Experiences Section */}
+    <View style={styles.popularSection}>
+      <View style={styles.popularBadge}>
+        <Text style={styles.popularBadgeText}>{t('topDestinationBadge')}</Text>
+      </View>
+      <Text style={styles.popularTitle}>
+        {t('popularExperiences')} <Text style={styles.popularTitleOrange}>{t('popularExperiencesHighlight')}</Text>
+      </Text>
+      <Text style={styles.popularDescription}>
+        {t('popularExperiencesDesc')}
+      </Text>
+      <TouchableOpacity
+        style={styles.exploreButton}
+        activeOpacity={0.85}
+        onPress={() => {
+          navigation && navigation.navigate
+            ? navigation.navigate('SearchResults', {
+                q: packageText || '',
+                departureDate: departureDate ? moment(departureDate).toISOString() : '',
+                adults,
+                children,
+                infant,
+                currency: selectedCurrency,
+              })
+            : null;
+        }}
+      >
+        <Text style={styles.exploreButtonText}>{t('exploreMore')} →</Text>
+      </TouchableOpacity>
+    </View>
   </View>
-  </View>
 
-  {/* Recently Viewed Section */}
-        <View style={styles.promotionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>ดูล่าสุด</Text>
-          </View>
-          
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.promotionsScroll}
+  {/* Tour Cards Grid */}
+  <View style={styles.tourCardsGrid}>
+    {tourCardsLoading ? (
+      <View style={{ width: '100%', padding: 40, alignItems: 'center' }}>
+        <Text style={{ color: '#999', fontSize: 14 }}>{t('loading') || 'กำลังโหลด...'}</Text>
+      </View>
+    ) : tourCards.length > 0 ? (
+      tourCards.map((tour, index) => {
+        // Prefer language-specific name: use NameThai when selectedLanguage is 'th', otherwise NameEng.
+        // Keep existing fallbacks for different API shapes.
+        const title = (selectedLanguage === 'th'
+          ? (tour.NameThai || tour.md_tour_name_thai || tour.NameEng || tour.md_tour_name_eng)
+          : (tour.NameEng || tour.md_tour_name_eng || tour.NameThai || tour.md_tour_name_thai)
+        ) || '';
+        const img = tour.Picture || tour.PictureUrl || tour.PictureUrlWebp || null;
+        const price = tour.Price ? (tour.Price.adult || tour.Price) : null;
+        const rawDuration = tour.TourDuration || tour.TourType || tour.tour_duration || '';
+        
+        // Determine country name from API response (same logic as SearchResultsScreen)
+        let countryName = '';
+        if (tour.country) {
+          if (typeof tour.country === 'string') {
+            countryName = tour.country;
+          } else if (Array.isArray(tour.country)) {
+            countryName = tour.country[0]?.name || tour.country[0]?.NameThai || '';
+          } else if (typeof tour.country === 'object') {
+            countryName = tour.country.name || tour.country.NameThai || tour.country.name_eng || '';
+          }
+        }
+        if (!countryName) countryName = tour.Country || 'THAILAND';
+
+        // Normalize duration display
+        let duration = '';
+        if (rawDuration) {
+          const rd = String(rawDuration).trim();
+          const lower = rd.toLowerCase();
+          if (lower === 'half' || lower === 'half-day' || lower === 'half day' || lower === 'ครึ่งวัน') {
+            duration = 'Half day';
+          } else {
+            duration = rd;
+          }
+        }
+        if (!duration) duration = 'One Day';
+        
+        return (
+          <TouchableOpacity
+            key={tour.Id || tour.md_tour_id || index}
+            style={styles.tourCard}
+            onPress={() => {
+              const tourId = tour.TourID || tour.tourid || tour.tourId || tour.Id || tour.md_tour_id;
+              try {
+                // update customer context with selected tour id
+                updateCustomerData({ md_tours_id: tourId });
+              } catch (e) {
+                // ignore if context not available
+              }
+              navigation && navigation.navigate
+                ? navigation.navigate('TourDetailNew', { 
+                    tourId,
+                    item: tour 
+                  })
+                : null;
+            }}
           >
-            {promotions.slice(0, 3).map((promo, index) => (
-              <TouchableOpacity
-                key={promo.md_promotion_id || index}
-                style={styles.promoCard}
-                onPress={() => {
-                  // Navigate to promotion detail
-                }}
-              >
-                <Image
-                  source={{
-                    uri: `https://www.thetrago.com/Api/uploads/promotion/index/${promo.md_promotion_picname}`,
-                  }}
-                  style={styles.promoImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.promoInfo}>
-                  <View style={styles.promoLocation}>
-                    <Ionicons name="location" size={14} color="#666" />
-                    <Text style={styles.promoLocationText} numberOfLines={1}>
-                      {promo.md_promotion_name || 'โปรโมชั่น'}
-                    </Text>
-                  </View>
-                  <Text style={styles.promoTitle} numberOfLines={2}>
-                    {promo.md_promotion_name || 'แพ็คเกจพิเศษ'}
-                  </Text>
-                  <View style={styles.promoRating}>
-                    <Text style={styles.ratingBadge}>❤️ 8.6</Text>
-                    <Text style={styles.tripBestBadge}>🏆 Trip.Best</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Bottom info section */}
-        <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>ที่เที่ยวกรุงเทพฯสำหรับคนพื้นที่</Text>
-        </View>
-
-        {/* Bottom Navigation Tabs */}
-        <View style={styles.bottomTabs}>
-            <TouchableOpacity style={styles.bottomTab}>
-            <Ionicons name="star" size={24} color="#FD501E" />
-            <Text style={styles.bottomTabText}>ตั๋วเลือกยอดนิยม</Text>
-            <View style={styles.bottomTabIndicator} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTab}>
-            <Ionicons name="ticket" size={24} color="#666" />
-            <Text style={[styles.bottomTabText, { color: '#666' }]}>สถานที่ท่องเที่ยว</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTab}>
-            <Ionicons name="planet" size={24} color="#666" />
-            <Text style={[styles.bottomTabText, { color: '#666' }]}>กิจกรรม</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTab}>
-            <Ionicons name="cash" size={24} color="#666" />
-            <Text style={[styles.bottomTabText, { color: '#666' }]}>สิ่งอำนวยความสะดวก</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Final Promotion Card */}
-        {promotions.length > 0 && (
-          <View style={styles.finalPromoCard}>
-            <TouchableOpacity
-              onPress={() => {
-                // Navigate to promotion detail
-              }}
-            >
+            {img ? (
               <Image
-                source={{
-                  uri: `https://www.thetrago.com/Api/uploads/promotion/index/${promotions[0].md_promotion_picname}`,
-                }}
-                style={styles.finalPromoImage}
+                source={{ uri: img }}
+                style={styles.tourCardImage}
                 resizeMode="cover"
               />
-              <View style={styles.heartIcon}>
-                <Ionicons name="heart-outline" size={24} color="#FFF" />
+            ) : (
+              <View style={[styles.tourCardImage, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+                <Ionicons name="image-outline" size={40} color="#ccc" />
               </View>
-            </TouchableOpacity>
-            <View style={styles.finalPromoInfo}>
-              <View style={styles.promoTagContainer}>
-                <Text style={styles.promoTag}>ดูล่าสุด</Text>
+            )}
+            
+            {/* Badge Overlay */}
+            <View style={styles.tourBadgeContainer}>
+              <View style={styles.tourBadge}>
+                <Text style={styles.tourBadgeText}>{countryName.toUpperCase()}</Text>
               </View>
-              <Text style={styles.finalPromoTitle}>พระบรมมหาราชวัง</Text>
-              <View style={styles.finalPromoRating}>
-                <Text style={styles.finalRatingScore}>❤️ 8.6</Text>
+              <View style={styles.tourDurationBadge}>
+                <Text style={styles.tourDurationText}>{duration}</Text>
               </View>
             </View>
-          </View>
-        )}
+
+            {/* Card Content */}
+            <View style={styles.tourCardContent}>
+              <Text style={styles.tourCardTitle} numberOfLines={2}>
+                {title}
+              </Text>
+              <View style={styles.tourCardPriceRow}>
+                <Text style={styles.tourCardPrice}>
+                  {selectedSysmbol}{price !== null && price !== undefined ? Number(price).toLocaleString() : '-'}
+                </Text>
+                <Text style={styles.tourCardPriceUnit}>
+                  {selectedLanguage === 'th' ? '/ท่าน' : '/person'}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.tourCardButton}>
+                <Text style={styles.tourCardButtonText}>{t('viewDetails') || 'View Details'}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        );
+      })
+    ) : (
+      <View style={{ width: '100%', padding: 40, alignItems: 'center' }}>
+        <Text style={{ color: '#999', fontSize: 14 }}>{t('noToursFound') || 'ไม่พบทัวร์'}</Text>
+      </View>
+    )}
+    
+    {/* Loading more indicator - show when loading */}
+    {tourCardsHasMore && tourCards.length > 0 && (
+      <View style={{ width: '100%', padding: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color="#FD501E" />
+        <Text style={{ color: '#999', fontSize: 12, marginTop: 8 }}>
+          {selectedLanguage === 'th' ? 'กำลังโหลดเพิ่ม...' : 'Loading more...'}
+        </Text>
+      </View>
+    )}
+    
+    {/* End of list indicator */}
+    {!tourCardsHasMore && tourCards.length > 4 && (
+      <View style={{ width: '100%', padding: 20, alignItems: 'center' }}>
+        <Text style={{ color: '#999', fontSize: 12 }}>
+          {selectedLanguage === 'th' ? 'แสดงทัวร์ทั้งหมดแล้ว' : 'All tours displayed'}
+        </Text>
+      </View>
+    )}
+  </View>
+  </View>
       </ScrollView>
 
       {/* ---- DATE MODAL ---- */}
@@ -1445,11 +1744,14 @@ const styles = StyleSheet.create({
 
     zIndex: 99,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    shadowOpacity: 0.1,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    shadowOpacity: 0.15,
+    elevation: 8,
     alignSelf: 'center',
+   // overflow: 'hidden',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
 
   // Search box container
@@ -1493,6 +1795,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
 
   searchButton: {
@@ -1520,14 +1823,17 @@ const styles = StyleSheet.create({
   // Tabs styles
   tabsContainer: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    paddingHorizontal: 16,
   },
 
   tabsContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingVertical: 12,
-    gap: 12,
+    gap: 4,
   },
 
   tab: {
@@ -1553,6 +1859,122 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  // Why use The Trago Section
+  whyUseSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    backgroundColor: '#FFFFFF',
+  },
+
+  whyUseTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#333',
+    lineHeight: 36,
+    marginBottom: 12,
+  },
+
+  whyUseTitleOrange: {
+    color: '#FD501E',
+  },
+
+  whyUseSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+
+  featuresList: {
+    marginBottom: 32,
+  },
+
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#FFF3ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+
+  featureContent: {
+    flex: 1,
+  },
+
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+
+  featureDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+
+  popularSection: {
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+
+  popularBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#4FC3C3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 16,
+  },
+
+  popularBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  popularTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+  },
+
+  popularTitleOrange: {
+    color: '#FD501E',
+  },
+
+  popularDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+
+  exploreButton: {
+    backgroundColor: '#FD501E',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    alignSelf: 'flex-start',
+  },
+
+  exploreButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
   // Category grid styles
   categoryGrid: {
     flexDirection: 'row',
@@ -1576,12 +1998,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     zIndex: 2,
+     marginTop: 30,
   },
 
   categoryItem: {
     width: '33.33%',
     alignItems: 'center',
     marginBottom: 20,
+    
   },
 
   categoryIconContainer: {
@@ -1606,6 +2030,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: '#FFFFFF',
+   
   },
 
   categoryRow: {
@@ -1827,6 +2252,116 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FF1744',
+  },
+
+  // Tour Cards Grid Styles
+  tourCardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+  },
+
+  tourCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 8,
+  },
+
+  tourCardImage: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#F5F5F5',
+  },
+
+  tourBadgeContainer: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+
+  tourBadge: {
+    backgroundColor: '#E31E24',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  tourBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  tourDurationBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  tourDurationText: {
+    color: '#333',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  tourCardContent: {
+    padding: 12,
+  },
+
+  tourCardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    minHeight: 36,
+  },
+
+  tourCardPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 10,
+  },
+
+  tourCardPrice: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#4FC3C3',
+  },
+
+  tourCardPriceUnit: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 2,
+  },
+
+  tourCardButton: {
+    backgroundColor: '#FD501E',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  tourCardButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   container: {
