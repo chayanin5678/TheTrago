@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Animated,
   Dimensions,
   Modal,
   StatusBar,
@@ -19,6 +20,7 @@ import { useCustomer } from './Screen/CustomerContext';
 import { useHideBottomTabBar } from '../utils/hideBottomTabBar';
 import { AntDesign } from '@expo/vector-icons';
 import styles from '../styles/CSS/TripDetailStyles';
+// Note: prefer built-in Animated for simple header animations used here
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // match iOS action sheet width (buttons have 16pt margin each side)
@@ -27,7 +29,7 @@ const pickerWidth = screenWidth - 32; // equals action-sheet width (screen - 32)
 const TourDetailScreen = ({ route, navigation }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
-  const { customerData } = useCustomer();
+  const { customerData, updateCustomerData } = useCustomer();
   const params = route?.params || {};
   const tourId =
     params.tourId ||
@@ -37,6 +39,18 @@ const TourDetailScreen = ({ route, navigation }) => {
 
   // hide bottom tab bar while on this screen
   useHideBottomTabBar();
+
+  // helper: format date to YYYY-MM-DD (safe)
+  const formatDateYMD = (d) => {
+    try {
+      if (!d) return '';
+      const dateObj = d instanceof Date ? d : new Date(d);
+      if (isNaN(dateObj.getTime())) return '';
+      return dateObj.toISOString().slice(0, 10);
+    } catch (e) {
+      return '';
+    }
+  };
 
   // ----------------------- STATE -----------------------
   const [loading, setLoading] = useState(true);
@@ -49,6 +63,18 @@ const TourDetailScreen = ({ route, navigation }) => {
   const [modalIndex, setModalIndex] = useState(0);
 
   const fullListRef = useRef(null);
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems && viewableItems.length > 0) {
+      const idx = viewableItems[0].index ?? 0;
+      setModalIndex(idx);
+    }
+  }).current;
+  const scrollRef = useRef(null);
+  const [galleryY, setGalleryY] = useState(0);
+    
+  const scrollY = useRef(new Animated.Value(0)).current;
+    
 
   // booking UI state (for the reserve box)
   const [bookingPassengers, setBookingPassengers] = useState(() => {
@@ -80,6 +106,13 @@ const TourDetailScreen = ({ route, navigation }) => {
   // Interesting places data (from toursearch API)
   const [interestingPlaces, setInterestingPlaces] = useState([]);
   const [interestingLoading, setInterestingLoading] = useState(false);
+
+  // Toggle to hide/show some extra sections while we polish the layout
+  // Make 'interesting places' visible but keep tickets/activities hidden by default
+  const SHOW_INTERESTING = true;
+  const SHOW_TICKETS = false;
+  const SHOW_POPULAR_ACTIVITIES = false;
+  const SHOW_BEST_VALUE = false;
 
   // repeating long-press refs for passenger controls
   const repeatRef = useRef({});
@@ -1658,39 +1691,107 @@ const TourDetailScreen = ({ route, navigation }) => {
   // allow content to extend to the top (remove top safe area)
   <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={["left", "right"]}>
       {/* Header with Back Button */}
-      <View style={[styles.topHeaderOverlay, { paddingTop: (insets.top || 0) + 12 }] }>
-        <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: 'rgba(0,0,0,0.4)' }]}
-          onPress={() => navigation.goBack()}
+      <Animated.View
+        style={[
+          styles.topHeaderOverlay,
+          {
+            // single-row header: back button left, centered title, right spacer
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: headerHeight,
+            paddingTop: (insets.top || 0) + 12,
+            backgroundColor: scrollY.interpolate({
+              inputRange: [0, 120],
+              outputRange: ['transparent', '#ffffff'],
+              extrapolate: 'clamp',
+            }),
+            borderBottomWidth: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
+            borderBottomColor: 'rgba(0,0,0,0.06)',
+            paddingHorizontal: 12,
+          },
+        ]}
+      >
+        {/* Back button (left) */}
+        <Animated.View
+          style={[
+            styles.backButton,
+            {
+              overflow: 'hidden',
+              // animate background from semi-transparent dark over image -> white when scrolled
+              backgroundColor: scrollY.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.12)'],
+                extrapolate: 'clamp',
+              }),
+            },
+          ]}
         >
-          <AntDesign name="left" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={[styles.topHeaderTitle, { color: '#FFFFFF' }]}>{t('tourDetails') || 'Tour Details'}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
+            <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: scrollY.interpolate({ inputRange: [0, 100], outputRange: [1, 0], extrapolate: 'clamp' }) }}>
+              <AntDesign name="left" size={24} color="#FFFFFF" />
+            </Animated.View>
+            <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: scrollY.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: 'clamp' }) }}>
+              <AntDesign name="left" size={24} color="#111827" />
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
 
-      <ScrollView
+        {/* Centered title */}
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Animated.Text style={[styles.topHeaderTitle, { color: scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#0f172a'], extrapolate: 'clamp' }) }]} numberOfLines={1}>
+            {t('tourDetails') || 'Tour Details'}
+          </Animated.Text>
+        </View>
+
+        {/* Right spacer to balance the back button */}
+        <View style={{ width: 40 }} />
+      </Animated.View>
+
+      <Animated.ScrollView
+        ref={scrollRef}
+        // animate scrollY for header effects
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
         // reduce top padding so main image moves up under the overlay header
         contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 120 }}
       >
         {/* main image */}
         {firstImage ? (
-          <Image
-            source={{ uri: firstImage }}
-            style={{
-              // full-bleed image that fits different screen sizes
-              width: screenWidth,
-              height: Math.round(screenHeight * 0.38),
-              borderRadius: 0,
-              alignSelf: 'center',
-              // extend to screen edges (compensate for ScrollView padding)
-              marginLeft: -16,
-              marginRight: -16,
-              // pull image up under the overlay header (device-aware)
-              marginTop: -(insets.top ? insets.top + 8 : 24),
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => {
+              try {
+                const target = Math.max(0, (galleryY || 0) - headerHeight);
+                // support Animated.ScrollView refs that expose getNode()
+                if (scrollRef.current) {
+                  const sv = scrollRef.current.getNode ? scrollRef.current.getNode() : scrollRef.current;
+                  sv.scrollTo({ y: target, animated: true });
+                }
+              } catch (e) {
+                // ignore
+              }
             }}
-            resizeMode="cover"
-          />
+          >
+            <Image
+              source={{ uri: firstImage }}
+              style={{
+                // full-bleed image that fits different screen sizes
+                width: screenWidth,
+                height: Math.round(screenHeight * 0.38),
+                borderRadius: 0,
+                alignSelf: 'center',
+                // extend to screen edges (compensate for ScrollView padding)
+                marginLeft: -16,
+                marginRight: -16,
+                // pull image up under the overlay header (device-aware)
+                marginTop: -(insets.top ? insets.top + 8 : 24),
+              }}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
         ) : null}
 
         {/* title and meta */}
@@ -1858,7 +1959,8 @@ const TourDetailScreen = ({ route, navigation }) => {
           <View>
             {/* Horizontal Category Sections */}
             {/* ที่เที่ยวน่าสนใจ */}
-            <View style={{ marginBottom: 20 }}>
+            {SHOW_INTERESTING && (
+              <View style={{ marginBottom: 20 }}>
               <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
                 {t('interestingPlaces') || 'ที่เที่ยวน่าสนใจ'}
               </Text>
@@ -1943,10 +2045,12 @@ const TourDetailScreen = ({ route, navigation }) => {
                   ))
                 ))}
               </ScrollView>
-            </View>
+              </View>
+            )}
 
             {/* บัตรเข้าชมสถานที่ท่องเที่ยว */}
-            <View style={{ marginBottom: 20 }}>
+            {SHOW_TICKETS && (
+              <View style={{ marginBottom: 20 }}>
               <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
                 {t('entranceTickets') || 'บัตรเข้าชมสถานที่ท่องเที่ยว'}
               </Text>
@@ -1963,10 +2067,12 @@ const TourDetailScreen = ({ route, navigation }) => {
                   </View>
                 ))}
               </ScrollView>
-            </View>
+              </View>
+            )}
 
             {/* กิจกรรมยอดนิยม */}
-            <View style={{ marginBottom: 20 }}>
+            {SHOW_POPULAR_ACTIVITIES && (
+              <View style={{ marginBottom: 20 }}>
               <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
                 {t('popularActivities') || 'กิจกรรมยอดนิยม'}
               </Text>
@@ -1983,27 +2089,30 @@ const TourDetailScreen = ({ route, navigation }) => {
                   </View>
                 ))}
               </ScrollView>
-            </View>
+              </View>
+            )}
 
             {/* ตั๋วสุดคุ้ม */}
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
-                {t('bestValueTickets') || 'ตั๋วสุดคุ้ม'}
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
-                {[1, 2].map((item, idx) => (
-                  <View key={`value-${idx}`} style={{ width: 200, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
-                    <View style={{ width: 200, height: 140, backgroundColor: '#e0e0e0' }} />
-                    <View style={{ padding: 8 }}>
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
-                        {t('sampleValueTicket') || 'ชื่อแพ็คเกจ'}
-                      </Text>
-                      <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿1,500</Text>
+            {SHOW_BEST_VALUE && (
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                  {t('bestValueTickets') || 'ตั๋วสุดคุ้ม'}
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+                  {[1, 2].map((item, idx) => (
+                    <View key={`value-${idx}`} style={{ width: 200, marginRight: 12, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f9f9f9' }}>
+                      <View style={{ width: 200, height: 140, backgroundColor: '#e0e0e0' }} />
+                      <View style={{ padding: 8 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#333' }} numberOfLines={2}>
+                          {t('sampleValueTicket') || 'ชื่อแพ็คเกจ'}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>฿1,500</Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
 
         {/* Itinerary / Detail */}
         <View style={{ marginTop: 20 }}>
@@ -2151,7 +2260,7 @@ const TourDetailScreen = ({ route, navigation }) => {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontSize: 16, fontWeight: '700' }}>{t('passengers') || 'Passengers'}</Text>
-            <AntDesign name="user" size={22} color="#FB6B36" />
+            {/* <AntDesign name="user" size={22} color="#FB6B36" /> */}
           </View>
 
           {/* passenger controls (improved) */}
@@ -2286,15 +2395,34 @@ const TourDetailScreen = ({ route, navigation }) => {
 
           <TouchableOpacity
             style={{ backgroundColor: '#FD501E', paddingVertical: 14, borderRadius: 12 }}
-            onPress={() => navigation.navigate('TourContact', { 
-              tour, 
-              tourId, 
-              tourtype: tour?.tourtypeID || tour?.tourtype || tour?.TourType || tour?.type || '',
-              price: adultPriceFormatted, 
-              passengers: bookingPassengers, 
-              date: bookingDate ? bookingDate.toISOString() : null, 
-              option: bookingOption 
-            })}
+            onPress={() => {
+              try {
+                updateCustomerData({
+                    md_tours_adult: (bookingPassengers && bookingPassengers.adult) ? Number(bookingPassengers.adult) : 0,
+                    md_tours_child: (bookingPassengers && bookingPassengers.child) ? Number(bookingPassengers.child) : 0,
+                    md_tours_infant: (bookingPassengers && bookingPassengers.infant) ? Number(bookingPassengers.infant) : 0,
+                    md_tours_departdate: (function(d) {
+                      try {
+                        if (!d) return '';
+                        const dateObj = d instanceof Date ? d : new Date(d);
+                        if (isNaN(dateObj.getTime())) return '';
+                        return dateObj.toISOString().slice(0,10);
+                      } catch (e) { return ''; }
+                    })(bookingDate),
+                  });
+              } catch (e) {
+                // ignore
+              }
+              navigation.navigate('TourContact', { 
+                tour, 
+                tourId, 
+                tourtype: tour?.tourtypeID || tour?.tourtype || tour?.TourType || tour?.type || '',
+                price: adultPriceFormatted, 
+                passengers: bookingPassengers, 
+                date: bookingDate ? formatDateYMD(bookingDate) : null, 
+                option: bookingOption, 
+              });
+            }}
           >
             <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '700', fontSize: 16 }}>{t('bookNow') || 'Book now'}</Text>
           </TouchableOpacity>
@@ -2302,7 +2430,7 @@ const TourDetailScreen = ({ route, navigation }) => {
 
         {/* Gallery thumbnails */}
         {gallery && gallery.length ? (
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 20 }} onLayout={(e) => setGalleryY(e.nativeEvent.layout.y)}>
             <Text
               style={{
                 fontWeight: '700',
@@ -2338,13 +2466,18 @@ const TourDetailScreen = ({ route, navigation }) => {
           </View>
 
         ) : null}
-      </ScrollView>
+  </Animated.ScrollView>
 
       {/* modal date picker for bookingDate */}
       <DateTimePickerModal
         isVisible={showDateModal}
         mode="date"
         date={bookingDate}
+        // prevent selecting past dates
+        minimumDate={new Date()}
+        // localized button labels (iOS) — uses translation function
+        confirmTextIOS={t('confirm') || 'Confirm'}
+        cancelTextIOS={t('cancel') || 'Cancel'}
         onConfirm={(d) => {
           setBookingDate(d);
           setShowDateModal(false);
@@ -2366,6 +2499,7 @@ const TourDetailScreen = ({ route, navigation }) => {
           borderRadius: 16,
           alignSelf: 'center',
           overflow: 'hidden',
+          alignItems: 'center',
         }}
       />
 
@@ -2385,6 +2519,8 @@ const TourDetailScreen = ({ route, navigation }) => {
               horizontal
               pagingEnabled
               initialScrollIndex={modalIndex}
+              viewabilityConfig={viewabilityConfig.current}
+              onViewableItemsChanged={onViewableItemsChanged}
               getItemLayout={(data, index) => ({
                 length: screenWidth,
                 offset: screenWidth * index,
@@ -2412,20 +2548,29 @@ const TourDetailScreen = ({ route, navigation }) => {
                 </View>
               )}
             />
-
+            {/* top-right close */}
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
+              accessibilityLabel="Close image viewer"
               style={{
                 position: 'absolute',
-                top: 16,
+                top: 50,
                 right: 16,
                 backgroundColor: 'rgba(0,0,0,0.5)',
                 padding: 8,
                 borderRadius: 20,
+                zIndex: 10,
               }}
             >
               <AntDesign name="close" size={20} color="#fff" />
             </TouchableOpacity>
+
+            {/* bottom-center indicator showing current index / total */}
+            <View style={{ position: 'absolute', bottom: 28, left: 0, right: 0, alignItems: 'center' }} pointerEvents="none">
+              <View style={{ backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{`${(modalIndex || 0) + 1}/${gallery.length}`}</Text>
+              </View>
+            </View>
           </View>
         </SafeAreaView>
       </Modal>

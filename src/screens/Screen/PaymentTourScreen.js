@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image, Platform, TextInput, Modal, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image, Platform, TextInput, Modal, Animated, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import axios from 'axios';
+import * as Linking from 'expo-linking';
+import moment from 'moment-timezone';
+import ipAddress from '../../config/ipconfig';
 
 const brandIcons = {
   Visa: require("../../../assets/visa.png"),
@@ -25,7 +29,7 @@ const THEME_COLOR = '#FF6B35';
 
 export default function PaymentTourScreen({ navigation, route }) {
   const { t } = useLanguage();
-  const { customerData } = useCustomer();
+  const { customerData, updateCustomerData } = useCustomer();
   const insets = useSafeAreaInsets();
   
   // Hide bottom tab bar
@@ -49,6 +53,31 @@ export default function PaymentTourScreen({ navigation, route }) {
     unitPrice = {},
     subtotal = {}
   } = route.params || {};
+
+  // Log data when entering this screen
+  useEffect(() => {
+    console.log('🎬 [PaymentTourScreen] Screen Loaded');
+    console.log('👤 Customer Data:', {
+      firstName: customerData?.md_tours_firstname,
+      lastName: customerData?.md_tours_lastname,
+      prefix: customerData?.md_tours_title,
+      tel: customerData?.md_tours_tel,
+      email: customerData?.md_tours_email,
+      country: customerData?.md_tours_country,
+      countrycode: customerData?.md_tours_countrycode,
+      account_id: customerData?.md_booking_memberid
+    });
+    console.log('🎫 Tour Data:', {
+      md_tour_id: customerData?.md_tours_id,
+    });
+    const bookingInfo = {
+      adults: typeof adults === 'number' && adults >= 0 ? adults : (customerData?.md_tours_adult || 0),
+      children: typeof children === 'number' && children >= 0 ? children : (customerData?.md_tours_child || 0),
+      infants: typeof infants === 'number' && infants >= 0 ? infants : (customerData?.md_tours_infant || 0),
+      date: date || customerData?.md_tours_departdate || customerData?.md_booking_departdate || '',
+    };
+    console.log('👥 Booking Info:', bookingInfo);
+  }, []);
 
   const formattedTotal = useMemo(() => {
     const n = Number(total || 0);
@@ -86,6 +115,9 @@ export default function PaymentTourScreen({ navigation, route }) {
   
   // Timer countdown (10 minutes = 600 seconds)
   const [timeLeft, setTimeLeft] = useState(600);
+  
+  // Loading state for payment processing
+  const [isLoading, setIsLoading] = useState(false);
 
   // Storage keys
   const STORAGE_KEYS = {
@@ -209,6 +241,30 @@ export default function PaymentTourScreen({ navigation, route }) {
 
     return () => clearInterval(timer);
   }, [timeLeft, navigation, t]);
+
+  // Handle deep linking for payment redirects
+  useEffect(() => {
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      if (url.includes('payment/success')) {
+        setIsLoading(false);
+        navigation.navigate('ResultScreen', {
+          success: true,
+          bookingCode: customerData.tour_booking_code,
+          paymentId: customerData.tour_payment_id,
+          type: 'tour'
+        });
+      } else if (url.includes('payment/failure')) {
+        setIsLoading(false);
+        Alert.alert(
+          t('paymentFailed') || 'ชำระเงินไม่สำเร็จ',
+          t('paymentFailedMessage') || 'การชำระเงินไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
+          [{ text: t('ok') || 'ตกลง' }]
+        );
+      }
+    });
+
+    return () => subscription.remove();
+  }, [customerData, navigation, t]);
 
   // Format time as MM:SS
   const formatTime = (seconds) => {
@@ -461,6 +517,294 @@ export default function PaymentTourScreen({ navigation, route }) {
     }
   };
 
+  // Generate random digits for order ID
+  const generateRandomDigits = (length) => {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += Math.floor(Math.random() * 10);
+    }
+    return result;
+  };
+
+  // Get selected card details
+  const getSelectedCard = () => {
+    if (selectedCardId) {
+      const found = savedCards.find(c => c.id === selectedCardId);
+      if (found) return found;
+    }
+    // If no saved card selected, use manual input
+    if (cardNumber && cardHolder && cardExpiry && cardCvv) {
+      return {
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        cardName: cardHolder,
+        expiry: cardExpiry,
+        cvv: cardCvv
+      };
+    }
+    return null;
+  };
+
+  // Create tour booking
+  const createTourBooking = async () => {
+    try {
+      // Split full name into first and last name
+      const fullName = customerData?.fullName || '';
+      const nameParts = fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      console.log('👤 [createTourBooking] Customer Data:', {
+        fullName: customerData?.fullName,
+        prefix: customerData?.prefix,
+        tel: customerData?.tel,
+        md_tours_tel: customerData?.md_tours_tel,
+        email: customerData?.email,
+        country: customerData?.country,
+        md_tours_country: customerData?.md_tours_country,
+        countrycode: customerData?.countrycode,
+        md_tours_countrycode: customerData?.md_tours_countrycode,
+        memberid: customerData?.memberid,
+        account_id: customerData?.account_id
+      });
+
+      console.log('🎫 [createTourBooking] Tour Data:', {
+        md_tour_id: tour?.md_tour_id,
+        tourId: tour?.tourId,
+        tourid: tour?.tourid,
+        TourID: tour?.TourID,
+        name: tour?.name,
+        title: tour?.title
+      });
+
+      console.log('👥 [createTourBooking] Passengers:', {
+        adults,
+        children,
+        infants,
+        date,
+        total,
+        selectedOption
+      });
+
+      const payload = {
+        md_booking_prefix: customerData?.prefix || '',
+        md_booking_fname: firstName,
+        md_booking_lname: lastName,
+        md_booking_tel: customerData?.tel || customerData?.md_tours_tel || '',
+        md_booking_email: customerData?.email || '',
+        md_booking_adult: Number(adults) || 0,
+        md_booking_child: Number(children) || 0,
+        md_booking_infant: Number(infants) || 0,
+        md_booking_tourid: tour?.md_tour_id || tour?.tourId || tour?.tourid || tour?.TourID,
+        md_booking_traveldate: date ? moment(date).format('YYYY-MM-DD') : '',
+        md_booking_country: customerData?.country || customerData?.md_tours_country || '',
+        md_booking_countrycode: customerData?.countrycode || customerData?.md_tours_countrycode || '',
+        md_booking_paymenttype: Number(selectedOption) || 0,
+        md_booking_dis: 0, // discount
+        md_booking_vat: 0, // VAT
+        md_booking_servicepickup: 0,
+        account_id: customerData?.md_booking_memberid || 0,
+        md_booking_affiliate: 0
+      };
+
+      console.log('📦 [createTourBooking] Final Payload:', JSON.stringify(payload, null, 2));
+
+      const response = await axios.post(
+        `${ipAddress}/addbookingtour`,
+        payload,
+        { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+      );
+
+      const { status, message, md_booking_code, md_booking_price, md_booking_total } = response?.data || {};
+      console.log('📋 Tour Booking API Response:', response.data);
+
+      if (status === 'success' && md_booking_code) {
+        updateCustomerData({
+          tour_booking_code: md_booking_code,
+          tour_booking_price: md_booking_price,
+          tour_booking_total: md_booking_total
+        });
+
+        console.log('✅ Tour booking created successfully', { 
+          bookingCode: md_booking_code,
+          price: md_booking_price,
+          total: md_booking_total
+        });
+
+        return {
+          success: true,
+          bookingCode: md_booking_code,
+          message
+        };
+      }
+
+      throw new Error(message || 'Failed to create tour booking');
+    } catch (error) {
+      const apiError = error?.response?.data || error?.message;
+      console.error('❌ Error creating tour booking:', apiError);
+      throw new Error(
+        typeof apiError === 'string' ? apiError : (apiError?.message || 'Failed to create tour booking')
+      );
+    }
+  };
+
+  // Handle card payment
+  const handleCardPayment = async () => {
+    setIsLoading(true);
+    
+    const selectedCard = getSelectedCard();
+    if (!selectedCard) {
+      setIsLoading(false);
+      Alert.alert(
+        t('noCardSelected') || 'ไม่พบข้อมูลบัตร',
+        t('pleaseSelectCard') || 'กรุณาเลือกบัตรหรือกรอกข้อมูลบัตร'
+      );
+      return;
+    }
+
+    console.log("Selected Card:", selectedCard);
+
+    // Validate card data
+    if (!selectedCard.cardName || !selectedCard.cardNumber || !selectedCard.expiry || !selectedCard.cvv) {
+      setIsLoading(false);
+      Alert.alert(
+        t('incompleteCardInfo') || 'ข้อมูลบัตรไม่ครบ',
+        t('pleaseFillAllFields') || 'กรุณากรอกข้อมูลบัตรให้ครบถ้วน'
+      );
+      return;
+    }
+
+    // Parse expiration date
+    let expMonth, expYearRaw, expYear;
+    if (selectedCard.expiry && selectedCard.expiry.includes("/")) {
+      [expMonth, expYearRaw] = selectedCard.expiry.split("/");
+      expMonth = expMonth.trim();
+      expYearRaw = expYearRaw.trim();
+      
+      // Pad month to 2 digits
+      if (/^\d{1}$/.test(expMonth)) {
+        expMonth = "0" + expMonth;
+      }
+      
+      // Year logic
+      if (/^\d{4}$/.test(expYearRaw)) {
+        expYear = expYearRaw;
+      } else if (/^\d{2}$/.test(expYearRaw)) {
+        expYear = "20" + expYearRaw;
+      } else {
+        expYear = null;
+      }
+    } else {
+      expMonth = null;
+      expYear = null;
+    }
+
+    if (!expMonth || !expYear || !/^\d{2}$/.test(expMonth) || !/^\d{4}$/.test(expYear)) {
+      setIsLoading(false);
+      Alert.alert(
+        t('invalidExpiryDate') || 'วันหมดอายุไม่ถูกต้อง',
+        t('checkExpiryFormat') || 'กรุณาตรวจสอบรูปแบบวันหมดอายุ (MM/YY)'
+      );
+      return;
+    }
+
+    const cardPayload = {
+      name: selectedCard.cardName || selectedCard.name || '',
+      number: selectedCard.cardNumber,
+      expiration_month: expMonth,
+      expiration_year: expYear,
+      security_code: selectedCard.cvv,
+    };
+
+    console.log("Card payload for token:", cardPayload);
+
+    try {
+      // 1. Create payment token
+      const tokenResponse = await fetch(`${ipAddress}/create-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ card: cardPayload }),
+      });
+
+      const tokenText = await tokenResponse.text();
+      console.log("Token API raw response:", tokenText);
+      
+      let tokenData;
+      try {
+        tokenData = JSON.parse(tokenText);
+      } catch (e) {
+        throw new Error("Invalid JSON from token API");
+      }
+
+      if (!tokenResponse.ok) throw new Error("Failed to create payment token");
+      if (!tokenData.success) throw new Error(tokenData.error || "Token API error");
+      if (!tokenData.token) throw new Error("Payment token missing from token API response");
+
+      // 2. Create tour booking before payment
+      const bookingResult = await createTourBooking();
+      if (!bookingResult || !bookingResult.success) {
+        throw new Error("Failed to create tour booking before payment");
+      }
+
+      const bookingCode = bookingResult.bookingCode;
+      const returnUri = bookingCode ? `${ipAddress}/redirect/${bookingCode}` : `${ipAddress}/redirect`;
+      console.log('📤 returnUri:', returnUri, 'bookingCode:', bookingCode);
+
+      // 3. Process payment
+      const paymentResponse = await fetch(`${ipAddress}/charge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+        body: JSON.stringify({
+          amount: Number(total),
+          token: tokenData.token,
+          return_uri: returnUri,
+          booking: bookingCode,
+          randomorder: generateRandomDigits(16),
+          currency: customerData?.currency || 'THB',
+        }),
+      });
+
+      if (!paymentResponse.ok) throw new Error("Payment failed");
+      
+      const paymentResult = await paymentResponse.json();
+      if (!paymentResult.success) throw new Error(paymentResult.message || "Payment declined");
+
+      const chargeId = paymentResult.charge_id || paymentResult.chargeId || '';
+      updateCustomerData({
+        tour_payment_id: chargeId,
+        tour_booking_code: bookingCode,
+        bookingdate: moment().tz("Asia/Bangkok").format("YYYY-MM-DD"),
+      });
+      
+      console.log('✅ Payment code:', chargeId);
+
+      // 4. Open authorize URL if available
+      if (paymentResult.authorize_uri) {
+        console.log("🔗 Redirecting to:", paymentResult.authorize_uri);
+        try {
+          await Linking.openURL(paymentResult.authorize_uri);
+        } catch (linkErr) {
+          console.error('❌ Failed to open authorize URI:', linkErr);
+          Alert.alert(
+            t('warning') || 'แจ้งเตือน',
+            t('cannotOpenLink') || 'ไม่สามารถเปิดลิงก์การชำระเงินได้'
+          );
+        }
+      } else {
+        // Payment successful without 3DS
+        navigation.navigate('ResultScreen', { success: true, source: 'tour', bookingCode });
+      }
+
+      setIsLoading(false);
+      console.log("✅ Payment processing completed");
+
+    } catch (error) {
+      console.error("❌ Payment Error:", error);
+      setIsLoading(false);
+      const msg = error?.message || String(error) || t('unknownError') || 'เกิดข้อผิดพลาด';
+      Alert.alert(t('error') || "ข้อผิดพลาด", msg);
+    }
+  };
+
   const handlePay = () => {
 
     if (!selectedOption) {
@@ -469,25 +813,8 @@ export default function PaymentTourScreen({ navigation, route }) {
     }
 
     if (selectedOption === "7") {
-      // card flow (if no saved card, navigate to AddCardScreen)
-        if (!selectedCardId) {
-        navigation.navigate('AddCardScreen', {
-          onAddCard: (newCard) => {
-            // detect brand and append so the correct icon is shown
-            const ccnum = (newCard.cardNumber || '').replace(/\s/g, '');
-            const brand = detectCardBrand(ccnum);
-            const cardObj = { ...newCard, brand };
-            const next = [...savedCards, cardObj];
-            setSavedCards(next);
-            persistSavedCards(next);
-            // automatically populate inputs from newly added card if it contains full number
-            populateFromCard(cardObj);
-          }
-        });
-        return;
-      }
-      // simulate success
-      Alert.alert('', t('paymentSuccessMessage') || 'Payment successful', [{ text: t('ok') || 'OK', onPress: () => navigation.navigate('ResultScreen', { success: true, source: 'tour' }) }]);
+      // Process card payment directly (handleCardPayment will validate)
+      handleCardPayment();
     } else if (selectedOption === "2") {
       // PromptPay flow (placeholder)
       navigation.navigate('PromptPayScreen', { amount: total, source: 'tour' });
@@ -1022,6 +1349,20 @@ export default function PaymentTourScreen({ navigation, route }) {
           </Animated.View>
         </View>
       </Modal>
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <Modal transparent visible={isLoading} animationType="fade">
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#FF6B35" />
+              <Text style={styles.loadingText}>
+                {t('processingPayment') || 'กำลังดำเนินการชำระเงิน...'}
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -1629,5 +1970,26 @@ const styles = StyleSheet.create({
   },
   inputWithLabel: {
     paddingTop: hp('2.8%')
+  },
+  // Loading overlay styles
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: wp('8%'),
+    alignItems: 'center',
+    minWidth: wp('60%')
+  },
+  loadingText: {
+    fontSize: wp('4%'),
+    color: '#111827',
+    marginTop: hp('2%'),
+    fontWeight: '600',
+    textAlign: 'center'
   }
 });

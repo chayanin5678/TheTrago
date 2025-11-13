@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Alert,
   ScrollView,
   Modal,
   FlatList,
   StyleSheet,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 // removed gradient for simple CTA
@@ -19,6 +22,7 @@ import { AntDesign } from '@expo/vector-icons';
 import ipAddress from '../../config/ipconfig';
 import { useLanguage } from './LanguageContext';
 import { useCustomer } from './CustomerContext';
+import styles from '../../styles/CSS/TripDetailStyles';
 
 /** ---------- THEME ---------- */
 const palette = {
@@ -45,6 +49,8 @@ const money = (n, locale = 'en-US', digits = 2) =>
 const TourContactScreen = ({ navigation, route }) => {
   const { t, selectedLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerHeight = (insets.top || 0) + 64;
   const { customerData, updateCustomerData } = useCustomer();
 
   const params = route?.params || {};
@@ -84,7 +90,20 @@ const TourContactScreen = ({ navigation, route }) => {
     return null;
   };
 
-  const [selectedCountry, setSelectedCountry] = useState(getReadableCountry(customerData) || please);
+  // Return country display name depending on selected language
+  const getCountryName = (item) => {
+    if (!item) return '';
+    // prefer Thai name when selectedLanguage is 'th'
+    if (selectedLanguage === 'th') {
+      return item.sys_countries_namethai || item.sys_countries_nameeng || item.name || item.country || '';
+    }
+    // default to English
+    return item.sys_countries_nameeng || item.name || item.country || item.sys_countries_namethai || '';
+  };
+
+  // store selectedCountry as the English name field when possible
+  const initialCountryName = customerData?.sys_countries_nameeng || getReadableCountry(customerData) || please;
+  const [selectedCountry, setSelectedCountry] = useState(initialCountryName);
   const [selectedTele, setSelectedTele] = useState(
     customerData.md_tours_country && (customerData.md_tours_countrycode || customerData.countrycode)
       ? `(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_country}`
@@ -93,14 +112,37 @@ const TourContactScreen = ({ navigation, route }) => {
   const [countrycode, setCountrycode] = useState(customerData.md_tours_countrycode || customerData.countrycode || '');
   const [countryId, setCountryId] = useState(customerData.countryId || '');
 
-  /** Titles */
-  const titleOptions = [
-    { label: please, value: please },
-    { label: t('mr') || 'Mr.', value: t('mr') || 'Mr.' },
-    { label: t('mrs') || 'Mrs.', value: t('mrs') || 'Mrs.' },
-    { label: t('ms') || 'Ms.', value: t('ms') || 'Ms.' },
-    { label: t('master') || 'Master', value: t('master') || 'Master' },
+  /** Titles - store English value but display localized label */
+  const TITLE_ENTRIES = [
+    { key: 'please', en: 'Please Select', tKey: null },
+    { key: 'mr', en: 'Mr.', tKey: 'mr' },
+    { key: 'mrs', en: 'Mrs.', tKey: 'mrs' },
+    { key: 'ms', en: 'Ms.', tKey: 'ms' },
+    { key: 'master', en: 'Master', tKey: 'master' },
   ];
+
+  // Options shown in the picker: label is localized, value is English string to store
+  const titleOptions = TITLE_ENTRIES.map((e) => ({
+    label: e.key === 'please' ? please : (t(e.tKey) || e.en),
+    value: e.en,
+  }));
+
+  // helper: normalize incoming stored value to the English string we store
+  const normalizeTitleToEnglish = (val) => {
+    if (!val) return TITLE_ENTRIES[0].en; // Please Select
+    // if it's already the English text, return it
+    const foundEn = TITLE_ENTRIES.find((it) => it.en === val);
+    if (foundEn) return foundEn.en;
+    // if it's a key like 'mr', map to english
+    const foundKey = TITLE_ENTRIES.find((it) => it.key === val);
+    if (foundKey) return foundKey.en;
+    // if it's localized label, try to match against translated labels
+    const foundByLabel = TITLE_ENTRIES.find((it) => (it.tKey ? (t(it.tKey) || it.en) === val : false));
+    if (foundByLabel) return foundByLabel.en;
+    // fallback: return as-is
+    return val;
+  };
+
   const [isTitleModalVisible, setTitleModalVisible] = useState(false);
 
   /** Validate */
@@ -165,7 +207,7 @@ const TourContactScreen = ({ navigation, route }) => {
     setLastname(customerData.Lastname || '');
     setTel(customerData.tel || '');
     setEmail(customerData.email || '');
-    setSelectedTitle(customerData.selectedTitle || 'Please Select');
+    setSelectedTitle(normalizeTitleToEnglish(customerData.selectedTitle) || 'Please Select');
 
     if (customerData.md_tours_country && (customerData.md_tours_countrycode || customerData.countrycode)) {
       setSelectedTele(`(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_country}`);
@@ -173,9 +215,43 @@ const TourContactScreen = ({ navigation, route }) => {
       setSelectedTele(please);
     }
     setCountrycode(customerData.md_tours_countrycode || customerData.countrycode || '');
-    const readable = getReadableCountry(customerData);
+    // prefer sys_countries_nameeng from context when available
+    const readable = customerData?.sys_countries_nameeng || getReadableCountry(customerData);
     setSelectedCountry(readable || please);
   }, [customerData]);
+
+  // displayTitle: show localized label while selectedTitle remains the stored English value
+  const displayTitle = useMemo(() => {
+    if (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please) return please;
+    // try to find by English stored value
+    const found = TITLE_ENTRIES.find((it) => it.en === selectedTitle);
+    if (found) return found.tKey ? (t(found.tKey) || found.en) : found.en;
+    // fallback: if selectedTitle happens to be a localized label, just return it
+    return selectedTitle;
+  }, [selectedTitle, selectedLanguage]);
+
+  // Debug: log selectedCountry whenever it changes
+  useEffect(() => {
+    console.log('TourContactScreen selectedCountry:', selectedCountry);
+  }, [selectedCountry]);
+
+  // Resolve a language-aware display name for the currently selected country.
+  // We keep `selectedCountry` as an English name string, but show the localized
+  // name in UI by looking up `countryId` or matching the stored English name.
+  const displayCountry = useMemo(() => {
+    if (countryId) {
+      const found = telePhone.find((it) => String(it.sys_countries_id) === String(countryId));
+      if (found) return getCountryName(found) || selectedCountry || please;
+    }
+    if (selectedCountry) {
+      // try to find the country object by its English name
+      const foundByEng = telePhone.find((it) => (it.sys_countries_nameeng || '').toString() === selectedCountry.toString());
+      if (foundByEng) return getCountryName(foundByEng) || selectedCountry;
+      // fallback: if selectedCountry already contains a display-friendly string, use it
+      return selectedCountry;
+    }
+    return please;
+  }, [telePhone, countryId, selectedCountry, selectedLanguage]);
 
   /** Helpers */
   const getTelephoneCode = (item) =>
@@ -189,7 +265,7 @@ const TourContactScreen = ({ navigation, route }) => {
 
   const filteredPhone = useMemo(() => {
     return telePhone.filter((item) => {
-      const eng = item.sys_countries_nameeng || item.name || item.country || '';
+      const eng = getCountryName(item);
       const code = getTelephoneCode(item);
       const label = `${code ? `(+${code}) ` : ''}${eng}`.toLowerCase();
       return label.includes(searchQueryPhone.toLowerCase());
@@ -198,7 +274,7 @@ const TourContactScreen = ({ navigation, route }) => {
 
   const filteredCountry = useMemo(() => {
     return telePhone.filter((item) => {
-      const eng = item.sys_countries_nameeng || item.name || item.country || '';
+      const eng = getCountryName(item);
       return (eng || '').toLowerCase().includes(searchQueryCountry.toLowerCase());
     });
   }, [telePhone, searchQueryCountry]);
@@ -294,17 +370,15 @@ const TourContactScreen = ({ navigation, route }) => {
 
     try {
       updateCustomerData({
-        selectedTitle,
-        Firstname: Firstname.trim(),
-        Lastname: Lastname.trim(),
-        tel: tel.trim(),
-        email: email.trim(),
-        country: selectedCountry,
-        countryId: countryId,
-        countrycode: countrycode,
+
         md_tours_countrycode: countrycode,
         md_tours_country: selectedCountry,
         md_tours_tel: tel.trim(),
+        md_tours_title: selectedTitle,
+        md_tours_firstname: Firstname.trim(),
+        md_tours_lastname: Lastname.trim(),
+        md_tours_email: email.trim(),
+        
       });
     } catch {}
 
@@ -332,17 +406,55 @@ const TourContactScreen = ({ navigation, route }) => {
   const locale = selectedLanguage === 'th' ? 'th-TH' : 'en-US';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 + insets.bottom }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={["left", "right"]}>
+      {/* Header with Back Button and animated background like TourDetailScreen */}
+      <Animated.View
+        style={[
+          styles.topHeaderOverlay,
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: headerHeight,
+            paddingTop: (insets.top || 0) + 12,
+            backgroundColor: scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#ffffff'], extrapolate: 'clamp' }),
+            borderBottomWidth: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
+            borderBottomColor: 'rgba(0,0,0,0.06)',
+            paddingHorizontal: 12,
+          },
+        ]}
+      >
+        <Animated.View style={[styles.backButton, { overflow: 'hidden' }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
+            <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: scrollY.interpolate({ inputRange: [0, 100], outputRange: [1, 0], extrapolate: 'clamp' }) }}>
+              <AntDesign name="left" size={24} color="#111827" />
+            </Animated.View>
+            <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: scrollY.interpolate({ inputRange: [0, 100], outputRange: [0, 1], extrapolate: 'clamp' }) }}>
+              <AntDesign name="left" size={24} color="#111827" />
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Animated.Text style={[styles.topHeaderTitle, { color: scrollY.interpolate({ inputRange: [0, 120], outputRange: ['#0f172a', '#0f172a'], extrapolate: 'clamp' }) }]} numberOfLines={1}>
+            {t('contact') || 'Contact'}
+          </Animated.Text>
+        </View>
+
+        <View style={{ width: 40 }} />
+      </Animated.View>
+
+      <Animated.ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 + insets.bottom, paddingTop: headerHeight }}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        scrollEventThrottle={16}
       >
         {/* --------- TRAVELER --------- */}
   <SectionCard title={t('travelerDetail')}>
           <Field label={t('title') || 'Title'}>
             <Select 
               onPress={() => setTitleModalVisible(true)} 
-              text={selectedTitle === 'Please Select' ? please : selectedTitle}
+              text={displayTitle}
               error={!!errors.title}
             />
           </Field>
@@ -379,7 +491,7 @@ const TourContactScreen = ({ navigation, route }) => {
           <Field label={t('country') || 'Country'}>
             <Select 
               onPress={() => setCountryModalVisible(true)} 
-              text={selectedCountry || please}
+              text={displayCountry || please}
               error={!!errors.country}
             />
           </Field>
@@ -392,10 +504,11 @@ const TourContactScreen = ({ navigation, route }) => {
             searchPlaceholder={t('searchCountry') || 'Search country'}
             onSearch={setSearchQueryCountry}
             keyExtractor={(item, idx) => (item.sys_countries_id ? String(item.sys_countries_id) : String(idx))}
-            renderLabel={(item) => item.sys_countries_nameeng || item.name || item.country || ''}
+            renderLabel={(item) => getCountryName(item)}
             onPick={(item) => {
-              const name = item.sys_countries_nameeng || item.name || item.country || '';
-              setSelectedCountry(name || please);
+              // store English field in selectedCountry when available
+              const englishName = item?.sys_countries_nameeng || getCountryName(item) || '';
+              setSelectedCountry(englishName || please);
               setCountryId(item.sys_countries_id || '');
               setCountryModalVisible(false);
               setSearchQueryCountry('');
@@ -433,14 +546,14 @@ const TourContactScreen = ({ navigation, route }) => {
             onSearch={setSearchQueryPhone}
             keyExtractor={(item, idx) => (item.sys_countries_id ? String(item.sys_countries_id) : String(idx))}
             renderLabel={(item) => {
-              const name = item.sys_countries_nameeng || item.name || item.country || '';
+              const name = getCountryName(item) || '';
               const code = getTelephoneCode(item);
-              return item.sys_countries_nameeng === please ? please : `${code ? `(+${code}) ` : ''}${name}`;
+              return name === please ? please : `${code ? `(+${code}) ` : ''}${name}`;
             }}
             onPick={(item) => {
               const code = getTelephoneCode(item);
-              const name = item.sys_countries_nameeng || item.name || item.country || '';
-              const label = item.sys_countries_nameeng === please ? please : `${code ? `(+${code}) ` : ''}${name}`;
+              const name = getCountryName(item) || '';
+              const label = name === please ? please : `${code ? `(+${code}) ` : ''}${name}`;
               setSelectedTele(label);
               setCountryId(item.sys_countries_id || '');
               setCountrycode(code || '');
@@ -548,7 +661,7 @@ const TourContactScreen = ({ navigation, route }) => {
         <TouchableOpacity activeOpacity={0.9} onPress={handleSave} style={[ui.cta, { marginTop: 12, backgroundColor: palette.primary }]}>
           <Text style={ui.ctaText}>{t('next') || 'Next'}</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
@@ -620,8 +733,9 @@ const PickerModal = ({
   const { t } = useLanguage();
   return (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <View style={ui.modalOverlay}>
-      <View style={ui.modalCard}>
+    <TouchableOpacity activeOpacity={1} style={ui.modalOverlay} onPress={onClose}>
+      <TouchableWithoutFeedback>
+        <View style={ui.modalCard}>
         {!!onSearch && (
           <TextInput
             placeholder={searchPlaceholder}
@@ -641,17 +755,12 @@ const PickerModal = ({
             </TouchableOpacity>
           )}
           ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: palette.line }} />}
-          style={{ maxHeight: '80%' }}
+          style={{ maxHeight: '100%' }}
         />
-        <TouchableOpacity 
-          onPress={onClose} 
-          activeOpacity={0.8}
-          style={ui.modalCloseButton}
-        >
-          <Text style={ui.modalCloseText}>{t('close') || 'Close'}</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        {/* Close button removed per request - modal now closes only via selection or system back */}
+        </View>
+      </TouchableWithoutFeedback>
+    </TouchableOpacity>
   </Modal>
   );
 };
