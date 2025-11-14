@@ -581,6 +581,7 @@ const PaymentScreen = ({ navigation, route }) => {
           booking: bookingMain,
           randomorder: generateRandomDigits(16), // สุ่มเลข 16 หลัก
           currency: customerData.currency || 'THB',
+           md_charge_from : 'ferry'
         }),
       });
 

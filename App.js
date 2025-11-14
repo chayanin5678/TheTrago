@@ -35,6 +35,7 @@ import CustomerInfo from './src/screens/Screen/CustomerInfo';
 import PaymentScreen from './src/screens/Screen/PaymentScreen';
 import PaymentTourScreen from './src/screens/Screen/PaymentTourScreen';
 import ResultScreen from './src/screens/Screen/ResultScreen';
+import TourPaymentSuccess from './src/screens/Screen/TourPaymentSuccess';
 import TourContactScreen from './src/screens/Screen/TourContactScreen';
 import { CustomerProvider } from './src/screens/Screen/CustomerContext';
 import LinkingConfiguration from './src/screens/Screen/linking';
@@ -102,6 +103,7 @@ const AppNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
   <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="TourPaymentSuccess" component={TourPaymentSuccess} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PopularDestination" component={PopularDestination} options={{ headerShown: false }} />
@@ -128,6 +130,7 @@ const BookingNavigator = () => (
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
   <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="TourPaymentSuccess" component={TourPaymentSuccess} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="PromptPayScreen" component={PromptPayScreen} options={{ headerShown: false }} />
   </Stack.Navigator>

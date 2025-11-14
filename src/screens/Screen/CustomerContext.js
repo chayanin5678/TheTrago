@@ -194,6 +194,8 @@ export const CustomerProvider = ({ children }) => {
     md_tours_country: '',
     md_tours_tel: '',
     md_tours_email: '',
+    md_tours_countryname: '',
+    md_booking_code : '',
 
   });
 

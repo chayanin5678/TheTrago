@@ -69,7 +69,7 @@ const TourContactScreen = ({ navigation, route }) => {
   });
 
   /** Prefill */
-  const [selectedTitle, setSelectedTitle] = useState(customerData.selectedTitle || 'Please Select');
+  const [selectedTitle, setSelectedTitle] = useState(customerData?.md_tours_title || 'Please Select');
   const [Firstname, setFirstname] = useState(customerData.Firstname || '');
   const [Lastname, setLastname] = useState(customerData.Lastname || '');
   const [tel, setTel] = useState(customerData.tel || '');
@@ -105,12 +105,17 @@ const TourContactScreen = ({ navigation, route }) => {
   const initialCountryName = customerData?.sys_countries_nameeng || getReadableCountry(customerData) || please;
   const [selectedCountry, setSelectedCountry] = useState(initialCountryName);
   const [selectedTele, setSelectedTele] = useState(
-    customerData.md_tours_country && (customerData.md_tours_countrycode || customerData.countrycode)
-      ? `(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_country}`
+    customerData.md_tours_countryname && (customerData.md_tours_countrycode)
+      ? `(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_countryname}`
       : please
   );
   const [countrycode, setCountrycode] = useState(customerData.md_tours_countrycode || customerData.countrycode || '');
-  const [countryId, setCountryId] = useState(customerData.countryId || '');
+  // separate IDs for Country modal (primary source for md_tours_country)
+  const [countryIdCountry, setCountryIdCountry] = useState(customerData.countryId || '');
+  // separate ID for Phone modal selection (used for phone-specific country, but NOT overwrite Country modal display)
+  const [countryIdPhone, setCountryIdPhone] = useState(customerData.countryId || '');
+  const [selectedCountryFromModal, setSelectedCountryFromModal] = useState(null);
+  const [selectedCountryFromPhone, setSelectedCountryFromPhone] = useState(null);
 
   /** Titles - store English value but display localized label */
   const TITLE_ENTRIES = [
@@ -144,17 +149,42 @@ const TourContactScreen = ({ navigation, route }) => {
   };
 
   const [isTitleModalVisible, setTitleModalVisible] = useState(false);
+  // Basic validators - define before errors so they're available when errors is computed
+  const isValidEmail = (value) => {
+    if (!value) return false;
+    const v = String(value).trim();
+    // Simple but practical email regex
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  };
+
+  const isValidPhoneNumber = (value) => {
+    if (!value) return false;
+    const s = String(value).replace(/[^0-9]+/g, '');
+    // allow typical international/local phone lengths
+    return s.length >= 6 && s.length <= 15;
+  };
 
   /** Validate */
   const [attempted, setAttempted] = useState(false);
+  // forceErrors lets us show field errors immediately when Save is pressed
+  const [forceErrors, setForceErrors] = useState({});
+  // track field-level touch/blur to show immediate validation
+  const [telTouched, setTelTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
   const errors = {
     title: attempted && (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please),
     firstname: attempted && (!Firstname || !Firstname.trim()),
     lastname: attempted && (!Lastname || !Lastname.trim()),
-    country: attempted && (!selectedCountry || selectedCountry === 'Please Select' || selectedCountry === please),
+    country: attempted && (
+      !(
+        (selectedCountryFromModal && selectedCountryFromModal !== please) ||
+        (countryIdCountry && telePhone.find((it) => String(it.sys_countries_id) === String(countryIdCountry))) ||
+        (selectedCountry && selectedCountry !== 'Please Select' && selectedCountry !== please)
+      )
+    ),
     telCode: attempted && (!selectedTele || selectedTele === 'Please Select' || selectedTele === please),
-    tel: attempted && (!tel || !tel.trim()),
-    email: attempted && (!email || !email.trim()),
+    tel: (attempted || telTouched) && (!tel || !tel.trim() || !isValidPhoneNumber(tel.trim())),
+    email: (attempted || emailTouched) && (!email || !email.trim() || !isValidEmail(email.trim())),
     tour: attempted && (!tourParam || (!tourParam.name && !tourParam.NameThai && !tourParam.Title)),
     date: attempted && !bookingDateParam,
   };
@@ -203,14 +233,14 @@ const TourContactScreen = ({ navigation, route }) => {
 
   /** Sync when context changes */
   useEffect(() => {
-    setFirstname(customerData.Firstname || '');
-    setLastname(customerData.Lastname || '');
-    setTel(customerData.tel || '');
-    setEmail(customerData.email || '');
-    setSelectedTitle(normalizeTitleToEnglish(customerData.selectedTitle) || 'Please Select');
+    setFirstname(customerData.md_tours_firstname || '');
+    setLastname(customerData.md_tours_lastname || '');
+    setTel(customerData.md_tours_tel || '');
+    setEmail(customerData.md_tours_email || '');
+    setSelectedTitle(normalizeTitleToEnglish(customerData.md_tours_title) || 'Please Select');
 
-    if (customerData.md_tours_country && (customerData.md_tours_countrycode || customerData.countrycode)) {
-      setSelectedTele(`(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_country}`);
+    if (customerData.md_tours_countryname && (customerData.md_tours_countrycode || customerData.countrycode)) {
+      setSelectedTele(`(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_countryname}`);
     } else {
       setSelectedTele(please);
     }
@@ -236,22 +266,16 @@ const TourContactScreen = ({ navigation, route }) => {
   }, [selectedCountry]);
 
   // Resolve a language-aware display name for the currently selected country.
-  // We keep `selectedCountry` as an English name string, but show the localized
-  // name in UI by looking up `countryId` or matching the stored English name.
+  // Use selectedCountryFromModal if set (from Country Modal), otherwise use countryId (from Phone Modal)
   const displayCountry = useMemo(() => {
-    if (countryId) {
-      const found = telePhone.find((it) => String(it.sys_countries_id) === String(countryId));
-      if (found) return getCountryName(found) || selectedCountry || please;
-    }
-    if (selectedCountry) {
-      // try to find the country object by its English name
-      const foundByEng = telePhone.find((it) => (it.sys_countries_nameeng || '').toString() === selectedCountry.toString());
-      if (foundByEng) return getCountryName(foundByEng) || selectedCountry;
-      // fallback: if selectedCountry already contains a display-friendly string, use it
-      return selectedCountry;
+    // Country field should show what was chosen in Country Modal (if any)
+    if (selectedCountryFromModal) return selectedCountryFromModal;
+    if (countryIdCountry) {
+      const found = telePhone.find((it) => String(it.sys_countries_id) === String(countryIdCountry));
+      if (found) return getCountryName(found) || please;
     }
     return please;
-  }, [telePhone, countryId, selectedCountry, selectedLanguage]);
+  }, [telePhone, countryIdCountry, selectedCountryFromModal, selectedLanguage]);
 
   /** Helpers */
   const getTelephoneCode = (item) =>
@@ -293,8 +317,8 @@ const TourContactScreen = ({ navigation, route }) => {
       date: bookingDateParam
         ? moment(bookingDateParam).format('YYYY-MM-DD')
         : params.date
-        ? moment(params.date).format('YYYY-MM-DD')
-        : '',
+          ? moment(params.date).format('YYYY-MM-DD')
+          : '',
       adult: Number(passengersParam.adult || 1),
       child: Number(passengersParam.child || 0),
       infant: Number(passengersParam.infant || 0),
@@ -337,7 +361,7 @@ const TourContactScreen = ({ navigation, route }) => {
     const missingTitle = !selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please;
     const missingFirstname = !Firstname || !Firstname.trim();
     const missingLastname = !Lastname || !Lastname.trim();
-    const missingCountry = !selectedCountry || selectedCountry === 'Please Select' || selectedCountry === please;
+    const missingCountry = !displayCountry || displayCountry === 'Please Select' || displayCountry === please;
     const missingTelCode = !selectedTele || selectedTele === 'Please Select' || selectedTele === please;
     const missingTel = !tel || !tel.trim();
     const missingEmail = !email || !email.trim();
@@ -356,10 +380,29 @@ const TourContactScreen = ({ navigation, route }) => {
     if (missingTour) missingFields.push(t('tourInformation') || 'ข้อมูลทัวร์');
     if (missingDate) missingFields.push(t('departureDate') || 'วันที่เดินทาง');
 
+    // format validations
+    const invalidTelFormat = !missingTel && !isValidPhoneNumber(tel.trim());
+    const invalidEmailFormat = !missingEmail && !isValidEmail(email.trim());
+    if (invalidTelFormat) missingFields.push(t('invalidPhone') || 'รูปแบบเบอร์โทรไม่ถูกต้อง');
+    if (invalidEmailFormat) missingFields.push(t('invalidEmail') || 'รูปแบบอีเมลไม่ถูกต้อง');
+
     if (missingFields.length > 0) {
+        // mark specific fields to show errors immediately (useful when attempted state
+        // may not reflect synchronously during the same tick)
+        setForceErrors({
+          title: missingTitle,
+          firstname: missingFirstname,
+          lastname: missingLastname,
+          country: missingCountry,
+          telCode: missingTelCode,
+          tel: missingTel || invalidTelFormat,
+          email: missingEmail || invalidEmailFormat,
+          tour: missingTour,
+          date: missingDate,
+        });
       const fieldsList = missingFields.join('\n• ');
       const message = `${t('pleaseFillTheseFields') || 'กรุณากรอกข้อมูลในช่องต่อไปนี้'}:\n\n• ${fieldsList}`;
-      
+
       Alert.alert(
         t('warning') || 'แจ้งเตือน',
         message,
@@ -368,19 +411,51 @@ const TourContactScreen = ({ navigation, route }) => {
       return;
     }
 
+    // Extra guard: ensure invalid formats always block navigation (defensive)
+    if (invalidTelFormat || invalidEmailFormat) {
+      // show formatting errors immediately
+      setForceErrors({ ...forceErrors, tel: invalidTelFormat, email: invalidEmailFormat });
+      const msgs = [];
+      if (invalidTelFormat) msgs.push(t('invalidPhone') || 'รูปแบบเบอร์โทรไม่ถูกต้อง');
+      if (invalidEmailFormat) msgs.push(t('invalidEmail') || 'รูปแบบอีเมลไม่ถูกต้อง');
+      const msg = msgs.join('\n');
+      console.log('Validation failed - phone/email format', { tel, email, invalidTelFormat, invalidEmailFormat });
+      Alert.alert(t('warning') || 'แจ้งเตือน', msg, [{ text: t('ok') || 'ตกลง' }]);
+      return;
+    }
+
     try {
+      const countryIdToSave = countryIdCountry || countryIdPhone || '';
+      const countryNameToSave = selectedCountryFromPhone || selectedCountryFromModal || selectedCountry || '';
+      console.log('handleSave - Saving customer data:', {
+        countrycode,
+        countryIdCountry,
+        countryIdPhone,
+        countryIdToSave,
+        selectedCountryFromModal,
+        selectedCountryFromPhone,
+        countryNameToSave,
+        selectedTitle,
+        Firstname,
+        Lastname,
+        tel,
+        email
+      });
       updateCustomerData({
 
         md_tours_countrycode: countrycode,
-        md_tours_country: selectedCountry,
+        md_tours_country: countryIdToSave,
+        md_tours_countryname: countryNameToSave,
         md_tours_tel: tel.trim(),
         md_tours_title: selectedTitle,
         md_tours_firstname: Firstname.trim(),
         md_tours_lastname: Lastname.trim(),
         md_tours_email: email.trim(),
-        
+
       });
-    } catch {}
+      // clear forced errors on successful save
+      setForceErrors({});
+    } catch { }
 
     const totalAmount = summary && (summary.subtotal && (summary.subtotal.total || summary.subtotal))
       ? summary.subtotal.total || summary.subtotal
@@ -402,7 +477,7 @@ const TourContactScreen = ({ navigation, route }) => {
   };
 
   /** UI */
-  const currency = summary?.currency || customerData?.currency || 'THB';
+  const currency =  customerData?.currency || 'THB';
   const locale = selectedLanguage === 'th' ? 'th-TH' : 'en-US';
 
   return (
@@ -416,8 +491,8 @@ const TourContactScreen = ({ navigation, route }) => {
             alignItems: 'center',
             minHeight: headerHeight,
             paddingTop: (insets.top || 0) + 12,
-            backgroundColor: scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#ffffff'], extrapolate: 'clamp' }),
-            borderBottomWidth: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
+            backgroundColor: scrollY.interpolate({ inputRange: [0, 50], outputRange: ['transparent', '#ffffff'], extrapolate: 'clamp' }),
+            borderBottomWidth: scrollY.interpolate({ inputRange: [0, 150], outputRange: [0, 1], extrapolate: 'clamp' }),
             borderBottomColor: 'rgba(0,0,0,0.06)',
             paddingHorizontal: 12,
           },
@@ -450,12 +525,12 @@ const TourContactScreen = ({ navigation, route }) => {
         scrollEventThrottle={16}
       >
         {/* --------- TRAVELER --------- */}
-  <SectionCard title={t('travelerDetail')}>
-          <Field label={t('title') || 'Title'}>
-            <Select 
-              onPress={() => setTitleModalVisible(true)} 
+        <SectionCard title={t('travelerDetail')}>
+          <Field label={t('title') || 'Title'} error={!!errors.title || !!forceErrors.title}>
+            <Select
+              onPress={() => setTitleModalVisible(true)}
               text={displayTitle}
-              error={!!errors.title}
+              error={!!errors.title || !!forceErrors.title}
             />
           </Field>
 
@@ -467,6 +542,7 @@ const TourContactScreen = ({ navigation, route }) => {
             renderLabel={(it) => it.label}
             onPick={(it) => {
               setSelectedTitle(it.value);
+              setForceErrors((p) => ({ ...p, title: false }));
               setTitleModalVisible(false);
             }}
           />
@@ -488,11 +564,11 @@ const TourContactScreen = ({ navigation, route }) => {
             />
           </Row>
 
-          <Field label={t('country') || 'Country'}>
-            <Select 
-              onPress={() => setCountryModalVisible(true)} 
+          <Field label={t('country') || 'Country'} error={!!errors.country || !!forceErrors.country}>
+            <Select
+              onPress={() => setCountryModalVisible(true)}
               text={displayCountry || please}
-              error={!!errors.country}
+              error={!!errors.country || !!forceErrors.country}
             />
           </Field>
 
@@ -506,10 +582,16 @@ const TourContactScreen = ({ navigation, route }) => {
             keyExtractor={(item, idx) => (item.sys_countries_id ? String(item.sys_countries_id) : String(idx))}
             renderLabel={(item) => getCountryName(item)}
             onPick={(item) => {
-              // store English field in selectedCountry when available
-              const englishName = item?.sys_countries_nameeng || getCountryName(item) || '';
-              setSelectedCountry(englishName || please);
-              setCountryId(item.sys_countries_id || '');
+              const displayName = getCountryName(item) || '';
+              console.log('Country Modal - Selected:', {
+                countryId: item.sys_countries_id,
+                displayName: displayName,
+                item: item
+              });
+              setCountryIdCountry(item.sys_countries_id || '');
+              setSelectedCountryFromModal(displayName || please);
+              // clear forced country error when user explicitly picks a country (even 'Please Select')
+              setForceErrors((p) => ({ ...p, country: false }));
               setCountryModalVisible(false);
               setSearchQueryCountry('');
             }}
@@ -517,26 +599,28 @@ const TourContactScreen = ({ navigation, route }) => {
         </SectionCard>
 
         {/* --------- CONTACT --------- */}
-  <SectionCard title={t('contactDetails')}>
-          <Field label={t('phone') || 'Phone'}>
+        <SectionCard title={t('contactDetails')}>
+          <Field
+            label={t('phone') || 'Phone'}
+            error={!!errors.telCode || !!forceErrors.telCode || !!errors.tel || !!forceErrors.tel}
+          >
             <Row>
               <Select
                 style={{ flex: 0.46, marginRight: 8 }}
                 onPress={() => setPhoneModalVisible(true)}
                 text={selectedTele || please}
-                error={!!errors.telCode}
+                error={!!errors.telCode || !!forceErrors.telCode}
               />
               <TextField
                 value={tel}
-                onChangeText={setTel}
+                onChangeText={(v) => { setTel(v); setForceErrors((p) => ({ ...p, tel: false })); }}
                 placeholder={t('phone') || 'Phone'}
                 keyboardType="phone-pad"
-                error={!!errors.tel}
+                error={!!errors.tel || !!forceErrors.tel}
+                onBlur={() => setTelTouched(true)}
                 style={{ flex: 0.54 }}
               />
             </Row>
-          </Field>
-
           {/* Phone Modal */}
           <PickerModal
             visible={isPhoneModalVisible}
@@ -554,22 +638,40 @@ const TourContactScreen = ({ navigation, route }) => {
               const code = getTelephoneCode(item);
               const name = getCountryName(item) || '';
               const label = name === please ? please : `${code ? `(+${code}) ` : ''}${name}`;
+              console.log('Phone Modal - Selected:', {
+                countryId: item.sys_countries_id,
+                countryName: name,
+                countrycode: code,
+                item: item
+              });
               setSelectedTele(label);
-              setCountryId(item.sys_countries_id || '');
+              // phone-specific ID/name (do NOT overwrite Country modal selection)
+              setCountryIdPhone(item.sys_countries_id || '');
+              setSelectedCountryFromPhone(name || please);
               setCountrycode(code || '');
+              // clear forced phone/country errors when picking phone country
+              setForceErrors((p) => ({ ...p, telCode: false, country: false }));
               setPhoneModalVisible(false);
               setSearchQueryPhone('');
             }}
           />
+          {errors.tel ? (
+            <Text style={{ color: palette.danger, marginTop: 8, fontSize: 13 }}>{t('invalidPhone') || 'รูปแบบเบอร์โทรไม่ถูกต้อง'}</Text>
+          ) : null}
+          </Field>
 
-          <Field label={t('email') || 'Email'}>
+          <Field label={t('email') || 'Email'} error={!!errors.email || !!forceErrors.email}>
             <TextField
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(v) => { setEmail(v); setForceErrors((p) => ({ ...p, email: false })); }}
               placeholder={t('email') || 'Email'}
               keyboardType="email-address"
-              error={!!errors.email}
+              error={!!errors.email || !!forceErrors.email}
+              onBlur={() => setEmailTouched(true)}
             />
+            {errors.email ? (
+              <Text style={{ color: palette.danger, marginTop: 8, fontSize: 13 }}>{t('invalidEmail') || 'รูปแบบอีเมลไม่ถูกต้อง'}</Text>
+            ) : null}
           </Field>
         </SectionCard>
 
@@ -627,7 +729,7 @@ const TourContactScreen = ({ navigation, route }) => {
                     return (
                       <View key={key} style={ui.summaryItemRow}>
                         <Text style={ui.summaryItemLabel}>{`${labelKey} x${count}`}</Text>
-                        <Text style={ui.summaryItemValue}>{`THB ${money(unit, locale)}`}</Text>
+                        <Text style={ui.summaryItemValue}>{`${customerData?.symbol || 'THB'} ${money(unit, locale)}`}</Text>
                       </View>
                     );
                   });
@@ -635,12 +737,12 @@ const TourContactScreen = ({ navigation, route }) => {
 
               <Divider style={{ marginVertical: 12 }} />
 
-       
+
               {/* Total Price */}
               <View style={ui.summaryTotalRow}>
                 <Text style={ui.summaryTotal}>{t('totalPrice') || 'ยอดรวม'}</Text>
                 <Text style={ui.summaryTotalValue}>
-                  {`THB ${money((summary.subtotal && (summary.subtotal.total || summary.subtotal)) || 0, locale)}`}
+                  {`${customerData?.symbol || 'THB'} ${money((summary.subtotal && (summary.subtotal.total || summary.subtotal)) || 0, locale)}`}
                 </Text>
               </View>
             </>
@@ -650,7 +752,7 @@ const TourContactScreen = ({ navigation, route }) => {
               <View style={ui.summaryTotalRow}>
                 <Text style={ui.summaryTotal}>{t('totalPrice') || 'ยอดรวม'}</Text>
                 <Text style={ui.summaryTotalValue}>
-                  {`${currency} ${money(computeTotal(), locale)}`}
+                  {`${customerData?.symbol || 'THB'} ${money(computeTotal(), locale)}`}
                 </Text>
               </View>
             </>
@@ -680,9 +782,9 @@ const SectionCard = ({ title, children }) => {
   );
 };
 
-const Field = ({ label, children }) => (
+const Field = ({ label, children, error }) => (
   <View style={{ marginBottom: 12 }}>
-    <Text style={ui.label}>{label}</Text>
+    <Text style={[ui.label, error && { color: palette.danger }]}>{label}</Text>
     {children}
   </View>
 );
@@ -692,11 +794,11 @@ const Row = ({ children, style }) => <View style={[ui.row, style]}>{children}</V
 const Divider = () => <View style={ui.divider} />;
 
 const Select = ({ text, onPress, style, error }) => (
-  <TouchableOpacity 
-    onPress={onPress} 
-    activeOpacity={0.85} 
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.85}
     style={[
-      ui.select, 
+      ui.select,
       error && { borderColor: palette.danger, backgroundColor: '#FFF5F5' },
       style
     ]}
@@ -732,36 +834,36 @@ const PickerModal = ({
 }) => {
   const { t } = useLanguage();
   return (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <TouchableOpacity activeOpacity={1} style={ui.modalOverlay} onPress={onClose}>
-      <TouchableWithoutFeedback>
-        <View style={ui.modalCard}>
-        {!!onSearch && (
-          <TextInput
-            placeholder={searchPlaceholder}
-            onChangeText={onSearch}
-            placeholderTextColor={palette.textDim}
-            style={[ui.input, { marginBottom: 8 }]}
-          />
-        )}
-        <FlatList
-          data={data}
-          keyExtractor={keyExtractor || ((_, idx) => String(idx))}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={ui.optionItem} onPress={() => onPick && onPick(item)}>
-              <Text style={ui.optionText} numberOfLines={1} ellipsizeMode="tail">
-                {typeof renderLabel === 'function' ? renderLabel(item) : String(item)}
-              </Text>
-            </TouchableOpacity>
-          )}
-          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: palette.line }} />}
-          style={{ maxHeight: '100%' }}
-        />
-        {/* Close button removed per request - modal now closes only via selection or system back */}
-        </View>
-      </TouchableWithoutFeedback>
-    </TouchableOpacity>
-  </Modal>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity activeOpacity={1} style={ui.modalOverlay} onPress={onClose}>
+        <TouchableWithoutFeedback>
+          <View style={ui.modalCard}>
+            {!!onSearch && (
+              <TextInput
+                placeholder={searchPlaceholder}
+                onChangeText={onSearch}
+                placeholderTextColor={palette.textDim}
+                style={[ui.input, { marginBottom: 8 }]}
+              />
+            )}
+            <FlatList
+              data={data}
+              keyExtractor={keyExtractor || ((_, idx) => String(idx))}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={ui.optionItem} onPress={() => onPick && onPick(item)}>
+                  <Text style={ui.optionText} numberOfLines={1} ellipsizeMode="tail">
+                    {typeof renderLabel === 'function' ? renderLabel(item) : String(item)}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: palette.line }} />}
+              style={{ maxHeight: '100%' }}
+            />
+            {/* Close button removed per request - modal now closes only via selection or system back */}
+          </View>
+        </TouchableWithoutFeedback>
+      </TouchableOpacity>
+    </Modal>
   );
 };
 

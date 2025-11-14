@@ -17,7 +17,7 @@ import { useLanguage } from './Screen/LanguageContext';
 import { useCustomer } from './Screen/CustomerContext';
 import ipAddress from '../config/ipconfig';
 import moment from 'moment';
-import { useHideBottomTabBar } from '../utils/hideBottomTabBar';
+import { hideBottomTabBar, showBottomTabBar } from '../utils/hideBottomTabBar';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -38,8 +38,13 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [searchText, setSearchText] = useState(
     (params.q || params.location || params.query || params.search || '').toString()
   );
-  // Hide bottom tab bar while on this screen
-  useHideBottomTabBar();
+  // Hide bottom tab bar while on this screen (match PaymentTourScreen behavior)
+  useEffect(() => {
+    hideBottomTabBar();
+    return () => {
+      showBottomTabBar();
+    };
+  }, []);
 
   const fetchResults = async () => {
     setLoading(true);

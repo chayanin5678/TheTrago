@@ -64,8 +64,10 @@ export default function PaymentTourScreen({ navigation, route }) {
       tel: customerData?.md_tours_tel,
       email: customerData?.md_tours_email,
       country: customerData?.md_tours_country,
+      countryName: customerData?.md_tours_countryname,
       countrycode: customerData?.md_tours_countrycode,
-      account_id: customerData?.md_booking_memberid
+      account_id: customerData?.md_booking_memberid,
+      currency: customerData?.currency || 'THB'
     });
     console.log('🎫 Tour Data:', {
       md_tour_id: customerData?.md_tours_id,
@@ -74,7 +76,7 @@ export default function PaymentTourScreen({ navigation, route }) {
       adults: typeof adults === 'number' && adults >= 0 ? adults : (customerData?.md_tours_adult || 0),
       children: typeof children === 'number' && children >= 0 ? children : (customerData?.md_tours_child || 0),
       infants: typeof infants === 'number' && infants >= 0 ? infants : (customerData?.md_tours_infant || 0),
-      date: date || customerData?.md_tours_departdate || customerData?.md_booking_departdate || '',
+      date:  customerData?.md_tours_departdate || customerData?.md_booking_departdate || '',
     };
     console.log('👥 Booking Info:', bookingInfo);
   }, []);
@@ -88,6 +90,17 @@ export default function PaymentTourScreen({ navigation, route }) {
   const [selectedOption, setSelectedOption] = useState(null); // e.g. "7" for card, "2" for promptpay
   const [pickup, setPickup] = useState(false); // terms accepted
   const [savedCards, setSavedCards] = useState([]);
+
+  // Map selectedOption (number string) to payment type string for API
+  const getPaymentTypeString = (option) => {
+    const map = {
+      '2': 'promptpay',
+      '3': 'profilpay',
+      '4': 'promptpay',
+      '7': 'credit_card',
+    };
+    return map[option] || 'credit_card';
+  };
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [cardNumber, setCardNumber] = useState('');
   const [cardNumberError, setCardNumberError] = useState('');
@@ -247,7 +260,7 @@ export default function PaymentTourScreen({ navigation, route }) {
     const subscription = Linking.addEventListener('url', ({ url }) => {
       if (url.includes('payment/success')) {
         setIsLoading(false);
-        navigation.navigate('ResultScreen', {
+        navigation.navigate('TourPaymentSuccess', {
           success: true,
           bookingCode: customerData.tour_booking_code,
           paymentId: customerData.tour_payment_id,
@@ -548,57 +561,23 @@ export default function PaymentTourScreen({ navigation, route }) {
   const createTourBooking = async () => {
     try {
       // Split full name into first and last name
-      const fullName = customerData?.fullName || '';
-      const nameParts = fullName.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      console.log('👤 [createTourBooking] Customer Data:', {
-        fullName: customerData?.fullName,
-        prefix: customerData?.prefix,
-        tel: customerData?.tel,
-        md_tours_tel: customerData?.md_tours_tel,
-        email: customerData?.email,
-        country: customerData?.country,
-        md_tours_country: customerData?.md_tours_country,
-        countrycode: customerData?.countrycode,
-        md_tours_countrycode: customerData?.md_tours_countrycode,
-        memberid: customerData?.memberid,
-        account_id: customerData?.account_id
-      });
-
-      console.log('🎫 [createTourBooking] Tour Data:', {
-        md_tour_id: tour?.md_tour_id,
-        tourId: tour?.tourId,
-        tourid: tour?.tourid,
-        TourID: tour?.TourID,
-        name: tour?.name,
-        title: tour?.title
-      });
-
-      console.log('👥 [createTourBooking] Passengers:', {
-        adults,
-        children,
-        infants,
-        date,
-        total,
-        selectedOption
-      });
+  
 
       const payload = {
-        md_booking_prefix: customerData?.prefix || '',
-        md_booking_fname: firstName,
-        md_booking_lname: lastName,
-        md_booking_tel: customerData?.tel || customerData?.md_tours_tel || '',
-        md_booking_email: customerData?.email || '',
-        md_booking_adult: Number(adults) || 0,
-        md_booking_child: Number(children) || 0,
-        md_booking_infant: Number(infants) || 0,
+        md_booking_prefix: customerData?.md_tours_title || '',
+        md_booking_fname: customerData?.md_tours_firstname,
+        md_booking_lname: customerData?.md_tours_lastname,
+        md_booking_tel: customerData?.md_tours_tel || '',
+        md_booking_email: customerData?.md_tours_email || '',
+        md_booking_adult:  typeof adults === 'number' && adults >= 0 ? adults : (customerData?.md_tours_adult || 0),
+        md_booking_child: typeof children === 'number' && children >= 0 ? children : (customerData?.md_tours_child || 0),
+        md_booking_infant: typeof infants === 'number' && infants >= 0 ? infants : (customerData?.md_tours_infant || 0),
         md_booking_tourid: tour?.md_tour_id || tour?.tourId || tour?.tourid || tour?.TourID,
-        md_booking_traveldate: date ? moment(date).format('YYYY-MM-DD') : '',
-        md_booking_country: customerData?.country || customerData?.md_tours_country || '',
-        md_booking_countrycode: customerData?.countrycode || customerData?.md_tours_countrycode || '',
-        md_booking_paymenttype: Number(selectedOption) || 0,
+        md_booking_traveldate:  customerData?.md_tours_departdate || customerData?.md_booking_departdate || '',
+        md_booking_country: customerData?.md_tours_country || '',
+        md_booking_countrycodetel:  customerData?.md_tours_countrycode || '',
+        md_booking_countrycode: customerData?.currency || 'THB',
+        md_booking_paymenttype: getPaymentTypeString(selectedOption),
         md_booking_dis: 0, // discount
         md_booking_vat: 0, // VAT
         md_booking_servicepickup: 0,
@@ -619,9 +598,7 @@ export default function PaymentTourScreen({ navigation, route }) {
 
       if (status === 'success' && md_booking_code) {
         updateCustomerData({
-          tour_booking_code: md_booking_code,
-          tour_booking_price: md_booking_price,
-          tour_booking_total: md_booking_total
+          md_booking_code: md_booking_code,
         });
 
         console.log('✅ Tour booking created successfully', { 
@@ -760,6 +737,7 @@ export default function PaymentTourScreen({ navigation, route }) {
           booking: bookingCode,
           randomorder: generateRandomDigits(16),
           currency: customerData?.currency || 'THB',
+          md_charge_from : 'tour',
         }),
       });
 
@@ -791,7 +769,7 @@ export default function PaymentTourScreen({ navigation, route }) {
         }
       } else {
         // Payment successful without 3DS
-        navigation.navigate('ResultScreen', { success: true, source: 'tour', bookingCode });
+        navigation.navigate('TourPaymentSuccess', { success: true, source: 'tour', bookingCode });
       }
 
       setIsLoading(false);
@@ -1214,14 +1192,14 @@ export default function PaymentTourScreen({ navigation, route }) {
               <View style={styles.modalSection}>
                 <View style={styles.modalRow}>
                   <Text style={styles.modalLabel}>{t('phoneNumber') || 'หมายเลขโทรศัพท์'}</Text>
-                  <Text style={styles.modalValue}>{'+ ' + customerData?.countrycode + ' ' + (customerData?.md_tours_tel || '+66 0937094534')}</Text>
+                  <Text style={styles.modalValue}>{'+' + customerData?.md_tours_countrycode + ' ' + (customerData?.md_tours_tel || '+66 0937094534')}</Text>
                 </View>
               </View>
 
               <View style={styles.modalSection}>
                 <View style={styles.modalRow}>
                   <Text style={styles.modalLabel}>{t('email') || 'อีเมล'}</Text>
-                  <Text style={styles.modalValue}>{customerData?.email || 'chayanin0937@gmail.com'}</Text>
+                  <Text style={styles.modalValue}>{customerData?.md_tours_email || 'chayanin0937@gmail.com'}</Text>
                 </View>
               </View>
 

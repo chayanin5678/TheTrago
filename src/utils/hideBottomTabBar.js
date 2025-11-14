@@ -12,6 +12,11 @@ import { useEffect } from 'react';
  * Call this function to hide the tab bar immediately
  */
 export const hideBottomTabBar = () => {
+  // Use a reference count so multiple screens can request the tab bar hidden
+  // without clobbering each other. Each hide increments the counter; each
+  // show decrements. The tab bar is visible only when the counter is 0.
+  if (typeof global._tabBarHideCount === 'undefined') global._tabBarHideCount = 0;
+  global._tabBarHideCount = Number(global._tabBarHideCount) + 1;
   if (typeof global.setTabBarVisible === 'function') {
     global.setTabBarVisible(false);
   }
@@ -23,10 +28,15 @@ export const hideBottomTabBar = () => {
  * Call this function to show the tab bar immediately
  */
 export const showBottomTabBar = () => {
-  if (typeof global.setTabBarVisible === 'function') {
-    global.setTabBarVisible(true);
+  // Decrement the hide counter; only actually show when count reaches 0.
+  if (typeof global._tabBarHideCount === 'undefined') global._tabBarHideCount = 0;
+  global._tabBarHideCount = Math.max(0, Number(global._tabBarHideCount) - 1);
+  if (global._tabBarHideCount === 0) {
+    if (typeof global.setTabBarVisible === 'function') {
+      global.setTabBarVisible(true);
+    }
+    global.isTabBarVisible = true;
   }
-  global.isTabBarVisible = true;
 };
 
 /**
@@ -59,7 +69,7 @@ export const toggleBottomTabBar = () => {
 export const useHideBottomTabBar = () => {
   useEffect(() => {
     hideBottomTabBar();
-    
+
     return () => {
       showBottomTabBar();
     };
@@ -82,7 +92,13 @@ export const useHideBottomTabBar = () => {
  */
 export const useHideBottomTabBarPermanent = () => {
   useEffect(() => {
-    hideBottomTabBar();
+    // Permanent hide increments the counter and does not decrement on unmount
+    // so the tab bar remains hidden until explicitly shown via
+    // `showBottomTabBar()`.
+    if (typeof global._tabBarHideCount === 'undefined') global._tabBarHideCount = 0;
+    global._tabBarHideCount = Number(global._tabBarHideCount) + 1;
+    if (typeof global.setTabBarVisible === 'function') global.setTabBarVisible(false);
+    global.isTabBarVisible = false;
   }, []);
 };
 
@@ -102,6 +118,9 @@ export const useHideBottomTabBarPermanent = () => {
  */
 export const useShowBottomTabBar = () => {
   useEffect(() => {
-    showBottomTabBar();
+    // Force show: reset counter and make visible
+    global._tabBarHideCount = 0;
+    if (typeof global.setTabBarVisible === 'function') global.setTabBarVisible(true);
+    global.isTabBarVisible = true;
   }, []);
 };
