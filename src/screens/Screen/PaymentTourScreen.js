@@ -264,7 +264,8 @@ export default function PaymentTourScreen({ navigation, route }) {
           success: true,
           bookingCode: customerData.tour_booking_code,
           paymentId: customerData.tour_payment_id,
-          type: 'tour'
+          type: 'tour',
+          bookingStatus : 'success'
         });
       } else if (url.includes('payment/failure')) {
         setIsLoading(false);
@@ -731,7 +732,7 @@ export default function PaymentTourScreen({ navigation, route }) {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
         body: JSON.stringify({
-          amount: Number(total),
+          amount: 50,
           token: tokenData.token,
           return_uri: returnUri,
           booking: bookingCode,
