@@ -25,18 +25,27 @@ const TourPaymentSuccess = ({ navigation, route }) => {
   const titleColor = scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#0f172a'], extrapolate: 'clamp' });
   const titleOpacity = scrollY.interpolate({ inputRange: [0, 80], outputRange: [0, 1], extrapolate: 'clamp' });
 
-  const { bookingCode, paymentId } = route.params || {};
+  const { bookingCode, paymentId, status } = route.params || {};
 
   // Prefer an explicit bookingStatus passed via navigation params. Fallback to customerData flags.
   const deriveStatusFromFlags = (p) => {
     const pay = Number(p?.md_booking_pay ?? customerData?.md_booking_pay ?? 0);
     const statuspayment = Number(p?.md_booking_statuspayment ?? customerData?.md_booking_statuspayment ?? 0);
     const status = Number(p?.md_booking_status ?? customerData?.md_booking_status ?? 0);
-    if (pay === 1 || statuspayment === 1 || status === 1) return 'paid';
-    return 'pending';
+    if (pay === 1 || statuspayment === 1 || status === 1) return 'success';
+    return 'failed';
   };
 
-  const initialBookingStatus = route.params?.bookingStatus ?? deriveStatusFromFlags(route.params);
+  const normalizeBookingStatus = (v) => {
+    const s = String(v ?? '').toLowerCase();
+    if (s === 'paid' || s === 'success') return 'success';
+    return 'failed';
+  };
+
+  // Prefer explicit bookingStatus passed through route params; fallback to status path param (from linking) or derive from flags
+  const initialBookingStatus = normalizeBookingStatus(
+    route.params?.bookingStatus ?? status ?? deriveStatusFromFlags(route.params)
+  );
   const [bookingStatus, setBookingStatus] = useState(initialBookingStatus);
   const [bookingLoading] = useState(false);
 
@@ -182,9 +191,9 @@ const TourPaymentSuccess = ({ navigation, route }) => {
               alignItems: 'center',
               minHeight: (insets.top || 0) + 64,
               paddingTop: (insets.top || 0) + 12,
-              backgroundColor: scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#ffffff'], extrapolate: 'clamp' }),
-              borderBottomWidth: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
-              borderBottomColor: 'rgba(0,0,0,0.06)',
+              backgroundColor: bookingStatus === 'failed' ? '#EF4444' : scrollY.interpolate({ inputRange: [0, 120], outputRange: ['transparent', '#ffffff'], extrapolate: 'clamp' }),
+              borderBottomWidth: bookingStatus === 'failed' ? 0 : scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
+              borderBottomColor: bookingStatus === 'failed' ? '#EF4444' : 'rgba(0,0,0,0.06)',
               paddingHorizontal: 12,
             },
           ]}
@@ -206,12 +215,18 @@ const TourPaymentSuccess = ({ navigation, route }) => {
             ]}
           >
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: backIconOpacityWhite }}>
+              {bookingStatus === 'failed' ? (
                 <AntDesign name="left" size={24} color="#FFFFFF" />
-              </Animated.View>
-              <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: backIconOpacityDark }}>
-                <AntDesign name="left" size={24} color="#111827" />
-              </Animated.View>
+              ) : (
+                <>
+                  <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: backIconOpacityWhite }}>
+                    <AntDesign name="left" size={24} color="#FFFFFF" />
+                  </Animated.View>
+                  <Animated.View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, opacity: backIconOpacityDark }}>
+                    <AntDesign name="left" size={24} color="#111827" />
+                  </Animated.View>
+                </>
+              )}
             </TouchableOpacity>
           </Animated.View>
 
@@ -220,8 +235,8 @@ const TourPaymentSuccess = ({ navigation, route }) => {
                 <LogoTheTrago />
               </Animated.View>
               <Animated.View style={{ opacity: titleOpacity }}>
-                <Animated.Text style={[stylesLocal.topHeaderTitle, { color: titleColor }]} numberOfLines={1}>
-                  {tourName ? tourName : (t('paymentComplete') || 'Payment Complete')}
+                <Animated.Text style={[stylesLocal.topHeaderTitle, { color: bookingStatus === 'failed' ? '#FFF' : titleColor }]} numberOfLines={1}>
+                  {bookingStatus === 'failed' ? (t('paymentFailed') || 'Transaction Failed') : (tourName ? tourName : (t('paymentComplete') || 'Payment Complete'))}
                 </Animated.Text>
               </Animated.View>
             </View>
@@ -246,33 +261,42 @@ const TourPaymentSuccess = ({ navigation, route }) => {
                 <Text style={[stylesLocal.headerStatusText, { color: '#1E3A8A' }]}>{t('processingPayment') || 'Processing...'}</Text>
               </View>
             ) : (
-              <View style={[stylesLocal.headerStatus, bookingStatus === 'paid' ? { backgroundColor: 'rgba(16,185,129,0.08)' } : bookingStatus === 'failed' ? { backgroundColor: 'rgba(239,68,68,0.08)' } : { backgroundColor: 'rgba(245,158,11,0.06)' }]}>
-                <Ionicons name={bookingStatus === 'paid' ? 'checkmark-circle' : bookingStatus === 'failed' ? 'close-circle' : 'time'} size={20} color={bookingStatus === 'paid' ? '#10B981' : bookingStatus === 'failed' ? '#DC2626' : '#D97706'} style={{ marginRight: 6 }} />
-                <Text style={[stylesLocal.headerStatusText, { color: bookingStatus === 'paid' ? '#065F46' : bookingStatus === 'failed' ? '#991B1B' : '#92400E' }]}>
-                  {bookingStatus === 'paid' ? (t('paymentComplete') || 'Payment Complete') : bookingStatus === 'failed' ? (t('paymentFailed') || 'Payment Failed') : (t('paymentPending') || 'Payment Pending')}
+              <View style={[stylesLocal.headerStatus, bookingStatus === 'success' ? { backgroundColor: 'rgba(16,185,129,0.08)' } : bookingStatus === 'failed' ? { backgroundColor: 'rgba(239,68,68,0.08)' } : { backgroundColor: 'rgba(245,158,11,0.06)' }]}> 
+                <Ionicons name={bookingStatus === 'success' ? 'checkmark-circle' : bookingStatus === 'failed' ? 'close-circle' : 'time'} size={20} color={bookingStatus === 'success' ? '#10B981' : bookingStatus === 'failed' ? '#DC2626' : '#D97706'} style={{ marginRight: 6 }} />
+                <Text style={[stylesLocal.headerStatusText, { color: bookingStatus === 'success' ? '#065F46' : bookingStatus === 'failed' ? '#991B1B' : '#92400E' }]}> 
+                  {bookingStatus === 'success' ? (t('paymentComplete') || 'Payment Complete') : bookingStatus === 'failed' ? (t('paymentFailed') || 'Payment Failed') : (t('paymentPending') || 'Payment Pending')}
                 </Text>
               </View>
             )}
           </View>
           {bookingStatus === 'failed' ? (
             <View style={stylesLocal.failedWrapper}>
-              <View style={stylesLocal.failedCard}>
-                <View style={{ alignItems: 'center', marginBottom: 8 }}>
-                  <AntDesign name="exclamationcircleo" size={96} color="#374151" />
+              <View style={[stylesLocal.failedCard, { paddingVertical: 28 }]}> 
+                <View style={{ width: 160, height: 160, borderRadius: 80, backgroundColor: '#FFF5F5', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <Ionicons name="close-circle" size={84} color="#EF4444" />
                 </View>
 
-                <Text style={[stylesLocal.failedTitle, { fontSize: 20 }]}>{t('paymentFailed') || 'Payment Failed'}</Text>
-                <Text style={[stylesLocal.failedMessage, { marginTop: 8, marginBottom: 18, color: '#374151' }]}>
-                  {t('bookingFailed') || 'Square encountered an unexpected error. Please try again or contact support if the problem continues.'}
+                <Text style={[stylesLocal.failedTitle, { fontSize: 22, color: '#111827', marginTop: 6 }]}>{t('errorProcessingPayment') || 'Error Processing Payment'}</Text>
+                <Text style={[stylesLocal.failedMessage, { marginTop: 12, marginBottom: 18, color: '#6B7280', textAlign: 'center', maxWidth: 360 }]}> 
+                  {t('errorProcessingPaymentMessage') || 'Please check your security code, card details and connection and try again.'}
                 </Text>
 
+                <View style={{ height: 1, backgroundColor: '#E5E7EB', width: '100%', marginVertical: 16 }} />
                 <TouchableOpacity
-                  style={stylesLocal.cancelButton}
+                  style={[stylesLocal.primaryButton, { backgroundColor: '#EF4444', width: '100%' }]}
                   onPress={() => {
-                    navigation.goBack();
+                    // Change behavior: navigate to HomeScreen when user tries again
+                    // We navigate to the main Home screen and reset if possible
+                    try {
+                      // Prefer top-level 'HomeScreen' navigation
+                      navigation.navigate('HomeScreen');
+                    } catch (e) {
+                      // fallback to goBack if cannot navigate
+                      if (navigation && navigation.canGoBack && navigation.canGoBack()) navigation.goBack();
+                    }
                   }}
                 >
-                  <Text style={stylesLocal.cancelButtonText}>{t('cancelPayment') || 'Cancel Payment'}</Text>
+                  <Text style={stylesLocal.primaryButtonText}>{t('backToPaymentSelection') || 'Back to payment selection'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -324,7 +348,7 @@ const TourPaymentSuccess = ({ navigation, route }) => {
                 {/* Show customer fields as label/value rows (left/right) to match ticket rows */}
                 <View style={stylesLocal.row}>
                   <Text style={stylesLocal.label}>{t('name') || 'Name'}</Text>
-                  <Text style={stylesLocal.value}>{`${customerData?.md_tours_title ? (customerData.md_tours_title + ' ') : ''}${customerData?.md_tours_firstname || customerData?.Firstname || ''} ${customerData?.md_tours_lastname || customerData?.Lastname || ''}`.trim() || '-'}</Text>
+                  <Text style={stylesLocal.value}>{`${customerData?.md_tours_title ? (customerData.md_tours_title_name + ' ') : ''}${customerData?.md_tours_firstname || customerData?.Firstname || ''} ${customerData?.md_tours_lastname || customerData?.Lastname || ''}`.trim() || '-'}</Text>
                 </View>
 
                 {customerData?.md_tours_email || customerData?.email ? (

@@ -13,6 +13,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import axios from 'axios';
 import * as Linking from 'expo-linking';
+import { useIsFocused } from '@react-navigation/native';
 import moment from 'moment-timezone';
 import ipAddress from '../../config/ipconfig';
 
@@ -33,7 +34,10 @@ export default function PaymentTourScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   
   // Hide bottom tab bar
+  const isFocused = useIsFocused();
+
   useEffect(() => {
+    if (!isFocused) return; // attach listener only while screen is focused
     hideBottomTabBar();
     
     return () => {
@@ -57,10 +61,10 @@ export default function PaymentTourScreen({ navigation, route }) {
   // Log data when entering this screen
   useEffect(() => {
     console.log('🎬 [PaymentTourScreen] Screen Loaded');
-    console.log('👤 Customer Data:', {
+      console.log('👤 Customer Data:', {
       firstName: customerData?.md_tours_firstname,
       lastName: customerData?.md_tours_lastname,
-      prefix: customerData?.md_tours_title,
+        prefix: customerData?.md_tours_title,
       tel: customerData?.md_tours_tel,
       email: customerData?.md_tours_email,
       country: customerData?.md_tours_country,
@@ -258,27 +262,44 @@ export default function PaymentTourScreen({ navigation, route }) {
   // Handle deep linking for payment redirects
   useEffect(() => {
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      if (url.includes('payment/success')) {
-        setIsLoading(false);
-        navigation.navigate('TourPaymentSuccess', {
-          success: true,
-          bookingCode: customerData.tour_booking_code,
-          paymentId: customerData.tour_payment_id,
-          type: 'tour',
-          bookingStatus : 'success'
-        });
-      } else if (url.includes('payment/failure')) {
-        setIsLoading(false);
-        Alert.alert(
-          t('paymentFailed') || 'ชำระเงินไม่สำเร็จ',
-          t('paymentFailedMessage') || 'การชำระเงินไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
-          [{ text: t('ok') || 'ตกลง' }]
-        );
+      try {
+        console.log('🔗 [PaymentTourScreen] Received deep link:', url);
+
+        const isTourSuccess = url.includes('payment/tour/success');
+        const isTourFailure = url.includes('payment/tour/failure');
+
+        // If we have a booking code, prefer route to include it, otherwise process if no booking-code is present.
+        const bookingCheck = customerData?.tour_booking_code ? url.includes(customerData.tour_booking_code) : true;
+
+        if (isTourSuccess && bookingCheck) {
+          setIsLoading(false);
+          console.log('✅ [PaymentTourScreen] Payment success deep link for tour detected.');
+          navigation.navigate('TourPaymentSuccess', {
+            success: true,
+            bookingCode: customerData.tour_booking_code,
+            paymentId: customerData.tour_payment_id,
+            type: 'tour',
+            bookingStatus: 'success'
+          });
+        } else if (isTourFailure && bookingCheck) {
+          setIsLoading(false);
+          console.log('❌ [PaymentTourScreen] Payment failure deep link for tour detected.');
+          // Navigate to the branded failure layout and pass bookingStatus = 'failed'
+          navigation.navigate('TourPaymentSuccess', {
+            success: false,
+            bookingCode: customerData.tour_booking_code,
+            paymentId: customerData.tour_payment_id,
+            type: 'tour',
+            bookingStatus: 'failed'
+          });
+        }
+      } catch (e) {
+        console.warn('⚠️ [PaymentTourScreen] deep link processing error', e);
       }
     });
 
     return () => subscription.remove();
-  }, [customerData, navigation, t]);
+  }, [customerData, navigation, t, isFocused]);
 
   // Format time as MM:SS
   const formatTime = (seconds) => {
@@ -565,7 +586,8 @@ export default function PaymentTourScreen({ navigation, route }) {
   
 
       const payload = {
-        md_booking_prefix: customerData?.md_tours_title || '',
+        // Prefer the newly stored readable label `md_tours_title_name`, fallback to legacy `md_tours_title` or empty string.
+        md_booking_prefix: customerData?.md_tours_title_name || customerData?.md_tours_title || '',
         md_booking_fname: customerData?.md_tours_firstname,
         md_booking_lname: customerData?.md_tours_lastname,
         md_booking_tel: customerData?.md_tours_tel || '',
@@ -724,7 +746,7 @@ export default function PaymentTourScreen({ navigation, route }) {
       }
 
       const bookingCode = bookingResult.bookingCode;
-      const returnUri = bookingCode ? `${ipAddress}/redirect/${bookingCode}` : `${ipAddress}/redirect`;
+      const returnUri = bookingCode ? `${ipAddress}/AppApi/redirect/tour/${bookingCode}` : `${ipAddress}/redirect`;
       console.log('📤 returnUri:', returnUri, 'bookingCode:', bookingCode);
 
       // 3. Process payment
@@ -769,8 +791,8 @@ export default function PaymentTourScreen({ navigation, route }) {
           );
         }
       } else {
-        // Payment successful without 3DS
-        navigation.navigate('TourPaymentSuccess', { success: true, source: 'tour', bookingCode });
+        // Payment successful without 3DS - navigate to the success screen explicitly with bookingStatus
+        navigation.navigate('TourPaymentSuccess', { success: true, source: 'tour', bookingCode, bookingStatus: 'success' });
       }
 
       setIsLoading(false);
@@ -795,8 +817,9 @@ export default function PaymentTourScreen({ navigation, route }) {
       // Process card payment directly (handleCardPayment will validate)
       handleCardPayment();
     } else if (selectedOption === "2") {
-      // PromptPay flow (placeholder)
-      navigation.navigate('PromptPayScreen', { amount: total, source: 'tour' });
+      // PromptPay flow for tour: pass the tour data and deadline
+      const deadline = moment().add(timeLeft, 'seconds').format('HH:mm');
+      navigation.navigate('PromptPayScreen', { Paymenttotal: total, source: 'tour', tour: tour, deadline });
     } else {
       Alert.alert(t('paymentOption') || 'Payment Option', t('pleaseSelectPayment') || 'Please select a payment option.');
     }

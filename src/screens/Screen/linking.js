@@ -31,6 +31,10 @@ export default {
       // Other standalone screens (stack screens under Home/AppNavigator)
       PaymentScreen: 'payment',
       ResultScreen: 'payment/success',
+      // Tour-specific payment success/failure deep links -> map both to `TourPaymentSuccess` route
+      TourPaymentSuccess: {
+        path: 'payment/tour/:status', // status can be 'success' or 'failure'
+      },
     },
   },
 };

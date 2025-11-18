@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert, Platform } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { View, StyleSheet, Image, TouchableOpacity, Text, ScrollView, Alert, Platform, Modal, Animated } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -10,7 +10,7 @@ import ipAddress from "../../config/ipconfig";
 import { useCustomer } from './CustomerContext';
 import { useLanguage } from './LanguageContext';
 import { useTabBarAutoHide } from '../../utils/useTabBarAutoHide';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import moment from "moment-timezone";
 import LogoTheTrago from "./../../components/component/Logo";
@@ -19,7 +19,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PromptPayScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { Paymenttotal, selectedOption, usePoints, pointsToUse, pointsToEarn } = route.params;
+  const params = route.params || {};
+  const Paymenttotal = params.Paymenttotal ?? params.amount ?? params.Paymenttotal ?? 0;
+  const selectedOption = params.selectedOption ?? params.selectedOption;
+  const usePoints = params.usePoints;
+  const pointsToUse = params.pointsToUse;
+  const pointsToEarn = params.pointsToEarn;
   const tabBarScrollProps = useTabBarAutoHide();
 
   // 🔍 Debug route params ที่ได้รับมา
@@ -39,6 +44,13 @@ export default function PromptPayScreen({ route, navigation }) {
   const [qrpayment, setqrpayment] = useState(Math.round(Paymenttotal * 100));
   const [intervalId, setIntervalId] = useState(null);
   const [actualBookingCode, setActualBookingCode] = useState(null); // เก็บ booking code ที่สร้างจริง
+  const { source = 'ferry', tour } = params; // support for 'tour' flow
+  
+  // Modal states
+  const [modalVisible, setModalVisible] = useState(false);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const modalTranslateY = useRef(new Animated.Value(hp('80%'))).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   // สร้าง random order id แบบตัวเลขความยาว n (ไม่ขึ้นต้นด้วย 0)
   const generateRandomDigits = (n) => {
@@ -53,6 +65,41 @@ export default function PromptPayScreen({ route, navigation }) {
   };
 
   const EXTRA_TOP_GUTTER = Platform.OS === 'android' ? 0 : 16;
+  const deadline = route.params?.deadline || moment().add(10, 'minutes').format('HH:mm');
+  
+  // Modal functions
+  const openModal = () => {
+    setModalVisible(true);
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalTranslateY, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start();
+  };
+  
+  const closeModal = () => {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalTranslateY, {
+        toValue: hp('80%'),
+        duration: 250,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setModalVisible(false);
+    });
+  };
   // Function สำหรับการอัปเดตคะแนน
   const updateUserPoints = async (pointsToDeduct, pointsToAdd) => {
     try {
@@ -116,7 +163,7 @@ export default function PromptPayScreen({ route, navigation }) {
         console.log("- paymentfee:", customerData.paymentfee);
 
         // สร้าง booking ก่อนเรียก create-promptpay
-        const bookingResult = await createBooking();
+        const bookingResult = source === 'tour' ? await createTourBooking() : await createBooking();
 
         if (!bookingResult.success) {
           throw new Error(bookingResult.message || 'Failed to create booking');
@@ -131,11 +178,14 @@ export default function PromptPayScreen({ route, navigation }) {
 
         // เมื่อ booking สำเร็จแล้ว สร้าง promptpay charge
         // ส่ง booking_code ที่ได้จาก createBooking โดยตรง (หลีกเลี่ยง race กับ customerData)
+        const md_charge_from = source === 'tour' ? 'tour' : 'ferry';
+        console.log('[PromptPay] create-promptpay payload:', { amount: parseFloat(qrpayment), currency: customerData.currency || 'THB', booking_code: bookingResult.bookingCode, randomorder: generateRandomDigits(16), md_charge_from });
         const response = await axios.post(`${ipAddress}/create-promptpay`, {
           amount: parseFloat(qrpayment),
           currency: customerData.currency || "THB",
           booking_code: bookingResult.bookingCode,
           randomorder: generateRandomDigits(16),
+          md_charge_from,
         });
 
         setChargeid(response.data.charge_id);
@@ -180,6 +230,7 @@ export default function PromptPayScreen({ route, navigation }) {
           // ทำการตรวจสอบสถานะการชำระเงิน
           let res;
           try {
+            console.log('[PromptPay] checking charge:', chargeid);
             res = await axios.post(`${ipAddress}/check-charge`, {
               charge_id: chargeid,
             });
@@ -192,8 +243,11 @@ export default function PromptPayScreen({ route, navigation }) {
           console.log("Payment Status Response:", res.data);
 
           if (res.data.success && res.data.status === "successful") {
- 
-            navigation.navigate("ResultScreen", { success: true });
+            if (source === 'tour') {
+              navigation.navigate('TourPaymentSuccess', { success: true, bookingCode: actualBookingCode, paymentId: chargeid, type: 'tour', bookingStatus: 'success' });
+            } else {
+              navigation.navigate("ResultScreen", { success: true });
+            }
             if (localIntervalId) clearInterval(localIntervalId); // หยุด interval ทันที
           }
         } catch (error) {
@@ -234,7 +288,7 @@ export default function PromptPayScreen({ route, navigation }) {
       // สร้างไฟล์ชั่วคราว
       const path = FileSystem.cacheDirectory + 'qr_code.png';
       await FileSystem.writeAsStringAsync(path, qrUri.replace('data:image/png;base64,', ''), {
-        encoding: FileSystem.EncodingType.Base64
+        encoding: 'base64'
       });
       // บันทึกลงแกลเลอรี่
       await MediaLibrary.saveToLibraryAsync(path);
@@ -292,8 +346,8 @@ export default function PromptPayScreen({ route, navigation }) {
         paymenttype: Number(selectedOption) || 2, // PromptPay
         international: Number(customerData.international) || 0,
 
-        detailpassenger: customerData.passenger || [],
-        detailinsurance: customerData.insurance || [],
+        detailpassenger: (customerData.passenger || []).filter(p => p && typeof p === 'object'),
+        detailinsurance: (customerData.insurance || []).filter(ins => ins && typeof ins === 'object' && ins.md_insurancetype_no),
 
         // ส่งรหัสประเทศตรง ๆ (ไม่มีการ norm ทำให้ไม่เกิด ++66)
         txt_countries: customerData.md_booking_country || customerData.country,
@@ -343,6 +397,7 @@ export default function PromptPayScreen({ route, navigation }) {
     }
     try {
       // ตรวจสอบสถานะล่าสุดก่อน
+      console.log('[PromptPay] manual check-charge for:', chargeid);
       const res = await axios.post(`${ipAddress}/check-charge`, {
         charge_id: chargeid,
       });
@@ -352,54 +407,106 @@ export default function PromptPayScreen({ route, navigation }) {
     } catch (e) {
       console.error('Error checking payment status on manual cancel:', e);
     }
-    // ✅ นำทางไปหน้า ResultScreen แทน HomeScreen
+    // For tour flow, check and navigate to TourPaymentSuccess with bookingStatus accordingly
+    if (source === 'tour') {
+      try {
+        const res = await axios.post(`${ipAddress}/check-charge`, { charge_id: chargeid });
+        if (res.data.success && res.data.status === 'successful') {
+          navigation.navigate('TourPaymentSuccess', { success: true, bookingCode: actualBookingCode, paymentId: chargeid, type: 'tour', bookingStatus: 'success' });
+          return;
+        }
+      } catch (e) {
+        console.error('Error checking payment status on manual confirm (tour):', e);
+      }
+      navigation.navigate('TourPaymentSuccess', { success: false, bookingCode: actualBookingCode, paymentId: chargeid, type: 'tour', bookingStatus: 'failed' });
+      return;
+    }
+    // Ferry flow fallback
     navigation.navigate('ResultScreen', { success: false });
   };
+
+  // Tour booking creator adapted from PaymentTourScreen.createTourBooking
+  async function createTourBooking() {
+    try {
+      const payload = {
+        md_booking_prefix: customerData?.md_tours_title_name || customerData?.md_tours_title || '',
+        md_booking_fname: customerData?.md_tours_firstname || customerData?.md_tours_name || '',
+        md_booking_lname: customerData?.md_tours_lastname || customerData?.md_tours_surname || '',
+        md_booking_tel: customerData?.md_tours_tel || '',
+        md_booking_email: customerData?.md_tours_email || '',
+        md_booking_adult: Number(customerData?.md_tours_adult || 0),
+        md_booking_child: Number(customerData?.md_tours_child || 0),
+        md_booking_infant: Number(customerData?.md_tours_infant || 0),
+        md_booking_tourid: tour?.md_tour_id || tour?.tourId || tour?.tourid || tour?.TourID || customerData?.md_tours_id,
+        md_booking_traveldate: customerData?.md_tours_departdate || customerData?.md_booking_departdate || '',
+        md_booking_country: customerData?.md_tours_country || '',
+        md_booking_countrycodetel: customerData?.md_tours_countrycode || '',
+        md_booking_countrycode: customerData?.currency || 'THB',
+        md_booking_paymenttype: 2, // promptpay
+        md_booking_dis: 0,
+        md_booking_vat: 0,
+        md_booking_servicepickup: 0,
+        account_id: customerData?.md_booking_memberid || 0,
+        md_booking_affiliate: 0
+      };
+
+      console.log('📦 [createTourBooking] Payload:', payload);
+      const response = await axios.post(`${ipAddress}/addbookingtour`, payload, { headers: { 'Content-Type': 'application/json' }, timeout: 15000 });
+      const { status, message, md_booking_code } = response?.data || {};
+      if (status === 'success' && md_booking_code) {
+        updateCustomerData({ md_booking_code: md_booking_code });
+        return { success: true, bookingCode: md_booking_code };
+      }
+      throw new Error(message || 'Failed to create tour booking');
+    } catch (error) {
+      console.error('❌ Error creating tour booking:', error);
+      throw new Error(error?.message || 'Failed to create tour booking');
+    }
+  }
 
 
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Ultra Premium Gradient Background */}
-      <LinearGradient
-        colors={['#002A5C', '#2563EB']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1.5 }}
-        style={{ flex: 1 }}
-      >
-        {/* Enhanced Premium Header */}
-        <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(248,250,252,0.95)", "rgba(241,245,249,0.9)"]}
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+        {/* Header */}
+        <Animated.View
           style={[
-            headStyles.headerBg,
             {
               width: '100%',
-              marginLeft: '0%',
-              paddingTop: insets.top + EXTRA_TOP_GUTTER,
-              borderBottomLeftRadius: 40,
-              borderBottomRightRadius: 40,
+              paddingTop: EXTRA_TOP_GUTTER,
+              borderBottomLeftRadius: 20,
+              borderBottomRightRadius: 20,
               paddingBottom: 8,
               padding: 10,
               minHeight: hp('12%'),
-              borderWidth: 1,
-              borderColor: 'rgba(0, 18, 51, 0.08)',
-              backdropFilter: 'blur(30px)',
-            },
+              elevation: 3,
+              backgroundColor: scrollY.interpolate({
+                inputRange: [0, 120],
+                outputRange: ['#FFFFFF', '#FFFFFF'],
+                extrapolate: 'clamp',
+              }),
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: scrollY.interpolate({
+                inputRange: [0, 120],
+                outputRange: [0.1, 0.15],
+                extrapolate: 'clamp',
+              }),
+              shadowRadius: 4,
+            }
           ]}
         >
           <View
-            style={[
-              headStyles.headerRow,
-              {
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 0,
-                paddingTop: 0,
-                position: 'relative',
-                marginTop: 0,
-                height: 56,
-              },
-            ]}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 0,
+              paddingTop: 0,
+              position: 'relative',
+              marginTop: hp('2%'),
+              height: 56,
+            }}
           >
             {/* Back Button - Left */}
             <TouchableOpacity
@@ -407,12 +514,10 @@ export default function PromptPayScreen({ route, navigation }) {
               style={{
                 position: 'absolute',
                 left: 16,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: '#F3F4F6',
                 borderRadius: 25,
                 padding: 8,
                 zIndex: 2,
-                borderWidth: 1,
-                borderColor: 'rgba(253, 80, 30, 0.1)',
               }}
             >
               <AntDesign name="arrow-left" size={24} color="#FD501E" />
@@ -423,129 +528,164 @@ export default function PromptPayScreen({ route, navigation }) {
               <LogoTheTrago />
             </View>
           </View>
-        </LinearGradient>
+        </Animated.View>
 
         <ScrollView
           {...tabBarScrollProps}
-          contentContainerStyle={[styles.container, { paddingBottom: hp('15%') }]}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+          contentContainerStyle={[styles.container, { paddingBottom: hp('15%'), backgroundColor: '#FFFFFF' }]}
           showsVerticalScrollIndicator={false}
           contentInsetAdjustmentBehavior="automatic"
           bounces={false}
+          style={{ backgroundColor: '#FFFFFF' }}
         >
 
-        {/* Ultra Premium Title Section */}
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: hp('1.5%'),
-          marginHorizontal: wp('0%'),
-          marginBottom: hp('2.5%'),
-          paddingHorizontal: wp('4%'),
-          paddingVertical: hp('2%'),
-          backgroundColor: 'rgba(255,255,255,0.12)',
-          borderRadius: wp('5%'),
-          backdropFilter: 'blur(15px)',
-          borderWidth: 1.5,
-          borderColor: 'rgba(255,255,255,0.25)',
-        }}>
-          <View style={{ flex: 1 }}>
-            <Text style={[
-              headStyles.headerTitle,
-              {
-                color: '#FFFFFF',
-                fontSize: wp('7.5%'),
-                fontWeight: '900',
-                letterSpacing: -0.8,
-                textAlign: 'left',
-                marginLeft: 0,
-                lineHeight: wp('8.5%'),
-              }
-            ]}>
-              {t('promptPayQR')}
-            </Text>
-            <Text style={{
-              color: 'rgba(255,255,255,0.85)',
-              fontSize: wp('3.8%'),
-              fontWeight: '600',
-              marginTop: hp('0.8%'),
-              letterSpacing: 0.5,
-            }}>
-              {t('scanToCompletePayment')}
-            </Text>
-          </View>
-        </View>
-
-          {loading ? (
+          {!loading && (
             <>
-              {/* Premium Loading Section */}
-              <View style={styles.loadingCard}>
-                <View style={styles.skeletonContainer}>
-                  <View style={styles.skeletonQR} />
-                  <View style={styles.skeletonAmount} />
-                </View>
-                <View style={styles.skeletonButtonRow}>
-                  <View style={styles.skeletonButton} />
-                  <View style={styles.skeletonButton} />
-                </View>
-              </View>
-            </>
-          ) : (
-            <>
-              {/* Premium QR Code Section */}
-              <View style={styles.qrCard}>
-                {qrUri && (
+              {/* Amount + Tour Name + Details Link */}
+              <View style={styles.topSection}>
+                <Text style={styles.amountLarge}>฿ {(Number(Paymenttotal) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                {source === 'tour' && (
                   <>
-                    <Image
-                      source={{ uri: qrUri }}
-                      style={styles.qr}
-                      resizeMode="contain"
-                    />
-                    <View style={styles.amountContainer}>
-                      <Text style={styles.amountLabel}>{t('totalAmount')}</Text>
-                      <Text style={styles.amountValue}>{customerData.symbol} {Number((Math.round(Paymenttotal * 100) / 100).toFixed(2)).toLocaleString()}</Text>
-                    </View>
+                    <Text style={styles.tourDescription}>{tour?.name || tour?.title || customerData?.md_tours_name || ''}</Text>
+                    <TouchableOpacity onPress={openModal}>
+                      <Text style={styles.detailLinkSmall}>{t('tourDetails') || 'รายละเอียด'} ›</Text>
+                    </TouchableOpacity>
                   </>
                 )}
               </View>
 
-              {/* Premium Action Buttons */}
-              <View style={styles.actionSection}>
-                <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={saveQRToFile}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.9)', 'rgba(248,250,252,0.95)']}
-                    style={styles.saveButtonGradient}
-                  >
-                    <Ionicons name="download-outline" size={20} color="#6B7280" style={{ marginRight: 8 }} />
-                    <Text style={styles.saveButtonText}>{t('saveQR')}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+              {/* Title: สแกน QR Code */}
+              <Text style={styles.qrTitle}>{t('scanQRCode') || 'สแกน QR Code'}</Text>
 
+              {/* QR Card */}
+              <View style={styles.qrCard}>
+                {qrUri ? (
+                  <Image
+                    source={{ uri: qrUri }}
+                    style={styles.qr}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={styles.skeletonQR} />
+                )}
                 <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={handlePress}
-                  activeOpacity={0.8}
+                  style={styles.saveButtonBlue}
+                  onPress={saveQRToFile}
+                  activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={['#FD501E', '#FF6B35']}
+                    colors={['#2563EB', '#06B6D4']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={styles.cancelButtonGradient}
+                    style={styles.saveButtonBlueGradient}
                   >
-                    <Ionicons name="close-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                    <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
+                    <Ionicons name="download-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text style={styles.saveButtonTextBlue}>{t('saveQR') || 'บันทึก QR Code'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
+              </View>
+
+              {/* Manual Confirm CTA */}
+              <TouchableOpacity
+                style={styles.confirmOutlineButton}
+                onPress={handlePress}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.confirmOutlineButtonText}>{t('confirmPayment') || 'ยืนยันการชำระเงินด้วยตนเอง'}</Text>
+              </TouchableOpacity>
+              {/* Instructions Block */}
+              <View style={styles.instructionsBlock}>
+                <Text style={styles.instructionsTitle}>{t('howToPayByQRCode') || 'วิธีการชำระเงินด้วย QR Code'}</Text>
+                <Text style={styles.instructionsText}>1. {t('qrInstruction1') || 'บันทึกรหัส QR ข้างต้น หรือถ่ายภาพหน้าจอของรหัส QR จากนั้นเปิดแอปธนาคารของคุณและสแกนเพื่อชำระเงิน'}</Text>
+                <Text style={styles.instructionsText}>2. {t('qrInstruction2') || 'อัปโหลด QR Code ในแอป หรือกดปุ่มบันทึก QR Code และยืนยันการชำระเงิน'}</Text>
+                <Text style={styles.instructionsText}>3. {t('qrInstruction3') || 'เมื่อระบบได้รับการยืนยันการชำระเงิน คุณจะได้รับยืนยันการจองโดยอัตโนมัติ'}</Text>
               </View>
             </>
           )}
         </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+      </View>
+      
+      {/* Tour Details Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View style={[styles.modalBackground, { opacity: overlayOpacity }]} />
+          <Animated.View style={[styles.modalContent, { transform: [{ translateY: modalTranslateY }] }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('bookingDetails') || 'รายละเอียดการจอง'}</Text>
+              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+                <Ionicons name="close" size={28} color="#111827" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+              {/* Tour Info */}
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>
+                  {tour?.name || tour?.title || t('tourPackage')}
+                </Text>
+              </View>
+              
+              {/* Contact Info */}
+              <View style={styles.modalSection}>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>{t('phoneNumber') || 'หมายเลขโทรศัพท์'}</Text>
+                  <Text style={styles.modalValue}>{'+' + (customerData?.md_tours_countrycode || '66') + ' ' + (customerData?.md_tours_tel || '')}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.modalSection}>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>{t('email') || 'อีเมล'}</Text>
+                  <Text style={styles.modalValue}>{customerData?.md_tours_email || ''}</Text>
+                </View>
+              </View>
+              
+              {/* Price Breakdown */}
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>{t('priceBreakdown') || 'รายละเอียดราคา'}</Text>
+                
+                {customerData?.md_tours_adult > 0 && (
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>{t('adult') || 'ผู้ใหญ่'} ×{customerData.md_tours_adult}</Text>
+                    <Text style={styles.priceValue}>{customerData?.symbol || '฿'} {(Number(customerData?.md_tours_adult_price || 0) * Number(customerData?.md_tours_adult || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+                  </View>
+                )}
+                
+                {customerData?.md_tours_child > 0 && (
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>{t('child') || 'เด็ก'} ×{customerData.md_tours_child}</Text>
+                    <Text style={styles.priceValue}>{customerData?.symbol || '฿'} {(Number(customerData?.md_tours_child_price || 0) * Number(customerData?.md_tours_child || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+                  </View>
+                )}
+                
+                {customerData?.md_tours_infant > 0 && (
+                  <View style={[styles.priceRow, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.priceLabel}>{t('infant') || 'ทารก'} ×{customerData.md_tours_infant}</Text>
+                    <Text style={styles.priceValue}>{customerData?.symbol || '฿'} {(Number(customerData?.md_tours_infant_price || 0) * Number(customerData?.md_tours_infant || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+                  </View>
+                )}
+                
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>{t('totalAmount') || 'ยอดชำระทั้งหมด'}</Text>
+                  <Text style={styles.totalValue}>{customerData?.symbol || '฿'} {(Number(Paymenttotal) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                </View>
+              </View>
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
@@ -555,29 +695,64 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     paddingTop: hp('2%'),
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#FFFFFF',
   },
   loadingCard: {
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: wp('7%'),
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('5%'),
     padding: wp('8%'),
     marginBottom: hp('2.5%'),
-    borderWidth: wp('0.3%'),
-    borderColor: 'rgba(253, 80, 30, 0.12)',
-    backdropFilter: 'blur(30px)',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     width: '100%',
     alignItems: 'center',
   },
   qrCard: {
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: wp('7%'),
-    padding: wp('2%'),
-    marginBottom: hp('4%'),
-    borderWidth: wp('0.3%'),
-    borderColor: 'rgba(253, 80, 30, 0.12)',
-    backdropFilter: 'blur(30px)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('5%'),
+    padding: wp('4%'),
+    marginBottom: hp('2%'),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     width: '100%',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  topSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: hp('2%'),
+    marginTop: hp('1%'),
+  },
+  amountLarge: {
+    fontSize: wp('10%'),
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: hp('1%'),
+  },
+  tourDescription: {
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: hp('0.5%'),
+    paddingHorizontal: wp('2%'),
+  },
+  detailLinkSmall: {
+    fontSize: wp('3.8%'),
+    color: '#2563EB',
+    fontWeight: '600',
+  },
+  qrTitle: {
+    fontSize: wp('4%'),
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: hp('1.5%'),
+    alignSelf: 'flex-start',
   },
   qr: {
     width: wp('90%'),
@@ -606,6 +781,64 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.5,
   },
+  topAmountSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: hp('2%'),
+  },
+  topAmountValue: {
+    fontSize: wp('10%'),
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: hp('0.4%'),
+  },
+  tourMetaContainer: {
+    alignItems: 'center',
+    marginTop: hp('1%'),
+  },
+  tourName: {
+    fontSize: wp('4%'),
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center'
+  },
+  tourDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: hp('0.6%')
+  },
+  detailLink: {
+    color: '#2563EB',
+    fontWeight: '700',
+    marginLeft: wp('2%')
+  },
+  bookingCodeText: {
+    fontSize: wp('3.4%'),
+    color: '#6B7280',
+    marginTop: hp('0.6%')
+  },
+  instructionsBlock: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: wp('4%'),
+    padding: wp('4%'),
+    marginTop: hp('3%'),
+    borderWidth: 1,
+    borderColor: '#E5E7EB'
+  },
+  instructionsTitle: {
+    fontSize: wp('4%'),
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: hp('1%')
+  },
+  instructionsText: {
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
+    lineHeight: wp('4.8%'),
+    marginBottom: hp('0.6%')
+  },
   actionSection: {
     flexDirection: 'row',
     width: '100%',
@@ -617,6 +850,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: wp('2%'),
     borderRadius: wp('4%'),
+  },
+  saveButtonBlue: {
+    marginTop: hp('2%'),
+    width: '70%',
+    borderRadius: wp('8%'),
+    alignSelf: 'center'
+  },
+  saveButtonBlueGradient: {
+    paddingVertical: hp('1.8%'),
+    paddingHorizontal: wp('6%'),
+    borderRadius: wp('8%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  saveButtonTextBlue: {
+    color: '#fff',
+    fontSize: wp('4.2%'),
+    fontWeight: '700'
   },
   saveButtonGradient: {
     paddingVertical: hp('2%'),
@@ -653,6 +905,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  confirmOutlineButton: {
+    borderWidth: 2,
+    borderColor: '#2563EB',
+    borderRadius: wp('6%'),
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('6%'),
+    alignItems: 'center',
+    width: '100%',
+    alignSelf: 'center',
+    marginTop: hp('2%'),
+    marginBottom: hp('2%'),
+  },
+  confirmOutlineButtonText: {
+    color: '#2563EB',
+    fontWeight: '700',
+    fontSize: wp('4%')
+  },
   // Premium Skeleton Loader Styles
   skeletonContainer: {
     width: '100%',
@@ -684,5 +953,107 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(148, 163, 184, 0.2)',
     borderRadius: wp('4%'),
     marginHorizontal: wp('1%'),
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end'
+  },
+  modalBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000'
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: hp('2%'),
+    maxHeight: hp('80%'),
+    minHeight: hp('50%')
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('2%'),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    position: 'relative'
+  },
+  modalTitle: {
+    fontSize: wp('4.5%'),
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center'
+  },
+  closeButton: {
+    position: 'absolute',
+    right: wp('5%'),
+    top: 0,
+    padding: 4
+  },
+  modalScroll: {
+    paddingHorizontal: wp('5%'),
+    paddingTop: hp('2%')
+  },
+  modalSection: {
+    marginBottom: hp('3%')
+  },
+  modalSectionTitle: {
+    fontSize: wp('4%'),
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: hp('1.5%'),
+    lineHeight: wp('5.5%')
+  },
+  modalRow: {
+    marginBottom: hp('1%')
+  },
+  modalLabel: {
+    fontSize: wp('3.5%'),
+    color: '#6B7280',
+    marginBottom: hp('0.5%'),
+    fontWeight: '600'
+  },
+  modalValue: {
+    fontSize: wp('3.8%'),
+    color: '#111827'
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: hp('1%'),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6'
+  },
+  priceLabel: {
+    fontSize: wp('3.8%'),
+    color: '#6B7280'
+  },
+  priceValue: {
+    fontSize: wp('3.8%'),
+    color: '#111827',
+    fontWeight: '600'
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: hp('2%'),
+    marginTop: hp('1%'),
+    borderTopWidth: 2,
+    borderTopColor: '#E5E7EB'
+  },
+  totalLabel: {
+    fontSize: wp('4.5%'),
+    color: '#111827',
+    fontWeight: '700'
+  },
+  totalValue: {
+    fontSize: wp('5%'),
+    color: '#2563EB',
+    fontWeight: '800'
   },
 });

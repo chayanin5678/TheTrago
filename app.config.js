@@ -1,5 +1,5 @@
-const APP_VERSION = "1.0.9";
-const IOS_BUILD_NUMBER = "2";
+const APP_VERSION = "1.1.0";
+const IOS_BUILD_NUMBER = "1";
 
 module.exports = {
   expo: {

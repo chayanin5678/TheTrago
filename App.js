@@ -101,7 +101,7 @@ const AppNavigator = () => (
     <Stack.Screen name="TourContact" component={TourContactScreen} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
-  <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
+  <Stack.Screen name="PaymentTourScreen" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TourPaymentSuccess" component={TourPaymentSuccess} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />
@@ -128,7 +128,7 @@ const BookingNavigator = () => (
     <Stack.Screen name="TripDetail" component={TripDetail} options={{ headerShown: false }} />
     <Stack.Screen name="CustomerInfo" component={CustomerInfo} options={{ headerShown: false }} />
     <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
-  <Stack.Screen name="PaymentTour" component={PaymentTourScreen} options={{ headerShown: false }} />
+  <Stack.Screen name="PaymentTourScreen" component={PaymentTourScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AddCardScreen" component={AddCardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="TourPaymentSuccess" component={TourPaymentSuccess} options={{ headerShown: false }} />
     <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} />

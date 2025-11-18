@@ -69,7 +69,7 @@ const TourContactScreen = ({ navigation, route }) => {
   });
 
   /** Prefill */
-  const [selectedTitle, setSelectedTitle] = useState(customerData?.md_tours_title || 'Please Select');
+  // selectedTitleId stores numeric sys_prefix_id; selectedTitleFallback maintains old string value until API mapping occurs
   const [Firstname, setFirstname] = useState(customerData.Firstname || '');
   const [Lastname, setLastname] = useState(customerData.Lastname || '');
   const [tel, setTel] = useState(customerData.tel || '');
@@ -117,36 +117,32 @@ const TourContactScreen = ({ navigation, route }) => {
   const [selectedCountryFromModal, setSelectedCountryFromModal] = useState(null);
   const [selectedCountryFromPhone, setSelectedCountryFromPhone] = useState(null);
 
-  /** Titles - store English value but display localized label */
-  const TITLE_ENTRIES = [
-    { key: 'please', en: 'Please Select', tKey: null },
-    { key: 'mr', en: 'Mr.', tKey: 'mr' },
-    { key: 'mrs', en: 'Mrs.', tKey: 'mrs' },
-    { key: 'ms', en: 'Ms.', tKey: 'ms' },
-    { key: 'master', en: 'Master', tKey: 'master' },
-  ];
+  /** Titles - load from API and store selected as ID (sys_prefix_id) */
+  const [titleOptionsApi, setTitleOptionsApi] = useState([]);
+  // store selected as numeric id; for compatibility we keep a small fallback variable for older string values
+  const [selectedTitleId, setSelectedTitleId] = useState(
+    (() => {
+      const v = customerData?.md_tours_title;
+      if (v === null || typeof v === 'undefined' || v === '') return '';
+      // if numeric, use it; if string containing only digits, parse
+      if (typeof v === 'number') return v;
+      if (/^[0-9]+$/.test(String(v))) return Number(v);
+      // non-numeric fallback: keep empty and UI will display localized string until mapping is found
+      return '';
+    })(),
+  );
+  const [selectedTitleFallback, setSelectedTitleFallback] = useState('');
 
-  // Options shown in the picker: label is localized, value is English string to store
-  const titleOptions = TITLE_ENTRIES.map((e) => ({
-    label: e.key === 'please' ? please : (t(e.tKey) || e.en),
-    value: e.en,
-  }));
-
-  // helper: normalize incoming stored value to the English string we store
-  const normalizeTitleToEnglish = (val) => {
-    if (!val) return TITLE_ENTRIES[0].en; // Please Select
-    // if it's already the English text, return it
-    const foundEn = TITLE_ENTRIES.find((it) => it.en === val);
-    if (foundEn) return foundEn.en;
-    // if it's a key like 'mr', map to english
-    const foundKey = TITLE_ENTRIES.find((it) => it.key === val);
-    if (foundKey) return foundKey.en;
-    // if it's localized label, try to match against translated labels
-    const foundByLabel = TITLE_ENTRIES.find((it) => (it.tKey ? (t(it.tKey) || it.en) === val : false));
-    if (foundByLabel) return foundByLabel.en;
-    // fallback: return as-is
-    return val;
-  };
+  // format title options for picker usage
+  const formattedTitleOptions = (titleOptionsApi && titleOptionsApi.length > 0)
+    ? titleOptionsApi.map((it) => ({
+      label: selectedLanguage === 'th' ? (it.sys_prefix_namethai || it.sys_prefix_nameeng || '') : (it.sys_prefix_nameeng || it.sys_prefix_namethai || ''),
+      value: it.sys_prefix_id,
+      raw: it,
+    }))
+    : [
+      { label: please, value: '', raw: { sys_prefix_id: '', sys_prefix_nameeng: please, sys_prefix_namethai: please } },
+    ];
 
   const [isTitleModalVisible, setTitleModalVisible] = useState(false);
   // Basic validators - define before errors so they're available when errors is computed
@@ -172,7 +168,7 @@ const TourContactScreen = ({ navigation, route }) => {
   const [telTouched, setTelTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const errors = {
-    title: attempted && (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please),
+    title: attempted && (!selectedTitleId || selectedTitleId === ''),
     firstname: attempted && (!Firstname || !Firstname.trim()),
     lastname: attempted && (!Lastname || !Lastname.trim()),
     country: attempted && (
@@ -231,13 +227,49 @@ const TourContactScreen = ({ navigation, route }) => {
     };
   }, []);
 
+  /** Data fetch: get titles/prefix from API */
+  useEffect(() => {
+    let mounted = true;
+    fetch(`${ipAddress}/sys_prefix`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!mounted) return;
+        // API returns { status: 'success', data: [ ... ] }
+        const arr = (json && (json.data || json.result)) || (Array.isArray(json) ? json : []);
+        if (Array.isArray(arr) && arr.length > 0) {
+          // store raw API items; ensure we include a 'Please Select' item
+          setTitleOptionsApi([{ sys_prefix_id: '', sys_prefix_nameeng: please, sys_prefix_namethai: please }, ...arr]);
+        } else {
+          setTitleOptionsApi([{ sys_prefix_id: '', sys_prefix_nameeng: please, sys_prefix_namethai: please }]);
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setTitleOptionsApi([{ sys_prefix_id: '', sys_prefix_nameeng: please, sys_prefix_namethai: please }]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   /** Sync when context changes */
   useEffect(() => {
     setFirstname(customerData.md_tours_firstname || '');
     setLastname(customerData.md_tours_lastname || '');
     setTel(customerData.md_tours_tel || '');
     setEmail(customerData.md_tours_email || '');
-    setSelectedTitle(normalizeTitleToEnglish(customerData.md_tours_title) || 'Please Select');
+    // If stored md_tours_title is numeric it's an ID; if string, keep as fallback until we can map to API
+    const incomingTitle = customerData.md_tours_title;
+    if (!incomingTitle) {
+      setSelectedTitleId('');
+      setSelectedTitleFallback('');
+    } else if (typeof incomingTitle === 'number' || /^[0-9]+$/.test(String(incomingTitle))) {
+      setSelectedTitleId(Number(incomingTitle));
+      setSelectedTitleFallback('');
+    } else {
+      setSelectedTitleId('');
+      setSelectedTitleFallback(String(incomingTitle));
+    }
 
     if (customerData.md_tours_countryname && (customerData.md_tours_countrycode || customerData.countrycode)) {
       setSelectedTele(`(+${customerData.md_tours_countrycode || customerData.countrycode}) ${customerData.md_tours_countryname}`);
@@ -250,15 +282,29 @@ const TourContactScreen = ({ navigation, route }) => {
     setSelectedCountry(readable || please);
   }, [customerData]);
 
-  // displayTitle: show localized label while selectedTitle remains the stored English value
+  // If we have title options loaded and the customer had a fallback (string), try to resolve to ID
+  useEffect(() => {
+    if (!titleOptionsApi || titleOptionsApi.length === 0) return;
+    const incoming = customerData.md_tours_title;
+    if (!incoming) return;
+    if (typeof incoming === 'number' || /^[0-9]+$/.test(String(incoming))) return; // already numeric
+    // find by english or thai name
+    const found = titleOptionsApi.find((it) => it.sys_prefix_nameeng === incoming || it.sys_prefix_namethai === incoming || String(it.sys_prefix_id) === String(incoming));
+    if (found) setSelectedTitleId(Number(found.sys_prefix_id));
+  }, [titleOptionsApi, customerData.md_tours_title]);
+
+  // displayTitle: show localized label from API when selectedTitleId is set; falls back to stored string if present
   const displayTitle = useMemo(() => {
-    if (!selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please) return please;
-    // try to find by English stored value
-    const found = TITLE_ENTRIES.find((it) => it.en === selectedTitle);
-    if (found) return found.tKey ? (t(found.tKey) || found.en) : found.en;
-    // fallback: if selectedTitle happens to be a localized label, just return it
-    return selectedTitle;
-  }, [selectedTitle, selectedLanguage]);
+    if (!selectedTitleId && !selectedTitleFallback) return please;
+    if (selectedTitleId) {
+      // find in loaded API data
+      const found = titleOptionsApi.find((it) => Number(it.sys_prefix_id) === Number(selectedTitleId));
+      if (found) return selectedLanguage === 'th' ? (found.sys_prefix_namethai || found.sys_prefix_nameeng || '') : (found.sys_prefix_nameeng || found.sys_prefix_namethai || '');
+    }
+    // fallback to stored string if present (older saved values)
+    if (selectedTitleFallback) return selectedTitleFallback;
+    return please;
+  }, [selectedTitleId, selectedTitleFallback, titleOptionsApi, selectedLanguage]);
 
   // Debug: log selectedCountry whenever it changes
   useEffect(() => {
@@ -358,7 +404,7 @@ const TourContactScreen = ({ navigation, route }) => {
     setAttempted(true);
 
     // ตรวจสอบแต่ละช่องว่ากรอกครบหรือไม่
-    const missingTitle = !selectedTitle || selectedTitle === 'Please Select' || selectedTitle === please;
+    const missingTitle = !selectedTitleId || selectedTitleId === '';
     const missingFirstname = !Firstname || !Firstname.trim();
     const missingLastname = !Lastname || !Lastname.trim();
     const missingCountry = !displayCountry || displayCountry === 'Please Select' || displayCountry === please;
@@ -427,6 +473,13 @@ const TourContactScreen = ({ navigation, route }) => {
     try {
       const countryIdToSave = countryIdCountry || countryIdPhone || '';
       const countryNameToSave = selectedCountryFromPhone || selectedCountryFromModal || selectedCountry || '';
+      const titleLabelEnglish = (() => {
+        if (selectedTitleId) {
+          const found = titleOptionsApi.find((it) => String(it.sys_prefix_id) === String(selectedTitleId));
+          if (found && found.sys_prefix_nameeng) return found.sys_prefix_nameeng;
+        }
+        return selectedTitleFallback || '';
+      })();
       console.log('handleSave - Saving customer data:', {
         countrycode,
         countryIdCountry,
@@ -435,7 +488,7 @@ const TourContactScreen = ({ navigation, route }) => {
         selectedCountryFromModal,
         selectedCountryFromPhone,
         countryNameToSave,
-        selectedTitle,
+        selectedTitleId,
         Firstname,
         Lastname,
         tel,
@@ -447,7 +500,9 @@ const TourContactScreen = ({ navigation, route }) => {
         md_tours_country: countryIdToSave,
         md_tours_countryname: countryNameToSave,
         md_tours_tel: tel.trim(),
-        md_tours_title: selectedTitle,
+        md_tours_title: selectedTitleId,
+        md_tours_title_name: displayTitle,
+        selectedTitle: titleLabelEnglish,
         md_tours_firstname: Firstname.trim(),
         md_tours_lastname: Lastname.trim(),
         md_tours_email: email.trim(),
@@ -462,7 +517,7 @@ const TourContactScreen = ({ navigation, route }) => {
       : computeTotal();
 
     // Directly navigate to tour payment screen after saving (no alert)
-    navigation.navigate('PaymentTour', {
+    navigation.navigate('PaymentTourScreen', {
       tour: tourParam,
       date: bookingDateParam || params.date || null,
       adults: Number(passengersParam.adult || 1),
@@ -473,6 +528,7 @@ const TourContactScreen = ({ navigation, route }) => {
       // ส่งข้อมูล unit_price และ subtotal จาก API
       unitPrice: summary?.unit_price || {},
       subtotal: summary?.subtotal || {},
+     
     });
   };
 
@@ -538,10 +594,12 @@ const TourContactScreen = ({ navigation, route }) => {
           <PickerModal
             visible={isTitleModalVisible}
             onClose={() => setTitleModalVisible(false)}
-            data={titleOptions}
+            data={formattedTitleOptions}
             renderLabel={(it) => it.label}
             onPick={(it) => {
-              setSelectedTitle(it.value);
+              // store numeric ID; clear fallback
+              setSelectedTitleId(it.value);
+              setSelectedTitleFallback('');
               setForceErrors((p) => ({ ...p, title: false }));
               setTitleModalVisible(false);
             }}
