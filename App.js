@@ -71,6 +71,7 @@ import EarningsScreen from './src/screens/Screen/EarningsScreen';
 import BookingAffiliateScreen from './src/screens/Screen/BookingAffiliateScreen';
 import OperatorDetailScreen from './src/screens/Screen/OperatorDetailScreen';
 import AllOperatorsScreen from './src/screens/Screen/AllOperatorsScreen';
+import CarRentalScreen from './src/screens/Screen/CarRentalScreen';
 
 
 const Stack = createStackNavigator();
@@ -113,6 +114,7 @@ const AppNavigator = () => (
     <Stack.Screen name="TermsScreen" component={TermsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="OperatorDetail" component={OperatorDetailScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AllOperators" component={AllOperatorsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="CarRental" component={CarRentalScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 

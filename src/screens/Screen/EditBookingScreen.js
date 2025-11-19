@@ -268,8 +268,8 @@ const EditBookingScreen = () => {
   // แสดงการแจ้งเตือนเมื่อ admin ตอบกลับ
   const showUpdateNotification = (isApproved, adminNote) => {
     const title = isApproved
-      ? (selectedLanguage === 'th' ? '✅ คำขอได้รับการอนุมัติ' : '✅ Request Approved')
-      : (selectedLanguage === 'th' ? '❌ คำขอถูกปฏิเสธ' : '❌ Request Rejected');
+      ? (selectedLanguage === 'th' ? 'คำขอได้รับการอนุมัติ' : 'Request Approved')
+      : (selectedLanguage === 'th' ? 'คำขอถูกปฏิเสธ' : 'Request Rejected');
 
     const message = adminNote || (isApproved
       ? (selectedLanguage === 'th' ? 'Admin อนุมัติคำขอแก้ไขการจองของคุณแล้ว' : 'Admin has approved your booking change request')

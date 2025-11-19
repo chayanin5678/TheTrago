@@ -99,7 +99,7 @@ const IDCardCameraScreen = ({ navigation }) => {
         setIsProcessing(false);
         setOcrProgress('');
         Alert.alert(
-          t('processingTooLong') || 'Processing Taking Too Long ⏱️',
+          t('processingTooLong') || 'Processing Taking Too Long',
           t('processingTooLongMessage') || 'Please try a clearer/smaller photo or enter details manually.',
           [
             { text: t('tryAgain') || 'Try Again', onPress: () => pickImage() },
@@ -225,7 +225,6 @@ const IDCardCameraScreen = ({ navigation }) => {
       setIsProcessing(true);
 
       const result = await ImagePicker.launchCameraAsync({
-  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [85.6, 54],
         quality: 1,
@@ -248,19 +247,10 @@ const IDCardCameraScreen = ({ navigation }) => {
 
   const openGallery = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          t('galleryPermissionRequired') || "Photo Library Access Required",
-          t('galleryPermissionIDMessage') || "TheTrago needs access to your photo library to select an ID card or passport photo for identity verification. Only the selected document image will be processed to extract your personal information and verify your identity for secure ferry bookings. No other photos will be accessed or stored.",
-          [{ text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }, { text: t('cancel') || "Cancel", style: "cancel" }]
-        );
-        return;
-      }
+      // ใช้ Photo Picker โดยตรง ไม่ต้องขอ permission
       setIsProcessing(true);
 
       const result = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [85.6, 54],
         quality: 1,

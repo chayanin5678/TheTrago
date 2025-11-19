@@ -429,7 +429,7 @@ const ProfileScreen = ({ navigation }) => {
       });
       const json = await response.json();
       if (json.status === 'success') {
-        alert('✅ ' + t('profileUpdatedSuccess'));
+        alert(t('profileUpdatedSuccess'));
         updateCustomerData({
           Firstname,
           Lastname,
@@ -439,11 +439,11 @@ const ProfileScreen = ({ navigation }) => {
           country: countryName || t('pleaseSelect'),
         });
       } else {
-        alert('❌ ' + t('updateFailed') + ': ' + json.message);
+        alert(t('updateFailed') + ': ' + json.message);
       }
     } catch (error) {
       console.error('handleSave error:', error);
-      alert('⚠️ ' + t('errorOccurred'));
+      alert(t('errorOccurred'));
     }
   };
 
@@ -484,7 +484,7 @@ const ProfileScreen = ({ navigation }) => {
         setShowNewPassword(false);
         setShowConfirmPassword(false);
       } else {
-        alert('❌ ' + json.message);
+        alert(json.message);
       }
     } catch (error) {
       console.error('handleChangePassword error:', error);

@@ -70,6 +70,7 @@ const BankVerificationScreen = ({ navigation }) => {
   const [token, setToken] = useState(null);
   const [ocrProgress, setOcrProgress] = useState('');
   const [imageLoadError, setImageLoadError] = useState(false);
+  
 
   // ===== Contact-style Animations =====
   const fadeAnim   = useRef(new Animated.Value(0)).current;
@@ -173,7 +174,7 @@ const BankVerificationScreen = ({ navigation }) => {
         setIsProcessing(false);
         setOcrProgress('');
         Alert.alert(
-          t('bankProcessingTooLong') || 'Processing Taking Too Long ⏱️',
+          t('bankProcessingTooLong') || 'Processing taking too long',
           t('bankProcessingTooLongMessage') || 'Bank document scanning is taking longer than expected.\n\n• Slow internet\n• Large image\n• Network congestion\n\nTry smaller/clearer photo or enter manually.',
           [
             { text: t('tryAgain') || 'Try Again', onPress: () => pickImage() },
@@ -187,19 +188,23 @@ const BankVerificationScreen = ({ navigation }) => {
 
   // ===== Image pickers / OCR (เหมือนเดิม) =====
   const pickImage = async () => {
+    console.log('BankVerificationScreen::pickImage invoked, isProcessing=', isProcessing);
     Alert.alert(
-      t('selectBankBookImage') || "Select Bank Book Image",
-      t('bankBookScanningTips') || "Use bright lighting and keep text clear. You can always enter info manually.",
+      t('selectBankBookImage') || "เลือกภาพสมุดบัญชี",
+      t('bankBookScanningTips') || "เพื่อผลลัพธ์การสแกนสมุดบัญชีที่ดีที่สุด:\n\nแนะนำ:\n• ใช้แสงสว่างที่ชัดเจนเสมอ\n• วางสมุดบัญชีบนพื้นผิวเรียบ\n• ตรวจสอบให้ข้อความชัดเจน\n• ถือกล้องให้ขนานกับหน้ากระดาษ\n• รวมชื่อธนาคารและรายละเอียดบัญชี\n\nหลีกเลี่ยง:\n• เงาหรือแสงสะท้อนบนหน้ากระดาษ\n• ภาพเบลอหรือเอียง\n• ข้อความหรือตัวเลขถูกตัด\n\nหมายเหตุ: OCR อาจไม่สมบูรณ์แบบ คุณสามารถใส่ข้อมูลเองได้เสมอ",
       [
-        { text: t('takePhotoEmoji') || "📷 Take Photo", onPress: () => openCamera(), style: "default" },
-        { text: t('chooseFromGalleryEmoji') || "🖼️ Choose from Gallery", onPress: () => openGallery(), style: "default" },
-        { text: t('cancel') || "Cancel", style: "cancel" }
+        { text: t('takePhoto') || "ถ่ายภาพ", onPress: () => openCamera(), style: "default" },
+        { text: t('chooseFromGallery') || "เลือกจากแกลเลอรี", onPress: () => openGallery(), style: "default" },
+        { text: t('cancel') || "ยกเลิก", style: "cancel" }
       ],
       { cancelable: true }
     );
   };
 
+  
+
   const openCamera = async () => {
+    // console.log('BankVerificationScreen::openCamera called');
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
@@ -220,7 +225,6 @@ const BankVerificationScreen = ({ navigation }) => {
         allowsEditing: true,
         aspect: [3, 2],
         quality: 0.6,
-  mediaTypes: ImagePicker.MediaType.Images,
         exif: false,
         allowsMultipleSelection: false,
         cameraType: ImagePicker.CameraType.back,
@@ -241,24 +245,12 @@ const BankVerificationScreen = ({ navigation }) => {
   };
 
   const openGallery = async () => {
+    // console.log('BankVerificationScreen::openGallery called');
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert(
-          t('galleryPermissionRequired') || "Gallery Permission Required",
-          t('galleryPermissionMessage') || "Permission to access photo library is required to select images!",
-          [
-            { text: t('cancel') || "Cancel", style: "cancel" },
-            { text: t('openSettings') || "Open Settings", onPress: () => Linking.openSettings() }
-          ]
-        );
-        return;
-      }
-
+      // ใช้ Photo Picker โดยตรง ไม่ต้องขอ permission
       setIsProcessing(true);
 
       const result = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [3, 2],
         quality: 0.6,
@@ -377,7 +369,7 @@ const BankVerificationScreen = ({ navigation }) => {
 
           const serviceName = ocrResult.service || 'OCR Service';
           Alert.alert(
-            t('bankDocumentScannedSuccessfully') || 'Bank Document Scanned Successfully! 🎉',
+            t('bankDocumentScannedSuccessfully') || 'Bank document scanned successfully',
             `${serviceName} ${t('extractedInformationFromBank') || 'has successfully extracted information'}:\n\n• ${t('bankName') || 'Bank'}: ${extractedData.bank_name || (t('notDetected') || 'Not detected')}\n• ${t('bankAccountNumber') || 'Account Number'}: ${extractedData.account_number || (t('notDetected') || 'Not detected')}\n• ${t('accountHolderName') || 'Account Name'}: ${extractedData.account_name || (t('notDetected') || 'Not detected')}`,
             [{ text: t('ok') || 'OK' }]
           );
@@ -387,17 +379,17 @@ const BankVerificationScreen = ({ navigation }) => {
       } catch (ocrError) {
         setOcrProgress('');
         setIsProcessing(false);
-        let alertTitle = 'OCR Scanning Failed 📄';
-        let alertMessage = 'Unable to automatically extract information from your bank book.\n\nPlease enter your bank information manually.';
+        let alertTitle = t('ocrScanningFailed') || 'OCR Scanning Failed';
+        let alertMessage = t('ocrFailedMessage') || 'Unable to automatically extract information from your bank book.\n\nPlease enter your bank information manually.';
 
         if (ocrError.message.includes('404')) {
-          alertTitle = 'Server Configuration Issue 🔧';
-          alertMessage = 'The OCR service is currently unavailable.\n\nPlease enter your bank information manually.';
+          alertTitle = t('serverConfigurationIssue') || 'Server Configuration Issue';
+          alertMessage = t('serverConfigMessage') || 'The OCR service is currently unavailable.\n\nPlease enter your bank information manually.';
         } else if (ocrError.message.includes('timeout')) {
-          alertTitle = 'Connection Timeout ⏱️';
-          alertMessage = 'The OCR service is taking too long to respond.\n\nPlease enter your bank information manually.';
+          alertTitle = t('connectionTimeout') || 'Connection Timeout';
+          alertMessage = t('connectionTimeoutMessage') || 'The OCR service is taking too long to respond.\n\nPlease enter your bank information manually.';
         }
-        Alert.alert(alertTitle, alertMessage, [{ text: 'OK' }]);
+        Alert.alert(alertTitle, alertMessage, [{ text: t('ok') || 'OK' }]);
       }
     } catch {
       setIsProcessing(false);
@@ -614,7 +606,7 @@ const BankVerificationScreen = ({ navigation }) => {
         else if (responseText && !responseText.includes('<html>'))
           errorMessage = responseText.length > 100 ? (t('serverReturnedError') || 'Server returned an error.') : responseText;
 
-        Alert.alert(t('uploadFailed') || '❌ Upload Failed', errorMessage);
+        Alert.alert(t('uploadFailed') || 'Upload Failed', errorMessage);
       }
     } catch (error) {
       let errorMessage = t('errorOccurredWhileSubmitting') || 'An error occurred while submitting bank verification';
@@ -622,7 +614,7 @@ const BankVerificationScreen = ({ navigation }) => {
       else if (error.message.includes('timeout')) errorMessage = t('uploadTimeout') || 'Upload timeout.';
       else if (error.message.includes('JSON Parse error')) errorMessage = t('serverResponseError') || 'Server response error.';
       else if (error.name === 'SyntaxError') errorMessage = t('invalidServerResponse') || 'Server returned an invalid response.';
-      Alert.alert(t('uploadError') || '⚠️ Upload Error', errorMessage);
+      Alert.alert(t('uploadError') || 'Upload Error', errorMessage);
     } finally {
       setIsLoadingBank(false);
     }
@@ -892,6 +884,8 @@ const BankVerificationScreen = ({ navigation }) => {
                   )}
                 </LinearGradient>
               </TouchableOpacity>
+
+
 
               {photo && (
                 <Animated.View

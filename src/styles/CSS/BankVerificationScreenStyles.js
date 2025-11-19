@@ -539,6 +539,8 @@ export const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
+  /* image picker modal styles removed */
+
   // Image Error Styles
   imageErrorContainer: {
     position: 'absolute',

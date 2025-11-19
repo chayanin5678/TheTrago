@@ -308,7 +308,6 @@ const AccountScreen = ({ navigation }) => {
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
-  mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -320,16 +319,8 @@ const AccountScreen = ({ navigation }) => {
   };
 
   const openImageLibrary = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        t('photoLibraryAccessRequired') || "ต้องการสิทธิ์เข้าถึงคลังภาพ", 
-        t('photoLibraryAccessDesc') || "TheTrago ต้องการสิทธิ์เข้าถึงคลังภาพของคุณเพื่อเลือกและอัพโหลดรูปโปรไฟล์ รูปโปรไฟล์ของคุณจะแสดงในการตั้งค่าบัญชีและใช้โดยผู้ปฏิบัติงานเรือเพื่อยืนยันตัวตนในระหว่างการเช็คอิน เพื่อรับประกันประสบการณ์การจองที่ปลอดภัยและเป็นส่วนตัว รูปภาพอื่นจะไม่ถูกเข้าถึงหรือจัดเก็บ"
-      );
-      return;
-    }
+    // ใช้ Photo Picker โดยตรง ไม่ต้องขอ permission
     const result = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,

@@ -59,7 +59,7 @@ const HomeScreen = ({ navigation, route }) => {
     { id: '1', title: t('ferry'), icon: 'boat', navigate: 'SearchFerry', item: 'new', available: true },
     { id: '2', title: t('flights'), icon: 'airplane', navigate: 'SearchFerryDemo', item: '', available: false },
     { id: '3', title: t('trains'), icon: 'train', navigate: '', item: '', available: false },
-    { id: '4', title: t('cars'), icon: 'car', navigate: '', item: '', available: false },
+    { id: '4', title: t('cars'), icon: 'car', navigate: 'CarRental', item: 'new', available: true },
     { id: '5', title: t('hotel'), icon: 'bed', navigate: '', item: '', available: false },
   { id: '6', title: t('tours'), icon: 'map', navigate: 'ToursScreen', item: 'new', available: true },
     { id: '7', title: t('attraction'), icon: 'star', navigate: '', item: '', available: false },

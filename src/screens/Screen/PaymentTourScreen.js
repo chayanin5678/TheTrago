@@ -754,7 +754,7 @@ export default function PaymentTourScreen({ navigation, route }) {
         method: "POST",
         headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
         body: JSON.stringify({
-          amount: 50,
+          amount:  Number(total),
           token: tokenData.token,
           return_uri: returnUri,
           booking: bookingCode,

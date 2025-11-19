@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.2";
 const IOS_BUILD_NUMBER = "1";
 
 module.exports = {
@@ -52,6 +52,10 @@ module.exports = {
       }],
       ["expo-camera", {
         cameraPermission: "Allow TheTrago to access your camera to scan QR codes and capture ID documents."
+      }],
+      ["expo-image-picker", {
+        photosPermission: "Allow TheTrago to access your photos to select profile pictures and upload documents.",
+        cameraPermission: "Allow TheTrago to take photos for your profile and document verification."
       }],
       ["expo-location", {
         locationAlwaysAndWhenInUsePermission: "Allow TheTrago to use your location to find nearby ferry terminals.",
