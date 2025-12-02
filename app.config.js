@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.1.3";
 const IOS_BUILD_NUMBER = "1";
 
 module.exports = {
@@ -17,7 +17,13 @@ module.exports = {
     },
   version: APP_VERSION,
     android: {
-      package: "com.chayanin5678.TheTrago"
+      package: "com.chayanin5678.TheTrago",
+      // Block permissions that Google Play flagged as not needed
+      blockedPermissions: [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     orientation: "default",
     icon: "./assets/icontrago.png",

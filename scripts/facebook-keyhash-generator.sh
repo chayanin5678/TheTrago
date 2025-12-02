@@ -36,7 +36,7 @@ cat << 'EOF'
 // เพิ่มโค้ดนี้ใน MainActivity.java เพื่อ print Key Hash
 try {
     PackageInfo info = getPackageManager().getPackageInfo(
-            "com.thetrago.android",
+            "com.chayanin5678.TheTrago",
             PackageManager.GET_SIGNATURES);
     for (Signature signature : info.signatures) {
         MessageDigest md = MessageDigest.getInstance("SHA");

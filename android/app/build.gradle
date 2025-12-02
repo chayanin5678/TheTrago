@@ -14,6 +14,7 @@ react {
     hermesCommand = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"
     codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
 
+    enableBundleCompression = (findProperty('android.enableBundleCompression') ?: false).toBoolean()
     // Use Expo CLI to bundle the app, this ensures the Metro config
     // works correctly with Expo projects.
     cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
@@ -65,7 +66,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInReleaseBuilds') ?: false).toBoolean()
+def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInReleaseBuilds') ?: true).toBoolean()
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -78,51 +79,22 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  * give correct results when using with locales other than en-US. Note that
  * this variant is about 6MiB larger per architecture than default.
  */
-def jscFlavor = 'org.webkit:android-jsc:+'
-
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
     ndkVersion rootProject.ext.ndkVersion
 
-    compileSdkVersion rootProject.ext.compileSdkVersion
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(17)  // Use Java 17
-        }
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"  // Ensure Kotlin uses JVM 17 to match Java version
-    }
-
-    buildFeatures {
-        buildConfig = true
-    }
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
 
     namespace 'com.chayanin5678.TheTrago'
-
     defaultConfig {
         applicationId 'com.chayanin5678.TheTrago'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 59
-        versionName "1.5.9"
-        
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "false")
-        buildConfigField("boolean", "IS_HERMES_ENABLED", "true")
-        
-        // Add multidex support for apps with 64K+ methods
-        multiDexEnabled true
-        
-        // Increase memory for dex operations
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
-            }
-        }
+        versionCode 65
+        versionName "1.6.5"
     }
-
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -131,65 +103,77 @@ android {
             keyPassword 'android'
         }
         release {
+
             storeFile file('my-release-key.keystore')
             storePassword 'chayanin25780'
             keyAlias 'my-key-alias'
             keyPassword 'chayanin25780'
         }
+        
     }
-
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
         }
         release {
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
-            // Enable minification with R8 to reduce APK size
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
-
-    // Note: ABI splits are disabled for App Bundle builds
-    // Google Play will automatically generate optimized APKs for each device configuration
-    // If you need to generate split APKs directly, use assembleRelease instead of bundleRelease
-
     packagingOptions {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
         }
     }
-
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
 }
 
+// Apply static values from `gradle.properties` to the `android.packagingOptions`
+// Accepts values in comma delimited lists, example:
+// android.packagingOptions.pickFirsts=/LICENSE,**/picasa.ini
+["pickFirsts", "excludes", "merges", "doNotStrip"].each { prop ->
+    // Split option: 'foo,bar' -> ['foo', 'bar']
+    def options = (findProperty("android.packagingOptions.$prop") ?: "").split(",");
+    // Trim all elements in place.
+    for (i in 0..<options.size()) options[i] = options[i].trim();
+    // `[] - ""` is essentially `[""].filter(Boolean)` removing all empty strings.
+    options -= ""
+
+    if (options.length > 0) {
+        println "android.packagingOptions.$prop += $options ($options.length)"
+        // Ex: android.packagingOptions.pickFirsts += '**/SCCS/**'
+        options.each {
+            android.packagingOptions[prop] += it
+        }
+    }
+}
+
 dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    // AndroidX core ktx for WindowCompat and WindowInsetsControllerCompat
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation 'androidx.annotation:annotation:1.1.0'
-    
-    // Add multidex support
-    implementation 'androidx.multidex:multidex:2.0.1'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
 
     if (isGifEnabled) {
-        implementation("com.facebook.fresco:animated-gif:3.6.0")
+        // For animated gif support
+        implementation("com.facebook.fresco:animated-gif:${expoLibs.versions.fresco.get()}")
     }
 
     if (isWebpEnabled) {
-        implementation("com.facebook.fresco:webpsupport:3.6.0")
+        // For webp support
+        implementation("com.facebook.fresco:webpsupport:${expoLibs.versions.fresco.get()}")
         if (isWebpAnimatedEnabled) {
-            implementation("com.facebook.fresco:animated-webp:3.6.0")
+            // Animated webp support
+            implementation("com.facebook.fresco:animated-webp:${expoLibs.versions.fresco.get()}")
         }
     }
 

@@ -12,17 +12,6 @@ buildscript {
   }
 }
 
-// Project properties: pin SDK and NDK versions so local and CI/EAS builds
-// use the same native toolchain. 
-// compileSdk 35 required, targetSdk 35 for Play Store (Aug 2024+)
-ext {
-  compileSdkVersion = 35
-  targetSdkVersion = 35  // Play Store requirement
-  minSdkVersion = 24
-  buildToolsVersion = "35.0.0"
-  ndkVersion = "27.1.12297006"  // NDK 27 supports SDK 35 and C++20
-}
-
 def reactNativeAndroidDir = new File(
   providers.exec {
     workingDir(rootDir)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, StatusBar, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator, ScrollView, Animated, Dimensions, StatusBar, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -68,7 +68,7 @@ const parseJwt = (token) => {
 };
 
 // Constants
-const BUNDLE_ID = 'com.thetrago.android'; // Bundle ID จาก app.json สำหรับ Apple Sign-In audience
+const BUNDLE_ID = 'com.chayanin5678.TheTrago'; // Bundle ID จาก app.json สำหรับ Apple Sign-In audience
 
 export default function LoginScreen({ navigation }) {
   const { customerData, updateCustomerData } = useCustomer();
@@ -299,84 +299,175 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  // Facebook Login Handler using expo-auth-session
+  // Facebook Login Handler using WebBrowser + Deep Link
+  // Flow: App -> Facebook -> thetrago.com/redirect-facebook -> Deep link back to app
   const handleFacebookLogin = async () => {
-    console.log('Starting Facebook Login with expo-auth-session...');
+    console.log('Starting Facebook Login with WebBrowser + Deep Link...');
 
     try {
       setSocialLoading(prev => ({ ...prev, facebook: true }));
 
       // Facebook OAuth configuration
       const CLIENT_ID = '1326238592032941'; // Your Facebook App ID
-      // Create a scheme-based redirect URI so OAuth redirects back into the app
-      // NOTE: Make sure this exact URI (for example: "thetrago://auth") is registered
-      // in your Facebook App -> Settings -> Valid OAuth Redirect URIs (or use the expo proxy URI).
-      const REDIRECT_URI = AuthSession.makeRedirectUri({
-        scheme: 'thetrago',
-        path: 'auth',
-        useProxy: useProxyForDev
-      });
+      
+      // Redirect URI ที่ลงทะเบียนใน Facebook Developer Console
+      // Facebook จะ redirect ไปที่ backend ของเรา แล้ว backend จะ redirect กลับมาที่ app ผ่าน deep link
+      // ⚠️ ต้องลงทะเบียน URI นี้ใน Facebook Developer Console > Facebook Login > Settings > Valid OAuth Redirect URIs
+      const REDIRECT_URI = 'https://thetrago.com/AppApi/redirect-facebook';
 
       console.log('Facebook Redirect URI:', REDIRECT_URI);
 
-      // Create AuthRequest for Facebook
-      const request = new AuthRequest({
-        clientId: CLIENT_ID,
-        scopes: ['public_profile', 'email'],
-        redirectUri: REDIRECT_URI,
-        responseType: ResponseType.Code,
-        extraParams: {
-          display: 'popup',
-        },
+      // สร้าง Facebook OAuth URL
+      const scopes = ['public_profile', 'email'];
+      const state = Math.random().toString(36).substring(7); // Random state for security
+      
+      const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${CLIENT_ID}` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+        `&scope=${scopes.join(',')}` +
+        `&response_type=code` +
+        `&state=${state}` +
+        `&display=popup`;
+
+      console.log('Opening Facebook auth URL...');
+
+      // Create a promise that resolves when we get the deep link callback
+      const deepLinkPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          Linking.removeAllListeners('url');
+          reject(new Error('Facebook login timeout - no response received'));
+        }, 120000); // 2 minute timeout
+
+        const handleDeepLink = async (event) => {
+          console.log('Deep link received:', event.url);
+          clearTimeout(timeout);
+          Linking.removeAllListeners('url');
+          
+          try {
+            const url = event.url;
+            
+            // Handle success callback: thetrago://auth/facebook/callback?code=xxx
+            if (url.includes('auth/facebook/callback')) {
+              const urlObj = new URL(url);
+              const code = urlObj.searchParams.get('code');
+              
+              if (code) {
+                console.log('Facebook authorization code received from deep link');
+                resolve({ type: 'success', code });
+              } else {
+                reject(new Error('No authorization code in callback URL'));
+              }
+            }
+            // Handle error callback: thetrago://auth/facebook/error
+            else if (url.includes('auth/facebook/error')) {
+              reject(new Error('Facebook authentication was cancelled or failed'));
+            }
+            else {
+              // Unknown callback, ignore
+              console.log('Unknown deep link callback:', url);
+            }
+          } catch (e) {
+            reject(e);
+          }
+        };
+
+        Linking.addEventListener('url', handleDeepLink);
       });
 
-      // Facebook discovery endpoint
-      const discovery = {
-        authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
-        tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
-      };
-
-      // Start authentication
-      const result = await request.promptAsync(discovery);
-
-      console.log('Facebook Auth Result:', result);
-
-      if (result.type === 'success') {
-        const { code } = result.params;
-        
-        if (!code) {
-          throw new Error('No authorization code received from Facebook');
+      // Open Facebook auth in browser
+      // ใช้ openAuthSessionAsync เพื่อให้ปิด browser อัตโนมัติเมื่อ redirect กลับมา
+      const browserResult = await WebBrowser.openAuthSessionAsync(
+        facebookAuthUrl,
+        'thetrago://', // Deep link scheme ที่รอรับ callback
+        {
+          showInRecents: true,
+          preferEphemeralSession: true, // ไม่เก็บ session ใน Safari
         }
+      );
 
-        console.log('Facebook authorization code received:', code);
+      console.log('Browser result:', browserResult);
 
-        // Send code to backend for token exchange and user info
-        console.log('Sending to backend API...');
-        const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
-          provider: 'facebook',
-          authCode: code,
-          redirectUri: REDIRECT_URI,
-        });
-
-        console.log('Backend response:', socialLoginResponse.data);
-
-        if (socialLoginResponse.data.token && socialLoginResponse.data.user) {
-          const userData = socialLoginResponse.data.user;
-          
-          await login(socialLoginResponse.data.token);
-          // Save user email to SecureStore for BookingScreen
-          await SecureStore.setItemAsync('userEmail', userData.email);
-          console.log('Facebook Sign-In: User email saved to SecureStore:', userData.email);
-          Alert.alert(t('success'), t('facebookSignInSuccess'));
-        } else {
-          Alert.alert('เตือน', t('facebookSignInError'));
-        }
-      } else if (result.type === 'cancel') {
-        console.log('Facebook login was cancelled');
+      // ถ้า browser ถูกปิดโดย user
+      if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+        console.log('Facebook login was cancelled by user');
+        setSocialLoading(prev => ({ ...prev, facebook: false }));
         return;
-      } else {
-        throw new Error('Facebook authentication failed');
       }
+
+      // Check if we got a redirect URL directly (iOS sometimes returns this)
+      if (browserResult.type === 'success' && browserResult.url) {
+        const url = browserResult.url;
+        console.log('Got redirect URL from browser:', url);
+        
+        // Handle the callback URL directly
+        if (url.includes('auth/facebook/callback') || url.includes('code=')) {
+          const urlObj = new URL(url.replace('thetrago://', 'https://thetrago.com/'));
+          const code = urlObj.searchParams.get('code');
+          
+          if (code) {
+            console.log('Facebook authorization code received directly from browser result');
+            
+            // Send code to backend for token exchange
+            const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+              provider: 'facebook',
+              authCode: code,
+              redirectUri: REDIRECT_URI,
+            });
+
+            console.log('Backend response:', socialLoginResponse.data);
+
+            if (socialLoginResponse.data.token && socialLoginResponse.data.user) {
+              const userData = socialLoginResponse.data.user;
+              
+              await login(socialLoginResponse.data.token);
+              await SecureStore.setItemAsync('userEmail', userData.email || '');
+              console.log('Facebook Sign-In: User email saved to SecureStore:', userData.email);
+              Alert.alert(t('success'), t('facebookSignInSuccess'));
+            } else {
+              Alert.alert('เตือน', t('facebookSignInError'));
+            }
+            
+            setSocialLoading(prev => ({ ...prev, facebook: false }));
+            return;
+          }
+        }
+      }
+
+      // Wait for deep link callback (fallback for Android)
+      try {
+        const result = await Promise.race([
+          deepLinkPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout waiting for callback')), 60000))
+        ]);
+
+        if (result.type === 'success' && result.code) {
+          console.log('Processing Facebook auth code from deep link...');
+          
+          // Send code to backend for token exchange
+          const socialLoginResponse = await axios.post(`${ipAddress}/social-login`, {
+            provider: 'facebook',
+            authCode: result.code,
+            redirectUri: REDIRECT_URI,
+          });
+
+          console.log('Backend response:', socialLoginResponse.data);
+
+          if (socialLoginResponse.data.token && socialLoginResponse.data.user) {
+            const userData = socialLoginResponse.data.user;
+            
+            await login(socialLoginResponse.data.token);
+            await SecureStore.setItemAsync('userEmail', userData.email || '');
+            console.log('Facebook Sign-In: User email saved to SecureStore:', userData.email);
+            Alert.alert(t('success'), t('facebookSignInSuccess'));
+          } else {
+            Alert.alert('เตือน', t('facebookSignInError'));
+          }
+        }
+      } catch (deepLinkError) {
+        // Deep link timeout or error - browser might have been closed
+        console.log('Deep link wait ended:', deepLinkError.message);
+      }
+
     } catch (error) {
       console.log('Facebook Login Error:', error);
       console.log('Error details:', error.message, error.stack);
@@ -387,7 +478,7 @@ export default function LoginScreen({ navigation }) {
       } else if (error.request) {
         console.log('Network Error:', error.request);
         Alert.alert('เตือน', t('cannotConnectToServer'));
-      } else {
+      } else if (error.message && !error.message.includes('timeout') && !error.message.includes('cancelled')) {
         Alert.alert('เตือน', `Facebook Login Error: ${error.message}`);
       }
     } finally {
